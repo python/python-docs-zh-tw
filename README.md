@@ -4,7 +4,7 @@
 
 **暫時不考慮 Python 2.7 的翻譯工作**
 
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ccwang002/python-doc-tw)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/python-doc-tw/python-doc-tw)
 
 
 ## 問題回報與討論
@@ -28,7 +28,7 @@
 
 This translation project is highly influenced by [python-doc-ja]'s translation architecture and workflow (aka a shameless copy). We truly thank their contribution.
 
-[Gitter chatroom]: https://gitter.im/ccwang002/python-doc-tw
+[Gitter chatroom]: https://gitter.im/python-doc-tw/python-doc-tw
 [Transifex]: https://www.transifex.com/
 [python-35-tw]: https://www.transifex.com/python-tw-doc/python-35-tw/
 [python-doc-ja]: https://github.com/python-doc-ja/python-doc-ja
