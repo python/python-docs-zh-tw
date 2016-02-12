@@ -1,19 +1,24 @@
-# Python 官方說明文件中文翻譯計畫
+Python 官方說明文件中文翻譯計畫
 
 本 GitHub repo 為統整翻譯專案進行的資訊集中處。
 
-目前以 Python 3.5 為翻譯的對象。**暫時不考慮 Python 2.7 的翻譯工作**
+您可以在 <http://docs.python.org.tw/3/> 瀏覽目前翻譯的成果。目前以 Python 3.5 為翻譯的對象。**暫時不考慮 Python 2.7 的翻譯工作。**
 
-更多資訊可以在 [Wiki] 分頁中找到。
 
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/python-doc-tw/python-doc-tw)
+在 [Wiki] 中有更多關於參加翻譯、翻譯風格規範、自行編譯文件等說明。
+
+想問問題、認識翻譯同好，歡迎加入聊天室 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/python-doc-tw/python-doc-tw)
+
 
 
 ## 參加翻譯
 
 請於 [Transifex] 網站註冊帳號並參加 [python-35-tw] 的翻譯專案。
 
-[Wiki](https://github.com/python-doc-tw/python-doc-tw/wiki/How-to-translate-%28on-Transifex%29) 有個簡單的 Transifex 使用教學，並請參考[翻譯手則](https://github.com/python-doc-tw/python-doc-tw/wiki/Translation-guideline)中的原則來翻譯。
+[Wiki] 有簡單的 [Transifex 使用教學](https://github.com/python-doc-tw/python-doc-tw/wiki/How-to-translate-%28on-Transifex%29)，並請參考[翻譯手則](https://github.com/python-doc-tw/python-doc-tw/wiki/Translation-guideline)中的原則來翻譯。
+
+<http://docs.python.org.tw/3/> 目前每天會自動更新一次。你也可以點每一頁左側欄的「Update Translation」強迫更新該頁的翻譯。
+
 
 
 ## 授權與 License
