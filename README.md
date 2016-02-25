@@ -1,8 +1,8 @@
-Python 官方說明文件中文翻譯計畫
+# Python 官方說明文件中文翻譯計畫
 
 本 GitHub repo 為統整翻譯專案進行的資訊集中處。
 
-您可以在 <http://docs.python.org.tw/3/> 瀏覽目前翻譯的成果。目前以 Python 3.5 為翻譯的對象。**暫時不考慮 Python 2.7 的翻譯工作。**
+您可以在 <https://docs.python.org.tw/3/> 瀏覽目前翻譯的成果。目前以 Python 3.5 為翻譯的對象。**暫時不考慮 Python 2.7 的翻譯工作。**
 
 
 在 [Wiki] 中有更多關於參加翻譯、翻譯風格規範、自行編譯文件等說明。
