@@ -2,7 +2,7 @@
 
 本 GitHub repo 為統整翻譯專案進行的資訊集中處。
 
-您可以在 <https://docs.python.org.tw/3/> 瀏覽目前翻譯的成果。目前以 Python 3.5 為翻譯的對象。**暫時不考慮 Python 2.7 的翻譯工作。**
+您可以在 <https://docs.python.org.tw/3/> 瀏覽目前翻譯的成果。目前以 Python 3.6 為翻譯的對象。**暫時不考慮 Python 2.7 的翻譯工作。**
 
 
 在 [Wiki] 中有更多關於參加翻譯、翻譯風格規範、自行編譯文件等說明。
@@ -13,7 +13,7 @@
 
 ## 參加翻譯
 
-請於 [Transifex] 網站註冊帳號並參加 [python-35-tw] 的翻譯專案。
+請於 [Transifex] 網站註冊帳號並參加 [python-36-tw] 的翻譯專案。
 
 [Wiki] 有簡單的 [Transifex 使用教學](https://github.com/python-doc-tw/python-doc-tw/wiki/How-to-translate-%28on-Transifex%29)，並請參考[翻譯手則](https://github.com/python-doc-tw/python-doc-tw/wiki/Translation-guideline)中的原則來翻譯。
 
@@ -41,5 +41,5 @@ This translation project is highly influenced by [python-doc-ja]'s translation a
 [wiki]: https://github.com/python-doc-tw/python-doc-tw/wiki
 [Gitter chatroom]: https://gitter.im/python-doc-tw/python-doc-tw
 [Transifex]: https://www.transifex.com/
-[python-35-tw]: https://www.transifex.com/python-tw-doc/python-35-tw/
+[python-36-tw]: https://www.transifex.com/python-tw-doc/python-36-tw/
 [python-doc-ja]: https://github.com/python-doc-ja/python-doc-ja
