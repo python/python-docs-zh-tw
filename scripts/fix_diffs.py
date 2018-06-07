@@ -94,10 +94,11 @@ def main(fp, original_po_commit='HEAD'):
 
 if __name__ == '__main__':
     import sys
+
     if len(sys.argv) < 2:
         print('Usage: python fix_diffs.py <po_file_path> <original_po_file_commit_hash>')
 
-    fp = sys.argv[1]
+    fp = './' + sys.argv[1]
     output_lines = None
     if len(sys.argv) == 3:
         original_hash = sys.argv[2]
