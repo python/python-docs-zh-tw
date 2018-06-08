@@ -97,3 +97,7 @@ fuzzy:
 .PHONY: clean
 clean:
 	rm *.mo */*.mo
+
+.PHONY: clean-diff
+clean-diff: $(VENV)/bin/activate
+	for file in $$(git diff --name-only | grep '.po$$'); do python3 scripts/fix_diffs.py $$file; done
