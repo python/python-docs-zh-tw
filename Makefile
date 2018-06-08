@@ -1,4 +1,4 @@
-# Makefile for French Python Documentation
+# Makefile for Chinese (Taiwan) Python Documentation
 #
 # Here is what you can do:
 #
@@ -15,7 +15,7 @@
 
 CPYTHON_CLONE := ../cpython/
 SPHINX_CONF := $(CPYTHON_CLONE)/Doc/conf.py
-LANGUAGE := fr
+LANGUAGE := zh_TW
 VENV := ~/.venvs/python-docs-i18n/
 PYTHON := $(shell which python3)
 MODE := autobuild-dev-html
@@ -26,12 +26,13 @@ JOBS = 1
 .PHONY: all
 all: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb $(SPHINX_CONF)
 	mkdir -p $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/
-	ln -nfs $(shell readlink -f .) $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/LC_MESSAGES
+	ln -nfs $(shell pwd) $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/LC_MESSAGES
 	. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D locale_dirs=locales -D language=$(LANGUAGE) -D gettext_compact=0' $(MODE)
 
 
 $(SPHINX_CONF):
 	git clone --depth 1 --no-single-branch https://github.com/python/cpython.git $(CPYTHON_CLONE)
+	cd $(CPYTHON_CLONE) && git checkout $(BRANCH)
 
 
 $(VENV)/bin/activate:
@@ -40,7 +41,7 @@ $(VENV)/bin/activate:
 
 
 $(VENV)/bin/sphinx-build: $(VENV)/bin/activate
-	. $(VENV)/bin/activate; python3 -m pip install sphinx
+	. $(VENV)/bin/activate; python3 -m pip install sphinx python-docs-theme
 
 
 $(VENV)/bin/blurb: $(VENV)/bin/activate
@@ -49,7 +50,7 @@ $(VENV)/bin/blurb: $(VENV)/bin/activate
 
 .PHONY: upgrade_venv
 upgrade_venv: $(VENV)/bin/activate
-	. $(VENV)/bin/activate; python3 -m pip install --upgrade sphinx blurb
+	. $(VENV)/bin/activate; python3 -m pip install --upgrade sphinx python-docs-theme blurb
 
 
 .PHONY: progress
@@ -91,3 +92,8 @@ endif
 .PHONY: fuzzy
 fuzzy:
 	for file in *.po */*.po; do echo $$(msgattrib --only-fuzzy --no-obsolete "$$file" | grep -c '#, fuzzy') $$file; done | grep -v ^0 | sort -gr
+
+
+.PHONY: clean
+clean:
+	rm *.mo */*.mo
