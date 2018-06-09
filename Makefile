@@ -12,6 +12,8 @@
 # Modes are: autobuild-stable, autobuild-dev, and autobuild-html,
 # documented in gen/src/3.6/Doc/Makefile as we're only delegating the
 # real work to the Python Doc Makefile.
+#
+# Credits: Python Documentation French Translation Team (https://github.com/python/python-docs-fr)
 
 CPYTHON_CLONE := ../cpython/
 SPHINX_CONF := $(CPYTHON_CLONE)/Doc/conf.py
