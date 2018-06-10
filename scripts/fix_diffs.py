@@ -96,13 +96,17 @@ if __name__ == '__main__':
     import sys
 
     if len(sys.argv) < 2:
-        print('Usage: python fix_diffs.py <po_file_path> <original_po_file_commit_hash>')
+        print('Usage:')
+        print('\tpython fix_diffs.py <po_file_path> [<original_po_file_commit>]')
+        print('Option:')
+        print('\t<original_po_file_commit>: The original .po file(s) commit record (default to HEAD).')
+        sys.exit(1)
 
     fp = './' + sys.argv[1]
     output_lines = None
     if len(sys.argv) == 3:
-        original_hash = sys.argv[2]
-        output_lines = main(fp, original_hash)
+        original_commit = sys.argv[2]
+        output_lines = main(fp, original_commit)
     else:
         output_lines = main(fp)
 
