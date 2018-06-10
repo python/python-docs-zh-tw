@@ -54,7 +54,7 @@ def get_msgs(lines):
     return msgids, msgstrs
 
 def main(fp, original_po_commit='HEAD'):
-    p = subprocess.Popen(['git', 'show', '{}:'.format(original_po_commit) + fp], stdout=subprocess.PIPE)
+    p = subprocess.Popen(['git', 'show', f'{original_po_commit}:{fp}'], stdout=subprocess.PIPE)
     out, err = p.communicate()
     head_po = out.decode().splitlines()
     msgids, msgstrs = get_msgs(head_po)
