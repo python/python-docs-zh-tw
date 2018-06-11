@@ -53,8 +53,8 @@ def get_msgs(lines):
         lineno += 1
     return msgids, msgstrs
 
-def main(fp):
-    p = subprocess.Popen(['git', 'show', 'HEAD:' + fp], stdout=subprocess.PIPE)
+def main(fp, original_po_commit='HEAD'):
+    p = subprocess.Popen(['git', 'show', f'{original_po_commit}:{fp}'], stdout=subprocess.PIPE)
     out, err = p.communicate()
     head_po = out.decode().splitlines()
     msgids, msgstrs = get_msgs(head_po)
@@ -94,11 +94,21 @@ def main(fp):
 
 if __name__ == '__main__':
     import sys
-    if len(sys.argv) < 2:
-        print('Usage: python fix_diffs.py <po_file_path>')
 
-    fp = sys.argv[1]
-    output_lines = main(fp)
+    if len(sys.argv) < 2:
+        print('Usage:')
+        print('\tpython fix_diffs.py <po_file_path> [<original_po_file_commit>]')
+        print('Option:')
+        print('\t<original_po_file_commit>: The original .po file(s) commit record (default to HEAD).')
+        sys.exit(1)
+
+    fp = './' + sys.argv[1]
+    output_lines = None
+    if len(sys.argv) == 3:
+        original_commit = sys.argv[2]
+        output_lines = main(fp, original_commit)
+    else:
+        output_lines = main(fp)
 
     with open(fp, 'w') as f:
         f.writelines([s + '\n' for s in output_lines])
