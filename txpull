@@ -1,0 +1,36 @@
+#!/bin/sh
+
+if [ x"$1" == x ];
+then
+    echo "Usage: ./txpull <po file path> [<options or arguments for tx pull>]"
+    exit 1
+fi
+
+if [ ! -f "$1" ];
+then
+    echo "File $1 does not exist"
+    exit 1
+fi
+
+file="$1"
+shift
+
+resource_slug="$(cat .tx/config | grep -B 1 $file | head -n 1 | sed 's/\[\(.*\)\]/\1/')"
+if [ x"$resource_slug" == x ];
+then
+    echo "Resource of file $file not found"
+    exit 1
+fi
+
+echo "Pulling translations of $file from Transifex...\n"
+echo "$ tx pull $@ -r $resource_slug"
+tx pull $@ -r $resource_slug
+
+echo "\nFixing format consistency in $file...\n"
+echo "$ poindent $file"
+poindent $file
+
+echo "sed -i '' -e 's/\"Language: zh-Hant\\\\n\"/\"Language: zh_TW\\\\n\"/' $file"
+sed -i '' -e 's/"Language: zh-Hant\\n"/"Language: zh_TW\\n"/' $file
+
+echo "Done."
