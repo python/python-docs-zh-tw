@@ -1,13 +1,11 @@
 #!/bin/sh
 
-if [ x"$1" == x ];
-then
+if [ -z "$1" ]; then
     echo "Usage: ./txpull <po file path> [<options or arguments for tx pull>]"
     exit 1
 fi
 
-if [ ! -f "$1" ];
-then
+if [ ! -f "$1" ]; then
     echo "File $1 does not exist"
     exit 1
 fi
@@ -15,10 +13,34 @@ fi
 file="$1"
 shift
 
-resource_slug="$(cat .tx/config | grep -B 1 $file | head -n 1 | sed 's/\[\(.*\)\]/\1/')"
-if [ x"$resource_slug" == x ];
-then
+resource_slug="$(cat .tx/config | grep -B 3 $file | grep "python-36-tw" | head -n 1 | sed 's/\[\(.*\)\]/\1/')"
+if [ -z "$resource_slug" ]; then
     echo "Resource of file $file not found"
+    exit 1
+fi
+
+if [ -z "$(which tx)" ]; then
+    echo "Dependency transifex-client not installed, install with the following command:"
+    echo "$ pip3 install transifex-client"
+    exit 1
+fi
+
+if [ -z "$(which poindent)" ]; then
+    echo "Dependency poindent not installed, install with the following command:"
+    echo "$ pip3 install poindent"
+    exit 1
+fi
+
+if [ -z "$(which gettext)" ]; then
+    echo "Dependency gettext not installed, please install with your package manager."
+    exit 1
+fi
+
+if [ -z "$(which tac)" ]; then
+    echo "Dependency tac not found, please install with your package manager."
+    if [ "$(uname -s)" == "Darwin" ]; then
+        echo "https://unix.stackexchange.com/questions/114041/how-can-i-get-the-tac-command-on-os-x/114042 may be useful for Mac users."
+    fi
     exit 1
 fi
 
@@ -30,7 +52,9 @@ echo "\nFixing format consistency in $file...\n"
 echo "$ poindent $file"
 poindent $file
 
-echo "sed -i '' -e 's/\"Language: zh-Hant\\\\n\"/\"Language: zh_TW\\\\n\"/' $file"
-sed -i '' -e 's/"Language: zh-Hant\\n"/"Language: zh_TW\\n"/' $file
+echo "$ sed -i.bak 's/\"Language: zh-Hant\\\\n\"/\"Language: zh_TW\\\\n\"/' $file"
+sed -i.bak 's/"Language: zh-Hant\\n"/"Language: zh_TW\\n"/' "$file"
+echo "$ rm $file.bak"
+rm "$file".bak
 
 echo "Done."
