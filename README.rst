@@ -1,17 +1,22 @@
-# Python 官方說明文件中文翻譯計畫
+Python 官方說明文件臺灣繁體中文翻譯計畫
+=======================================
 
-本 GitHub repo 為統整翻譯專案進行的資訊集中處。
+本 GitHub repository 含有 Python 官方說明文件的 zh_TW 翻譯。實際的翻譯內容
+在這個 repository 裡以 Python 的穩定發行版本作為 branch 名稱，請參考 3.6 等
+branch 以查看目前的翻譯內容。此 master branch 則為專案的貢獻說明。
 
-您可以在 <https://docs.python.org.tw/3/> 瀏覽目前翻譯的成果。目前以 Python 3.6 為翻譯的對象。**暫時不考慮 Python 2.7 的翻譯工作。**
+您可以在 https://python-doc-tw.github.io/ 瀏覽目前翻譯的成果。目前以
+Python 3.6 為翻譯的對象，**暫時不考慮 Python 2.7 的翻譯工作**。未來有新的
+Python 發行版本時，也將會將翻譯滾動至新的版本。
 
 
 在 [Wiki] 中有更多關於參加翻譯、翻譯風格規範、自行編譯文件等說明。
 
-想問問題、認識翻譯同好，歡迎加入聊天室 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/python-doc-tw/python-doc-tw)
+想問問題、認識翻譯同好，歡迎加入 Telegram 聊天室 `t.me/PyDocTW<https://t.me/PyDocTW>`_。
 
 
-
-## 參加翻譯
+參加翻譯
+========
 
 請於 [Transifex] 網站註冊帳號並參加 [python-36-tw] 的翻譯專案。
 
