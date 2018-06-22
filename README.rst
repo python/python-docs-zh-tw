@@ -81,6 +81,20 @@ pull request（記得 base 是此專案的其中一個 branch；目前只有 3.6
 
 執行完 ``poindent`` 以後即可 commit、push 等。
 
+
+問題回報與討論
+--------------
+
+如果有需要共同討論的問題，請開設一個新的 Issue_。如果是翻譯上遇到困難需要\
+幫助，則可以使用 Telegram_。
+
+.. _Issue: https://github.com/python-doc-tw/python-docs-zh-tw/issues
+.. _Telegram: https://t.me/PyDocT
+
+另外，此翻譯的領導人為 `adrianliaw<https://github.com/adrianliaw>`_，\
+您也可以透過此 email 聯繫：``adrianliaw2000 at gmail dot com``。
+
+
 授權與 License
 ==============
 
@@ -122,15 +136,6 @@ the PSF for inclusion in the documentation.
 文本貢獻，您在 Python 社群的參與是受歡迎且受感激的。
 
 您在對 PSF 送出說明文件貢獻的同時，即表示同意上述的協議。
-
-
-問題回報與討論
-==============
-
-對於翻譯有任何問題，請開設一個新的 Issue_。討論使用 Telegram_。
-
-.. _Issue: https://github.com/python-doc-tw/python-docs-zh-tw/issues
-.. _Telegram: https://t.me/PyDocTW
 
 
 Acknowledgement
