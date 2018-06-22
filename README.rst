@@ -1,6 +1,13 @@
-# Chinese (Taiwan) Translation of the Python Documentation
+Chinese (Taiwan) Translation of the Python Documentation
+========================================================
 
-## Documentation Contribution Agreement
+Please visit `README on master branch`_ for more informations.
+
+.. _README on master branch:
+    https://github.com/python-doc-tw/python-docs-zh-tw/blob/master/README.rst
+
+Documentation Contribution Agreement
+------------------------------------
 
 NOTE REGARDING THE LICENSE FOR TRANSLATIONS: Python's documentation is
 maintained using a global network of volunteers. By posting this
