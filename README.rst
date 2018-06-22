@@ -11,7 +11,7 @@ Python 3.6 為翻譯的對象，**暫時不考慮 Python 2.7 的翻譯工作**�
 Python 發行版本時，也將會將翻譯滾動至新的版本。
 
 
-在 Wiki_ 中有更多關於參加翻譯、翻譯風格規範、自行編譯文件等說明。
+在 Wiki_ 中有更多關於參加翻譯、翻譯風格規範、自行編譯文件等說明（待更新）。
 
 想問問題、認識翻譯同好，歡迎加入 Telegram 聊天室 `t.me/PyDocTW`_
 
@@ -91,8 +91,19 @@ pull request（記得 base 是此專案的其中一個 branch；目前只有 3.6
 .. _Issue: https://github.com/python-doc-tw/python-docs-zh-tw/issues
 .. _Telegram: https://t.me/PyDocT
 
-另外，此翻譯的領導人為 `adrianliaw<https://github.com/adrianliaw>`_，\
+另外，此翻譯的 coordinator 為 `adrianliaw <https://github.com/adrianliaw>`_，\
 您也可以透過此 email 聯繫：``adrianliaw2000 at gmail dot com``。
+
+
+額外翻譯資源
+------------
+
+- Telegram group `t.me/PyDocTW`_
+- `Doc-SIG mailing list <https://mail.python.org/mailman/listinfo/doc-sig>`_
+- `PEP 545 <https://www.python.org/dev/peps/pep-0545/>`_
+- 我們的 `Transifex 專案 <https://www.transifex.com/python-tw-doc/>`_
+- 我們在 Transifex 上的 `Glossary
+  <https://www.transifex.com/python-tw-doc/python-36-tw/glossary/zh-Hant/>`_
 
 
 授權與 License
