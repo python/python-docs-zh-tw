@@ -18,6 +18,7 @@
 CPYTHON_CLONE := ../cpython/
 SPHINX_CONF := $(CPYTHON_CLONE)/Doc/conf.py
 LANGUAGE := zh_TW
+LC_MESSAGES := $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/LC_MESSAGES
 VENV := ~/.venvs/python-docs-i18n/
 PYTHON := $(shell which python3)
 MODE := autobuild-dev-html
@@ -27,8 +28,9 @@ JOBS = 1
 
 .PHONY: all
 all: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb $(SPHINX_CONF)
-	mkdir -p $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/
-	ln -nfs $(shell pwd) $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/LC_MESSAGES
+	mkdir -p $(LC_MESSAGES)
+	for dirname in $$(find . -name '*.po' | xargs -n1 dirname | sort -u | grep -v '^\.$$'); do mkdir -p $(LC_MESSAGES)/$$dirname; done
+	for file in *.po */*.po; do ln -f $$file $(LC_MESSAGES)/$$file; done
 	. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D locale_dirs=locales -D language=$(LANGUAGE) -D gettext_compact=0' $(MODE)
 
 
