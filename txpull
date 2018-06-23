@@ -1,21 +1,26 @@
 #!/bin/sh
 
+set -e
+
 if [ -z "$1" ]; then
     echo "Usage: ./txpull <po file path> [<options or arguments for tx pull>]"
     exit 1
 fi
 
-if [ ! -f "$1" ]; then
-    echo "File $1 does not exist"
-    exit 1
+if [ -f "$1" ]; then
+  file=$1
+elif [ -n "$(cat .tx/config | grep "\[python-36-tw\.$1\]")" ]; then
+  file=$(cat .tx/config | grep -A 3 "\[python-36-tw\.$1]" | grep "trans.zh_TW = " | sed 's/trans\.zh_TW = //')
+else
+  echo "Cannot find file or resource $1"
+  exit 1
 fi
 
-file="$1"
+resource_slug=$(cat .tx/config | grep -B 3 $file | grep "python-36-tw" | head -n 1 | sed 's/\[\(.*\)\]/\1/')
 shift
 
-resource_slug="$(cat .tx/config | grep -B 3 $file | grep "python-36-tw" | head -n 1 | sed 's/\[\(.*\)\]/\1/')"
 if [ -z "$resource_slug" ]; then
-    echo "Resource of file $file not found"
+    echo "Cannot find resource slug of $file"
     exit 1
 fi
 
