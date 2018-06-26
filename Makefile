@@ -75,11 +75,11 @@ ifneq "$(shell cd $(CPYTHON_CLONE) 2>/dev/null && git describe --contains --all 
 	$(error "You're merging from a different branch")
 endif
 	(cd $(CPYTHON_CLONE)/Doc; rm -f build/NEWS)
-	(cd $(CPYTHON_CLONE); $(VENV)/bin/sphinx-build -Q -b gettext -D gettext_compact=0 Doc pot/)
-	find $(CPYTHON_CLONE)/pot/ -name '*.pot' |\
+	(cd $(CPYTHON_CLONE)/Doc; $(VENV)/bin/sphinx-build -Q -b gettext -D gettext_compact=0 . locales/pot/)
+	find $(CPYTHON_CLONE)/Doc/locales/pot/ -name '*.pot' |\
 	    while read -r POT;\
 	    do\
-	        PO="./$$(echo "$$POT" | sed "s#$(CPYTHON_CLONE)/pot/##; s#\.pot\$$#.po#")";\
+	        PO="./$$(echo "$$POT" | sed "s#$(CPYTHON_CLONE)/Doc/locales/pot/##; s#\.pot\$$#.po#")";\
 	        mkdir -p "$$(dirname "$$PO")";\
 	        if [ -f "$$PO" ];\
 	        then\
