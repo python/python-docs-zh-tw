@@ -96,8 +96,3 @@ endif
 .PHONY: fuzzy
 fuzzy:
 	for file in *.po */*.po; do echo $$(msgattrib --only-fuzzy --no-obsolete "$$file" | grep -c '#, fuzzy') $$file; done | grep -v ^0 | sort -gr
-
-
-.PHONY: clean
-clean:
-	rm *.mo */*.mo
