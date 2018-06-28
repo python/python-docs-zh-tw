@@ -10,13 +10,52 @@ branch 以查看目前的翻譯內容。此 master branch 則為專案的貢獻�
 Python 3.6 為翻譯的對象，**暫時不考慮 Python 2.7 的翻譯工作**。未來有新的
 Python 發行版本時，也將會將翻譯滾動至新的版本。
 
-
-在 Wiki_ 中有更多關於參加翻譯、翻譯風格規範、自行編譯文件等說明（待更新）。
-
 想問問題、認識翻譯同好，歡迎加入 Telegram 聊天室 `t.me/PyDocTW`_
 
-.. _Wiki: https://github.com/python-doc-tw/python-docs-zh-tw/wiki
 .. _t.me/PyDocTW: https://t.me/PyDocTW
+
+
+授權與 License
+==============
+
+以下為 Documentation Contribution Agreement，說明文件貢獻協議，請在貢獻以前\
+務必詳讀以下內容。原文後附有中文翻譯，但譯文不保證完全正確，請以原文為準。
+
+Documentation Contribution Agreement
+------------------------------------
+
+NOTE REGARDING THE LICENSE FOR TRANSLATIONS: Python's documentation is
+maintained using a global network of volunteers. By posting this
+project on Transifex, Github, and other public places, and inviting
+you to participate, we are proposing an agreement that you will
+provide your improvements to Python's documentation or the translation
+of Python's documentation for the PSF's use under the CC0 license
+(available at
+https://creativecommons.org/publicdomain/zero/1.0/legalcode). In
+return, you may publicly claim credit for the portion of the
+translation you contributed and if your translation is accepted by the
+PSF, you may (but are not required to) submit a patch including an
+appropriate annotation in the Misc/ACKS or TRANSLATORS file. Although
+nothing in this Documentation Contribution Agreement obligates the PSF
+to incorporate your textual contribution, your participation in the
+Python community is welcomed and appreciated.
+
+You signify acceptance of this agreement by submitting your work to
+the PSF for inclusion in the documentation.
+
+中文翻譯
+~~~~~~~~
+
+請注意此予翻譯專案的授權：Python 的說明文件是以全球的志工社群來維護。透過張貼\
+此專案在 Transifex、GitHub 以及其他公眾場合，以及邀請您參與，我們向您提出一個\
+協議：您必須將您對於 Python 說明文件或是 Python 說明文件翻譯的貢獻以 CC0\
+（請參考 https://creativecommons.org/publicdomain/zero/1.0/legalcode）的方式\
+授權給 PSF 使用。您可以公開地聲明您所貢獻翻譯的部分，並且如果您的翻譯被 PSF
+採用，您可以（但並不須要）送出一個修改，其包含在 Misc/ACKS 或是 TRANSLATORS
+檔案裡增加合適的注釋。雖然這個說明文件貢獻協議並沒有說明 PSF 有義務納入您的\
+文本貢獻，您在 Python 社群的參與是受歡迎且受感激的。
+
+您在對 PSF 送出說明文件貢獻的同時，即表示同意上述的協議。
 
 
 參加翻譯
@@ -82,6 +121,46 @@ pull request（記得 base 是此專案的其中一個 branch；目前只有 3.6
 執行完 ``poindent`` 以後即可 commit、push 等。
 
 
+翻譯守則
+--------
+
+#. 譯文應兼顧前後文大意。
+
+#. 中文句使用全形標點符號；英文句維持半形的標點符號。
+
+   例如：「」（）、，。
+
+   例如：Python is supported by Python Software Foundation (PSF).
+
+#. 中英文交雜時要插入空白；符號英文間不用。
+
+   例如：使用 CPU 運算、使用「CPU」運算
+
+#. 專有名詞應該參考 Transifex 上 Glossary 裡對照表的翻譯方式。
+
+#. 專有名詞可以選擇不翻譯。
+
+   例如：CPU、Unicode
+
+#. 在翻譯名稱不常用或不確定的情形，宜用括號註解或直接保留原文。單頁只要首次\
+   出現有註解即可。
+
+   例如：正規表示式 (regular expression)
+
+   例如：Network News Transfer Protocol、Portable Network Graphics
+   （可攜式網路圖形）
+
+#. 務必保留 reStructuredText 格式（如：超連結名稱）
+
+#. po 檔單行不應超過 79 字元寬度（可以使用 |poindent|_ 來確保格式）
+
+#. 高頻詞保留原文。因為翻譯後不一定能較好理解市面上 Python 的文章。 這些高頻詞\
+   在 Glossary 中的譯文仍保持原文，並加註市面上的翻譯。
+
+   例如：``int``、``float``、``str``、``bytes``、``list``、``tuple``、
+   ``dict``、``set``、``iterator``、``generator``、``iterable``
+
+
 問題回報與討論
 --------------
 
@@ -106,48 +185,40 @@ pull request（記得 base 是此專案的其中一個 branch；目前只有 3.6
   <https://www.transifex.com/python-tw-doc/python-36-tw/glossary/zh-Hant/>`_
 
 
-授權與 License
-==============
+維護、預覽
+==========
 
-以下為 Documentation Contribution Agreement，說明文件貢獻協議，請在貢獻以前\
-務必詳讀以下內容。（後面有中文翻譯）
+以下的指令皆預設在本機端 ``python-docs-zh-tw`` clone 的根目錄執行，同時預設\
+在同一個目錄底下有一個 CPython clone，如下：
 
-Documentation Contribution Agreement
-------------------------------------
+::
 
-NOTE REGARDING THE LICENSE FOR TRANSLATIONS: Python's documentation is
-maintained using a global network of volunteers. By posting this
-project on Transifex, Github, and other public places, and inviting
-you to participate, we are proposing an agreement that you will
-provide your improvements to Python's documentation or the translation
-of Python's documentation for the PSF's use under the CC0 license
-(available at
-https://creativecommons.org/publicdomain/zero/1.0/legalcode). In
-return, you may publicly claim credit for the portion of the
-translation you contributed and if your translation is accepted by the
-PSF, you may (but are not required to) submit a patch including an
-appropriate annotation in the Misc/ACKS or TRANSLATORS file. Although
-nothing in this Documentation Contribution Agreement obligates the PSF
-to incorporate your textual contribution, your participation in the
-Python community is welcomed and appreciated.
+  ~/
+  ├── python-docs-zh-tw/
+  └── cpython/
 
-You signify acceptance of this agreement by submitting your work to
-the PSF for inclusion in the documentation.
+若要在本機端 clone 一個 CPython，可以使用以下指令：
 
-中文翻譯（請盡量以原文為準）
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. code-block:: bash
 
-請注意此予翻譯專案的授權：Python 的說明文件是以全球的志工社群來維護。透過張貼\
-此專案在 Transifex、GitHub 以及其他公眾場合，以及邀請您參與，我們向您提出一個\
-協議：您必須將您對於 Python 說明文件或是 Python 說明文件翻譯的貢獻以 CC0\
-（請參考 https://creativecommons.org/publicdomain/zero/1.0/legalcode）的方式\
-授權給 PSF 使用。您可以公開地聲明您所貢獻翻譯的部分，並且如果您的翻譯被 PSF
-採用，您可以（但並不須要）送出一個修改，其包含在 Misc/ACKS 或是 TRANSLATORS
-檔案裡增加合適的注釋。雖然這個說明文件貢獻協議並沒有說明 PSF 有義務納入您的\
-文本貢獻，您在 Python 社群的參與是受歡迎且受感激的。
+  $ git clone --depth 1 --no-single-branch https://github.com/python/cpython.git
 
-您在對 PSF 送出說明文件貢獻的同時，即表示同意上述的協議。
+這樣可以避免下載完整的 commit 歷史（對輸出文件沒什麼幫助），但仍然能把所有的
+branch clone 下來。
 
+與 CPython 同步最新的 pot 檔
+----------------------------
+
+.. code-block:: bash
+
+  $ make merge
+
+本地端 build 文件
+-----------------
+
+.. code-block:: bash
+
+  $ make
 
 Acknowledgement
 ===============
