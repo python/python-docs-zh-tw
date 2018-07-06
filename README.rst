@@ -213,8 +213,23 @@ branch clone 下來。
 
   $ make merge
 
-本地端 build 文件
------------------
+尋找 fuzzy entries
+------------------
+
+*Fuzzy entries* 係指更新 po 檔的原始字串（*msgid*）以後，大部分內容相同但有\
+些許差異的字串，即表示該字串的翻譯需要更新。在 po 檔中，您會看到 ``#, fuzzy``
+的字樣，這就表示了接下來的字串是 fuzzy entry，需要更新翻譯。
+
+.. code-block:: bash
+
+  $ make fuzzy
+
+本地端編譯輸出文件
+------------------
+
+輸出的文件會被放置在您的本地端 CPython clone（見 `維護、預覽`_ 段落的圖示）\
+底下的 ``Doc/build/html``，切換到該目錄再使用 ``python3 -m http.server``
+或類似的靜態網頁伺服器即可以預覽成果。編譯程序則使用：
 
 .. code-block:: bash
 
