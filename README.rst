@@ -66,7 +66,7 @@ the PSF for inclusion in the documentation.
 ------------
 
 實際的翻譯即為修改 po 檔，流程遵照標準的 **GitHub Flow**，請 fork 此專案並在您\
-自己的 fork 裡新增一個 branch，修改 po 檔內容並 commit、push 以後對此專案發出
+自己的 fork 裡新增一個 branch，修改 po檔內容並 commit、push 以後對此專案發出
 pull request（記得 base 是此專案的其中一個 branch；目前只有 3.6），至少有一人\
 審查過翻譯以後，才可以 merge 進入此 repository 中。
 
@@ -235,6 +235,27 @@ branch clone 下來。
 .. code-block:: bash
 
   $ make
+
+
+Project History
+===============
+
+This translation project was created by Liang-Bo Wang in late-2015, the
+translations were hosted on https://docs.python.org.tw/3, and the project
+includes daily auto-build sever, documentation website enhancement for
+translations and project management on the `python-doc-tw
+<https://github.com/python-doc-tw>`_ GitHub organisation. The translations
+were done on Transifex, with `our own translation team and project
+<https://www.transifex.com/python-tw-doc>`_. People who've contributed
+on this Transifex project are listed in `TRANSLATORS`_
+
+.. _TRANSLATORS: TRANSLATORS
+
+In mid-2018, thanks to `PEP 545 <https://www.python.org/dev/peps/pep-0545/>`_
+and the Doc-SIG community, this project has migrated to Python's Github
+organisation and will become the official Taiwanese Mandarin translation of the
+documentation.
+
 
 Acknowledgement
 ===============
