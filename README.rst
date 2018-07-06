@@ -65,14 +65,18 @@ the PSF for inclusion in the documentation.
 如何參加翻譯
 ------------
 
-實際的翻譯即為修改 po 檔，流程遵照標準的 **GitHub Flow**，請 fork 此專案並在您\
-自己的 fork 裡新增一個 branch，修改 po檔內容並 commit、push 以後對此專案發出
-pull request（記得 base 是此專案的其中一個 branch；目前只有 3.6），至少有一人\
-審查過翻譯以後，才可以 merge 進入此 repository 中。
+實際的翻譯即為修改 po 檔，流程遵照標準的 `GitHub Flow
+<https://guides.github.com/introduction/flow/>`_，並且在翻譯任何部份以前新增\
+一個 issue 並且指定給自己，讓大家知道您正在翻譯該部分。詳細的步驟如下：
 
-在對任何檔案進行貢獻之前，請先在本專案\ **新增一個 issue**，註明您正在翻譯的頁面\
-名稱，並將該 issue **assign 給自己**，讓大家知道您正在修改該頁面，以避免多人\
-同時貢獻同一個檔案的衝突。
+- `新增一個 issue <https://github.com/python/python-docs-zh-tw/issues>`_ 並
+  assign 給自己，如：「翻譯 tutorial/introduction.po」
+- 在 GitHub 上 fork 此專案
+- 將您的 fork clone 一份到本機端
+- 新增一個 branch，所有新的變更將在這個 branch 上完成
+- 修改 po 檔的內容（參考下面的段落）
+- commit 您所修改的內容並且 push 到 GitHub
+- 對本專案發出 *Pull Request*
 
 編輯 po 檔的方式主要可以分為兩種，以 Transifex 作為工具或是使用其他翻譯工具：
 
@@ -120,6 +124,16 @@ pull request（記得 base 是此專案的其中一個 branch；目前只有 3.6
   $ poindent <po 檔的路徑>
 
 執行完 ``poindent`` 以後即可 commit、push 等。
+
+
+要翻譯哪些東西
+--------------
+
+最簡單的貢獻方式就是更新 *fuzzy entries*，讓翻譯的內容保持與最新版本的文件\
+同步。請參考 `尋找 fuzzy entries`_ 段落。
+
+此外，當前的目標為完成 **Tutorial** 的翻譯，因此在 ``tutorial/`` 底下的所有
+po 檔皆為首要的翻譯對象。您也可以幫忙校對已經翻譯過的內容。
 
 
 翻譯守則
