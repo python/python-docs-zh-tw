@@ -2,6 +2,10 @@
 Python 官方說明文件臺灣繁體中文翻譯計畫
 =======================================
 
+.. image:: https://badgen.now.sh/badge/chat/on%20Telegram/blue
+   :target: https://t.me/PyDocTW
+   :alt: Join Chat on Telegram
+
 本 GitHub repository 含有 Python 官方說明文件的 zh_TW 翻譯。實際的翻譯內容\
 在這個 repository 裡以 Python 的穩定發行版本作為 branch 名稱，請參考 3.6 等
 branch 以查看目前的翻譯內容。此 master branch 則為專案的貢獻說明。
