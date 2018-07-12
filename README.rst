@@ -84,11 +84,11 @@ the PSF for inclusion in the documentation.
 
 編輯 po 檔的方式主要可以分為兩種，以 Transifex 作為工具或是使用其他翻譯工具：
 
-1. 使用 Transifex 作為翻譯工具
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+1. 使用 Transifex 作為翻譯工具（不建議）
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-您可以註冊 Transifex 帳號並加入我們的 `Transifex 專案
-<https://www.transifex.com/python-tw-doc/python-36-tw>`_，並且在上面\
+您可以註冊 Transifex 帳號並申請加入官方的 `Transifex 專案
+<https://www.transifex.com/python-doc/python-newest>`_，並且在上面\
 編輯您所要翻譯的頁面，並且在您本機上透過 command line 從此專案的 clone 的\
 根目錄位置執行以下指令：
 
@@ -103,10 +103,10 @@ the PSF for inclusion in the documentation.
 .. |gettext| replace:: ``gettext``
 .. _gettext: https://www.gnu.org/software/gettext/
 
-2. 使用其他翻譯工具
-~~~~~~~~~~~~~~~~~~~
+2. 使用其他翻譯工具（建議）
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-使用 Transifex 並非強迫性，您可以使用其他翻譯工具，如：
+您可以使用以下工具在本機端翻譯 po 檔內容：
 
 - 推薦：`poedit <https://www.poedit.net/>`_
 - gted
@@ -118,7 +118,7 @@ the PSF for inclusion in the documentation.
 - 可能還有更多其他的
 
 編輯完檔案以後，請執行以下指令以確保檔案的換行格式一致（需要安裝
-|poindent|_）：
+|poindent|_ ：``pip install poindent``）：
 
 .. |poindent| replace:: ``poindent``
 .. _poindent: https://pypi.org/project/poindent/
@@ -155,7 +155,7 @@ po 檔皆為首要的翻譯對象。您也可以幫忙校對已經翻譯過的�
 
    例如：使用 CPU 運算、使用「CPU」運算
 
-#. 專有名詞應該參考 Transifex 上 Glossary 裡對照表的翻譯方式。
+#. 專有名詞應該參考 `術語表 Glossary`_ 裡翻譯方式。
 
 #. 專有名詞可以選擇不翻譯。
 
@@ -180,6 +180,50 @@ po 檔皆為首要的翻譯對象。您也可以幫忙校對已經翻譯過的�
    ``dict``、``set``、``iterator``、``generator``、``iterable``
 
 
+術語表 Glossary
+---------------
+
+為了讓翻譯保持統一，我們在這邊整理了一個術語列表，如果您有不同意的地方，歡迎\
+打開一個 issue 或是 pull request 一起討論。
+
+===================== =====================
+原文                  翻譯
+===================== =====================
+argument              引數
+attribute             屬性
+boolean               boolean（布林）
+class                 class（類別）
+condition             條件
+contributor           貢獻者
+deprecated            已棄用
+dictionary            dictionary（字典）
+element               元素
+exception             例外
+expression            運算式
+float                 float（浮點數）
+function              函式
+import                import（不翻譯）
+index                 索引
+instance              實例
+int                   int（整數）
+interpreter           直譯器
+iterate               疊代
+list                  list（串列）
+loop                  迴圈
+method                method（方法）
+module                module（模組）
+object                物件
+operand               運算元
+operator              運算子
+parameter             參數
+prompt                提示字元
+return                回傳
+set                   set（集合）
+statement             陳述式
+type                  型別
+===================== =====================
+
+
 問題回報與討論
 --------------
 
@@ -199,9 +243,6 @@ po 檔皆為首要的翻譯對象。您也可以幫忙校對已經翻譯過的�
 - Telegram group `t.me/PyDocTW`_
 - `Doc-SIG mailing list <https://mail.python.org/mailman/listinfo/doc-sig>`_
 - `PEP 545 <https://www.python.org/dev/peps/pep-0545/>`_
-- 我們的 `Transifex 專案 <https://www.transifex.com/python-tw-doc/>`_
-- 我們在 Transifex 上的 `Glossary
-  <https://www.transifex.com/python-tw-doc/python-36-tw/glossary/zh-Hant/>`_
 
 
 維護、預覽
