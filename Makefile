@@ -93,6 +93,14 @@ endif
 	    done
 
 
+.PHONY: update_txconfig
+update_txconfig:
+	curl -L https://rawgit.com/python-doc-ja/cpython-doc-catalog/catalog-$(BRANCH)/Doc/locales/.tx/config |\
+		grep --invert-match '^file_filter = *' |\
+		sed -e 's/source_file = pot\/\(.*\)\.pot/trans.zh_TW = \1.po/' |\
+		sed -n 'w .tx/config'
+
+
 .PHONY: fuzzy
 fuzzy:
 	for file in *.po */*.po; do echo $$(msgattrib --only-fuzzy --no-obsolete "$$file" | grep -c '#, fuzzy') $$file; done | grep -v ^0 | sort -gr
