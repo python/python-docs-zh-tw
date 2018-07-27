@@ -6,13 +6,11 @@ Python 官方說明文件臺灣繁體中文翻譯計畫
    :target: https://t.me/PyDocTW
    :alt: Join Chat on Telegram
 
-本 GitHub repository 含有 Python 官方說明文件的 zh_TW 翻譯。實際的翻譯內容\
-在這個 repository 裡以 Python 的穩定發行版本作為 branch 名稱，請參考 3.7 等
-branch 以查看目前的翻譯內容。此 master branch 則為專案的貢獻說明。
+這是 Python 3.7 官方說明文件的臺灣繁體中文（zh_TW）翻譯。
 
-您可以在 https://python-doc-tw.github.io/ 瀏覽目前翻譯的成果。目前以
-Python 3.7 為翻譯的對象，**暫時不考慮 Python 2.7 的翻譯工作**。未來有新的
-Python 發行版本時，也將會將翻譯滾動至新的版本。
+翻譯之前，請務必詳讀並同意\ `授權與 License`_。參與方式請參考\ `參加翻譯`_。
+
+您可以在 https://python-doc-tw.github.io/ 瀏覽目前翻譯的成果。
 
 想問問題、認識翻譯同好，歡迎加入 Telegram 聊天室 `t.me/PyDocTW`_
 
@@ -69,65 +67,87 @@ the PSF for inclusion in the documentation.
 如何參加翻譯
 ------------
 
-實際的翻譯即為修改 po 檔，流程遵照標準的 `GitHub Flow
-<https://guides.github.com/introduction/flow/>`_，並且在翻譯任何部份以前新增\
-一個 issue 並且指定給自己，讓大家知道您正在翻譯該部分。詳細的步驟如下：
+**事先需要有：**
 
-- `新增一個 issue <https://github.com/python/python-docs-zh-tw/issues>`_ 並
-  assign 給自己，如：「翻譯 tutorial/introduction.po」
-- 在 GitHub 上 fork 此專案
-- 將您的 fork clone 一份到本機端
-- 新增一個 branch，所有新的變更將在這個 branch 上完成
-- 修改 po 檔的內容（參考下面的段落）
-- commit 您所修改的內容並且 push 到 GitHub
-- 對本專案發出 *Pull Request*
+- 一個 `GitHub 帳號 <https://github.com/join>`_
+- `安裝好 git <https://help.github.com/articles/set-up-git/>`_\ （Windows
+  上請參考 https://gitforwindows.org/）
+- 一個 ``.po`` 檔的編輯器，如果還沒有的話請使用 `poedit <https://poedit.net>`_
 
-編輯 po 檔的方式主要可以分為兩種，以 Transifex 作為工具或是使用其他翻譯工具：
+在進行任何動作以前，你必須在 GitHub 上 fork 此專案（按下右上角的 ``Fork``
+按鈕），這樣會把整個專案複製一份到你的 GitHub 帳號底下，你可以對這個 fork
+進行修改。
 
-1. 使用 Transifex 作為翻譯工具（不建議）
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-您可以註冊 Transifex 帳號並申請加入官方的 `Transifex 專案
-<https://www.transifex.com/python-doc/python-newest>`_，並且在上面\
-編輯您所要翻譯的頁面，並且在您本機上透過 command line 從此專案的 clone 的\
-根目錄位置執行以下指令：
+在\ **第一次貢獻以前**\ （還沒有 clone 過），請在 terminal 裡依照以下步驟：
 
 .. code-block:: bash
 
-  $ ./txpull <po 檔的路徑>
+  # 用 git clone 將你的 fork 下載到本機端
+  git clone git@github.com:<你的 GitHub 帳號>/python-docs-zh-tw.git
 
-此指令會需要 PyPI 上的 ``transifex-client`` 和 ``poindent``，|gettext|_、
-``tac`` 等指令。這個小工具可以幫您把您在 Transifex 上針對特定檔案的翻譯 pull
-下來，並且修正換行格式的錯誤。您在使用 txpull 以後就可以 commit 以及 push 了。
+  # 進入 clone 下來的資料夾裡：
+  cd python-docs-zh-tw/
 
-.. |gettext| replace:: ``gettext``
-.. _gettext: https://www.gnu.org/software/gettext/
+  # 將 python/python-docs-zh-tw 設為 upstream remote
+  git remote add upstream https://github.com/python/python-docs-zh-tw.git
 
-2. 使用其他翻譯工具（建議）
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+在\ **每一次翻譯時**\ 請遵照以下步驟（`GitHub Flow`_）：
 
-您可以使用以下工具在本機端翻譯 po 檔內容：
+.. _GitHub Flow: https://guides.github.com/introduction/flow/
 
-- 推薦：`poedit <https://www.poedit.net/>`_
-- gted
-- gtranslator
-- lokalize
-- betterpoeditor
-- 適當模式底下的 vim 或 emacs
-- Vé on Android
-- 可能還有更多其他的
+首先，`新增一個 issue <https://github.com/python/python-docs-zh-tw/issues>`_\
+，如：「翻譯 tutorial/introduction.po」，讓大家知道您正在翻譯這個檔案。
 
-編輯完檔案以後，請執行以下指令以確保檔案的換行格式一致（需要安裝
-|poindent|_ ：``pip install poindent``）：
+接著在 terminal 裡按照以下步驟：
 
-.. |poindent| replace:: ``poindent``
-.. _poindent: https://pypi.org/project/poindent/
+1. 基於最新版本的 ``upstream/3.7`` 開啟一個 branch，現在假設我們想要翻譯 Glossary
+   所以把這個 branch 叫做 ``glossary`` ::
 
-.. code-block:: bash
+    git fetch upstream
+    git checkout -b glossary upstream/3.7
 
-  $ poindent <po 檔的路徑>
+2. 接著就可以開始翻譯，你可以使用 Poedit 應用程式將檔案打開，或是用以下指令\
+   （翻譯不同檔案時將 glossary 換成別的檔名） ::
 
-執行完 ``poindent`` 以後即可 commit、push 等。
+    poedit glossary.po
+
+3. 存檔以後，可以輸出文件以確保你的修改沒有 rST 的語法錯誤或警告 ::
+
+    make
+
+   這個過程中 Sphinx 會幫你檢查 rST 語法錯誤，我們盡量保持沒有 warning
+   的狀態，因此如果有出現 warning 的話請修復它。另外也記得檢查是否符合\
+   `翻譯守則`_
+
+4. 在瀏覽器中打開編譯出來的文件以確認整份文件的語意通暢\
+   （翻譯別的檔案時將 glossary 換成別的檔名） ::
+
+    open ../cpython/Doc/build/html/glossary.html
+
+5. 檢查完畢後，即可以將你的翻譯 commit 起來，請使用明確的 commit message ::
+
+    git add glossary.po
+    git commit -m "Working on glossary."
+
+6. 將你的修改 push 到你的 GitHub clone 上。為了簡單，我們可以用 ``origin HEAD``
+   來告訴 git 我們將修改 push 到 origin，branch 則和本機端的 branch 名稱一樣 ::
+
+    git push origin HEAD
+
+7. 這時候你就可以打開一個 pull request 了，請打開
+   https://github.com/python/python-docs-zh-tw，你會看到一個「Compare & Pull
+   Request」按鈕，按下它就可以對此專案發送一個 pull request。
+
+8. 如果有人在 GitHub 上 review 了你的 pull request，並且你想要修改你的內容，\
+   那麼（如果你切換到了別的 branch 上）你要先切換回到你的 branch 上 ::
+
+    git checkout glossary
+
+   接著修改你要修正的問題，並再次 commit、push ::
+
+    git add glossary.po
+    git commit -m "glossary: small fixes"
+    git push origin HEAD
 
 
 要翻譯哪些東西
@@ -143,7 +163,7 @@ po 檔皆為首要的翻譯對象。您也可以幫忙校對已經翻譯過的�
 翻譯守則
 ========
 
-#. 譯文應兼顧前後文大意。
+#. 譯文應兼顧前後文大意，在翻譯一份文件前請務必熟讀該文件的原文。
 
 #. 中文句使用全形標點符號；英文句維持半形的標點符號。
 
@@ -171,7 +191,8 @@ po 檔皆為首要的翻譯對象。您也可以幫忙校對已經翻譯過的�
 
 #. 務必保留 reStructuredText 格式（如：超連結名稱）
 
-#. po 檔單行不應超過 79 字元寬度（可以使用 |poindent|_ 來確保格式）
+#. po 檔單行不應超過 79 字元寬度（Poedit 會處理，但也可以使用 `poindent
+   <https://pypi.org/project/poindent/>`_ 來確保格式）
 
 #. 高頻詞保留原文。因為翻譯後不一定能較好理解市面上 Python 的文章。 這些高頻詞\
    在 Glossary 中的譯文仍保持原文，並加註市面上的翻譯。
@@ -322,6 +343,9 @@ type                  型別
 - Telegram group `t.me/PyDocTW`_
 - `Doc-SIG mailing list <https://mail.python.org/mailman/listinfo/doc-sig>`_
 - `PEP 545 <https://www.python.org/dev/peps/pep-0545/>`_
+- `zh_CN Translation of the Python Documentation
+  <https://zhsj.github.io/python-docs-zh-cn/>`_
+- `Cambridge Dictionary <https://dictionary.cambridge.org/>`_
 
 
 維護、預覽
