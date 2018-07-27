@@ -149,6 +149,12 @@ the PSF for inclusion in the documentation.
     git commit -m "glossary: small fixes"
     git push origin HEAD
 
+這整個流程裡有幾件事情值得注意：
+
+- 從 upstream（我們的主要 GitHub repo）做 fetch 的動作
+- 對 origin（你的 fork）做 push
+- 永遠不對 ``3.7`` branch 進行修改，請保持讓這個 branch 唯讀，可以避免\
+  掉很多問題。
 
 要翻譯哪些東西
 --------------
