@@ -120,7 +120,7 @@ the PSF for inclusion in the documentation.
 3. 存檔以後，可以輸出文件以確保你的修改沒有 rST 的語法錯誤或警告 ::
 
     make
-   
+
    這個過程中 Sphinx 會幫你檢查 rST 語法錯誤，我們盡量保持沒有 warning
    的狀態，因此如果有出現 warning 的話請修復它。另外也記得檢查是否符合\
    `翻譯守則`_
