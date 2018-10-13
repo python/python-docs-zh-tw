@@ -73,7 +73,7 @@ the PSF for inclusion in the documentation.
 - `安裝好 git <https://help.github.com/articles/set-up-git/>`_\ （Windows
   上請參考 https://gitforwindows.org/）
 - 一個 ``.po`` 檔的編輯器，如果還沒有的話請使用 `poedit <https://poedit.net>`_
-- MacOS 的使用者還需要先利用 homebrew 安裝 gettext ，屆時 Sphinx 會使用到。
+- MacOS 的使用者還需要先利用 `homebrew <https://brew.sh/index_zh-tw>`_ 安裝 gettext ，屆時 Sphinx 會使用到。
 .. code-block:: bash
 
   brew install gettext
