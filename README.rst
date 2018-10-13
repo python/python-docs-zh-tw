@@ -74,6 +74,7 @@ the PSF for inclusion in the documentation.
   上請參考 https://gitforwindows.org/）
 - 一個 ``.po`` 檔的編輯器，如果還沒有的話請使用 `poedit <https://poedit.net>`_
 - MacOS 的使用者還需要先利用 homebrew 安裝 gettext ，屆時使用 Sphinx 會用到。
+
 .. code-block:: bash
   brew install gettext
 
