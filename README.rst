@@ -73,6 +73,11 @@ the PSF for inclusion in the documentation.
 - `安裝好 git <https://help.github.com/articles/set-up-git/>`_\ （Windows
   上請參考 https://gitforwindows.org/）
 - 一個 ``.po`` 檔的編輯器，如果還沒有的話請使用 `poedit <https://poedit.net>`_
+- MacOS 的使用者還需要先利用 homebrew 安裝 gettext ，屆時使用 Sphinx 會用到。
+.. code-block:: bash
+  brew install gettext
+
+  brew link gettext --force
 
 在進行任何動作以前，你必須在 GitHub 上 fork 此專案（按下右上角的 ``Fork``
 按鈕），這樣會把整個專案複製一份到你的 GitHub 帳號底下，你可以對這個 fork
@@ -114,7 +119,7 @@ the PSF for inclusion in the documentation.
 3. 存檔以後，可以輸出文件以確保你的修改沒有 rST 的語法錯誤或警告 ::
 
     make
-
+   
    這個過程中 Sphinx 會幫你檢查 rST 語法錯誤，我們盡量保持沒有 warning
    的狀態，因此如果有出現 warning 的話請修復它。另外也記得檢查是否符合\
    `翻譯守則`_
