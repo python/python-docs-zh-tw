@@ -303,6 +303,7 @@ rST 語法注意事項
 ===================== =====================
 argument              引數
 attribute             屬性
+approximate           近似
 boolean               boolean（布林）
 class                 class（類別）
 condition             條件
