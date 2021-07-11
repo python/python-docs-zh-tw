@@ -15,23 +15,24 @@
 #
 # Credits: Python Documentation French Translation Team (https://github.com/python/python-docs-fr)
 
+SHELL = C:/Program Files/Git/bin/bash.exe
 CPYTHON_CLONE := ../cpython/
 SPHINX_CONF := $(CPYTHON_CLONE)/Doc/conf.py
 LANGUAGE := zh_TW
 LC_MESSAGES := $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/LC_MESSAGES
 VENV := ~/.venvs/python-docs-i18n/
-PYTHON := $(shell which python3)
+PYTHON := $(shell which python)
 MODE := autobuild-dev-html
 BRANCH = $(shell git describe --contains --all HEAD)
 JOBS = 1
 
 
 .PHONY: all
-all: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb $(SPHINX_CONF)
+all: $(VENV)/Scripts/sphinx-build $(VENV)/Scripts/blurb $(SPHINX_CONF)
 	mkdir -p $(LC_MESSAGES)
 	for dirname in $$(find . -name '*.po' | xargs -n1 dirname | sort -u | grep -v '^\.$$'); do mkdir -p $(LC_MESSAGES)/$$dirname; done
 	for file in *.po */*.po; do ln -f $$file $(LC_MESSAGES)/$$file; done
-	. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D locale_dirs=locales -D language=$(LANGUAGE) -D gettext_compact=0' $(MODE)
+	. $(VENV)/Scripts/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D locale_dirs=locales -D language=$(LANGUAGE) -D gettext_compact=0' $(MODE)
 
 
 $(SPHINX_CONF):
@@ -39,27 +40,30 @@ $(SPHINX_CONF):
 	cd $(CPYTHON_CLONE) && git checkout $(BRANCH)
 
 
-$(VENV)/bin/activate:
+$(VENV)/Scripts/activate:
 	mkdir -p $(VENV)
 	$(PYTHON) -m venv $(VENV)
 
 
-$(VENV)/bin/sphinx-build: $(VENV)/bin/activate
-	. $(VENV)/bin/activate; python3 -m pip install sphinx python-docs-theme
+$(VENV)/Scripts/sphinx-build: $(VENV)/Scripts/activate
+	. $(VENV)/Scripts/activate; $(PYTHON) -m pip install sphinx python-docs-theme
 
 
-$(VENV)/bin/blurb: $(VENV)/bin/activate
-	. $(VENV)/bin/activate; python3 -m pip install blurb
+$(VENV)/Scripts/blurb: $(VENV)/Scripts/activate
+	. $(VENV)/Scripts/activate; $(PYTHON) -m pip install blurb
 
 
 .PHONY: upgrade_venv
-upgrade_venv: $(VENV)/bin/activate
-	. $(VENV)/bin/activate; python3 -m pip install --upgrade sphinx python-docs-theme blurb
+upgrade_venv: $(VENV)/Scripts/activate
+	. $(VENV)/Scripts/activate; $(PYTHON) -m pip install --upgrade python-docs-theme blurb
+	$(PYTHON) -m pip install -U pip setuptools
+	$(PYTHON) -m pip install -r $(CPYTHON_CLONE)/Doc/requirements.txt
+	@echo "The venv has been created in the $(VENV) directory"
 
 
 .PHONY: progress
 progress:
-	@python3 -c 'import sys; print("{:.1%}".format(int(sys.argv[1]) / int(sys.argv[2])))'  \
+	@python -c 'import sys; print("{:.1%}".format(int(sys.argv[1]) / int(sys.argv[2])))'  \
 	$(shell msgcat *.po */*.po | msgattrib --translated | grep -c '^msgid') \
 	$(shell msgcat *.po */*.po | grep -c '^msgid')
 
@@ -75,7 +79,7 @@ ifneq "$(shell cd $(CPYTHON_CLONE) 2>/dev/null && git describe --contains --all 
 	$(error "You're merging from a different branch")
 endif
 	(cd $(CPYTHON_CLONE)/Doc; rm -f build/NEWS)
-	(cd $(CPYTHON_CLONE)/Doc; $(VENV)/bin/sphinx-build -Q -b gettext -D gettext_compact=0 . locales/pot/)
+	(cd $(CPYTHON_CLONE)/Doc; $(VENV)/Scripts/sphinx-build -Q -b gettext -D gettext_compact=0 . locales/pot/)
 	find $(CPYTHON_CLONE)/Doc/locales/pot/ -name '*.pot' |\
 	    while read -r POT;\
 	    do\
