@@ -22,7 +22,7 @@ LC_MESSAGES := $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/LC_MESSAGES
 VENV := ~/.venvs/python-docs-i18n/
 PYTHON := $(shell which python3)
 MODE := autobuild-dev-html
-BRANCH = $(shell git describe --contains --all HEAD)
+BRANCH := $(or $(VERSION), $(shell git describe --contains --all HEAD))
 JOBS = 1
 
 
