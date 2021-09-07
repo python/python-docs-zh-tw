@@ -1,0 +1,52 @@
+name: python-3.9-sync-with-cpython
+
+on:
+  push:
+    branches:
+      - "3.9"
+  schedule:
+    - cron: "0 0 * * *"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      VERSION: "3.9"
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ env.VERSION }}
+
+      - name: Set env
+        run: echo "LATEST_COMMIT_ID=$(git ls-remote https://github.com/python/CPython.git $VERSION | head -c 8)" >> $GITHUB_ENV
+
+      - name: Install Dependencies
+        run: sudo apt-get install gettext
+
+      - name: Sync with CPython
+        run: make clone && make merge && make rm_cpython
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@v3
+        with:
+          commit-message: sync with cpython ${{ env.LATEST_COMMIT_ID }}
+          committer: GitHub <noreply@github.com>
+          author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
+          base: ${{ env.VERSION }}
+          branch: cron/sync/${{ env.VERSION }}
+          delete-branch: true
+          title: 'Sync with CPython ${{ env.VERSION }}'
+          body: |
+            Sync with CPython ${{ env.VERSION }}
+          labels: |
+            sync-cpython
+            automation
+          team-reviewers: |
+            owners
+            maintainers
+          
+      - name: Check outputs
+        run: |
+          echo "Pull Request Number - ${{ steps.cpr.outputs.pull-request-number }}"
+          echo "Pull Request URL - ${{ steps.cpr.outputs.pull-request-url }}"
