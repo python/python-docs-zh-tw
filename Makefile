@@ -23,20 +23,20 @@ LC_MESSAGES := $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/LC_MESSAGES
 VENV := ~/.venvs/python-docs-i18n/
 PYTHON := $(shell which python)
 MODE := autobuild-dev-html
-BRANCH = $(shell git describe --contains --all HEAD)
+BRANCH := $(or $(VERSION), $(shell git describe --contains --all HEAD))
 JOBS = 1
 
 
 .PHONY: all
-all: $(VENV)/Scripts/sphinx-build $(VENV)/Scripts/blurb $(SPHINX_CONF)
+all: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone
 	mkdir -p $(LC_MESSAGES)
 	for dirname in $$(find . -name '*.po' | xargs -n1 dirname | sort -u | grep -v '^\.$$'); do mkdir -p $(LC_MESSAGES)/$$dirname; done
 	for file in *.po */*.po; do ln -f $$file $(LC_MESSAGES)/$$file; done
 	. $(VENV)/Scripts/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D locale_dirs=locales -D language=$(LANGUAGE) -D gettext_compact=0' $(MODE)
 
 
-$(SPHINX_CONF):
-	git clone --depth 1 --no-single-branch https://github.com/python/cpython.git $(CPYTHON_CLONE)
+clone:
+	git clone --depth 1 --no-single-branch https://github.com/python/cpython.git $(CPYTHON_CLONE)  || echo "cpython exists"
 	cd $(CPYTHON_CLONE) && git checkout $(BRANCH)
 
 
@@ -108,3 +108,7 @@ update_txconfig:
 .PHONY: fuzzy
 fuzzy:
 	for file in *.po */*.po; do echo $$(msgattrib --only-fuzzy --no-obsolete "$$file" | grep -c '#, fuzzy') $$file; done | grep -v ^0 | sort -gr
+
+.PHONY: rm_cpython
+rm_cpython:
+	rm -rf $(CPYTHON_CLONE)
