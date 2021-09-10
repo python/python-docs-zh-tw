@@ -10,7 +10,7 @@ Python 官方說明文件臺灣繁體中文翻譯計畫
 
 翻譯之前，請務必詳讀並同意\ `授權與 License`_。參與方式請參考\ `參加翻譯`_。
 
-您可以在 https://python-doc-tw.github.io/ 瀏覽目前翻譯的成果。
+您可以在 https://python.github.io/python-docs-zh-tw/ 瀏覽目前翻譯的成果。
 
 想問問題、認識翻譯同好，歡迎加入 Telegram 聊天室 `t.me/PyDocTW`_
 

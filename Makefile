@@ -84,11 +84,11 @@ endif
 	        if [ -f "$$PO" ];\
 	        then\
 	            case "$$POT" in\
-	            *whatsnew*) msgmerge --backup=off --force-po --no-fuzzy-matching -U "$$PO" "$$POT" ;;\
-	            *)          msgmerge --backup=off --force-po -U "$$PO" "$$POT" ;;\
+	            *whatsnew*) msgmerge --lang=$(LANGUAGE) --backup=off --force-po --no-fuzzy-matching -U "$$PO" "$$POT" ;;\
+	            *)          msgmerge --lang=$(LANGUAGE) --backup=off --force-po -U "$$PO" "$$POT" ;;\
 	            esac\
 	        else\
-	            msgcat -o "$$PO" "$$POT";\
+	            msgcat --lang=$(LANGUAGE) -o "$$PO" "$$POT";\
 	        fi\
 	    done
 
