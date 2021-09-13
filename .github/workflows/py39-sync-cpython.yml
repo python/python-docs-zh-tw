@@ -12,10 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     env:
       VERSION: "3.9"
+      BRANCH: "cron/sync/3.9"
     steps:
       - uses: actions/checkout@v2
         with:
           ref: ${{ env.VERSION }}
+
+      - name: Get the changes on branch (if exists)
+        continue-on-error: true
+        run: |
+          git fetch origin ${{ env.BRANCH }}:${{ env.BRANCH }}
+          git reset --hard ${{ env.BRANCH }}
 
       - name: Set env
         run: echo "LATEST_COMMIT_ID=$(git ls-remote https://github.com/python/CPython.git $VERSION | head -c 8)" >> $GITHUB_ENV
@@ -41,8 +48,8 @@ jobs:
           committer: GitHub <noreply@github.com>
           author: github-actions[bot] <github-actions[bot]@users.noreply.github.com>
           base: ${{ env.VERSION }}
-          branch: cron/sync/${{ env.VERSION }}
-          delete-branch: true
+          branch: ${{ env.BRANCH }}
+          delete-branch: false
           title: 'Sync with CPython ${{ env.VERSION }}'
           body: |
             Sync with CPython ${{ env.VERSION }}
