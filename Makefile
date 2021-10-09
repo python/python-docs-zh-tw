@@ -28,7 +28,7 @@ JOBS = 1
 
 
 .PHONY: all
-all: $(VENV)/Scripts/sphinx-build $(VENV)/bin/blurb clone
+all: $(VENV)/Scripts/sphinx-build $(VENV)/Scripts/blurb clone
 	mkdir -p $(LC_MESSAGES)
 	for dirname in $$(find . -name '*.po' | xargs -n1 dirname | sort -u | grep -v '^\.$$'); do mkdir -p $(LC_MESSAGES)/$$dirname; done
 	for file in *.po */*.po; do ln -f $$file $(LC_MESSAGES)/$$file; done
