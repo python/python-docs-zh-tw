@@ -8,7 +8,7 @@ Python 官方說明文件臺灣繁體中文翻譯計畫
 
 這是 Python 3.9 官方說明文件的臺灣繁體中文（zh_TW）翻譯。
 
-翻譯之前，請務必詳讀並同意\ `授權與 License`_。參與方式請參考\ `參加翻譯`_。
+翻譯之前，請務必詳讀並同意\ `授權與 License`_。參與方式請參考\ `參與翻譯`_。
 
 您可以在 https://python.github.io/python-docs-zh-tw/ 瀏覽目前翻譯的成果。
 
@@ -61,10 +61,10 @@ the PSF for inclusion in the documentation.
 您在對 PSF 送出說明文件貢獻的同時，即表示同意上述的協議。
 
 
-參加翻譯
+參與翻譯
 ========
 
-如何參加翻譯
+如何參與翻譯
 ------------
 
 **事先需要有：**
@@ -385,6 +385,9 @@ branch clone 下來。
 與 CPython 同步最新的 pot 檔
 ----------------------------
 
+pot 檔為翻譯的樣板檔案，它包含需要翻譯的原始字串 (*msgid*) 跟其對應的空白翻譯字串 (*msgstr*)，\
+此步驟會更新 po 檔，我們在 po 檔的每一個 (*msgstr*) 填上翻譯。
+
 .. code-block:: bash
 
   $ make merge
@@ -392,7 +395,7 @@ branch clone 下來。
 尋找 fuzzy entries
 ------------------
 
-*Fuzzy entries* 係指更新 po 檔的原始字串（*msgid*）以後，大部分內容相同但有\
+*Fuzzy entries* 是指更新 po 檔的原始字串（*msgid*）以後，大部分內容相同但有\
 些許差異的字串，即表示該字串的翻譯需要更新。在 po 檔中，您會看到 ``#, fuzzy``
 的字樣，這就表示了接下來的字串是 fuzzy entry，需要更新翻譯。
 
