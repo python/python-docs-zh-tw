@@ -80,7 +80,7 @@ the PSF for inclusion in the documentation.
 - `安裝好 git <https://help.github.com/articles/set-up-git/>`_\ （Windows
   上請參考 https://gitforwindows.org/）
 - 一個 ``.po`` 檔的編輯器。推薦使用 `Poedit <https://poedit.net>`_，若熟悉 po 檔用一般文字編輯器亦可。
-- macOS 的使用者還需要先利用 `homebrew <https://brew.sh/index_zh-tw>`_ 安裝 gettext ，屆時 Sphinx 會使用到。
+- macOS 的使用者還需要先利用 `homebrew <https://brew.sh/index_zh-tw>`_ 安裝 gettext，屆時 Sphinx 會使用到。
 .. code-block:: bash
 
   brew install gettext
@@ -404,7 +404,7 @@ branch clone 下來。
 ----------------------------------------------------------
 
 pot 檔為翻譯的樣板檔案，它包含需要翻譯的原始字串 (*msgid*) 跟其對應的空白翻譯字串 (*msgstr*)，\
-此步驟會參考最新的 Cpython 中的 pot 檔來更新 po 檔。如果是之前在 po 檔中已填入過翻議字串但參考的 \
+此步驟會參考最新的 CPython 中的 pot 檔來更新 po 檔。如果是之前在 po 檔中已填入過翻議字串但參考的 \
 pot 檔的 ``msgid`` 已有變動，則此指令會自動加上 ``#, fuzzy`` 的標記，代表內容有些許差異需要更新。
 
 .. code-block:: bash
