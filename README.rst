@@ -125,7 +125,7 @@ the PSF for inclusion in the documentation.
     git fetch upstream
     git checkout -b glossary upstream/3.9
 
-2. 接著就可以開始翻譯，你可以手動開啟 Poedit 應用程式再選檔案或用以下指令請 Poedit 將檔案\
+2. 接著就可以開始翻譯（翻譯時可參考`翻譯守則`_），你可以手動開啟 Poedit 應用程式再選檔案或用以下指令請 Poedit 將檔案\
    打開，翻譯不同檔案時將 glossary 換成別的檔名） ::
 
     poedit glossary.po
