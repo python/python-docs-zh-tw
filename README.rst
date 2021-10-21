@@ -183,8 +183,8 @@ the PSF for inclusion in the documentation.
 
 主要是填入翻譯字串 (*msgid*) 以及更新有標記為 ``#, fuzzy`` 的字串。
 
-其中最簡單的貢獻方式就是更新 *fuzzy entries*，讓翻譯的內容保持與最新版本的文件\
-同步。請參考 `尋找 fuzzy entries`_ 段落。
+其中最簡單的貢獻方式就是更新 *fuzzy entries*，讓曾經翻譯的內容保持與最新版本的文件\
+同步。請參考 `尋找有翻譯過但需校閱的 fuzzy entries`_ 段落。
 
 此外，當前的目標為完成 **Tutorial** 的翻譯，因此在 ``tutorial/`` 底下的所有
 po 檔皆為首要的翻譯對象。您也可以幫忙校對已經翻譯過的內容。
@@ -400,7 +400,7 @@ type                  型別
 這樣可以避免下載完整的 commit 歷史（對輸出文件沒什麼幫助），但仍然能把所有的
 branch clone 下來。
 
-與 CPython 同步最新的 pot 檔 (目前由 GitHub Actions 代為執行)
+與 CPython 同步最新的 pot 檔 (目前由 GitHub Actions 定時代為執行)
 ----------------------------------------------------------
 
 pot 檔為翻譯的樣板檔案，它包含需要翻譯的原始字串 (*msgid*) 跟其對應的空白翻譯字串 (*msgstr*)，\
@@ -411,11 +411,12 @@ pot 檔的 ``msgid`` 已有變動，則此指令會自動加上 ``#, fuzzy`` 的
 
   $ make merge
 
-尋找 fuzzy entries
-------------------
+尋找有翻譯過但需校閱的 fuzzy entries
+---------------------------------
 
 在 po 檔中，您會看到 ``#, fuzzy`` 的字樣，這就表示了接下來的字串是 fuzzy entry，需要更新翻譯。\
-執行下列指令會列出有 *Fuzzy entries* 的檔案。
+您可以自行用習慣的文字編輯器、Linux 指令搜尋有包含此字樣的檔案，但請記得 ``#, fuzzy`` 標記的翻譯字串\
+有可能是尚未翻譯過的空白字串 (*msgstr*)。執行下列指令會列出有 *Fuzzy entries* 的檔案且會排除這個情形。
 
 .. code-block:: bash
 
