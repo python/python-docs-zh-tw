@@ -362,7 +362,7 @@ type                  型別
 幫助，則可以使用 Telegram_。
 
 .. _Issue: https://github.com/python-doc-tw/python-docs-zh-tw/issues
-.. _Telegram: https://t.me/PyDocT
+.. _Telegram: https://t.me/PyDocTW
 
 另外，此翻譯的 coordinator 為 `adrianliaw <https://github.com/adrianliaw>`_，\
 您也可以透過此 email 聯繫：``adrianliaw2000 at gmail dot com``。
