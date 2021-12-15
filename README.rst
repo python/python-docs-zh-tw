@@ -10,7 +10,7 @@ Python 官方說明文件臺灣繁體中文翻譯計畫
 
 翻譯之前，請務必詳讀並同意\ `授權與 License`_。參與方式請參考\ `參與翻譯`_。
 
-您可以在 https://python.github.io/python-docs-zh-tw/ 瀏覽目前翻譯的成果。
+你可以在 https://python.github.io/python-docs-zh-tw/ 瀏覽目前翻譯的成果。
 
 想問問題、認識翻譯同好，歡迎加入 Telegram 聊天室 `t.me/PyDocTW`_
 
@@ -50,15 +50,15 @@ the PSF for inclusion in the documentation.
 ~~~~~~~~
 
 請注意此予翻譯專案的授權：Python 的說明文件是以全球的志工社群來維護。透過張貼\
-此專案在 Transifex、GitHub 以及其他公眾場合，以及邀請您參與，我們向您提出一個\
-協議：您必須將您對於 Python 說明文件或是 Python 說明文件翻譯的貢獻以 CC0\
+此專案在 Transifex、GitHub 以及其他公眾場合，以及邀請你參與，我們向你提出一個\
+協議：你必須將你對於 Python 說明文件或是 Python 說明文件翻譯的貢獻以 CC0\
 （請參考 https://creativecommons.org/publicdomain/zero/1.0/legalcode）的方式\
-授權給 PSF 使用。您可以公開地聲明您所貢獻翻譯的部分，並且如果您的翻譯被 PSF
-採用，您可以（但並不須要）送出一個修改，其包含在 Misc/ACKS 或是 TRANSLATORS
-檔案裡增加合適的注釋。雖然這個說明文件貢獻協議並沒有說明 PSF 有義務納入您的\
-文本貢獻，您在 Python 社群的參與是受歡迎且受感激的。
+授權給 PSF 使用。你可以公開地聲明你所貢獻翻譯的部分，並且如果你的翻譯被 PSF
+採用，你可以（但並不須要）送出一個修改，其包含在 Misc/ACKS 或是 TRANSLATORS
+檔案裡增加合適的注釋。雖然這個說明文件貢獻協議並沒有說明 PSF 有義務納入你的\
+文本貢獻，你在 Python 社群的參與是受歡迎且受感激的。
 
-您在對 PSF 送出說明文件貢獻的同時，即表示同意上述的協議。
+你在對 PSF 送出說明文件貢獻的同時，即表示同意上述的協議。
 
 
 參與翻譯
@@ -115,7 +115,7 @@ the PSF for inclusion in the documentation.
 .. _GitHub Flow: https://guides.github.com/introduction/flow/
 
 首先，`新增一個 issue <https://github.com/python/python-docs-zh-tw/issues>`_\
-，如：「翻譯 tutorial/introduction.po」，讓大家知道您正在翻譯這個檔案。
+，如：「翻譯 tutorial/introduction.po」，讓大家知道你正在翻譯這個檔案。
 
 接著在 terminal 裡按照以下步驟：
 
@@ -139,7 +139,7 @@ the PSF for inclusion in the documentation.
    的狀態，因此如果有出現 warning 的話請修復它。另外也記得檢查是否符合\
    `翻譯守則`_
 
-4. 輸出的文件會被放置在您的本地端 CPython clone（見 `維護、預覽`_ 段落的圖示）\
+4. 輸出的文件會被放置在你的本地端 CPython clone（見 `維護、預覽`_ 段落的圖示）\
    底下的 ``Doc/build/html``，切換到該目錄再使用 ``python3 -m http.server`` \
    或類似的靜態網頁伺服器即可以預覽成果。你可以執行下列指令請瀏覽器打開編譯出來的文件\
    以確認整份文件的語意通暢（翻譯別的檔案時將 glossary 換成別的檔名） ::
@@ -187,7 +187,7 @@ the PSF for inclusion in the documentation.
 同步。請參考 `尋找有翻譯過但需校閱的 fuzzy entries`_ 段落。
 
 此外，當前的目標為完成 **Tutorial** 的翻譯，因此在 ``tutorial/`` 底下的所有
-po 檔皆為首要的翻譯對象。您也可以幫忙校對已經翻譯過的內容。
+po 檔皆為首要的翻譯對象。你也可以幫忙校對已經翻譯過的內容。
 
 
 翻譯守則
@@ -313,7 +313,7 @@ rST 語法注意事項
 術語表 Glossary
 ===============
 
-為了讓翻譯保持統一，我們在這邊整理了一個術語列表，如果您有不同意的地方，歡迎\
+為了讓翻譯保持統一，我們在這邊整理了一個術語列表，如果你有不同意的地方，歡迎\
 打開一個 issue 或是 pull request 一起討論。
 
 ===================== =====================
@@ -365,7 +365,7 @@ type                  型別
 .. _Telegram: https://t.me/PyDocTW
 
 另外，此翻譯的 coordinator 為 `mattwang44 <https://github.com/mattwang44>`_ 和 \
-`josix <https://github.com/josix>`_，您也可以分別透過以下 email 聯繫：\
+`josix <https://github.com/josix>`_，你也可以分別透過以下 email 聯繫：\
 ``mattwang44 at gmail dot com``, ``josixwang at gmail dot com``。
 
 
@@ -415,8 +415,8 @@ pot 檔的 ``msgid`` 已有變動，則此指令會自動加上 ``#, fuzzy`` 的
 尋找有翻譯過但需校閱的 fuzzy entries
 ---------------------------------
 
-在 po 檔中，您會看到 ``#, fuzzy`` 的字樣，這就表示了接下來的字串是 fuzzy entry，需要更新翻譯。\
-您可以自行用習慣的文字編輯器、Linux 指令搜尋有包含此字樣的檔案，但請記得 ``#, fuzzy`` 標記的翻譯字串\
+在 po 檔中，你會看到 ``#, fuzzy`` 的字樣，這就表示了接下來的字串是 fuzzy entry，需要更新翻譯。\
+你可以自行用習慣的文字編輯器、Linux 指令搜尋有包含此字樣的檔案，但請記得 ``#, fuzzy`` 標記的翻譯字串\
 有可能是尚未翻譯過的空白字串 (*msgstr*)。執行下列指令會列出有 *Fuzzy entries* 的檔案且會排除這個情形。
 
 .. code-block:: bash
