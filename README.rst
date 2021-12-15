@@ -361,7 +361,7 @@ type                  型別
 如果有需要共同討論的問題，請開設一個新的 Issue_。如果是翻譯上遇到困難需要\
 幫助，則可以使用 Telegram_。
 
-.. _Issue: https://github.com/python-doc-tw/python-docs-zh-tw/issues
+.. _Issue: https://github.com/python/python-docs-zh-tw/issues
 .. _Telegram: https://t.me/PyDocTW
 
 另外，此翻譯的 coordinator 為 `mattwang44 <https://github.com/mattwang44>`_ 和 \
