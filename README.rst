@@ -313,46 +313,12 @@ rST 語法注意事項
 術語表 Glossary
 ===============
 
-為了讓翻譯保持統一，我們在這邊整理了一個術語列表，如果你有不同意的地方，歡迎\
-打開一個 issue 或是 pull request 一起討論。
+為了讓翻譯保持統一，我們整理了一份 `術語列表 
+<https://airtable.com/shrHlRP52bZ9C7aY3/tbl7dhPe9Ph9XIAy3>`_ \
+如果翻譯過程中你覺得需要術語列表有所缺漏，請填寫 `術語列表擴充表單 \
+<https://airtable.com/shr6sU4HHSKAz0Y7J>`_。新增的術語，將會於每次\
+Sprint中共同討論是否合併進術語列表。
 
-===================== =====================
-原文                  翻譯
-===================== =====================
-argument              引數
-attribute             屬性
-approximate           近似
-boolean               boolean（布林）
-class                 class（類別）
-condition             條件
-contributor           貢獻者
-deprecated            已棄用
-dictionary            dictionary（字典）
-element               元素
-exception             例外
-expression            運算式
-float                 float（浮點數）
-function              函式
-import                import（不翻譯）
-index                 索引
-instance              實例
-int                   int（整數）
-interpreter           直譯器
-iterate               疊代
-list                  list（串列）
-loop                  迴圈
-method                method（方法）
-module                module（模組）
-object                物件
-operand               運算元
-operator              運算子
-parameter             參數
-prompt                提示字元
-return                回傳
-set                   set（集合）
-statement             陳述式
-type                  型別
-===================== =====================
 
 
 問題回報與討論
