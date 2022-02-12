@@ -132,7 +132,7 @@ the PSF for inclusion in the documentation.
 
 3. 存檔以後，執行以下列指令編譯輸出文件，以確保你的修改沒有 rST 的語法錯誤或警告 ::
 
-    make
+    make all
 
    如果你還沒有執行 `維護、預覽`_ 的 clone CPython 的動作，此指令會自動幫你 clone CPython，\
    並且會使用 Sphinx 幫你檢查 rST 語法錯誤，我們盡量保持沒有 warning \
