@@ -2,9 +2,9 @@
 Python 官方說明文件臺灣繁體中文翻譯計畫
 =======================================
 
-.. image:: https://badgen.now.sh/badge/chat/on%20Telegram/blue
-   :target: https://t.me/PyDocTW
-   :alt: Join Chat on Telegram
+.. image:: https://badgen.net/badge/chat/on%20Discord/blue
+   :target: https://discord.gg/44XheGXhWH
+   :alt: Join Chat on Discord
 
 這是 Python 3.10 官方說明文件的臺灣繁體中文（zh_TW）翻譯。
 
@@ -12,9 +12,9 @@ Python 官方說明文件臺灣繁體中文翻譯計畫
 
 你可以在 https://python.github.io/python-docs-zh-tw/ 瀏覽目前翻譯的成果。
 
-想問問題、認識翻譯同好，歡迎加入 Telegram 聊天室 `t.me/PyDocTW`_
+想問問題、認識翻譯同好，歡迎加入 Discord 頻道 `discord.gg/44XheGXhWH`_
 
-.. _t.me/PyDocTW: https://t.me/PyDocTW
+.. _discord.gg/44XheGXhWH: https://discord.gg/44XheGXhWH
 
 .. contents:: **目錄 Table of Contents**
 
@@ -132,7 +132,7 @@ the PSF for inclusion in the documentation.
 
 3. 存檔以後，執行以下列指令編譯輸出文件，以確保你的修改沒有 rST 的語法錯誤或警告 ::
 
-    make
+    make all
 
    如果你還沒有執行 `維護、預覽`_ 的 clone CPython 的動作，此指令會自動幫你 clone CPython，\
    並且會使用 Sphinx 幫你檢查 rST 語法錯誤，我們盡量保持沒有 warning \
@@ -228,7 +228,8 @@ po 檔皆為首要的翻譯對象。你也可以幫忙校對已經翻譯過的�
    在 Glossary 中的譯文仍保持原文，並加註市面上的翻譯。
 
    例如：``int``、``float``、``str``、``bytes``、``list``、``tuple``、
-   ``dict``、``set``、``iterator``、``generator``、``iterable``
+   ``dict``、``set``、``iterator``、``generator``、``iterable``、
+   ``pickle``
 
 
 括號的使用
@@ -313,56 +314,22 @@ rST 語法注意事項
 術語表 Glossary
 ===============
 
-為了讓翻譯保持統一，我們在這邊整理了一個術語列表，如果你有不同意的地方，歡迎\
-打開一個 issue 或是 pull request 一起討論。
+為了讓翻譯保持統一，我們整理了一份 `術語列表 
+<https://airtable.com/shrHlRP52bZ9C7aY3/tbl7dhPe9Ph9XIAy3>`_ \
+如果翻譯過程中你覺得需要術語列表有所缺漏，請填寫 `術語列表擴充表單 \
+<https://airtable.com/shr6sU4HHSKAz0Y7J>`_。新增的術語，將會於每次\
+Sprint中共同討論是否合併進術語列表。
 
-===================== =====================
-原文                  翻譯
-===================== =====================
-argument              引數
-attribute             屬性
-approximate           近似
-boolean               boolean（布林）
-class                 class（類別）
-condition             條件
-contributor           貢獻者
-deprecated            已棄用
-dictionary            dictionary（字典）
-element               元素
-exception             例外
-expression            運算式
-float                 float（浮點數）
-function              函式
-import                import（不翻譯）
-index                 索引
-instance              實例
-int                   int（整數）
-interpreter           直譯器
-iterate               疊代
-list                  list（串列）
-loop                  迴圈
-method                method（方法）
-module                module（模組）
-object                物件
-operand               運算元
-operator              運算子
-parameter             參數
-prompt                提示字元
-return                回傳
-set                   set（集合）
-statement             陳述式
-type                  型別
-===================== =====================
 
 
 問題回報與討論
 ==============
 
 如果有需要共同討論的問題，請開設一個新的 Issue_。如果是翻譯上遇到困難需要\
-幫助，則可以使用 Telegram_。
+幫助，則可以使用 Discord_。
 
 .. _Issue: https://github.com/python/python-docs-zh-tw/issues
-.. _Telegram: https://t.me/PyDocTW
+.. _Discord: https://discord.gg/44XheGXhWH
 
 另外，此翻譯的 coordinator 為 `mattwang44 <https://github.com/mattwang44>`_ 和 \
 `josix <https://github.com/josix>`_，你也可以分別透過以下 email 聯繫：\
@@ -372,7 +339,7 @@ type                  型別
 額外翻譯資源
 ============
 
-- Telegram group `t.me/PyDocTW`_
+- Discord channel `discord.gg/44XheGXhWH`_
 - `Doc-SIG mailing list <https://mail.python.org/mailman/listinfo/doc-sig>`_
 - `PEP 545 <https://www.python.org/dev/peps/pep-0545/>`_
 - `zh_CN Translation of the Python Documentation
