@@ -800,7 +800,7 @@ msgstr ""
 
 #: ../../faq/design.rst:456
 msgid "Why must dictionary keys be immutable?"
-msgstr ""
+msgstr "為何字典的鍵一定是不可變的？"
 
 #: ../../faq/design.rst:458
 msgid ""
@@ -814,6 +814,11 @@ msgid ""
 "be found either, because the value of the object found in that hash bin "
 "would be different."
 msgstr ""
+"實作字典用的雜湊表是根據鍵的值做計算從而找到鍵的。如果鍵可變的話，他的值就可"
+"以改變，則雜湊的結果也會一起變動。但改變鍵的物件的人無從得知他被用來當成字典"
+"的鍵，所以無法修改字典的內容。然後，當你嘗試在字典中尋找這個物件時，因為雜湊"
+"值不同的緣故，你找不到他。而如果你嘗試用舊的值去尋找，也一樣找不到，因為他的"
+"雜湊結果和原先物件不同。"
 
 #: ../../faq/design.rst:467
 msgid ""
@@ -822,16 +827,20 @@ msgid ""
 "as the list ``L``.  Tuples are immutable and can therefore be used as "
 "dictionary keys."
 msgstr ""
+"如果你想要用串列作為字典的索引，把他轉換成值組即可。``tuple(L)`` 函式會建立一"
+"個和串列 ``L`` 一樣內容的值組。而值組式不可變的，所以可以用來當成字典的鍵。"
 
 #: ../../faq/design.rst:471
 msgid "Some unacceptable solutions that have been proposed:"
-msgstr ""
+msgstr "也有人提出一些不能接受的方法："
 
 #: ../../faq/design.rst:473
 msgid ""
 "Hash lists by their address (object ID).  This doesn't work because if you "
 "construct a new list with the same value it won't be found; e.g.::"
 msgstr ""
+"用串列的記憶體位址（物件 id）來雜湊。這不會成功，因為你如果用同樣的值建立一個"
+"新的串列，是找不到的。舉例來說："
 
 #: ../../faq/design.rst:479
 msgid ""
@@ -840,6 +849,8 @@ msgid ""
 "words, dictionary keys should be compared using ``==``, not using :keyword:"
 "`is`."
 msgstr ""
+"這將會導致 :exc:`KeyError` 例外，因為 ``[1, 2]`` 的 id 在第一行和第二行是不同"
+"的。換句話說，字典的鍵應該要用 ``==`` 來做比較，而不是用 :keyword:`is`。"
 
 #: ../../faq/design.rst:483
 msgid ""
@@ -847,6 +858,8 @@ msgid ""
 "being a mutable object, could contain a reference to itself, and then the "
 "copying code would run into an infinite loop."
 msgstr ""
+"複製一個串列作為鍵。這一樣不會成功，因為串列是可變的，他可以包含自己的參照，"
+"所以複製會形成一個無窮迴圈。"
 
 #: ../../faq/design.rst:487
 msgid ""
@@ -855,6 +868,9 @@ msgid ""
 "by accident. It also invalidates an important invariant of dictionaries: "
 "every value in ``d.keys()`` is usable as a key of the dictionary."
 msgstr ""
+"允許串列作為鍵，但告訴使用者不要更動他。當你不小心忘記或是更動了這個串列，會"
+"產生一種難以追蹤的 bug。他同時也違背了一項字典的重要定則：在 ``d.keys()`` 的"
+"每個值都可以當成字典的鍵。"
 
 #: ../../faq/design.rst:492
 msgid ""
@@ -865,6 +881,9 @@ msgid ""
 "read-only -- and again, self-referential objects could cause an infinite "
 "loop."
 msgstr ""
+"一旦串列被當成鍵，把他標記成只能讀取。問題是，這不只要避免最上層的物件改變"
+"值，就像用值組包含串列來做為鍵。把一個物件當成鍵，需要將從他開始可以接觸到的"
+"所有物件都標記成只能讀取 — 所以再一次，自己參照自己的物件會導致無窮迴圈。"
 
 #: ../../faq/design.rst:498
 msgid ""
@@ -875,6 +894,12 @@ msgid ""
 "dictionary (or other hash based structure), remain fixed while the object is "
 "in the dictionary (or other structure). ::"
 msgstr ""
+"如果你需要的話，這裡有個小技巧可以幫你，但請自己承擔風險：你可以把一個可變物"
+"件包裝進一個有 :meth:`__eq__` 和 :meth:`__hash__` 方法的類別。只要這種包裝物"
+"件還存在於字典（或其他類似結構）中，你就必須確定在字典（或其他用雜湊為基底的"
+"結構）中他們的雜湊值會保持恆定。\n"
+"\n"
+"::"
 
 #: ../../faq/design.rst:522
 msgid ""
@@ -882,6 +907,8 @@ msgid ""
 "members of the list may be unhashable and also by the possibility of "
 "arithmetic overflow."
 msgstr ""
+"請注意，雜湊的計算可能變得複雜，因為有串列成員不可雜湊 (unhashable) 和算術溢"
+"位的可能性。"
 
 #: ../../faq/design.rst:526
 msgid ""
@@ -891,6 +918,10 @@ msgid ""
 "not.  If you fail to meet these restrictions dictionaries and other hash "
 "based structures will misbehave."
 msgstr ""
+"此外，不管物件是否在字典中，如果 ``o1 == o2``（即 ``o1.__eq__(o2) is "
+"True``），則 ``hash(o1) == hash(o2)``（即 ``o1.__hash__() == o2."
+"__hash__()``），這個事實必須要成立。如果無法滿足這項限制，那字典和其他用雜湊"
+"為基底的結構會出現不正常的行為。"
 
 #: ../../faq/design.rst:531
 msgid ""
@@ -899,6 +930,9 @@ msgid ""
 "you are prepared to think hard about the requirements and the consequences "
 "of not meeting them correctly.  Consider yourself warned."
 msgstr ""
+"至於 ListWrapper，只要這個包裝過的物件在字典中，裡面的串列就不能改變以避免不"
+"正常的事情發生。除非你已經謹慎思考過你的需求和無法滿足條件的後果，不然請不要"
+"這麼做。請自行注意。"
 
 #: ../../faq/design.rst:538
 msgid "Why doesn't list.sort() return the sorted list?"
