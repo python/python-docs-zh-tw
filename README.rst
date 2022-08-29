@@ -181,7 +181,7 @@ the PSF for inclusion in the documentation.
 要翻譯哪些東西
 --------------
 
-主要是填入翻譯字串 (*msgid*) 以及更新有標記為 ``#, fuzzy`` 的字串。
+主要是填入翻譯字串 (*msgstr*) 以及更新有標記為 ``#, fuzzy`` 的字串。
 
 其中最簡單的貢獻方式就是更新 *fuzzy entries*，讓曾經翻譯的內容保持與最新版本的文件\
 同步。請參考 `尋找有翻譯過但需校閱的 fuzzy entries`_ 段落。
