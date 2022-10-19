@@ -67,7 +67,7 @@ $(VENV)/bin/activate:
 
 
 $(VENV)/bin/sphinx-build: $(VENV)/bin/activate
-	. $(VENV)/bin/activate; python3 -m pip install sphinx python-docs-theme
+	. $(VENV)/bin/activate; python3 -m pip install "sphinx<6" python-docs-theme
 
 
 $(VENV)/bin/blurb: $(VENV)/bin/activate
