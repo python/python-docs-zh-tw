@@ -1,0 +1,808 @@
+
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>同步化原始物件 (Synchronization Primitives) &#8212; Python 3.11.0rc2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?2022.1" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/translations.js"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.11.0rc2 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權" href="../copyright.html" />
+    <link rel="next" title="子行程" href="asyncio-subprocess.html" />
+    <link rel="prev" title="串流" href="asyncio-stream.html" />
+    <link rel="canonical" href="https://docs.python.org/3/library/asyncio-sync.html" />
+    
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="shortcut icon" type="image/png" href="../_static/py.svg" />
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script> 
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="Menu" />
+    <label for="menuToggler" class="toggler__label">
+        <span></span>
+    </label>
+    <nav class="nav-content" role="navigation">
+         <a href="https://www.python.org/" class="nav-logo">
+             <img src="../_static/py.svg" alt="Logo"/>
+         </a>
+        <div class="version_switcher_placeholder"></div>
+        <form role="search" class="search" action="../search.html" method="get">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                <path fill-rule="nonzero"
+                        d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="#444"></path>
+            </svg>
+            <input type="text" name="q" aria-label="快速搜尋"/>
+            <input type="submit" value="前往"/>
+        </form>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">同步化原始物件 (Synchronization Primitives)</a><ul>
+<li><a class="reference internal" href="#lock">Lock</a><ul>
+<li><a class="reference internal" href="#asyncio.Lock"><code class="docutils literal notranslate"><span class="pre">Lock</span></code></a><ul>
+<li><a class="reference internal" href="#asyncio.Lock.acquire"><code class="docutils literal notranslate"><span class="pre">Lock.acquire()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Lock.release"><code class="docutils literal notranslate"><span class="pre">Lock.release()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Lock.locked"><code class="docutils literal notranslate"><span class="pre">Lock.locked()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#event">Event</a><ul>
+<li><a class="reference internal" href="#asyncio.Event"><code class="docutils literal notranslate"><span class="pre">Event</span></code></a><ul>
+<li><a class="reference internal" href="#asyncio.Event.wait"><code class="docutils literal notranslate"><span class="pre">Event.wait()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Event.set"><code class="docutils literal notranslate"><span class="pre">Event.set()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Event.clear"><code class="docutils literal notranslate"><span class="pre">Event.clear()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Event.is_set"><code class="docutils literal notranslate"><span class="pre">Event.is_set()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#condition">Condition</a><ul>
+<li><a class="reference internal" href="#asyncio.Condition"><code class="docutils literal notranslate"><span class="pre">Condition</span></code></a><ul>
+<li><a class="reference internal" href="#asyncio.Condition.acquire"><code class="docutils literal notranslate"><span class="pre">Condition.acquire()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Condition.notify"><code class="docutils literal notranslate"><span class="pre">Condition.notify()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Condition.locked"><code class="docutils literal notranslate"><span class="pre">Condition.locked()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Condition.notify_all"><code class="docutils literal notranslate"><span class="pre">Condition.notify_all()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Condition.release"><code class="docutils literal notranslate"><span class="pre">Condition.release()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Condition.wait"><code class="docutils literal notranslate"><span class="pre">Condition.wait()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Condition.wait_for"><code class="docutils literal notranslate"><span class="pre">Condition.wait_for()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#semaphore">Semaphore</a><ul>
+<li><a class="reference internal" href="#asyncio.Semaphore"><code class="docutils literal notranslate"><span class="pre">Semaphore</span></code></a><ul>
+<li><a class="reference internal" href="#asyncio.Semaphore.acquire"><code class="docutils literal notranslate"><span class="pre">Semaphore.acquire()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Semaphore.locked"><code class="docutils literal notranslate"><span class="pre">Semaphore.locked()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Semaphore.release"><code class="docutils literal notranslate"><span class="pre">Semaphore.release()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#boundedsemaphore">BoundedSemaphore</a><ul>
+<li><a class="reference internal" href="#asyncio.BoundedSemaphore"><code class="docutils literal notranslate"><span class="pre">BoundedSemaphore</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#barrier">Barrier</a><ul>
+<li><a class="reference internal" href="#asyncio.Barrier"><code class="docutils literal notranslate"><span class="pre">Barrier</span></code></a><ul>
+<li><a class="reference internal" href="#asyncio.Barrier.wait"><code class="docutils literal notranslate"><span class="pre">Barrier.wait()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Barrier.reset"><code class="docutils literal notranslate"><span class="pre">Barrier.reset()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Barrier.abort"><code class="docutils literal notranslate"><span class="pre">Barrier.abort()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Barrier.parties"><code class="docutils literal notranslate"><span class="pre">Barrier.parties</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Barrier.n_waiting"><code class="docutils literal notranslate"><span class="pre">Barrier.n_waiting</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Barrier.broken"><code class="docutils literal notranslate"><span class="pre">Barrier.broken</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#asyncio.BrokenBarrierError"><code class="docutils literal notranslate"><span class="pre">BrokenBarrierError</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="asyncio-stream.html"
+                          title="上一章">串流</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="asyncio-subprocess.html"
+                          title="下一章">子行程</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/asyncio-sync.rst"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="asyncio-subprocess.html" title="子行程"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="asyncio-stream.html" title="串流"
+             accesskey="P">上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="python logo" style="vertical-align: middle; margin-top: -1px"/></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.11.0rc2 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="ipc.html" >Networking and Interprocess Communication</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="asyncio.html" accesskey="U"><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code> --- 非同步 I/O</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">同步化原始物件 (Synchronization Primitives)</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜尋" aria-label="快速搜尋" type="text" name="q" />
+          <input type="submit" value="前往" />
+          <input type="hidden" name="check_keywords" value="yes" />
+          <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+                     |
+                </li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="synchronization-primitives">
+<span id="asyncio-sync"></span><h1>同步化原始物件 (Synchronization Primitives)<a class="headerlink" href="#synchronization-primitives" title="本標頭的永久連結">¶</a></h1>
+<p><strong>原始碼：</strong><a class="reference external" href="https://github.com/python/cpython/tree/3.11/Lib/asyncio/locks.py">Lib/asyncio/locks.py</a></p>
+<hr class="docutils" />
+<p>asyncio 的同步化原始物件被設計成和那些 <a class="reference internal" href="threading.html#module-threading" title="threading: Thread-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code></a> 模組 (module) 中的同名物件相似，但有兩個重要的限制條件：</p>
+<ul class="simple">
+<li><p>asyncio 原始物件並不支援執行緒安全 (thread-safe)，因此他們不可被用於 OS 執行緒同步化（請改用 <a class="reference internal" href="threading.html#module-threading" title="threading: Thread-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code></a>）；</p></li>
+<li><p>這些同步化原始物件的方法 (method) 並不接受 <em>timeout</em> 引數；要達成有超時 (timeout) 設定的操作請改用 <a class="reference internal" href="asyncio-task.html#asyncio.wait_for" title="asyncio.wait_for"><code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.wait_for()</span></code></a> 函式。</p></li>
+</ul>
+<p>asyncio 有以下基礎同步化原始物件：</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#asyncio.Lock" title="asyncio.Lock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lock</span></code></a></p></li>
+<li><p><a class="reference internal" href="#asyncio.Event" title="asyncio.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a></p></li>
+<li><p><a class="reference internal" href="#asyncio.Condition" title="asyncio.Condition"><code class="xref py py-class docutils literal notranslate"><span class="pre">Condition</span></code></a></p></li>
+<li><p><a class="reference internal" href="#asyncio.Semaphore" title="asyncio.Semaphore"><code class="xref py py-class docutils literal notranslate"><span class="pre">Semaphore</span></code></a></p></li>
+<li><p><a class="reference internal" href="#asyncio.BoundedSemaphore" title="asyncio.BoundedSemaphore"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoundedSemaphore</span></code></a></p></li>
+<li><p><a class="reference internal" href="#asyncio.Barrier" title="asyncio.Barrier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Barrier</span></code></a></p></li>
+</ul>
+<hr class="docutils" />
+<section id="lock">
+<h2>Lock<a class="headerlink" href="#lock" title="本標頭的永久連結">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="asyncio.Lock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">Lock</span></span><a class="headerlink" href="#asyncio.Lock" title="本定義的永久連結">¶</a></dt>
+<dd><p>實作了一個給 asyncio 任務 (task) 用的互斥鎖 (mutex lock)。不支援執行緒安全。</p>
+<p>一個 asyncio 的鎖可以用來確保一個共享資源的存取權被獨佔。</p>
+<p>使用 Lock 的推薦方式是透過 <a class="reference internal" href="../reference/compound_stmts.html#async-with"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">async</span> <span class="pre">with</span></code></a> 陳述式：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">lock</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+<span class="c1"># ... later</span>
+<span class="k">async</span> <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
+    <span class="c1"># access shared state</span>
+</pre></div>
+</div>
+<p>這等價於：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">lock</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+<span class="c1"># ... later</span>
+<span class="k">await</span> <span class="n">lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># access shared state</span>
+<span class="k">finally</span><span class="p">:</span>
+    <span class="n">lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.10 版本變更: </span>移除 <code class="docutils literal notranslate"><span class="pre">loop</span></code> 參數。</p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Lock.acquire">
+<em class="property"><span class="pre">coroutine</span> </em><span class="sig-name descname"><span class="pre">acquire</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Lock.acquire" title="本定義的永久連結">¶</a></dt>
+<dd><p>獲得鎖。</p>
+<p>此方法會持續等待直到鎖的狀態成為 <em>unlocked</em>，並將其設置為 <em>locked</em> 和回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+<p>當多於一個的協程 (coroutine) 在 <a class="reference internal" href="#asyncio.Lock.acquire" title="asyncio.Lock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> 中等待解鎖而被阻塞，最終只會有其中的一個被處理。</p>
+<p>鎖的獲取方式是<em>公平</em>的：被處理的協程會是最早開始等待解鎖的那一個。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Lock.release">
+<span class="sig-name descname"><span class="pre">release</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Lock.release" title="本定義的永久連結">¶</a></dt>
+<dd><p>釋放鎖。</p>
+<p>如果鎖的狀態為 <em>locked</em> 則將其重置為 <em>unlocked</em> 並回傳。</p>
+<p>如果鎖的狀態為 <em>unlocked</em> 則 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> 會被引發。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Lock.locked">
+<span class="sig-name descname"><span class="pre">locked</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Lock.locked" title="本定義的永久連結">¶</a></dt>
+<dd><p>如果鎖的狀態為 <em>locked</em> 則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="event">
+<h2>Event<a class="headerlink" href="#event" title="本標頭的永久連結">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="asyncio.Event">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">Event</span></span><a class="headerlink" href="#asyncio.Event" title="本定義的永久連結">¶</a></dt>
+<dd><p>一個事件 (event) 物件。不支援執行緒安全。</p>
+<p>一個 asyncio 事件可以被用於通知多個有發生某些事件於其中的 asyncio 任務。</p>
+<p>一個 Event 物件會管理一個內部旗標 (flag)，它可以透過 <a class="reference internal" href="#asyncio.Event.set" title="asyncio.Event.set"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set()</span></code></a> 方法來被設為 <em>true</em> 並透過 <a class="reference internal" href="#asyncio.Event.clear" title="asyncio.Event.clear"><code class="xref py py-meth docutils literal notranslate"><span class="pre">clear()</span></code></a> 方法來重置為 <em>false</em>。<a class="reference internal" href="#asyncio.Event.wait" title="asyncio.Event.wait"><code class="xref py py-meth docutils literal notranslate"><span class="pre">wait()</span></code></a> 方法會被阻塞 (block) 直到該旗標被設為 <em>true</em>。該旗標初始設置為 <em>false</em>。</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.10 版本變更: </span>移除 <code class="docutils literal notranslate"><span class="pre">loop</span></code> 參數。</p>
+</div>
+<p id="asyncio-example-sync-event">範例：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">waiter</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;waiting for it ...&#39;</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">event</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;... got it!&#39;</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="c1"># Create an Event object.</span>
+    <span class="n">event</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Event</span><span class="p">()</span>
+
+    <span class="c1"># Spawn a Task to wait until &#39;event&#39; is set.</span>
+    <span class="n">waiter_task</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">waiter</span><span class="p">(</span><span class="n">event</span><span class="p">))</span>
+
+    <span class="c1"># Sleep for 1 second and set the event.</span>
+    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">event</span><span class="o">.</span><span class="n">set</span><span class="p">()</span>
+
+    <span class="c1"># Wait until the waiter task is finished.</span>
+    <span class="k">await</span> <span class="n">waiter_task</span>
+
+<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Event.wait">
+<em class="property"><span class="pre">coroutine</span> </em><span class="sig-name descname"><span class="pre">wait</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Event.wait" title="本定義的永久連結">¶</a></dt>
+<dd><p>持續等待直到事件被設置。</p>
+<p>如果事件有被設置則立刻回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。否則持續阻塞直到另一個任務呼叫 <a class="reference internal" href="#asyncio.Event.set" title="asyncio.Event.set"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set()</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Event.set">
+<span class="sig-name descname"><span class="pre">set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Event.set" title="本定義的永久連結">¶</a></dt>
+<dd><p>設置事件。</p>
+<p>所有正在等待事件被設置的任務會立即被喚醒。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Event.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Event.clear" title="本定義的永久連結">¶</a></dt>
+<dd><p>清除（還原）事件。</p>
+<p>正透過 <a class="reference internal" href="#asyncio.Event.wait" title="asyncio.Event.wait"><code class="xref py py-meth docutils literal notranslate"><span class="pre">wait()</span></code></a> 等待的 Tasks 現在會持續阻塞直到 <a class="reference internal" href="#asyncio.Event.set" title="asyncio.Event.set"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set()</span></code></a> 方法再次被呼叫。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Event.is_set">
+<span class="sig-name descname"><span class="pre">is_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Event.is_set" title="本定義的永久連結">¶</a></dt>
+<dd><p>如果事件有被設置則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="condition">
+<h2>Condition<a class="headerlink" href="#condition" title="本標頭的永久連結">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="asyncio.Condition">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">Condition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lock</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Condition" title="本定義的永久連結">¶</a></dt>
+<dd><p>一個條件 (codition) 物件。不支援執行緒安全。</p>
+<p>一個 asyncio 條件原始物件可以被任務用來等待某事件發生，並獲得一個共享資源的獨佔存取權。</p>
+<p>本質上，一個 Condition 物件會結合 <a class="reference internal" href="#asyncio.Event" title="asyncio.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> 和 <a class="reference internal" href="#asyncio.Lock" title="asyncio.Lock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lock</span></code></a> 的功能。多個 Condition 物件共享一個 Lock 是有可能發生的，這能夠協調關注同一共享資源的不同狀態以獲取其獨佔存取權的多個任務。</p>
+<p>可選的 <em>lock</em> 引數必須是一個 <a class="reference internal" href="#asyncio.Lock" title="asyncio.Lock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lock</span></code></a> 物件或者為 <code class="docutils literal notranslate"><span class="pre">None</span></code>。如為後者則一個新的 Lock 物件會被自動建立。</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.10 版本變更: </span>移除 <code class="docutils literal notranslate"><span class="pre">loop</span></code> 參數。</p>
+</div>
+<p>使用 Condition 的推薦方式是透過 <a class="reference internal" href="../reference/compound_stmts.html#async-with"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">async</span> <span class="pre">with</span></code></a> 陳述式：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">cond</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Condition</span><span class="p">()</span>
+
+<span class="c1"># ... later</span>
+<span class="k">async</span> <span class="k">with</span> <span class="n">cond</span><span class="p">:</span>
+    <span class="k">await</span> <span class="n">cond</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>這等價於：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">cond</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Condition</span><span class="p">()</span>
+
+<span class="c1"># ... later</span>
+<span class="k">await</span> <span class="n">cond</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="k">await</span> <span class="n">cond</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+<span class="k">finally</span><span class="p">:</span>
+    <span class="n">cond</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Condition.acquire">
+<em class="property"><span class="pre">coroutine</span> </em><span class="sig-name descname"><span class="pre">acquire</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Condition.acquire" title="本定義的永久連結">¶</a></dt>
+<dd><p>獲取底層的鎖。</p>
+<p>此方法會持續等待直到底層的鎖為 <em>unlocked</em>，並將其設為 <em>locked</em> 並回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Condition.notify">
+<span class="sig-name descname"><span class="pre">notify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Condition.notify" title="本定義的永久連結">¶</a></dt>
+<dd><p>喚醒至多 <em>n</em> 個正在等待此條件的任務（預設為 1），如果沒有正在等待的任務則此方法為空操作 (no-op)。</p>
+<p>在此方法被呼叫前必須先獲得鎖，並在之後立刻將其釋放。如果呼叫於一個 <em>unlocked</em> 的鎖則 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> 錯誤會被引發。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Condition.locked">
+<span class="sig-name descname"><span class="pre">locked</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Condition.locked" title="本定義的永久連結">¶</a></dt>
+<dd><p>如果已獲取底層的鎖則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Condition.notify_all">
+<span class="sig-name descname"><span class="pre">notify_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Condition.notify_all" title="本定義的永久連結">¶</a></dt>
+<dd><p>喚醒所有正在等待此條件的任務。</p>
+<p>這個方法的行為就像 <a class="reference internal" href="#asyncio.Condition.notify" title="asyncio.Condition.notify"><code class="xref py py-meth docutils literal notranslate"><span class="pre">notify()</span></code></a>，但會喚醒所有正在等待的任務。</p>
+<p>在此方法被呼叫前必須先獲得鎖，並在之後立刻將其釋放。如果呼叫於一個 <em>unlocked</em> 的鎖則 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> 錯誤會被引發。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Condition.release">
+<span class="sig-name descname"><span class="pre">release</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Condition.release" title="本定義的永久連結">¶</a></dt>
+<dd><p>釋放底層的鎖。</p>
+<p>當調用於一個未被解開的鎖之上時，會引發一個 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Condition.wait">
+<em class="property"><span class="pre">coroutine</span> </em><span class="sig-name descname"><span class="pre">wait</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Condition.wait" title="本定義的永久連結">¶</a></dt>
+<dd><p>持續等待直到被通知 (notify)。</p>
+<p>當此方法被呼叫時，如果呼叫它的任務還沒有獲取鎖的話，<a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> 會被引發。</p>
+<p>此方法會釋放底層的鎖，然後持續阻塞直到被 <a class="reference internal" href="#asyncio.Condition.notify" title="asyncio.Condition.notify"><code class="xref py py-meth docutils literal notranslate"><span class="pre">notify()</span></code></a> 或 <a class="reference internal" href="#asyncio.Condition.notify_all" title="asyncio.Condition.notify_all"><code class="xref py py-meth docutils literal notranslate"><span class="pre">notify_all()</span></code></a> 的呼叫所喚醒。一但被喚醒，Condition 會重新獲取該鎖且此方法會回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Condition.wait_for">
+<em class="property"><span class="pre">coroutine</span> </em><span class="sig-name descname"><span class="pre">wait_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predicate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Condition.wait_for" title="本定義的永久連結">¶</a></dt>
+<dd><p>持續等待直到謂語 (predicate) 成為 <em>true</em>。</p>
+<p>謂語必須是一個結果可被直譯為一個 boolean 值的可呼叫物件 (callable)。最終值為回傳值。</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="semaphore">
+<h2>Semaphore<a class="headerlink" href="#semaphore" title="本標頭的永久連結">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="asyncio.Semaphore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">Semaphore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Semaphore" title="本定義的永久連結">¶</a></dt>
+<dd><p>一個旗號 (semaphore) 物件。不支援執行緒安全。</p>
+<p>一個旗號物件會管理一個內部計數器，會在每次呼叫 <a class="reference internal" href="#asyncio.Semaphore.acquire" title="asyncio.Semaphore.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> 時減少一、每次呼叫 <a class="reference internal" href="#asyncio.Semaphore.release" title="asyncio.Semaphore.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> 時增加一。此計數器永遠不會少於零；當 <a class="reference internal" href="#asyncio.Semaphore.acquire" title="asyncio.Semaphore.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> 發現它是零時，它會持續阻塞並等待某任務呼叫 <a class="reference internal" href="#asyncio.Semaphore.release" title="asyncio.Semaphore.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a>。</p>
+<p>可選的 <em>value</em> 引數給定了內部計數器的初始值（預設為 <code class="docutils literal notranslate"><span class="pre">1</span></code>）。如給定的值少於 <code class="docutils literal notranslate"><span class="pre">0</span></code> 則 <a class="reference internal" href="exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> 會被引發。</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.10 版本變更: </span>移除 <code class="docutils literal notranslate"><span class="pre">loop</span></code> 參數。</p>
+</div>
+<p>使用 Semaphore 的推薦方式是透過 <a class="reference internal" href="../reference/compound_stmts.html#async-with"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">async</span> <span class="pre">with</span></code></a> 陳述式：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">sem</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Semaphore</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># ... later</span>
+<span class="k">async</span> <span class="k">with</span> <span class="n">sem</span><span class="p">:</span>
+    <span class="c1"># work with shared resource</span>
+</pre></div>
+</div>
+<p>這等價於：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">sem</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Semaphore</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+
+<span class="c1"># ... later</span>
+<span class="k">await</span> <span class="n">sem</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="c1"># work with shared resource</span>
+<span class="k">finally</span><span class="p">:</span>
+    <span class="n">sem</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Semaphore.acquire">
+<em class="property"><span class="pre">coroutine</span> </em><span class="sig-name descname"><span class="pre">acquire</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Semaphore.acquire" title="本定義的永久連結">¶</a></dt>
+<dd><p>獲取一個旗號。</p>
+<p>如果內部計數器大於零，將其減一並立刻回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。如果為零，則持續等待直到 <a class="reference internal" href="#asyncio.Semaphore.release" title="asyncio.Semaphore.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> 被呼叫，並回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Semaphore.locked">
+<span class="sig-name descname"><span class="pre">locked</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Semaphore.locked" title="本定義的永久連結">¶</a></dt>
+<dd><p>如果旗號無法立即被取得則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Semaphore.release">
+<span class="sig-name descname"><span class="pre">release</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Semaphore.release" title="本定義的永久連結">¶</a></dt>
+<dd><p>釋放一個旗號，並為其內部的計數器數值增加一。可以把一個正在等待獲取旗號的任務叫醒。</p>
+<p>和 <a class="reference internal" href="#asyncio.BoundedSemaphore" title="asyncio.BoundedSemaphore"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoundedSemaphore</span></code></a> 不同，<a class="reference internal" href="#asyncio.Semaphore" title="asyncio.Semaphore"><code class="xref py py-class docutils literal notranslate"><span class="pre">Semaphore</span></code></a> 允許 <code class="docutils literal notranslate"><span class="pre">release()</span></code> 的呼叫次數多於 <code class="docutils literal notranslate"><span class="pre">acquire()</span></code>。</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="boundedsemaphore">
+<h2>BoundedSemaphore<a class="headerlink" href="#boundedsemaphore" title="本標頭的永久連結">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="asyncio.BoundedSemaphore">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">BoundedSemaphore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.BoundedSemaphore" title="本定義的永久連結">¶</a></dt>
+<dd><p>一個有界的旗號物件。不支援執行緒安全。</p>
+<p>Bounded Semaphore 是 <a class="reference internal" href="#asyncio.Semaphore" title="asyncio.Semaphore"><code class="xref py py-class docutils literal notranslate"><span class="pre">Semaphore</span></code></a> 的另一版本，如果其內部的計數器數值增加至大於初始 <em>value</em> 值的話，<a class="reference internal" href="exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> 會在 <a class="reference internal" href="#asyncio.Semaphore.release" title="asyncio.Semaphore.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> 時被引發。</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.10 版本變更: </span>移除 <code class="docutils literal notranslate"><span class="pre">loop</span></code> 參數。</p>
+</div>
+</dd></dl>
+
+</section>
+<section id="barrier">
+<h2>Barrier<a class="headerlink" href="#barrier" title="本標頭的永久連結">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="asyncio.Barrier">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">Barrier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parties</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Barrier" title="本定義的永久連結">¶</a></dt>
+<dd><p>一個屏障 (barrier) 物件。不支援執行緒安全。</p>
+<p>A barrier is a simple synchronization primitive that allows to block until
+<em>parties</em> number of tasks are waiting on it.
+Tasks can wait on the <a class="reference internal" href="#asyncio.Barrier.wait" title="asyncio.Barrier.wait"><code class="xref py py-meth docutils literal notranslate"><span class="pre">wait()</span></code></a> method and would be blocked until
+the specified number of tasks end up waiting on <a class="reference internal" href="#asyncio.Barrier.wait" title="asyncio.Barrier.wait"><code class="xref py py-meth docutils literal notranslate"><span class="pre">wait()</span></code></a>.
+At that point all of the waiting tasks would unblock simultaneously.</p>
+<p><a class="reference internal" href="../reference/compound_stmts.html#async-with"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">async</span> <span class="pre">with</span></code></a> can be used as an alternative to awaiting on
+<a class="reference internal" href="#asyncio.Barrier.wait" title="asyncio.Barrier.wait"><code class="xref py py-meth docutils literal notranslate"><span class="pre">wait()</span></code></a>.</p>
+<p>The barrier can be reused any number of times.</p>
+<p id="asyncio-example-barrier">範例：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span> <span class="nf">example_barrier</span><span class="p">():</span>
+   <span class="c1"># barrier with 3 parties</span>
+   <span class="n">b</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Barrier</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+   <span class="c1"># create 2 new waiting tasks</span>
+   <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">wait</span><span class="p">())</span>
+   <span class="n">asyncio</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">wait</span><span class="p">())</span>
+
+   <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+   <span class="nb">print</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+   <span class="c1"># The third .wait() call passes the barrier</span>
+   <span class="k">await</span> <span class="n">b</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+   <span class="nb">print</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+   <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;barrier passed&quot;</span><span class="p">)</span>
+
+   <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+   <span class="nb">print</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">example_barrier</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Result of this example is:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">asyncio</span><span class="o">.</span><span class="n">locks</span><span class="o">.</span><span class="n">Barrier</span> <span class="nb">object</span> <span class="n">at</span> <span class="mi">0</span><span class="n">x</span><span class="o">...</span> <span class="p">[</span><span class="n">filling</span><span class="p">,</span> <span class="n">waiters</span><span class="p">:</span><span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="p">]</span><span class="o">&gt;</span>
+<span class="o">&lt;</span><span class="n">asyncio</span><span class="o">.</span><span class="n">locks</span><span class="o">.</span><span class="n">Barrier</span> <span class="nb">object</span> <span class="n">at</span> <span class="mi">0</span><span class="n">x</span><span class="o">...</span> <span class="p">[</span><span class="n">draining</span><span class="p">,</span> <span class="n">waiters</span><span class="p">:</span><span class="mi">0</span><span class="o">/</span><span class="mi">3</span><span class="p">]</span><span class="o">&gt;</span>
+<span class="n">barrier</span> <span class="n">passed</span>
+<span class="o">&lt;</span><span class="n">asyncio</span><span class="o">.</span><span class="n">locks</span><span class="o">.</span><span class="n">Barrier</span> <span class="nb">object</span> <span class="n">at</span> <span class="mi">0</span><span class="n">x</span><span class="o">...</span> <span class="p">[</span><span class="n">filling</span><span class="p">,</span> <span class="n">waiters</span><span class="p">:</span><span class="mi">0</span><span class="o">/</span><span class="mi">3</span><span class="p">]</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.11 版本新加入.</span></p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Barrier.wait">
+<em class="property"><span class="pre">coroutine</span> </em><span class="sig-name descname"><span class="pre">wait</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Barrier.wait" title="本定義的永久連結">¶</a></dt>
+<dd><p>Pass the barrier. When all the tasks party to the barrier have called
+this function, they are all unblocked simultaneously.</p>
+<p>When a waiting or blocked task in the barrier is cancelled,
+this task exits the barrier which stays in the same state.
+If the state of the barrier is &quot;filling&quot;, the number of waiting task
+decreases by 1.</p>
+<p>The return value is an integer in the range of 0 to <code class="docutils literal notranslate"><span class="pre">parties-1</span></code>, different
+for each task. This can be used to select a task to do some special
+housekeeping, e.g.:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<span class="k">async</span> <span class="k">with</span> <span class="n">barrier</span> <span class="k">as</span> <span class="n">position</span><span class="p">:</span>
+   <span class="k">if</span> <span class="n">position</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+      <span class="c1"># Only one task prints this</span>
+      <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;End of *draining phase*&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This method may raise a <a class="reference internal" href="#asyncio.BrokenBarrierError" title="asyncio.BrokenBarrierError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BrokenBarrierError</span></code></a> exception if the
+barrier is broken or reset while a task is waiting.
+It could raise a <a class="reference internal" href="asyncio-exceptions.html#asyncio.CancelledError" title="asyncio.CancelledError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">CancelledError</span></code></a> if a task is cancelled.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Barrier.reset">
+<em class="property"><span class="pre">coroutine</span> </em><span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Barrier.reset" title="本定義的永久連結">¶</a></dt>
+<dd><p>Return the barrier to the default, empty state.  Any tasks waiting on it
+will receive the <a class="reference internal" href="#asyncio.BrokenBarrierError" title="asyncio.BrokenBarrierError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BrokenBarrierError</span></code></a> exception.</p>
+<p>If a barrier is broken it may be better to just leave it and create a new one.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Barrier.abort">
+<em class="property"><span class="pre">coroutine</span> </em><span class="sig-name descname"><span class="pre">abort</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Barrier.abort" title="本定義的永久連結">¶</a></dt>
+<dd><p>Put the barrier into a broken state.  This causes any active or future
+calls to <a class="reference internal" href="asyncio-task.html#asyncio.wait" title="asyncio.wait"><code class="xref py py-meth docutils literal notranslate"><span class="pre">wait()</span></code></a> to fail with the <a class="reference internal" href="#asyncio.BrokenBarrierError" title="asyncio.BrokenBarrierError"><code class="xref py py-class docutils literal notranslate"><span class="pre">BrokenBarrierError</span></code></a>.
+Use this for example if one of the tasks needs to abort, to avoid infinite
+waiting tasks.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="asyncio.Barrier.parties">
+<span class="sig-name descname"><span class="pre">parties</span></span><a class="headerlink" href="#asyncio.Barrier.parties" title="本定義的永久連結">¶</a></dt>
+<dd><p>The number of tasks required to pass the barrier.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="asyncio.Barrier.n_waiting">
+<span class="sig-name descname"><span class="pre">n_waiting</span></span><a class="headerlink" href="#asyncio.Barrier.n_waiting" title="本定義的永久連結">¶</a></dt>
+<dd><p>The number of tasks currently waiting in the barrier while filling.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="asyncio.Barrier.broken">
+<span class="sig-name descname"><span class="pre">broken</span></span><a class="headerlink" href="#asyncio.Barrier.broken" title="本定義的永久連結">¶</a></dt>
+<dd><p>A boolean that is <code class="docutils literal notranslate"><span class="pre">True</span></code> if the barrier is in the broken state.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="asyncio.BrokenBarrierError">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">BrokenBarrierError</span></span><a class="headerlink" href="#asyncio.BrokenBarrierError" title="本定義的永久連結">¶</a></dt>
+<dd><p>This exception, a subclass of <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>, is raised when the
+<a class="reference internal" href="#asyncio.Barrier" title="asyncio.Barrier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Barrier</span></code></a> object is reset or broken.</p>
+</dd></dl>
+
+<hr class="docutils" />
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.9 版本變更: </span>透過 <code class="docutils literal notranslate"><span class="pre">await</span> <span class="pre">lock</span></code> 或 <code class="docutils literal notranslate"><span class="pre">yield</span> <span class="pre">from</span> <span class="pre">lock</span></code> 和/或 <a class="reference internal" href="../reference/compound_stmts.html#with"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">with</span></code></a> 陳述式 (<code class="docutils literal notranslate"><span class="pre">with</span> <span class="pre">await</span> <span class="pre">lock</span></code>, <code class="docutils literal notranslate"><span class="pre">with</span> <span class="pre">(yield</span> <span class="pre">from</span> <span class="pre">lock)</span></code>) 來獲取鎖的方式已被移除。請改用 <code class="docutils literal notranslate"><span class="pre">async</span> <span class="pre">with</span> <span class="pre">lock</span></code>。</p>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">同步化原始物件 (Synchronization Primitives)</a><ul>
+<li><a class="reference internal" href="#lock">Lock</a><ul>
+<li><a class="reference internal" href="#asyncio.Lock"><code class="docutils literal notranslate"><span class="pre">Lock</span></code></a><ul>
+<li><a class="reference internal" href="#asyncio.Lock.acquire"><code class="docutils literal notranslate"><span class="pre">Lock.acquire()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Lock.release"><code class="docutils literal notranslate"><span class="pre">Lock.release()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Lock.locked"><code class="docutils literal notranslate"><span class="pre">Lock.locked()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#event">Event</a><ul>
+<li><a class="reference internal" href="#asyncio.Event"><code class="docutils literal notranslate"><span class="pre">Event</span></code></a><ul>
+<li><a class="reference internal" href="#asyncio.Event.wait"><code class="docutils literal notranslate"><span class="pre">Event.wait()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Event.set"><code class="docutils literal notranslate"><span class="pre">Event.set()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Event.clear"><code class="docutils literal notranslate"><span class="pre">Event.clear()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Event.is_set"><code class="docutils literal notranslate"><span class="pre">Event.is_set()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#condition">Condition</a><ul>
+<li><a class="reference internal" href="#asyncio.Condition"><code class="docutils literal notranslate"><span class="pre">Condition</span></code></a><ul>
+<li><a class="reference internal" href="#asyncio.Condition.acquire"><code class="docutils literal notranslate"><span class="pre">Condition.acquire()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Condition.notify"><code class="docutils literal notranslate"><span class="pre">Condition.notify()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Condition.locked"><code class="docutils literal notranslate"><span class="pre">Condition.locked()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Condition.notify_all"><code class="docutils literal notranslate"><span class="pre">Condition.notify_all()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Condition.release"><code class="docutils literal notranslate"><span class="pre">Condition.release()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Condition.wait"><code class="docutils literal notranslate"><span class="pre">Condition.wait()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Condition.wait_for"><code class="docutils literal notranslate"><span class="pre">Condition.wait_for()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#semaphore">Semaphore</a><ul>
+<li><a class="reference internal" href="#asyncio.Semaphore"><code class="docutils literal notranslate"><span class="pre">Semaphore</span></code></a><ul>
+<li><a class="reference internal" href="#asyncio.Semaphore.acquire"><code class="docutils literal notranslate"><span class="pre">Semaphore.acquire()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Semaphore.locked"><code class="docutils literal notranslate"><span class="pre">Semaphore.locked()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Semaphore.release"><code class="docutils literal notranslate"><span class="pre">Semaphore.release()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#boundedsemaphore">BoundedSemaphore</a><ul>
+<li><a class="reference internal" href="#asyncio.BoundedSemaphore"><code class="docutils literal notranslate"><span class="pre">BoundedSemaphore</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#barrier">Barrier</a><ul>
+<li><a class="reference internal" href="#asyncio.Barrier"><code class="docutils literal notranslate"><span class="pre">Barrier</span></code></a><ul>
+<li><a class="reference internal" href="#asyncio.Barrier.wait"><code class="docutils literal notranslate"><span class="pre">Barrier.wait()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Barrier.reset"><code class="docutils literal notranslate"><span class="pre">Barrier.reset()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Barrier.abort"><code class="docutils literal notranslate"><span class="pre">Barrier.abort()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Barrier.parties"><code class="docutils literal notranslate"><span class="pre">Barrier.parties</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Barrier.n_waiting"><code class="docutils literal notranslate"><span class="pre">Barrier.n_waiting</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Barrier.broken"><code class="docutils literal notranslate"><span class="pre">Barrier.broken</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#asyncio.BrokenBarrierError"><code class="docutils literal notranslate"><span class="pre">BrokenBarrierError</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="asyncio-stream.html"
+                          title="上一章">串流</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="asyncio-subprocess.html"
+                          title="下一章">子行程</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/asyncio-sync.rst"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="asyncio-subprocess.html" title="子行程"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="asyncio-stream.html" title="串流"
+             >上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="python logo" style="vertical-align: middle; margin-top: -1px"/></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.11.0rc2 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="ipc.html" >Networking and Interprocess Communication</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="asyncio.html" ><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code> --- 非同步 I/O</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">同步化原始物件 (Synchronization Primitives)</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜尋" aria-label="快速搜尋" type="text" name="q" />
+          <input type="submit" value="前往" />
+          <input type="hidden" name="check_keywords" value="yes" />
+          <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+                     |
+                </li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; <a href="../copyright.html">版權</a> 2001-2022, Python Software Foundation.
+    <br />
+    This page is licensed under the Python Software Foundation License Version 2.
+    <br />
+    Examples, recipes, and other code in the documentation are additionally licensed under the Zero Clause BSD License.
+    <br />
+    See <a href="/license.html">History and License</a> for more information.<br />
+    <br />
+
+    The Python Software Foundation is a non-profit corporation.
+<a href="https://www.python.org/psf/donations/">Please donate.</a>
+<br />
+    <br />
+
+    最後更新於 10月 23, 2022。
+    <a href="/bugs.html">Found a bug</a>?
+    <br />
+
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3 建立。
+    </div>
+
+  </body>
+</html>

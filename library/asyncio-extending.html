@@ -1,0 +1,395 @@
+
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>Extending &#8212; Python 3.11.0rc2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?2022.1" />
+    
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/translations.js"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.11.0rc2 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權" href="../copyright.html" />
+    <link rel="next" title="高階 API 索引" href="asyncio-api-index.html" />
+    <link rel="prev" title="平臺支援" href="asyncio-platforms.html" />
+    <link rel="canonical" href="https://docs.python.org/3/library/asyncio-extending.html" />
+    
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="shortcut icon" type="image/png" href="../_static/py.svg" />
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script> 
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="Menu" />
+    <label for="menuToggler" class="toggler__label">
+        <span></span>
+    </label>
+    <nav class="nav-content" role="navigation">
+         <a href="https://www.python.org/" class="nav-logo">
+             <img src="../_static/py.svg" alt="Logo"/>
+         </a>
+        <div class="version_switcher_placeholder"></div>
+        <form role="search" class="search" action="../search.html" method="get">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                <path fill-rule="nonzero"
+                        d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill="#444"></path>
+            </svg>
+            <input type="text" name="q" aria-label="快速搜尋"/>
+            <input type="submit" value="前往"/>
+        </form>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Extending</a><ul>
+<li><a class="reference internal" href="#writing-a-custom-event-loop">Writing a Custom Event Loop</a></li>
+<li><a class="reference internal" href="#future-and-task-private-constructors">Future and Task private constructors</a><ul>
+<li><a class="reference internal" href="#asyncio.Future.__init__"><code class="docutils literal notranslate"><span class="pre">Future.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Task.__init__"><code class="docutils literal notranslate"><span class="pre">Task.__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#task-lifetime-support">Task lifetime support</a><ul>
+<li><a class="reference internal" href="#asyncio._register_task"><code class="docutils literal notranslate"><span class="pre">_register_task()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio._unregister_task"><code class="docutils literal notranslate"><span class="pre">_unregister_task()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio._enter_task"><code class="docutils literal notranslate"><span class="pre">_enter_task()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio._leave_task"><code class="docutils literal notranslate"><span class="pre">_leave_task()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="asyncio-platforms.html"
+                          title="上一章">平臺支援</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="asyncio-api-index.html"
+                          title="下一章">高階 API 索引</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/asyncio-extending.rst"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="asyncio-api-index.html" title="高階 API 索引"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="asyncio-platforms.html" title="平臺支援"
+             accesskey="P">上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="python logo" style="vertical-align: middle; margin-top: -1px"/></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.11.0rc2 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="ipc.html" >Networking and Interprocess Communication</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="asyncio.html" accesskey="U"><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code> --- 非同步 I/O</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Extending</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜尋" aria-label="快速搜尋" type="text" name="q" />
+          <input type="submit" value="前往" />
+          <input type="hidden" name="check_keywords" value="yes" />
+          <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+                     |
+                </li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="extending">
+<h1>Extending<a class="headerlink" href="#extending" title="本標頭的永久連結">¶</a></h1>
+<p>The main direction for <a class="reference internal" href="asyncio.html#module-asyncio" title="asyncio: Asynchronous I/O."><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code></a> extending is writing custom <em>event loop</em>
+classes. Asyncio has helpers that could be used to simplify this task.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Third-parties should reuse existing asyncio code with caution,
+a new Python version is free to break backward compatibility
+in <em>internal</em> part of API.</p>
+</div>
+<section id="writing-a-custom-event-loop">
+<h2>Writing a Custom Event Loop<a class="headerlink" href="#writing-a-custom-event-loop" title="本標頭的永久連結">¶</a></h2>
+<p><a class="reference internal" href="asyncio-eventloop.html#asyncio.AbstractEventLoop" title="asyncio.AbstractEventLoop"><code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.AbstractEventLoop</span></code></a> declares very many methods.  Implementing all them
+from scratch is a tedious job.</p>
+<p>A loop can get many common methods implementation for free by inheriting from
+<code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.BaseEventLoop</span></code>.</p>
+<p>In turn, the successor should implement a bunch of <em>private</em> methods declared but not
+implemented in <code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.BaseEventLoop</span></code>.</p>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">loop.create_connection()</span></code> checks arguments, resolves DNS addresses, and
+calls <code class="docutils literal notranslate"><span class="pre">loop._make_socket_transport()</span></code> that should be implemented by inherited class.
+The <code class="docutils literal notranslate"><span class="pre">_make_socket_transport()</span></code> method is not documented and is considered as an
+<em>internal</em> API.</p>
+</section>
+<section id="future-and-task-private-constructors">
+<h2>Future and Task private constructors<a class="headerlink" href="#future-and-task-private-constructors" title="本標頭的永久連結">¶</a></h2>
+<p><a class="reference internal" href="asyncio-future.html#asyncio.Future" title="asyncio.Future"><code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.Future</span></code></a> and <a class="reference internal" href="asyncio-task.html#asyncio.Task" title="asyncio.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.Task</span></code></a> should be never created directly,
+please use corresponding <a class="reference internal" href="asyncio-eventloop.html#asyncio.loop.create_future" title="asyncio.loop.create_future"><code class="xref py py-meth docutils literal notranslate"><span class="pre">loop.create_future()</span></code></a> and <a class="reference internal" href="asyncio-eventloop.html#asyncio.loop.create_task" title="asyncio.loop.create_task"><code class="xref py py-meth docutils literal notranslate"><span class="pre">loop.create_task()</span></code></a>,
+or <a class="reference internal" href="asyncio-task.html#asyncio.create_task" title="asyncio.create_task"><code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.create_task()</span></code></a> factories instead.</p>
+<p>However, third-party <em>event loops</em> may <em>reuse</em> built-in future and task implementations
+for the sake of getting a complex and highly optimized code for free.</p>
+<p>For this purpose the following, <em>private</em> constructors are listed:</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Future.__init__">
+<span class="sig-prename descclassname"><span class="pre">Future.</span></span><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Future.__init__" title="本定義的永久連結">¶</a></dt>
+<dd><p>Create a built-in future instance.</p>
+<p><em>loop</em> is an optional event loop instance.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="asyncio.Task.__init__">
+<span class="sig-prename descclassname"><span class="pre">Task.</span></span><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coro</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Task.__init__" title="本定義的永久連結">¶</a></dt>
+<dd><p>Create a built-in task instance.</p>
+<p><em>loop</em> is an optional event loop instance. The rest of arguments are described in
+<a class="reference internal" href="asyncio-eventloop.html#asyncio.loop.create_task" title="asyncio.loop.create_task"><code class="xref py py-meth docutils literal notranslate"><span class="pre">loop.create_task()</span></code></a> description.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.11 版本變更: </span><em>context</em> argument is added.</p>
+</div>
+</dd></dl>
+
+</section>
+<section id="task-lifetime-support">
+<h2>Task lifetime support<a class="headerlink" href="#task-lifetime-support" title="本標頭的永久連結">¶</a></h2>
+<p>A third party task implementation should call the following functions to keep a task
+visible by <code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.get_tasks()</span></code> and <a class="reference internal" href="asyncio-task.html#asyncio.current_task" title="asyncio.current_task"><code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.current_task()</span></code></a>:</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="asyncio._register_task">
+<span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">_register_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio._register_task" title="本定義的永久連結">¶</a></dt>
+<dd><p>Register a new <em>task</em> as managed by <em>asyncio</em>.</p>
+<p>Call the function from a task constructor.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="asyncio._unregister_task">
+<span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">_unregister_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio._unregister_task" title="本定義的永久連結">¶</a></dt>
+<dd><p>Unregister a <em>task</em> from <em>asyncio</em> internal structures.</p>
+<p>The function should be called when a task is about to finish.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="asyncio._enter_task">
+<span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">_enter_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio._enter_task" title="本定義的永久連結">¶</a></dt>
+<dd><p>Switch the current task to the <em>task</em> argument.</p>
+<p>Call the function just before executing a portion of embedded <em>coroutine</em>
+(<a class="reference internal" href="../reference/datamodel.html#coroutine.send" title="coroutine.send"><code class="xref py py-meth docutils literal notranslate"><span class="pre">coroutine.send()</span></code></a> or <a class="reference internal" href="../reference/datamodel.html#coroutine.throw" title="coroutine.throw"><code class="xref py py-meth docutils literal notranslate"><span class="pre">coroutine.throw()</span></code></a>).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="asyncio._leave_task">
+<span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">_leave_task</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">task</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio._leave_task" title="本定義的永久連結">¶</a></dt>
+<dd><p>Switch the current task back from <em>task</em> to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>Call the function just after <a class="reference internal" href="../reference/datamodel.html#coroutine.send" title="coroutine.send"><code class="xref py py-meth docutils literal notranslate"><span class="pre">coroutine.send()</span></code></a> or <a class="reference internal" href="../reference/datamodel.html#coroutine.throw" title="coroutine.throw"><code class="xref py py-meth docutils literal notranslate"><span class="pre">coroutine.throw()</span></code></a>
+execution.</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Extending</a><ul>
+<li><a class="reference internal" href="#writing-a-custom-event-loop">Writing a Custom Event Loop</a></li>
+<li><a class="reference internal" href="#future-and-task-private-constructors">Future and Task private constructors</a><ul>
+<li><a class="reference internal" href="#asyncio.Future.__init__"><code class="docutils literal notranslate"><span class="pre">Future.__init__()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.Task.__init__"><code class="docutils literal notranslate"><span class="pre">Task.__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#task-lifetime-support">Task lifetime support</a><ul>
+<li><a class="reference internal" href="#asyncio._register_task"><code class="docutils literal notranslate"><span class="pre">_register_task()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio._unregister_task"><code class="docutils literal notranslate"><span class="pre">_unregister_task()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio._enter_task"><code class="docutils literal notranslate"><span class="pre">_enter_task()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio._leave_task"><code class="docutils literal notranslate"><span class="pre">_leave_task()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="asyncio-platforms.html"
+                          title="上一章">平臺支援</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="asyncio-api-index.html"
+                          title="下一章">高階 API 索引</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/asyncio-extending.rst"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="asyncio-api-index.html" title="高階 API 索引"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="asyncio-platforms.html" title="平臺支援"
+             >上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="python logo" style="vertical-align: middle; margin-top: -1px"/></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.11.0rc2 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="ipc.html" >Networking and Interprocess Communication</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="asyncio.html" ><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code> --- 非同步 I/O</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Extending</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜尋" aria-label="快速搜尋" type="text" name="q" />
+          <input type="submit" value="前往" />
+          <input type="hidden" name="check_keywords" value="yes" />
+          <input type="hidden" name="area" value="default" />
+        </form>
+    </div>
+                     |
+                </li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; <a href="../copyright.html">版權</a> 2001-2022, Python Software Foundation.
+    <br />
+    This page is licensed under the Python Software Foundation License Version 2.
+    <br />
+    Examples, recipes, and other code in the documentation are additionally licensed under the Zero Clause BSD License.
+    <br />
+    See <a href="/license.html">History and License</a> for more information.<br />
+    <br />
+
+    The Python Software Foundation is a non-profit corporation.
+<a href="https://www.python.org/psf/donations/">Please donate.</a>
+<br />
+    <br />
+
+    最後更新於 10月 23, 2022。
+    <a href="/bugs.html">Found a bug</a>?
+    <br />
+
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3 建立。
+    </div>
+
+  </body>
+</html>
