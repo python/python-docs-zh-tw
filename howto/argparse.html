@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Argparse 教學 &#8212; Python 3.11.0rc2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Argparse 教學 &#8212; Python 3.12.0a0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?2022.1" />
@@ -22,7 +22,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.11.0rc2 說明文件 中搜尋"
+          title="在 Python 3.12.0a0 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -85,6 +85,7 @@
 </li>
 <li><a class="reference internal" href="#combining-positional-and-optional-arguments">現在結合位置與選項參數</a></li>
 <li><a class="reference internal" href="#getting-a-little-more-advanced">Getting a little more advanced</a><ul>
+<li><a class="reference internal" href="#specifying-ambiguous-arguments">Specifying ambiguous arguments</a></li>
 <li><a class="reference internal" href="#conflicting-options">Conflicting options</a></li>
 </ul>
 </li>
@@ -146,7 +147,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.0rc2 Documentation</a> &#187;
+      <a href="../index.html">3.12.0a0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 如何達成任務</a> &#187;</li>
@@ -177,7 +178,7 @@
 <h1>Argparse 教學<a class="headerlink" href="#argparse-tutorial" title="本標頭的永久連結">¶</a></h1>
 <dl class="field-list simple">
 <dt class="field-odd">作者<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Tshepang Lekhonkhobe</p>
+<dd class="field-odd"><p>Tshepang Mbambo</p>
 </dd>
 </dl>
 <p id="id1">這個教學傾向簡介 Python 官方標準含式庫中推薦的命令列剖析模組 <a class="reference internal" href="../library/argparse.html#module-argparse" title="argparse: Command-line option and argument parsing library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a>。</p>
@@ -725,6 +726,32 @@ to display <em>more</em> text instead:</p>
 <span class="go">4^2 == 16</span>
 </pre></div>
 </div>
+<section id="specifying-ambiguous-arguments">
+<span id="id2"></span><h3>Specifying ambiguous arguments<a class="headerlink" href="#specifying-ambiguous-arguments" title="本標頭的永久連結">¶</a></h3>
+<p>When there is ambiguity in deciding whether an argument is positional or for an
+argument, <code class="docutils literal notranslate"><span class="pre">--</span></code> can be used to tell <code class="xref py py-meth docutils literal notranslate"><span class="pre">parse_args()</span></code> that
+everything after that is a positional argument:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">prog</span><span class="o">=</span><span class="s1">&#39;PROG&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-n&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># ambiguous, so parse_args assumes it&#39;s an option</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s1">&#39;-f&#39;</span><span class="p">])</span>
+<span class="go">usage: PROG [-h] [-n N [N ...]] [args ...]</span>
+<span class="go">PROG: error: unrecognized arguments: -f</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="s1">&#39;-f&#39;</span><span class="p">])</span>
+<span class="go">Namespace(args=[&#39;-f&#39;], n=None)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># ambiguous, so the -n option greedily accepts arguments</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s1">&#39;-n&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">])</span>
+<span class="go">Namespace(args=[], n=[&#39;1&#39;, &#39;2&#39;, &#39;3&#39;])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s1">&#39;-n&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;--&#39;</span><span class="p">,</span> <span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;3&#39;</span><span class="p">])</span>
+<span class="go">Namespace(args=[&#39;2&#39;, &#39;3&#39;], n=[&#39;1&#39;])</span>
+</pre></div>
+</div>
+</section>
 <section id="conflicting-options">
 <h3>Conflicting options<a class="headerlink" href="#conflicting-options" title="本標頭的永久連結">¶</a></h3>
 <p>So far, we have been working with two methods of an
@@ -838,6 +865,7 @@ but not both at the same time:</p>
 </li>
 <li><a class="reference internal" href="#combining-positional-and-optional-arguments">現在結合位置與選項參數</a></li>
 <li><a class="reference internal" href="#getting-a-little-more-advanced">Getting a little more advanced</a><ul>
+<li><a class="reference internal" href="#specifying-ambiguous-arguments">Specifying ambiguous arguments</a></li>
 <li><a class="reference internal" href="#conflicting-options">Conflicting options</a></li>
 </ul>
 </li>
@@ -902,7 +930,7 @@ but not both at the same time:</p>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.0rc2 Documentation</a> &#187;
+      <a href="../index.html">3.12.0a0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 如何達成任務</a> &#187;</li>
@@ -942,7 +970,7 @@ but not both at the same time:</p>
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
-    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.2.3 建立。
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 5.3.0 建立。
     </div>
 
   </body>
