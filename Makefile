@@ -57,9 +57,9 @@ help:
 	@python3 -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
 clone: ## Clone latest cpython repository to `../cpython/` if it doesn't exist
-	git clone https://github.com/python/cpython.git $(CPYTHON_CLONE)  || echo "cpython exists"
+	git clone --depth 1 --no-single-branch https://github.com/python/cpython.git $(CPYTHON_CLONE)  || echo "cpython exists"
 	cd $(CPYTHON_CLONE) && git checkout $(BRANCH)
-	curl -L https://github.com/python/cpython/commit/383f9a7.patch/\?full_index\=1 | git apply -v --index
+	cd $(CPYTHON_CLONE) && curl -L https://github.com/python/cpython/commit/383f9a7.patch/\?full_index\=1 | git apply -v
 
 
 $(VENV)/bin/activate:
