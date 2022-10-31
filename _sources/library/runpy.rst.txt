@@ -93,11 +93,6 @@ The :mod:`runpy` module provides two functions:
       run this way, as well as ensuring the real module name is always
       accessible as ``__spec__.name``.
 
-   .. versionchanged:: 3.12
-      The setting of ``__cached__``, ``__loader__``, and
-      ``__package__`` are deprecated. See
-      :class:`~importlib.machinery.ModuleSpec` for alternatives.
-
 .. function:: run_path(path_name, init_globals=None, run_name=None)
 
    .. index::
@@ -167,10 +162,6 @@ The :mod:`runpy` module provides two functions:
       :pep:`451`. This allows ``__cached__`` to be set correctly in the
       case where ``__main__`` is imported from a valid sys.path entry rather
       than being executed directly.
-
-   .. versionchanged:: 3.12
-      The setting of ``__cached__``, ``__loader__``, and
-      ``__package__`` are deprecated.
 
 .. seealso::
 

@@ -12,12 +12,8 @@
 --------------
 
 The :mod:`wave` module provides a convenient interface to the WAV sound format.
-Only PCM encoded wave files are supported.
-
-.. versionchanged:: 3.12
-
-   Support for ``WAVE_FORMAT_EXTENSIBLE`` headers was added, provided that the
-   extended format is ``KSDATAFORMAT_SUBTYPE_PCM``.
+Only files using ``WAVE_FORMAT_PCM`` are supported. Note that this does not
+include files using ``WAVE_FORMAT_EXTENSIBLE`` even if the subformat is PCM.
 
 The :mod:`wave` module defines the following function and exception:
 

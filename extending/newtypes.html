@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>3. Defining Extension Types: Assorted Topics &#8212; Python 3.12.0a0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3. Defining Extension Types: Assorted Topics &#8212; Python 3.11.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?2022.1" />
@@ -22,7 +22,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.12.0a0 說明文件 中搜尋"
+          title="在 Python 3.11.0 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -144,7 +144,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.12.0a0 Documentation</a> &#187;
+      <a href="../index.html">3.11.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">擴充和嵌入 Python 直譯器</a> &#187;</li>
@@ -748,25 +748,41 @@ performance-critical objects (such as numbers).</p>
 <p class="admonition-title">也參考</p>
 <p>Documentation for the <a class="reference internal" href="../library/weakref.html#module-weakref" title="weakref: Support for weak references and weak dictionaries."><code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code></a> module.</p>
 </div>
-<p>For an object to be weakly referencable, the extension type must set the
-<code class="docutils literal notranslate"><span class="pre">Py_TPFLAGS_MANAGED_WEAKREF</span></code> bit of the <a class="reference internal" href="../c-api/typeobj.html#c.PyTypeObject.tp_flags" title="PyTypeObject.tp_flags"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_flags</span></code></a>
-field. The legacy <a class="reference internal" href="../c-api/typeobj.html#c.PyTypeObject.tp_weaklistoffset" title="PyTypeObject.tp_weaklistoffset"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_weaklistoffset</span></code></a> field should
-be left as zero.</p>
-<p>Concretely, here is how the statically declared type object would look:</p>
+<p>For an object to be weakly referencable, the extension type must do two things:</p>
+<ol class="arabic simple">
+<li><p>Include a <span class="c-expr sig sig-inline c"><a class="reference internal" href="../c-api/structures.html#c.PyObject" title="PyObject"><span class="n">PyObject</span></a><span class="p">*</span></span> field in the C object structure dedicated to
+the weak reference mechanism.  The object's constructor should leave it
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code> (which is automatic when using the default
+<a class="reference internal" href="../c-api/typeobj.html#c.PyTypeObject.tp_alloc" title="PyTypeObject.tp_alloc"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_alloc</span></code></a>).</p></li>
+<li><p>Set the <a class="reference internal" href="../c-api/typeobj.html#c.PyTypeObject.tp_weaklistoffset" title="PyTypeObject.tp_weaklistoffset"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_weaklistoffset</span></code></a> type member
+to the offset of the aforementioned field in the C object structure,
+so that the interpreter knows how to access and modify that field.</p></li>
+</ol>
+<p>Concretely, here is how a trivial object structure would be augmented
+with the required field:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">typedef</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
+<span class="w">    </span><span class="n">PyObject_HEAD</span><span class="w"></span>
+<span class="w">    </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">weakreflist</span><span class="p">;</span><span class="w">  </span><span class="cm">/* List of weak references */</span><span class="w"></span>
+<span class="p">}</span><span class="w"> </span><span class="n">TrivialObject</span><span class="p">;</span><span class="w"></span>
+</pre></div>
+</div>
+<p>And the corresponding member in the statically declared type object:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">PyTypeObject</span><span class="w"> </span><span class="n">TrivialType</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="n">PyVarObject_HEAD_INIT</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"></span>
 <span class="w">    </span><span class="cm">/* ... other members omitted for brevity ... */</span><span class="w"></span>
-<span class="w">    </span><span class="p">.</span><span class="n">tp_flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Py_TPFLAGS_MANAGED_WEAKREF</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p">...,</span><span class="w"></span>
+<span class="w">    </span><span class="p">.</span><span class="n">tp_weaklistoffset</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">offsetof</span><span class="p">(</span><span class="n">TrivialObject</span><span class="p">,</span><span class="w"> </span><span class="n">weakreflist</span><span class="p">),</span><span class="w"></span>
 <span class="p">};</span><span class="w"></span>
 </pre></div>
 </div>
 <p>The only further addition is that <code class="docutils literal notranslate"><span class="pre">tp_dealloc</span></code> needs to clear any weak
-references (by calling <code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_ClearWeakRefs()</span></code>):</p>
+references (by calling <code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_ClearWeakRefs()</span></code>) if the field is
+non-<code class="docutils literal notranslate"><span class="pre">NULL</span></code>:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"></span>
 <span class="nf">Trivial_dealloc</span><span class="p">(</span><span class="n">TrivialObject</span><span class="w"> </span><span class="o">*</span><span class="n">self</span><span class="p">)</span><span class="w"></span>
 <span class="p">{</span><span class="w"></span>
 <span class="w">    </span><span class="cm">/* Clear weakrefs first before calling any destructors */</span><span class="w"></span>
-<span class="w">    </span><span class="n">PyObject_ClearWeakRefs</span><span class="p">((</span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="n">self</span><span class="p">);</span><span class="w"></span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">weakreflist</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="n">PyObject_ClearWeakRefs</span><span class="p">((</span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="n">self</span><span class="p">);</span><span class="w"></span>
 <span class="w">    </span><span class="cm">/* ... remainder of destruction code omitted for brevity ... */</span><span class="w"></span>
 <span class="w">    </span><span class="n">Py_TYPE</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">tp_free</span><span class="p">((</span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="n">self</span><span class="p">);</span><span class="w"></span>
 <span class="p">}</span><span class="w"></span>
@@ -883,7 +899,7 @@ its use might be something like the following:</p>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.12.0a0 Documentation</a> &#187;
+      <a href="../index.html">3.11.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >擴充和嵌入 Python 直譯器</a> &#187;</li>
@@ -919,7 +935,7 @@ its use might be something like the following:</p>
 <br />
     <br />
 
-    最後更新於 10月 24, 2022。
+    最後更新於 10月 31, 2022。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 

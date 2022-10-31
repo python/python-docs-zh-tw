@@ -150,11 +150,6 @@ Importing Modules
    See also :c:func:`PyImport_ExecCodeModuleEx` and
    :c:func:`PyImport_ExecCodeModuleWithPathnames`.
 
-   .. versionchanged:: 3.12
-      The setting of :attr:`__cached__` and :attr:`__loader__` is
-      deprecated. See :class:`~importlib.machinery.ModuleSpec` for
-      alternatives.
-
 
 .. c:function:: PyObject* PyImport_ExecCodeModuleEx(const char *name, PyObject *co, const char *pathname)
 
@@ -171,10 +166,6 @@ Importing Modules
    non-``NULL``.  Of the three functions, this is the preferred one to use.
 
    .. versionadded:: 3.3
-
-   .. versionchanged:: 3.12
-      Setting :attr:`__cached__` is deprecated. See
-      :class:`~importlib.machinery.ModuleSpec` for alternatives.
 
 
 .. c:function:: PyObject* PyImport_ExecCodeModuleWithPathnames(const char *name, PyObject *co, const char *pathname, const char *cpathname)

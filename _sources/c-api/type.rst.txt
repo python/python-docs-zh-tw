@@ -57,55 +57,6 @@ Type Objects
    modification of the attributes or base classes of the type.
 
 
-.. c:function:: int PyType_AddWatcher(PyType_WatchCallback callback)
-
-   Register *callback* as a type watcher. Return a non-negative integer ID
-   which must be passed to future calls to :c:func:`PyType_Watch`. In case of
-   error (e.g. no more watcher IDs available), return ``-1`` and set an
-   exception.
-
-   .. versionadded:: 3.12
-
-
-.. c:function:: int PyType_ClearWatcher(int watcher_id)
-
-   Clear watcher identified by *watcher_id* (previously returned from
-   :c:func:`PyType_AddWatcher`). Return ``0`` on success, ``-1`` on error (e.g.
-   if *watcher_id* was never registered.)
-
-   An extension should never call ``PyType_ClearWatcher`` with a *watcher_id*
-   that was not returned to it by a previous call to
-   :c:func:`PyType_AddWatcher`.
-
-   .. versionadded:: 3.12
-
-
-.. c:function:: int PyType_Watch(int watcher_id, PyObject *type)
-
-   Mark *type* as watched. The callback granted *watcher_id* by
-   :c:func:`PyType_AddWatcher` will be called whenever
-   :c:func:`PyType_Modified` reports a change to *type*. (The callback may be
-   called only once for a series of consecutive modifications to *type*, if
-   :c:func:`PyType_Lookup` is not called on *type* between the modifications;
-   this is an implementation detail and subject to change.)
-
-   An extension should never call ``PyType_Watch`` with a *watcher_id* that was
-   not returned to it by a previous call to :c:func:`PyType_AddWatcher`.
-
-   .. versionadded:: 3.12
-
-
-.. c:type:: int (*PyType_WatchCallback)(PyObject *type)
-
-   Type of a type-watcher callback function.
-
-   The callback must not modify *type* or cause :c:func:`PyType_Modified` to be
-   called on *type* or any type in its MRO; violating this rule could cause
-   infinite recursion.
-
-   .. versionadded:: 3.12
-
-
 .. c:function:: int PyType_HasFeature(PyTypeObject *o, int feature)
 
    Return non-zero if the type object *o* sets the feature *feature*.
@@ -239,16 +190,10 @@ Creating Heap-Allocated Types
 The following functions and structs are used to create
 :ref:`heap types <heap-types>`.
 
-.. c:function:: PyObject* PyType_FromMetaclass(PyTypeObject *metaclass, PyObject *module, PyType_Spec *spec, PyObject *bases)
+.. c:function:: PyObject* PyType_FromModuleAndSpec(PyObject *module, PyType_Spec *spec, PyObject *bases)
 
-   Create and return a :ref:`heap type <heap-types>` from the *spec*
-   (see :const:`Py_TPFLAGS_HEAPTYPE`).
-
-   The metaclass *metaclass* is used to construct the resulting type object.
-   When *metaclass* is ``NULL``, the metaclass is derived from *bases*
-   (or *Py_tp_base[s]* slots if *bases* is ``NULL``, see below).
-   Note that metaclasses that override
-   :c:member:`~PyTypeObject.tp_new` are not supported.
+   Creates and returns a :ref:`heap type <heap-types>` from the *spec*
+   (:const:`Py_TPFLAGS_HEAPTYPE`).
 
    The *bases* argument can be used to specify base classes; it can either
    be only one class or a tuple of classes.
@@ -265,25 +210,6 @@ The following functions and structs are used to create
 
    This function calls :c:func:`PyType_Ready` on the new type.
 
-   Note that this function does *not* fully match the behavior of
-   calling :py:class:`type() <type>` or using the :keyword:`class` statement.
-   With user-provided base types or metaclasses, prefer
-   :ref:`calling <capi-call>` :py:class:`type` (or the metaclass)
-   over ``PyType_From*`` functions.
-   Specifically:
-
-   * :py:meth:`~object.__new__` is not called on the new class
-     (and it must be set to ``type.__new__``).
-   * :py:meth:`~object.__init__` is not called on the new class.
-   * :py:meth:`~object.__init_subclass__` is not called on any bases.
-   * :py:meth:`~object.__set_name__` is not called on new descriptors.
-
-   .. versionadded:: 3.12
-
-.. c:function:: PyObject* PyType_FromModuleAndSpec(PyObject *module, PyType_Spec *spec, PyObject *bases)
-
-   Equivalent to ``PyType_FromMetaclass(NULL, module, spec, bases)``.
-
    .. versionadded:: 3.9
 
    .. versionchanged:: 3.10
@@ -291,32 +217,15 @@ The following functions and structs are used to create
       The function now accepts a single class as the *bases* argument and
       ``NULL`` as the ``tp_doc`` slot.
 
-   .. versionchanged:: 3.12
-
-      The function now finds and uses a metaclass corresponding to the provided
-      base classes.  Previously, only :class:`type` instances were returned.
-
-
 .. c:function:: PyObject* PyType_FromSpecWithBases(PyType_Spec *spec, PyObject *bases)
 
-   Equivalent to ``PyType_FromMetaclass(NULL, NULL, spec, bases)``.
+   Equivalent to ``PyType_FromModuleAndSpec(NULL, spec, bases)``.
 
    .. versionadded:: 3.3
 
-   .. versionchanged:: 3.12
-
-      The function now finds and uses a metaclass corresponding to the provided
-      base classes.  Previously, only :class:`type` instances were returned.
-
 .. c:function:: PyObject* PyType_FromSpec(PyType_Spec *spec)
 
-   Equivalent to ``PyType_FromMetaclass(NULL, NULL, spec, NULL)``.
-
-   .. versionchanged:: 3.12
-
-      The function now finds and uses a metaclass corresponding to the
-      base classes provided in *Py_tp_base[s]* slots.
-      Previously, only :class:`type` instances were returned.
+   Equivalent to ``PyType_FromSpecWithBases(spec, NULL)``.
 
 .. c:type:: PyType_Spec
 
@@ -344,8 +253,6 @@ The following functions and structs are used to create
 
       Array of :c:type:`PyType_Slot` structures.
       Terminated by the special slot value ``{0, NULL}``.
-
-      Each slot ID should be specified at most once.
 
 .. c:type:: PyType_Slot
 
@@ -376,9 +283,9 @@ The following functions and structs are used to create
       * :c:member:`~PyTypeObject.tp_weaklist`
       * :c:member:`~PyTypeObject.tp_vectorcall`
       * :c:member:`~PyTypeObject.tp_weaklistoffset`
-        (use :const:`Py_TPFLAGS_MANAGED_WEAKREF` instead)
+        (see :ref:`PyMemberDef <pymemberdef-offsets>`)
       * :c:member:`~PyTypeObject.tp_dictoffset`
-        (use :const:`Py_TPFLAGS_MANAGED_DICT` instead)
+        (see :ref:`PyMemberDef <pymemberdef-offsets>`)
       * :c:member:`~PyTypeObject.tp_vectorcall_offset`
         (see :ref:`PyMemberDef <pymemberdef-offsets>`)
 
