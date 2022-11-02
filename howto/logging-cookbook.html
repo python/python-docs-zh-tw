@@ -931,11 +931,73 @@ alternative there, as well as adapting the above script to use your alternative
 serialization.</p>
 <section id="running-a-logging-socket-listener-in-production">
 <h3>Running a logging socket listener in production<a class="headerlink" href="#running-a-logging-socket-listener-in-production" title="本標頭的永久連結">¶</a></h3>
-<p>To run a logging listener in production, you may need to use a process-management tool
-such as <a class="reference external" href="http://supervisord.org/">Supervisor</a>. <a class="reference external" href="https://gist.github.com/vsajip/4b227eeec43817465ca835ca66f75e2b">Here</a> is a Gist which
-provides the bare-bones files to run the above functionality using Supervisor: you
-will need to change the <code class="docutils literal notranslate"><span class="pre">/path/to/</span></code> parts in the Gist to reflect the actual paths you
-want to use.</p>
+<p>To run a logging listener in production, you may need to use a
+process-management tool such as <a class="reference external" href="http://supervisord.org/">Supervisor</a>.
+<a class="reference external" href="https://gist.github.com/vsajip/4b227eeec43817465ca835ca66f75e2b">Here is a Gist</a>
+which provides the bare-bones files to run the above functionality using
+Supervisor. It consists of the following files:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>File</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="file docutils literal notranslate"><span class="pre">prepare.sh</span></code></p></td>
+<td><p>A Bash script to prepare the environment for
+testing</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="file docutils literal notranslate"><span class="pre">supervisor.conf</span></code></p></td>
+<td><p>The Supervisor configuration file, which has
+entries for the listener and a multi-process web
+application</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="file docutils literal notranslate"><span class="pre">ensure_app.sh</span></code></p></td>
+<td><p>A Bash script to ensure that Supervisor is running
+with the above configuration</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="file docutils literal notranslate"><span class="pre">log_listener.py</span></code></p></td>
+<td><p>The socket listener program which receives log
+events and records them to a file</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="file docutils literal notranslate"><span class="pre">main.py</span></code></p></td>
+<td><p>A simple web application which performs logging
+via a socket connected to the listener</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="file docutils literal notranslate"><span class="pre">webapp.json</span></code></p></td>
+<td><p>A JSON configuration file for the web application</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="file docutils literal notranslate"><span class="pre">client.py</span></code></p></td>
+<td><p>A Python script to exercise the web application</p></td>
+</tr>
+</tbody>
+</table>
+<p>The web application uses <a class="reference external" href="https://gunicorn.org/">Gunicorn</a>, which is a
+popular web application server that starts multiple worker processes to handle
+requests. This example setup shows how the workers can write to the same log file
+without conflicting with one another --- they all go through the socket listener.</p>
+<p>To test these files, do the following in a POSIX environment:</p>
+<ol class="arabic simple">
+<li><p>Download <a class="reference external" href="https://gist.github.com/vsajip/4b227eeec43817465ca835ca66f75e2b">the Gist</a>
+as a ZIP archive using the <span class="guilabel">Download ZIP</span> button.</p></li>
+<li><p>Unzip the above files from the archive into a scratch directory.</p></li>
+<li><p>In the scratch directory, run <code class="docutils literal notranslate"><span class="pre">bash</span> <span class="pre">prepare.sh</span></code> to get things ready.
+This creates a <code class="file docutils literal notranslate"><span class="pre">run</span></code> subdirectory to contain Supervisor-related and
+log files, and a <code class="file docutils literal notranslate"><span class="pre">venv</span></code> subdirectory to contain a virtual environment
+into which <code class="docutils literal notranslate"><span class="pre">bottle</span></code>, <code class="docutils literal notranslate"><span class="pre">gunicorn</span></code> and <code class="docutils literal notranslate"><span class="pre">supervisor</span></code> are installed.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">bash</span> <span class="pre">ensure_app.sh</span></code> to ensure that Supervisor is running with
+the above configuration.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">venv/bin/python</span> <span class="pre">client.py</span></code> to exercise the web application,
+which will lead to records being written to the log.</p></li>
+<li><p>Inspect the log files in the <code class="file docutils literal notranslate"><span class="pre">run</span></code> subdirectory. You should see the
+most recent log lines in files matching the pattern <code class="file docutils literal notranslate"><span class="pre">app.log*</span></code>. They won't be in
+any particular order, since they have been handled concurrently by different
+worker processes in a non-deterministic way.</p></li>
+<li><p>You can shut down the listener and the web application by running
+<code class="docutils literal notranslate"><span class="pre">venv/bin/supervisorctl</span> <span class="pre">-c</span> <span class="pre">supervisor.conf</span> <span class="pre">shutdown</span></code>.</p></li>
+</ol>
+<p>You may need to tweak the configuration files in the unlikely event that the
+configured ports clash with something else in your test environment.</p>
 </section>
 </section>
 <section id="adding-contextual-information-to-your-logging-output">
@@ -3985,7 +4047,7 @@ more fine-grained than that).</p>
 <br />
     <br />
 
-    最後更新於 10月 31, 2022。
+    最後更新於 11月 02, 2022。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
