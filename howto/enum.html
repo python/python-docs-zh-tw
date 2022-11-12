@@ -109,9 +109,14 @@
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#how-are-enums-different">How are Enums different?</a><ul>
+<li><a class="reference internal" href="#how-are-enums-and-flags-different">How are Enums and Flags different?</a><ul>
 <li><a class="reference internal" href="#enum-classes">Enum Classes</a></li>
+<li><a class="reference internal" href="#flag-classes">Flag Classes</a></li>
 <li><a class="reference internal" href="#enum-members-aka-instances">Enum Members (aka instances)</a></li>
+<li><a class="reference internal" href="#flag-members">Flag Members</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#enum-cookbook">Enum Cookbook</a><ul>
 <li><a class="reference internal" href="#omitting-values">Omitting values</a><ul>
 <li><a class="reference internal" href="#using-auto">Using <code class="xref py py-class docutils literal notranslate"><span class="pre">auto</span></code></a></li>
 <li><a class="reference internal" href="#using-object">Using <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></li>
@@ -374,6 +379,7 @@ yourself some work and use <a class="reference internal" href="../library/enum.h
 <span class="gp">... </span>    <span class="n">FRIDAY</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
 <span class="gp">... </span>    <span class="n">SATURDAY</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
 <span class="gp">... </span>    <span class="n">SUNDAY</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="n">WEEKEND</span> <span class="o">=</span> <span class="n">SATURDAY</span> <span class="o">|</span> <span class="n">SUNDAY</span>
 </pre></div>
 </div>
 <section id="programmatic-access-to-enumeration-members-and-their-attributes">
@@ -498,8 +504,11 @@ overridden:</p>
 <p>Iterating over the members of an enum does not provide the aliases:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">Shape</span><span class="p">)</span>
 <span class="go">[&lt;Shape.SQUARE: 2&gt;, &lt;Shape.DIAMOND: 1&gt;, &lt;Shape.CIRCLE: 3&gt;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">Weekday</span><span class="p">)</span>
+<span class="go">[&lt;Weekday.MONDAY: 1&gt;, &lt;Weekday.TUESDAY: 2&gt;, &lt;Weekday.WEDNESDAY: 4&gt;, &lt;Weekday.THURSDAY: 8&gt;, &lt;Weekday.FRIDAY: 16&gt;, &lt;Weekday.SATURDAY: 32&gt;, &lt;Weekday.SUNDAY: 64&gt;]</span>
 </pre></div>
 </div>
+<p>Note that the aliases <code class="docutils literal notranslate"><span class="pre">Shape.ALIAS_FOR_SQUARE</span></code> and <code class="docutils literal notranslate"><span class="pre">Weekday.WEEKEND</span></code> aren't shown.</p>
 <p>The special attribute <code class="docutils literal notranslate"><span class="pre">__members__</span></code> is a read-only ordered mapping of names
 to members.  It includes all names defined in the enumeration, including the
 aliases:</p>
@@ -517,6 +526,11 @@ the enumeration members.  For example, finding all the aliases:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">member</span> <span class="ow">in</span> <span class="n">Shape</span><span class="o">.</span><span class="n">__members__</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">member</span><span class="o">.</span><span class="n">name</span> <span class="o">!=</span> <span class="n">name</span><span class="p">]</span>
 <span class="go">[&#39;ALIAS_FOR_SQUARE&#39;]</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Aliases for flags include values with multiple flags set, such as <code class="docutils literal notranslate"><span class="pre">3</span></code>,
+and no flags set, i.e. <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
 </div>
 </section>
 <section id="comparisons">
@@ -940,7 +954,7 @@ flags being set, the boolean evaluation is <a class="reference internal" href=".
 </pre></div>
 </div>
 <p>Individual flags should have values that are powers of two (1, 2, 4, 8, ...),
-while combinations of flags won't:</p>
+while combinations of flags will not:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Color</span><span class="p">(</span><span class="n">Flag</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">RED</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
 <span class="gp">... </span>    <span class="n">BLUE</span> <span class="o">=</span> <span class="n">auto</span><span class="p">()</span>
@@ -1297,8 +1311,8 @@ example of when <code class="docutils literal notranslate"><span class="pre">KEE
 </section>
 </section>
 </section>
-<section id="how-are-enums-different">
-<span id="enum-class-differences"></span><h2>How are Enums different?<a class="headerlink" href="#how-are-enums-different" title="本標頭的永久連結">¶</a></h2>
+<section id="how-are-enums-and-flags-different">
+<span id="enum-class-differences"></span><h2>How are Enums and Flags different?<a class="headerlink" href="#how-are-enums-and-flags-different" title="本標頭的永久連結">¶</a></h2>
 <p>Enums have a custom metaclass that affects many aspects of both derived <a class="reference internal" href="../library/enum.html#enum.Enum" title="enum.Enum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a>
 classes and their instances (members).</p>
 <section id="enum-classes">
@@ -1311,17 +1325,49 @@ responsible for ensuring that various other methods on the final <a class="refer
 class are correct (such as <code class="xref py py-meth docutils literal notranslate"><span class="pre">__new__()</span></code>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">__getnewargs__()</span></code>,
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">__str__()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">__repr__()</span></code>).</p>
 </section>
+<section id="flag-classes">
+<h3>Flag Classes<a class="headerlink" href="#flag-classes" title="本標頭的永久連結">¶</a></h3>
+<p>Flags have an expanded view of aliasing: to be canonical, the value of a flag
+needs to be a power-of-two value, and not a duplicate name.  So, in addition to the
+<a class="reference internal" href="../library/enum.html#enum.Enum" title="enum.Enum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a> definition of alias, a flag with no value (a.k.a. <code class="docutils literal notranslate"><span class="pre">0</span></code>) or with more than one
+power-of-two value (e.g. <code class="docutils literal notranslate"><span class="pre">3</span></code>) is considered an alias.</p>
+</section>
 <section id="enum-members-aka-instances">
 <h3>Enum Members (aka instances)<a class="headerlink" href="#enum-members-aka-instances" title="本標頭的永久連結">¶</a></h3>
 <p>The most interesting thing about enum members is that they are singletons.
 <a class="reference internal" href="../library/enum.html#enum.EnumType" title="enum.EnumType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EnumType</span></code></a> creates them all while it is creating the enum class itself,
 and then puts a custom <code class="xref py py-meth docutils literal notranslate"><span class="pre">__new__()</span></code> in place to ensure that no new ones are
 ever instantiated by returning only the existing member instances.</p>
-<p id="enum-cookbook">While <a class="reference internal" href="../library/enum.html#enum.Enum" title="enum.Enum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a>, <a class="reference internal" href="../library/enum.html#enum.IntEnum" title="enum.IntEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></a>, <a class="reference internal" href="../library/enum.html#enum.StrEnum" title="enum.StrEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">StrEnum</span></code></a>, <a class="reference internal" href="../library/enum.html#enum.Flag" title="enum.Flag"><code class="xref py py-class docutils literal notranslate"><span class="pre">Flag</span></code></a>, and
+</section>
+<section id="flag-members">
+<h3>Flag Members<a class="headerlink" href="#flag-members" title="本標頭的永久連結">¶</a></h3>
+<p>Flag members can be iterated over just like the <a class="reference internal" href="../library/enum.html#enum.Flag" title="enum.Flag"><code class="xref py py-class docutils literal notranslate"><span class="pre">Flag</span></code></a> class, and only the
+canonical members will be returned.  For example:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">Color</span><span class="p">)</span>
+<span class="go">[&lt;Color.RED: 1&gt;, &lt;Color.GREEN: 2&gt;, &lt;Color.BLUE: 4&gt;]</span>
+</pre></div>
+</div>
+<p>(Note that <code class="docutils literal notranslate"><span class="pre">BLACK</span></code>, <code class="docutils literal notranslate"><span class="pre">PURPLE</span></code>, and <code class="docutils literal notranslate"><span class="pre">WHITE</span></code> do not show up.)</p>
+<p>Inverting a flag member returns the corresponding positive value,
+rather than a negative value --- for example:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="o">~</span><span class="n">Color</span><span class="o">.</span><span class="n">RED</span>
+<span class="go">&lt;Color.GREEN|BLUE: 6&gt;</span>
+</pre></div>
+</div>
+<p>Flag members have a length corresponding to the number of power-of-two values
+they contain.  For example:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">Color</span><span class="o">.</span><span class="n">PURPLE</span><span class="p">)</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="enum-cookbook">
+<span id="id1"></span><h2>Enum Cookbook<a class="headerlink" href="#enum-cookbook" title="本標頭的永久連結">¶</a></h2>
+<p>While <a class="reference internal" href="../library/enum.html#enum.Enum" title="enum.Enum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a>, <a class="reference internal" href="../library/enum.html#enum.IntEnum" title="enum.IntEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntEnum</span></code></a>, <a class="reference internal" href="../library/enum.html#enum.StrEnum" title="enum.StrEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">StrEnum</span></code></a>, <a class="reference internal" href="../library/enum.html#enum.Flag" title="enum.Flag"><code class="xref py py-class docutils literal notranslate"><span class="pre">Flag</span></code></a>, and
 <a class="reference internal" href="../library/enum.html#enum.IntFlag" title="enum.IntFlag"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntFlag</span></code></a> are expected to cover the majority of use-cases, they cannot
 cover them all.  Here are recipes for some different types of enumerations
 that can be used directly, or as examples for creating one's own.</p>
-</section>
 <section id="omitting-values">
 <h3>Omitting values<a class="headerlink" href="#omitting-values" title="本標頭的永久連結">¶</a></h3>
 <p>In many use-cases, one doesn't care what the actual value of an enumeration
@@ -1609,9 +1655,14 @@ subclassed to provide a different Enum experience.</p>
 </li>
 </ul>
 </li>
-<li><a class="reference internal" href="#how-are-enums-different">How are Enums different?</a><ul>
+<li><a class="reference internal" href="#how-are-enums-and-flags-different">How are Enums and Flags different?</a><ul>
 <li><a class="reference internal" href="#enum-classes">Enum Classes</a></li>
+<li><a class="reference internal" href="#flag-classes">Flag Classes</a></li>
 <li><a class="reference internal" href="#enum-members-aka-instances">Enum Members (aka instances)</a></li>
+<li><a class="reference internal" href="#flag-members">Flag Members</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#enum-cookbook">Enum Cookbook</a><ul>
 <li><a class="reference internal" href="#omitting-values">Omitting values</a><ul>
 <li><a class="reference internal" href="#using-auto">Using <code class="xref py py-class docutils literal notranslate"><span class="pre">auto</span></code></a></li>
 <li><a class="reference internal" href="#using-object">Using <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></li>
