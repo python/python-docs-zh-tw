@@ -92,6 +92,11 @@
 <li><a class="reference internal" href="#examples">範例</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#applications">Applications</a><ul>
+<li><a class="reference internal" href="#native-formats">Native Formats</a></li>
+<li><a class="reference internal" href="#standard-formats">Standard Formats</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#classes">Classes</a><ul>
 <li><a class="reference internal" href="#struct.Struct"><code class="docutils literal notranslate"><span class="pre">Struct</span></code></a><ul>
 <li><a class="reference internal" href="#struct.Struct.pack"><code class="docutils literal notranslate"><span class="pre">Struct.pack()</span></code></a></li>
@@ -194,20 +199,24 @@
 <span id="struct-interpret-bytes-as-packed-binary-data"></span><h1><a class="reference internal" href="#module-struct" title="struct: Interpret bytes as packed binary data."><code class="xref py py-mod docutils literal notranslate"><span class="pre">struct</span></code></a> --- Interpret bytes as packed binary data<a class="headerlink" href="#module-struct" title="本標頭的永久連結">¶</a></h1>
 <p><strong>原始碼：</strong><a class="reference external" href="https://github.com/python/cpython/tree/3.11/Lib/struct.py">Lib/struct.py</a></p>
 <hr class="docutils" id="index-0" />
-<p>This module performs conversions between Python values and C structs represented
-as Python <a class="reference internal" href="stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a> objects.  This can be used in handling binary data
-stored in files or from network connections, among other sources.  It uses
-<a class="reference internal" href="#struct-format-strings"><span class="std std-ref">Format Strings</span></a> as compact descriptions of the layout of the C
-structs and the intended conversion to/from Python values.</p>
+<p>This module converts between Python values and C structs represented
+as Python <a class="reference internal" href="stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a> objects.  Compact <a class="reference internal" href="#struct-format-strings"><span class="std std-ref">format strings</span></a>
+describe the intended conversions to/from Python values.
+The module's functions and objects can be used for two largely
+distinct applications, data exchange with external sources (files or
+network connections), or data transfer between the Python application
+and the C layer.</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>By default, the result of packing a given C struct includes pad bytes in
-order to maintain proper alignment for the C types involved; similarly,
-alignment is taken into account when unpacking.  This behavior is chosen so
-that the bytes of a packed struct correspond exactly to the layout in memory
-of the corresponding C struct.  To handle platform-independent data formats
-or omit implicit pad bytes, use <code class="docutils literal notranslate"><span class="pre">standard</span></code> size and alignment instead of
-<code class="docutils literal notranslate"><span class="pre">native</span></code> size and alignment: see <a class="reference internal" href="#struct-alignment"><span class="std std-ref">Byte Order, Size, and Alignment</span></a> for details.</p>
+<p>When no prefix character is given, native mode is the default. It
+packs or unpacks data based on the platform and compiler on which
+the Python interpreter was built.
+The result of packing a given C struct includes pad bytes which
+maintain proper alignment for the C types involved; similarly,
+alignment is taken into account when unpacking.  In contrast, when
+communicating data between external sources, the programmer is
+responsible for defining byte ordering and padding between elements.
+See <a class="reference internal" href="#struct-alignment"><span class="std std-ref">Byte Order, Size, and Alignment</span></a> for details.</p>
 </div>
 <p>Several <a class="reference internal" href="#module-struct" title="struct: Interpret bytes as packed binary data."><code class="xref py py-mod docutils literal notranslate"><span class="pre">struct</span></code></a> functions (and methods of <a class="reference internal" href="#struct.Struct" title="struct.Struct"><code class="xref py py-class docutils literal notranslate"><span class="pre">Struct</span></code></a>) take a <em>buffer</em>
 argument.  This refers to objects that implement the <a class="reference internal" href="../c-api/buffer.html#bufferobjects"><span class="std std-ref">緩衝協定 (Buffer Protocol)</span></a> and
@@ -283,15 +292,23 @@ required by the format, as reflected by <a class="reference internal" href="#str
 </section>
 <section id="format-strings">
 <span id="struct-format-strings"></span><h2>Format Strings<a class="headerlink" href="#format-strings" title="本標頭的永久連結">¶</a></h2>
-<p>Format strings are the mechanism used to specify the expected layout when
-packing and unpacking data.  They are built up from <a class="reference internal" href="#format-characters"><span class="std std-ref">Format Characters</span></a>,
-which specify the type of data being packed/unpacked.  In addition, there are
-special characters for controlling the <a class="reference internal" href="#struct-alignment"><span class="std std-ref">Byte Order, Size, and Alignment</span></a>.</p>
+<p>Format strings describe the data layout when
+packing and unpacking data.  They are built up from <a class="reference internal" href="#format-characters"><span class="std std-ref">format characters</span></a>,
+which specify the type of data being packed/unpacked.  In addition,
+special characters control the <a class="reference internal" href="#struct-alignment"><span class="std std-ref">byte order, size and alignment</span></a>.
+Each format string consists of an optional prefix character which
+describes the overall properties of the data and one or more format
+characters which describe the actual data values and padding.</p>
 <section id="byte-order-size-and-alignment">
 <span id="struct-alignment"></span><h3>Byte Order, Size, and Alignment<a class="headerlink" href="#byte-order-size-and-alignment" title="本標頭的永久連結">¶</a></h3>
 <p>By default, C types are represented in the machine's native format and byte
 order, and properly aligned by skipping pad bytes if necessary (according to the
-rules used by the C compiler).</p>
+rules used by the C compiler).
+This behavior is chosen so
+that the bytes of a packed struct correspond exactly to the memory layout
+of the corresponding C struct.
+Whether to use native byte ordering
+and padding or standard formats depends on the application.</p>
 <p id="index-1">Alternatively, the first character of the format string can be used to indicate
 the byte order, size and alignment of the packed data, according to the
 following table:</p>
@@ -332,12 +349,10 @@ following table:</p>
 </tbody>
 </table>
 <p>If the first character is not one of these, <code class="docutils literal notranslate"><span class="pre">'&#64;'</span></code> is assumed.</p>
-<p>Native byte order is big-endian or little-endian, depending on the host
-system. For example, Intel x86 and AMD64 (x86-64) are little-endian;
-IBM z and most legacy architectures are big-endian;
-and ARM, RISC-V and IBM Power feature switchable endianness
-(bi-endian, though the former two are nearly always little-endian in practice).
-Use <code class="docutils literal notranslate"><span class="pre">sys.byteorder</span></code> to check the endianness of your system.</p>
+<p>Native byte order is big-endian or little-endian, depending on the
+host system. For example, Intel x86, AMD64 (x86-64), and Apple M1 are
+little-endian; IBM z and many legacy architectures are big-endian.
+Use <a class="reference internal" href="sys.html#sys.byteorder" title="sys.byteorder"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.byteorder</span></code></a> to check the endianness of your system.</p>
 <p>Native size and alignment are determined using the C compiler's
 <code class="docutils literal notranslate"><span class="pre">sizeof</span></code> expression.  This is always combined with native byte order.</p>
 <p>Standard size depends only on the format character;  see the table in
@@ -489,13 +504,13 @@ platform-dependent.</p>
 <td><p><span class="c-expr sig sig-inline c"><span class="kt">char</span><span class="p">[</span><span class="p">]</span></span></p></td>
 <td><p>bytes</p></td>
 <td></td>
-<td></td>
+<td><p>(9)</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">p</span></code></p></td>
 <td><p><span class="c-expr sig sig-inline c"><span class="kt">char</span><span class="p">[</span><span class="p">]</span></span></p></td>
 <td><p>bytes</p></td>
 <td></td>
-<td></td>
+<td><p>(8)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">P</span></code></p></td>
 <td><p><span class="c-expr sig sig-inline c"><span class="kt">void</span><span class="p">*</span></span></p></td>
@@ -545,29 +560,8 @@ at full precision. This type is not widely supported by C compilers: on a
 typical machine, an unsigned short can be used for storage, but not for math
 operations. See the Wikipedia page on the <a class="reference external" href="https://en.wikipedia.org/wiki/Half-precision_floating-point_format">half-precision floating-point
 format</a> for more information.</p></li>
-<li><p>For padding, <code class="docutils literal notranslate"><span class="pre">x</span></code> inserts null bytes.</p></li>
-</ol>
-<p>A format character may be preceded by an integral repeat count.  For example,
-the format string <code class="docutils literal notranslate"><span class="pre">'4h'</span></code> means exactly the same as <code class="docutils literal notranslate"><span class="pre">'hhhh'</span></code>.</p>
-<p>Whitespace characters between formats are ignored; a count and its format must
-not contain whitespace though.</p>
-<p>For the <code class="docutils literal notranslate"><span class="pre">'s'</span></code> format character, the count is interpreted as the length of the
-bytes, not a repeat count like for the other format characters; for example,
-<code class="docutils literal notranslate"><span class="pre">'10s'</span></code> means a single 10-byte string, while <code class="docutils literal notranslate"><span class="pre">'10c'</span></code> means 10 characters.
-If a count is not given, it defaults to 1.  For packing, the string is
-truncated or padded with null bytes as appropriate to make it fit. For
-unpacking, the resulting bytes object always has exactly the specified number
-of bytes.  As a special case, <code class="docutils literal notranslate"><span class="pre">'0s'</span></code> means a single, empty string (while
-<code class="docutils literal notranslate"><span class="pre">'0c'</span></code> means 0 characters).</p>
-<p>When packing a value <code class="docutils literal notranslate"><span class="pre">x</span></code> using one of the integer formats (<code class="docutils literal notranslate"><span class="pre">'b'</span></code>,
-<code class="docutils literal notranslate"><span class="pre">'B'</span></code>, <code class="docutils literal notranslate"><span class="pre">'h'</span></code>, <code class="docutils literal notranslate"><span class="pre">'H'</span></code>, <code class="docutils literal notranslate"><span class="pre">'i'</span></code>, <code class="docutils literal notranslate"><span class="pre">'I'</span></code>, <code class="docutils literal notranslate"><span class="pre">'l'</span></code>, <code class="docutils literal notranslate"><span class="pre">'L'</span></code>,
-<code class="docutils literal notranslate"><span class="pre">'q'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Q'</span></code>), if <code class="docutils literal notranslate"><span class="pre">x</span></code> is outside the valid range for that format
-then <a class="reference internal" href="#struct.error" title="struct.error"><code class="xref py py-exc docutils literal notranslate"><span class="pre">struct.error</span></code></a> is raised.</p>
-<div class="versionchanged">
-<p><span class="versionmodified changed">在 3.1 版本變更: </span>Previously, some of the integer formats wrapped out-of-range values and
-raised <a class="reference internal" href="exceptions.html#DeprecationWarning" title="DeprecationWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DeprecationWarning</span></code></a> instead of <a class="reference internal" href="#struct.error" title="struct.error"><code class="xref py py-exc docutils literal notranslate"><span class="pre">struct.error</span></code></a>.</p>
-</div>
-<p>The <code class="docutils literal notranslate"><span class="pre">'p'</span></code> format character encodes a &quot;Pascal string&quot;, meaning a short
+<li><p>When packing, <code class="docutils literal notranslate"><span class="pre">'x'</span></code> inserts one NUL byte.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">'p'</span></code> format character encodes a &quot;Pascal string&quot;, meaning a short
 variable-length string stored in a <em>fixed number of bytes</em>, given by the count.
 The first byte stored is the length of the string, or 255, whichever is
 smaller.  The bytes of the string follow.  If the string passed in to
@@ -576,7 +570,32 @@ smaller.  The bytes of the string follow.  If the string passed in to
 <code class="docutils literal notranslate"><span class="pre">count-1</span></code>, it is padded with null bytes so that exactly count bytes in all
 are used.  Note that for <a class="reference internal" href="#struct.unpack" title="struct.unpack"><code class="xref py py-func docutils literal notranslate"><span class="pre">unpack()</span></code></a>, the <code class="docutils literal notranslate"><span class="pre">'p'</span></code> format character consumes
 <code class="docutils literal notranslate"><span class="pre">count</span></code> bytes, but that the string returned can never contain more than 255
-bytes.</p>
+bytes.</p></li>
+<li><p>For the <code class="docutils literal notranslate"><span class="pre">'s'</span></code> format character, the count is interpreted as the length of the
+bytes, not a repeat count like for the other format characters; for example,
+<code class="docutils literal notranslate"><span class="pre">'10s'</span></code> means a single 10-byte string mapping to or from a single
+Python byte string, while <code class="docutils literal notranslate"><span class="pre">'10c'</span></code> means 10
+separate one byte character elements (e.g., <code class="docutils literal notranslate"><span class="pre">cccccccccc</span></code>) mapping
+to or from ten different Python byte objects. (See <a class="reference internal" href="#struct-examples"><span class="std std-ref">範例</span></a>
+for a concrete demonstration of the difference.)
+If a count is not given, it defaults to 1.  For packing, the string is
+truncated or padded with null bytes as appropriate to make it fit. For
+unpacking, the resulting bytes object always has exactly the specified number
+of bytes.  As a special case, <code class="docutils literal notranslate"><span class="pre">'0s'</span></code> means a single, empty string (while
+<code class="docutils literal notranslate"><span class="pre">'0c'</span></code> means 0 characters).</p></li>
+</ol>
+<p>A format character may be preceded by an integral repeat count.  For example,
+the format string <code class="docutils literal notranslate"><span class="pre">'4h'</span></code> means exactly the same as <code class="docutils literal notranslate"><span class="pre">'hhhh'</span></code>.</p>
+<p>Whitespace characters between formats are ignored; a count and its format must
+not contain whitespace though.</p>
+<p>When packing a value <code class="docutils literal notranslate"><span class="pre">x</span></code> using one of the integer formats (<code class="docutils literal notranslate"><span class="pre">'b'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">'B'</span></code>, <code class="docutils literal notranslate"><span class="pre">'h'</span></code>, <code class="docutils literal notranslate"><span class="pre">'H'</span></code>, <code class="docutils literal notranslate"><span class="pre">'i'</span></code>, <code class="docutils literal notranslate"><span class="pre">'I'</span></code>, <code class="docutils literal notranslate"><span class="pre">'l'</span></code>, <code class="docutils literal notranslate"><span class="pre">'L'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">'q'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Q'</span></code>), if <code class="docutils literal notranslate"><span class="pre">x</span></code> is outside the valid range for that format
+then <a class="reference internal" href="#struct.error" title="struct.error"><code class="xref py py-exc docutils literal notranslate"><span class="pre">struct.error</span></code></a> is raised.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.1 版本變更: </span>Previously, some of the integer formats wrapped out-of-range values and
+raised <a class="reference internal" href="exceptions.html#DeprecationWarning" title="DeprecationWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DeprecationWarning</span></code></a> instead of <a class="reference internal" href="#struct.error" title="struct.error"><code class="xref py py-exc docutils literal notranslate"><span class="pre">struct.error</span></code></a>.</p>
+</div>
 <p id="index-3">For the <code class="docutils literal notranslate"><span class="pre">'?'</span></code> format character, the return value is either <a class="reference internal" href="constants.html#True" title="True"><code class="xref py py-const docutils literal notranslate"><span class="pre">True</span></code></a> or
 <a class="reference internal" href="constants.html#False" title="False"><code class="xref py py-const docutils literal notranslate"><span class="pre">False</span></code></a>. When packing, the truth value of the argument object is used.
 Either 0 or 1 in the native or standard bool representation will be packed, and
@@ -586,17 +605,35 @@ any non-zero value will be <code class="docutils literal notranslate"><span clas
 <span id="struct-examples"></span><h3>範例<a class="headerlink" href="#examples" title="本標頭的永久連結">¶</a></h3>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>All examples assume a native byte order, size, and alignment with a
-big-endian machine.</p>
+<p>Native byte order examples (designated by the <code class="docutils literal notranslate"><span class="pre">'&#64;'</span></code> format prefix or
+lack of any prefix character) may not match what the reader's
+machine produces as
+that depends on the platform and compiler.</p>
 </div>
-<p>A basic example of packing/unpacking three integers:</p>
+<p>Pack and unpack integers of three different sizes, using big endian
+ordering:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">struct</span> <span class="kn">import</span> <span class="o">*</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;hhl&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<span class="go">b&#39;\x00\x01\x00\x02\x00\x00\x00\x03&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;hhl&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x00\x01\x00\x02\x00\x00\x00\x03</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&gt;bhl&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">b&#39;\x01\x00\x02\x00\x00\x00\x03&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;&gt;bhl&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x01\x00\x02\x00\x00\x00\x03</span><span class="s1">&#39;</span>
 <span class="go">(1, 2, 3)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;hhl&#39;</span><span class="p">)</span>
-<span class="go">8</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;&gt;bhl&#39;</span><span class="p">)</span>
+<span class="go">7</span>
+</pre></div>
+</div>
+<p>Attempt to pack an integer which is too large for the defined field:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;&gt;h&quot;</span><span class="p">,</span> <span class="mi">99999</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;stdin&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
+<span class="gr">struct.error</span>: <span class="n">&#39;h&#39; format requires -32768 &lt;= number &lt;= 32767</span>
+</pre></div>
+</div>
+<p>Demonstrate the difference between <code class="docutils literal notranslate"><span class="pre">'s'</span></code> and <code class="docutils literal notranslate"><span class="pre">'c'</span></code> format
+characters:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;@ccc&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;3&#39;</span><span class="p">)</span>
+<span class="go">b&#39;123&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;@3s&quot;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;123&#39;</span><span class="p">)</span>
+<span class="go">b&#39;123&#39;</span>
 </pre></div>
 </div>
 <p>Unpacked fields can be named by assigning them to variables or by wrapping
@@ -610,34 +647,118 @@ the result in a named tuple:</p>
 <span class="go">Student(name=b&#39;raymond   &#39;, serialnum=4658, school=264, gradelevel=8)</span>
 </pre></div>
 </div>
-<p>The ordering of format characters may have an impact on size since the padding
-needed to satisfy alignment requirements is different:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;ci&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;*&#39;</span><span class="p">,</span> <span class="mh">0x12131415</span><span class="p">)</span>
-<span class="go">b&#39;*\x00\x00\x00\x12\x13\x14\x15&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;ic&#39;</span><span class="p">,</span> <span class="mh">0x12131415</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;*&#39;</span><span class="p">)</span>
-<span class="go">b&#39;\x12\x13\x14\x15*&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;ci&#39;</span><span class="p">)</span>
+<p>The ordering of format characters may have an impact on size in native
+mode since padding is implicit. In standard mode, the user is
+responsible for inserting any desired padding.
+Note in
+the first <code class="docutils literal notranslate"><span class="pre">pack</span></code> call below that three NUL bytes were added after the
+packed <code class="docutils literal notranslate"><span class="pre">'#'</span></code> to align the following integer on a four-byte boundary.
+In this example, the output was produced on a little endian machine:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;@ci&#39;</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="mh">0x12131415</span><span class="p">)</span>
+<span class="go">b&#39;#\x00\x00\x00\x15\x14\x13\x12&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;@ic&#39;</span><span class="p">,</span> <span class="mh">0x12131415</span><span class="p">,</span> <span class="sa">b</span><span class="s1">&#39;#&#39;</span><span class="p">)</span>
+<span class="go">b&#39;\x15\x14\x13\x12#&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;@ci&#39;</span><span class="p">)</span>
 <span class="go">8</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;ic&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;@ic&#39;</span><span class="p">)</span>
 <span class="go">5</span>
 </pre></div>
 </div>
-<p>The following format <code class="docutils literal notranslate"><span class="pre">'llh0l'</span></code> specifies two pad bytes at the end, assuming
-longs are aligned on 4-byte boundaries:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;llh0l&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<p>The following format <code class="docutils literal notranslate"><span class="pre">'llh0l'</span></code> results in two pad bytes being added
+at the end, assuming the platform's longs are aligned on 4-byte boundaries:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;@llh0l&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 <span class="go">b&#39;\x00\x00\x00\x01\x00\x00\x00\x02\x00\x03\x00\x00&#39;</span>
 </pre></div>
 </div>
-<p>This only works when native size and alignment are in effect; standard size and
-alignment does not enforce any alignment.</p>
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
 <dl class="simple">
 <dt><a class="reference internal" href="array.html#module-array" title="array: Space efficient arrays of uniformly typed numeric values."><code class="xref py py-mod docutils literal notranslate"><span class="pre">array</span></code></a> 模組</dt><dd><p>Packed binary storage of homogeneous data.</p>
 </dd>
-<dt><a class="reference internal" href="xdrlib.html#module-xdrlib" title="xdrlib: Encoders and decoders for the External Data Representation (XDR).（已棄用）"><code class="xref py py-mod docutils literal notranslate"><span class="pre">xdrlib</span></code></a> 模組</dt><dd><p>Packing and unpacking of XDR data.</p>
+<dt><a class="reference internal" href="json.html#module-json" title="json: Encode and decode the JSON format."><code class="xref py py-mod docutils literal notranslate"><span class="pre">json</span></code></a> 模組</dt><dd><p>JSON encoder and decoder.</p>
+</dd>
+<dt><a class="reference internal" href="pickle.html#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 模組</dt><dd><p>Python object serialization.</p>
 </dd>
 </dl>
+</div>
+</section>
+</section>
+<section id="applications">
+<span id="id2"></span><h2>Applications<a class="headerlink" href="#applications" title="本標頭的永久連結">¶</a></h2>
+<p>Two main applications for the <a class="reference internal" href="#module-struct" title="struct: Interpret bytes as packed binary data."><code class="xref py py-mod docutils literal notranslate"><span class="pre">struct</span></code></a> module exist, data
+interchange between Python and C code within an application or another
+application compiled using the same compiler (<a class="reference internal" href="#struct-native-formats"><span class="std std-ref">native formats</span></a>), and
+data interchange between applications using agreed upon data layout
+(<a class="reference internal" href="#struct-standard-formats"><span class="std std-ref">standard formats</span></a>).  Generally speaking, the format strings
+constructed for these two domains are distinct.</p>
+<section id="native-formats">
+<span id="struct-native-formats"></span><h3>Native Formats<a class="headerlink" href="#native-formats" title="本標頭的永久連結">¶</a></h3>
+<p>When constructing format strings which mimic native layouts, the
+compiler and machine architecture determine byte ordering and padding.
+In such cases, the <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> format character should be used to specify
+native byte ordering and data sizes.  Internal pad bytes are normally inserted
+automatically.  It is possible that a zero-repeat format code will be
+needed at the end of a format string to round up to the correct
+byte boundary for proper alignment of consective chunks of data.</p>
+<p>Consider these two simple examples (on a 64-bit, little-endian
+machine):</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;@lhl&#39;</span><span class="p">)</span>
+<span class="go">24</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;@llh&#39;</span><span class="p">)</span>
+<span class="go">18</span>
+</pre></div>
+</div>
+<p>Data is not padded to an 8-byte boundary at the end of the second
+format string without the use of extra padding.  A zero-repeat format
+code solves that problem:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;@llh0l&#39;</span><span class="p">)</span>
+<span class="go">24</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">'x'</span></code> format code can be used to specify the repeat, but for
+native formats it is better to use a zero-repeat format like <code class="docutils literal notranslate"><span class="pre">'0l'</span></code>.</p>
+<p>By default, native byte ordering and alignment is used, but it is
+better to be explicit and use the <code class="docutils literal notranslate"><span class="pre">'&#64;'</span></code> prefix character.</p>
+</section>
+<section id="standard-formats">
+<span id="struct-standard-formats"></span><h3>Standard Formats<a class="headerlink" href="#standard-formats" title="本標頭的永久連結">¶</a></h3>
+<p>When exchanging data beyond your process such as networking or storage,
+be precise.  Specify the exact byte order, size, and alignment.  Do
+not assume they match the native order of a particular machine.
+For example, network byte order is big-endian, while many popular CPUs
+are little-endian.  By defining this explicitly, the user need not
+care about the specifics of the platform their code is running on.
+The first character should typically be <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> or <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>
+(or <code class="docutils literal notranslate"><span class="pre">!</span></code>).  Padding is the responsibility of the programmer.  The
+zero-repeat format character won't work.  Instead, the user must
+explicitly add <code class="docutils literal notranslate"><span class="pre">'x'</span></code> pad bytes where needed.  Revisiting the
+examples from the previous section, we have:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;&lt;qh6xq&#39;</span><span class="p">)</span>
+<span class="go">24</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&lt;qh6xq&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">==</span> <span class="n">pack</span><span class="p">(</span><span class="s1">&#39;@lhl&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;@llh&#39;</span><span class="p">)</span>
+<span class="go">18</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;@llh&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">==</span> <span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&lt;qqh&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;&lt;qqh6x&#39;</span><span class="p">)</span>
+<span class="go">24</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;@llh0l&#39;</span><span class="p">)</span>
+<span class="go">24</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;@llh0l&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">==</span> <span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&lt;qqh6x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>The above results (executed on a 64-bit machine) aren't guaranteed to
+match when executed on different machines.  For example, the examples
+below were executed on a 32-bit machine:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;&lt;qqh6x&#39;</span><span class="p">)</span>
+<span class="go">24</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">&#39;@llh0l&#39;</span><span class="p">)</span>
+<span class="go">12</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s1">&#39;@llh0l&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="o">==</span> <span class="n">pack</span><span class="p">(</span><span class="s1">&#39;&lt;qqh6x&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="go">False</span>
+</pre></div>
 </div>
 </section>
 </section>
@@ -648,9 +769,9 @@ alignment does not enforce any alignment.</p>
 <dt class="sig sig-object py" id="struct.Struct">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">struct.</span></span><span class="sig-name descname"><span class="pre">Struct</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">format</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#struct.Struct" title="本定義的永久連結">¶</a></dt>
 <dd><p>Return a new Struct object which writes and reads binary data according to
-the format string <em>format</em>.  Creating a Struct object once and calling its
-methods is more efficient than calling the <a class="reference internal" href="#module-struct" title="struct: Interpret bytes as packed binary data."><code class="xref py py-mod docutils literal notranslate"><span class="pre">struct</span></code></a> functions with the
-same format since the format string only needs to be compiled once.</p>
+the format string <em>format</em>.  Creating a <code class="docutils literal notranslate"><span class="pre">Struct</span></code> object once and calling its
+methods is more efficient than calling module-level functions with the
+same format since the format string is only compiled once.</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
 <p>The compiled versions of the most recent format strings passed to
@@ -743,6 +864,11 @@ by the <a class="reference internal" href="#struct.pack" title="struct.pack"><co
 <li><a class="reference internal" href="#byte-order-size-and-alignment">Byte Order, Size, and Alignment</a></li>
 <li><a class="reference internal" href="#format-characters">Format Characters</a></li>
 <li><a class="reference internal" href="#examples">範例</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#applications">Applications</a><ul>
+<li><a class="reference internal" href="#native-formats">Native Formats</a></li>
+<li><a class="reference internal" href="#standard-formats">Standard Formats</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#classes">Classes</a><ul>
@@ -855,7 +981,7 @@ by the <a class="reference internal" href="#struct.pack" title="struct.pack"><co
 <br />
     <br />
 
-    最後更新於 11月 14, 2022。
+    最後更新於 11月 23, 2022。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
