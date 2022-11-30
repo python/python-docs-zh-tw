@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>sqlite3 --- DB-API 2.0 interface for SQLite databases &#8212; Python 3.11.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sqlite3 --- SQLite 資料庫的 DB-API 2.0 介面 &#8212; Python 3.11.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?2022.1" />
@@ -75,7 +75,7 @@
   <div>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
-<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code> --- DB-API 2.0 interface for SQLite databases</a><ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code> --- SQLite 資料庫的 DB-API 2.0 介面</a><ul>
 <li><a class="reference internal" href="#tutorial">Tutorial</a></li>
 <li><a class="reference internal" href="#reference">Reference</a><ul>
 <li><a class="reference internal" href="#module-functions">Module functions</a><ul>
@@ -152,6 +152,7 @@
 <li><a class="reference internal" href="#sqlite3.Cursor.description"><code class="docutils literal notranslate"><span class="pre">Cursor.description</span></code></a></li>
 <li><a class="reference internal" href="#sqlite3.Cursor.lastrowid"><code class="docutils literal notranslate"><span class="pre">Cursor.lastrowid</span></code></a></li>
 <li><a class="reference internal" href="#sqlite3.Cursor.rowcount"><code class="docutils literal notranslate"><span class="pre">Cursor.rowcount</span></code></a></li>
+<li><a class="reference internal" href="#sqlite3.Cursor.row_factory"><code class="docutils literal notranslate"><span class="pre">Cursor.row_factory</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -211,6 +212,7 @@
 <li><a class="reference internal" href="#how-to-use-connection-shortcut-methods">How to use connection shortcut methods</a></li>
 <li><a class="reference internal" href="#how-to-use-the-connection-context-manager">How to use the connection context manager</a></li>
 <li><a class="reference internal" href="#how-to-work-with-sqlite-uris">How to work with SQLite URIs</a></li>
+<li><a class="reference internal" href="#how-to-create-and-use-row-factories">How to create and use row factories</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#explanation">解釋</a><ul>
@@ -279,7 +281,7 @@
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="persistence.html" accesskey="U">Data Persistence</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code> --- DB-API 2.0 interface for SQLite databases</a></li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code> --- SQLite 資料庫的 DB-API 2.0 介面</a></li>
                 <li class="right">
                     
 
@@ -303,7 +305,7 @@
           <div class="body" role="main">
             
   <section id="module-sqlite3">
-<span id="sqlite3-db-api-2-0-interface-for-sqlite-databases"></span><h1><a class="reference internal" href="#module-sqlite3" title="sqlite3: A DB-API 2.0 implementation using SQLite 3.x."><code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code></a> --- DB-API 2.0 interface for SQLite databases<a class="headerlink" href="#module-sqlite3" title="本標頭的永久連結">¶</a></h1>
+<span id="sqlite3-db-api-2-0-interface-for-sqlite-databases"></span><h1><a class="reference internal" href="#module-sqlite3" title="sqlite3: A DB-API 2.0 implementation using SQLite 3.x."><code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code></a> --- SQLite 資料庫的 DB-API 2.0 介面<a class="headerlink" href="#module-sqlite3" title="本標頭的永久連結">¶</a></h1>
 <p><strong>原始碼：</strong><a class="reference external" href="https://github.com/python/cpython/tree/3.11/Lib/sqlite3/">Lib/sqlite3/</a></p>
 <p id="sqlite3-intro">SQLite is a C library that provides a lightweight disk-based database that
 doesn't require a separate server process and allows accessing the database
@@ -475,6 +477,7 @@ inserted data and retrieved values from it in multiple ways.</p>
 <li><p><a class="reference internal" href="#sqlite3-adapters"><span class="std std-ref">How to adapt custom Python types to SQLite values</span></a></p></li>
 <li><p><a class="reference internal" href="#sqlite3-converters"><span class="std std-ref">How to convert SQLite values to custom Python types</span></a></p></li>
 <li><p><a class="reference internal" href="#sqlite3-connection-context-manager"><span class="std std-ref">How to use the connection context manager</span></a></p></li>
+<li><p><a class="reference internal" href="#sqlite3-howto-row-factory"><span class="std std-ref">How to create and use row factories</span></a></p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -1454,26 +1457,13 @@ the default is <code class="docutils literal notranslate"><span class="pre">&quo
 <dl class="py attribute">
 <dt class="sig sig-object py" id="sqlite3.Connection.row_factory">
 <span class="sig-name descname"><span class="pre">row_factory</span></span><a class="headerlink" href="#sqlite3.Connection.row_factory" title="本定義的永久連結">¶</a></dt>
-<dd><p>A callable that accepts two arguments,
-a <a class="reference internal" href="#sqlite3.Cursor" title="sqlite3.Cursor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cursor</span></code></a> object and the raw row results as a <a class="reference internal" href="stdtypes.html#tuple" title="tuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>,
-and returns a custom object representing an SQLite row.</p>
-<p>範例：</p>
-<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">dict_factory</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="n">col_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cursor</span><span class="o">.</span><span class="n">description</span><span class="p">]</span>
-<span class="gp">... </span>    <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">col_names</span><span class="p">,</span> <span class="n">row</span><span class="p">)}</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;:memory:&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">row_factory</span> <span class="o">=</span> <span class="n">dict_factory</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">con</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT 1 AS a, 2 AS b&quot;</span><span class="p">):</span>
-<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-<span class="go">{&#39;a&#39;: 1, &#39;b&#39;: 2}</span>
-</pre></div>
-</div>
-<p>If returning a tuple doesn't suffice and you want name-based access to
-columns, you should consider setting <a class="reference internal" href="#sqlite3.Connection.row_factory" title="sqlite3.Connection.row_factory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">row_factory</span></code></a> to the
-highly optimized <a class="reference internal" href="#sqlite3.Row" title="sqlite3.Row"><code class="xref py py-class docutils literal notranslate"><span class="pre">sqlite3.Row</span></code></a> type. <a class="reference internal" href="#sqlite3.Row" title="sqlite3.Row"><code class="xref py py-class docutils literal notranslate"><span class="pre">Row</span></code></a> provides both
-index-based and case-insensitive name-based access to columns with almost no
-memory overhead. It will probably be better than your own custom
-dictionary-based approach or even a db_row based solution.</p>
+<dd><p>The initial <a class="reference internal" href="#sqlite3.Cursor.row_factory" title="sqlite3.Cursor.row_factory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">row_factory</span></code></a>
+for <a class="reference internal" href="#sqlite3.Cursor" title="sqlite3.Cursor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cursor</span></code></a> objects created from this connection.
+Assigning to this attribute does not affect the <code class="xref py py-attr docutils literal notranslate"><span class="pre">row_factory</span></code>
+of existing cursors belonging to this connection, only new ones.
+Is <code class="docutils literal notranslate"><span class="pre">None</span></code> by default,
+meaning each row is returned as a <a class="reference internal" href="stdtypes.html#tuple" title="tuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>.</p>
+<p>See <a class="reference internal" href="#sqlite3-howto-row-factory"><span class="std std-ref">How to create and use row factories</span></a> for more details.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1606,7 +1596,7 @@ any transaction control must be added to <em>sql_script</em>.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sqlite3.Cursor.fetchone">
 <span class="sig-name descname"><span class="pre">fetchone</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sqlite3.Cursor.fetchone" title="本定義的永久連結">¶</a></dt>
-<dd><p>If <a class="reference internal" href="#sqlite3.Connection.row_factory" title="sqlite3.Connection.row_factory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">row_factory</span></code></a> is <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+<dd><p>If <a class="reference internal" href="#sqlite3.Cursor.row_factory" title="sqlite3.Cursor.row_factory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">row_factory</span></code></a> is <code class="docutils literal notranslate"><span class="pre">None</span></code>,
 return the next row query result set as a <a class="reference internal" href="stdtypes.html#tuple" title="tuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>.
 Else, pass it to the row factory and return its result.
 Return <code class="docutils literal notranslate"><span class="pre">None</span></code> if no more data is available.</p>
@@ -1716,6 +1706,22 @@ including <abbr title="Common Table Expression">CTE</abbr> queries.
 It is only updated by the <a class="reference internal" href="#sqlite3.Cursor.execute" title="sqlite3.Cursor.execute"><code class="xref py py-meth docutils literal notranslate"><span class="pre">execute()</span></code></a> and <a class="reference internal" href="#sqlite3.Cursor.executemany" title="sqlite3.Cursor.executemany"><code class="xref py py-meth docutils literal notranslate"><span class="pre">executemany()</span></code></a> methods.</p>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="sqlite3.Cursor.row_factory">
+<span class="sig-name descname"><span class="pre">row_factory</span></span><a class="headerlink" href="#sqlite3.Cursor.row_factory" title="本定義的永久連結">¶</a></dt>
+<dd><p>Control how a row fetched from this <code class="xref py py-class docutils literal notranslate"><span class="pre">Cursor</span></code> is represented.
+If <code class="docutils literal notranslate"><span class="pre">None</span></code>, a row is represented as a <a class="reference internal" href="stdtypes.html#tuple" title="tuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>.
+Can be set to the included <a class="reference internal" href="#sqlite3.Row" title="sqlite3.Row"><code class="xref py py-class docutils literal notranslate"><span class="pre">sqlite3.Row</span></code></a>;
+or a <a class="reference internal" href="../glossary.html#term-callable"><span class="xref std std-term">callable</span></a> that accepts two arguments,
+a <a class="reference internal" href="#sqlite3.Cursor" title="sqlite3.Cursor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cursor</span></code></a> object and the <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code> of row values,
+and returns a custom object representing an SQLite row.</p>
+<p>Defaults to what <a class="reference internal" href="#sqlite3.Connection.row_factory" title="sqlite3.Connection.row_factory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Connection.row_factory</span></code></a> was set to
+when the <code class="xref py py-class docutils literal notranslate"><span class="pre">Cursor</span></code> was created.
+Assigning to this attribute does not affect
+<a class="reference internal" href="#sqlite3.Connection.row_factory" title="sqlite3.Connection.row_factory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Connection.row_factory</span></code></a> of the parent connection.</p>
+<p>See <a class="reference internal" href="#sqlite3-howto-row-factory"><span class="std std-ref">How to create and use row factories</span></a> for more details.</p>
+</dd></dl>
+
 </dd></dl>
 
 </section>
@@ -1728,7 +1734,9 @@ It is only updated by the <a class="reference internal" href="#sqlite3.Cursor.ex
 <a class="reference internal" href="#sqlite3.Connection.row_factory" title="sqlite3.Connection.row_factory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">row_factory</span></code></a> for <a class="reference internal" href="#sqlite3.Connection" title="sqlite3.Connection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connection</span></code></a> objects.
 It supports iteration, equality testing, <a class="reference internal" href="functions.html#len" title="len"><code class="xref py py-func docutils literal notranslate"><span class="pre">len()</span></code></a>,
 and <a class="reference internal" href="../glossary.html#term-mapping"><span class="xref std std-term">mapping</span></a> access by column name and index.</p>
-<p>Two row objects compare equal if have equal columns and equal members.</p>
+<p>Two <code class="xref py py-class docutils literal notranslate"><span class="pre">Row</span></code> objects compare equal
+if they have identical column names and values.</p>
+<p>See <a class="reference internal" href="#sqlite3-howto-row-factory"><span class="std std-ref">How to create and use row factories</span></a> for more details.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="sqlite3.Row.keys">
 <span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#sqlite3.Row.keys" title="本定義的永久連結">¶</a></dt>
@@ -1739,19 +1747,6 @@ it is the first member of each tuple in <a class="reference internal" href="#sql
 
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.5 版本變更: </span>Added support of slicing.</p>
-</div>
-<p>範例：</p>
-<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;:memory:&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">row_factory</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">Row</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT &#39;Earth&#39; AS name, 6378 AS radius&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-<span class="go">[&#39;name&#39;, &#39;radius&#39;]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>  <span class="c1"># Access by index and name.</span>
-<span class="go">(&#39;Earth&#39;, &#39;Earth&#39;)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;RADIUS&quot;</span><span class="p">]</span>  <span class="c1"># Column names are case-insensitive.</span>
-<span class="go">6378</span>
-</pre></div>
 </div>
 </dd></dl>
 
@@ -2210,7 +2205,7 @@ Column names take precedence over declared types.</p></li>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Point(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="si">}</span><span class="s2">)&quot;</span>
 
 <span class="k">def</span> <span class="nf">adapt_point</span><span class="p">(</span><span class="n">point</span><span class="p">):</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">point</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">;</span><span class="si">{</span><span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="si">}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">point</span><span class="o">.</span><span class="n">x</span><span class="si">}</span><span class="s2">;</span><span class="si">{</span><span class="n">point</span><span class="o">.</span><span class="n">y</span><span class="si">}</span><span class="s2">&quot;</span>
 
 <span class="k">def</span> <span class="nf">convert_point</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
     <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;;&quot;</span><span class="p">)))</span>
@@ -2387,6 +2382,78 @@ will raise <a class="reference internal" href="#sqlite3.OperationalError" title=
 <p>More information about this feature, including a list of parameters,
 can be found in the <a class="reference external" href="https://www.sqlite.org/uri.html">SQLite URI documentation</a>.</p>
 </section>
+<section id="how-to-create-and-use-row-factories">
+<span id="sqlite3-howto-row-factory"></span><h3>How to create and use row factories<a class="headerlink" href="#how-to-create-and-use-row-factories" title="本標頭的永久連結">¶</a></h3>
+<p>By default, <code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code> represents each row as a <a class="reference internal" href="stdtypes.html#tuple" title="tuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>.
+If a <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code> does not suit your needs,
+you can use the <a class="reference internal" href="#sqlite3.Row" title="sqlite3.Row"><code class="xref py py-class docutils literal notranslate"><span class="pre">sqlite3.Row</span></code></a> class
+or a custom <a class="reference internal" href="#sqlite3.Cursor.row_factory" title="sqlite3.Cursor.row_factory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">row_factory</span></code></a>.</p>
+<p>While <code class="xref py py-attr docutils literal notranslate"><span class="pre">row_factory</span></code> exists as an attribute both on the
+<a class="reference internal" href="#sqlite3.Cursor" title="sqlite3.Cursor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Cursor</span></code></a> and the <a class="reference internal" href="#sqlite3.Connection" title="sqlite3.Connection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connection</span></code></a>,
+it is recommended to set <a class="reference internal" href="#sqlite3.Connection.row_factory" title="sqlite3.Connection.row_factory"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connection.row_factory</span></code></a>,
+so all cursors created from the connection will use the same row factory.</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">Row</span></code> provides indexed and case-insensitive named access to columns,
+with minimal memory overhead and performance impact over a <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>.
+To use <code class="xref py py-class docutils literal notranslate"><span class="pre">Row</span></code> as a row factory,
+assign it to the <code class="xref py py-attr docutils literal notranslate"><span class="pre">row_factory</span></code> attribute:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;:memory:&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">row_factory</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">Row</span>
+</pre></div>
+</div>
+<p>Queries now return <code class="xref py py-class docutils literal notranslate"><span class="pre">Row</span></code> objects:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT &#39;Earth&#39; AS name, 6378 AS radius&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+<span class="go">[&#39;name&#39;, &#39;radius&#39;]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>         <span class="c1"># Access by index.</span>
+<span class="go">&#39;Earth&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>    <span class="c1"># Access by name.</span>
+<span class="go">&#39;Earth&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span><span class="p">[</span><span class="s2">&quot;RADIUS&quot;</span><span class="p">]</span>  <span class="c1"># Column names are case-insensitive.</span>
+<span class="go">6378</span>
+</pre></div>
+</div>
+<p>You can create a custom <a class="reference internal" href="#sqlite3.Cursor.row_factory" title="sqlite3.Cursor.row_factory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">row_factory</span></code></a>
+that returns each row as a <a class="reference internal" href="stdtypes.html#dict" title="dict"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, with column names mapped to values:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">dict_factory</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">cursor</span><span class="o">.</span><span class="n">description</span><span class="p">]</span>
+    <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">fields</span><span class="p">,</span> <span class="n">row</span><span class="p">)}</span>
+</pre></div>
+</div>
+<p>Using it, queries now return a <code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code> instead of a <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code>:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;:memory:&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">row_factory</span> <span class="o">=</span> <span class="n">dict_factory</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">con</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT 1 AS a, 2 AS b&quot;</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+<span class="go">{&#39;a&#39;: 1, &#39;b&#39;: 2}</span>
+</pre></div>
+</div>
+<p>The following row factory returns a <a class="reference internal" href="../glossary.html#term-named-tuple"><span class="xref std std-term">named tuple</span></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
+
+<span class="k">def</span> <span class="nf">namedtuple_factory</span><span class="p">(</span><span class="n">cursor</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span><span class="n">column</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">cursor</span><span class="o">.</span><span class="n">description</span><span class="p">]</span>
+    <span class="bp">cls</span> <span class="o">=</span> <span class="n">namedtuple</span><span class="p">(</span><span class="s2">&quot;Row&quot;</span><span class="p">,</span> <span class="n">fields</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_make</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">namedtuple_factory()</span></code> can be used as follows:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">con</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;:memory:&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">con</span><span class="o">.</span><span class="n">row_factory</span> <span class="o">=</span> <span class="n">namedtuple_factory</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cur</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT 1 AS a, 2 AS b&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span>
+<span class="go">Row(a=1, b=2)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Indexed access.</span>
+<span class="go">1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">row</span><span class="o">.</span><span class="n">b</span>   <span class="c1"># Attribute access.</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<p>With some adjustments, the above recipe can be adapted to use a
+<a class="reference internal" href="dataclasses.html#dataclasses.dataclass" title="dataclasses.dataclass"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataclass</span></code></a>, or any other custom class,
+instead of a <a class="reference internal" href="collections.html#collections.namedtuple" title="collections.namedtuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">namedtuple</span></code></a>.</p>
+</section>
 </section>
 <section id="explanation">
 <span id="sqlite3-explanation"></span><h2>解釋<a class="headerlink" href="#explanation" title="本標頭的永久連結">¶</a></h2>
@@ -2434,7 +2501,7 @@ statements.  This is no longer the case.</p>
   <div>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
-<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code> --- DB-API 2.0 interface for SQLite databases</a><ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code> --- SQLite 資料庫的 DB-API 2.0 介面</a><ul>
 <li><a class="reference internal" href="#tutorial">Tutorial</a></li>
 <li><a class="reference internal" href="#reference">Reference</a><ul>
 <li><a class="reference internal" href="#module-functions">Module functions</a><ul>
@@ -2511,6 +2578,7 @@ statements.  This is no longer the case.</p>
 <li><a class="reference internal" href="#sqlite3.Cursor.description"><code class="docutils literal notranslate"><span class="pre">Cursor.description</span></code></a></li>
 <li><a class="reference internal" href="#sqlite3.Cursor.lastrowid"><code class="docutils literal notranslate"><span class="pre">Cursor.lastrowid</span></code></a></li>
 <li><a class="reference internal" href="#sqlite3.Cursor.rowcount"><code class="docutils literal notranslate"><span class="pre">Cursor.rowcount</span></code></a></li>
+<li><a class="reference internal" href="#sqlite3.Cursor.row_factory"><code class="docutils literal notranslate"><span class="pre">Cursor.row_factory</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -2570,6 +2638,7 @@ statements.  This is no longer the case.</p>
 <li><a class="reference internal" href="#how-to-use-connection-shortcut-methods">How to use connection shortcut methods</a></li>
 <li><a class="reference internal" href="#how-to-use-the-connection-context-manager">How to use the connection context manager</a></li>
 <li><a class="reference internal" href="#how-to-work-with-sqlite-uris">How to work with SQLite URIs</a></li>
+<li><a class="reference internal" href="#how-to-create-and-use-row-factories">How to create and use row factories</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#explanation">解釋</a><ul>
@@ -2641,7 +2710,7 @@ statements.  This is no longer the case.</p>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="persistence.html" >Data Persistence</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code> --- DB-API 2.0 interface for SQLite databases</a></li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code> --- SQLite 資料庫的 DB-API 2.0 介面</a></li>
                 <li class="right">
                     
 
@@ -2673,7 +2742,7 @@ statements.  This is no longer the case.</p>
 <br />
     <br />
 
-    最後更新於 11月 23, 2022。
+    最後更新於 11月 30, 2022。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
