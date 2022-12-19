@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Event Loop &#8212; Python 3.11.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Loop &#8212; Python 3.11.1 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?2022.1" />
@@ -22,7 +22,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.11.0 說明文件 中搜尋"
+          title="在 Python 3.11.1 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -283,7 +283,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.0 Documentation</a> &#187;
+      <a href="../index.html">3.11.1 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -332,8 +332,8 @@ an event loop:</p>
 <dt class="sig sig-object py" id="asyncio.get_running_loop">
 <span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">get_running_loop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.get_running_loop" title="本定義的永久連結">¶</a></dt>
 <dd><p>Return the running event loop in the current OS thread.</p>
-<p>If there is no running event loop a <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> is raised.
-This function can only be called from a coroutine or a callback.</p>
+<p>Raise a <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> if there is no running event loop.</p>
+<p>This function can only be called from a coroutine or a callback.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.7 版本新加入.</span></p>
 </div>
@@ -343,27 +343,35 @@ This function can only be called from a coroutine or a callback.</p>
 <dt class="sig sig-object py" id="asyncio.get_event_loop">
 <span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">get_event_loop</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.get_event_loop" title="本定義的永久連結">¶</a></dt>
 <dd><p>Get the current event loop.</p>
-<p>If there is no current event loop set in the current OS thread,
-the OS thread is main, and <a class="reference internal" href="#asyncio.set_event_loop" title="asyncio.set_event_loop"><code class="xref py py-func docutils literal notranslate"><span class="pre">set_event_loop()</span></code></a> has not yet
-been called, asyncio will create a new event loop and set it as the
-current one.</p>
+<p>When called from a coroutine or a callback (e.g. scheduled with
+call_soon or similar API), this function will always return the
+running event loop.</p>
+<p>If there is no running event loop set, the function will return
+the result of <code class="docutils literal notranslate"><span class="pre">get_event_loop_policy().get_event_loop()</span></code> call.</p>
 <p>Because this function has rather complex behavior (especially
 when custom event loop policies are in use), using the
 <a class="reference internal" href="#asyncio.get_running_loop" title="asyncio.get_running_loop"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_running_loop()</span></code></a> function is preferred to <a class="reference internal" href="#asyncio.get_event_loop" title="asyncio.get_event_loop"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_event_loop()</span></code></a>
 in coroutines and callbacks.</p>
-<p>Consider also using the <a class="reference internal" href="asyncio-runner.html#asyncio.run" title="asyncio.run"><code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.run()</span></code></a> function instead of using
-lower level functions to manually create and close an event loop.</p>
+<p>As noted above, consider using the higher-level <a class="reference internal" href="asyncio-runner.html#asyncio.run" title="asyncio.run"><code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.run()</span></code></a> function,
+instead of using these lower level functions to manually create and close an
+event loop.</p>
 <div class="deprecated">
-<p><span class="versionmodified deprecated">在 3.10 版本開始棄用: </span>Deprecation warning is emitted if there is no running event loop.
-In future Python releases, this function will be an alias of
-<a class="reference internal" href="#asyncio.get_running_loop" title="asyncio.get_running_loop"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_running_loop()</span></code></a>.</p>
+<p><span class="versionmodified deprecated">在 3.10 版本開始棄用: </span>Deprecation warning is emitted if there is no current event loop.
+In Python 3.12 it will be an error.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>In Python versions 3.10.0--3.10.8 and 3.11.0 this function
+(and other functions which used it implicitly) emitted a
+<a class="reference internal" href="exceptions.html#DeprecationWarning" title="DeprecationWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DeprecationWarning</span></code></a> if there was no running event loop, even if
+the current loop was set.</p>
 </div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="asyncio.set_event_loop">
 <span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">set_event_loop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loop</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.set_event_loop" title="本定義的永久連結">¶</a></dt>
-<dd><p>Set <em>loop</em> as a current event loop for the current OS thread.</p>
+<dd><p>Set <em>loop</em> as the current event loop for the current OS thread.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -1122,7 +1130,8 @@ reading.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="asyncio.loop.remove_reader">
 <span class="sig-prename descclassname"><span class="pre">loop.</span></span><span class="sig-name descname"><span class="pre">remove_reader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fd</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.loop.remove_reader" title="本定義的永久連結">¶</a></dt>
-<dd><p>Stop monitoring the <em>fd</em> file descriptor for read availability.</p>
+<dd><p>Stop monitoring the <em>fd</em> file descriptor for read availability. Returns
+<code class="docutils literal notranslate"><span class="pre">True</span></code> if <em>fd</em> was previously being monitored for reads.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1137,7 +1146,8 @@ writing.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="asyncio.loop.remove_writer">
 <span class="sig-prename descclassname"><span class="pre">loop.</span></span><span class="sig-name descname"><span class="pre">remove_writer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fd</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.loop.remove_writer" title="本定義的永久連結">¶</a></dt>
-<dd><p>Stop monitoring the <em>fd</em> file descriptor for write availability.</p>
+<dd><p>Stop monitoring the <em>fd</em> file descriptor for write availability. Returns
+<code class="docutils literal notranslate"><span class="pre">True</span></code> if <em>fd</em> was previously being monitored for writes.</p>
 </dd></dl>
 
 <p>See also <a class="reference internal" href="asyncio-platforms.html#asyncio-platform-support"><span class="std std-ref">Platform Support</span></a> section
@@ -2274,7 +2284,7 @@ using the <a class="reference internal" href="#asyncio.loop.add_signal_handler" 
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.0 Documentation</a> &#187;
+      <a href="../index.html">3.11.1 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -2312,7 +2322,7 @@ using the <a class="reference internal" href="#asyncio.loop.add_signal_handler" 
 <br />
     <br />
 
-    最後更新於 11月 30, 2022。
+    最後更新於 12月 19, 2022。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
