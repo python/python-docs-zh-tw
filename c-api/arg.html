@@ -193,21 +193,34 @@ variable(s) whose address should be passed.</p>
 <p>These formats allow accessing an object as a contiguous chunk of memory.
 You don't have to provide raw storage for the returned unicode or bytes
 area.</p>
-<p>In general, when a format sets a pointer to a buffer, the buffer is
-managed by the corresponding Python object, and the buffer shares
-the lifetime of this object.  You won't have to release any memory yourself.
-The only exceptions are <code class="docutils literal notranslate"><span class="pre">es</span></code>, <code class="docutils literal notranslate"><span class="pre">es#</span></code>, <code class="docutils literal notranslate"><span class="pre">et</span></code> and <code class="docutils literal notranslate"><span class="pre">et#</span></code>.</p>
-<p>However, when a <a class="reference internal" href="buffer.html#c.Py_buffer" title="Py_buffer"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_buffer</span></code></a> structure gets filled, the underlying
-buffer is locked so that the caller can subsequently use the buffer even
-inside a <a class="reference internal" href="init.html#c.Py_BEGIN_ALLOW_THREADS" title="Py_BEGIN_ALLOW_THREADS"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_BEGIN_ALLOW_THREADS</span></code></a> block without the risk of mutable data
-being resized or destroyed.  As a result, <strong>you have to call</strong>
-<a class="reference internal" href="buffer.html#c.PyBuffer_Release" title="PyBuffer_Release"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyBuffer_Release()</span></code></a> after you have finished processing the data (or
-in any early abort case).</p>
 <p>Unless otherwise stated, buffers are not NUL-terminated.</p>
-<p>Some formats require a read-only <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a>, and set a
-pointer instead of a buffer structure.  They work by checking that
-the object's <a class="reference internal" href="typeobj.html#c.PyBufferProcs.bf_releasebuffer" title="PyBufferProcs.bf_releasebuffer"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyBufferProcs.bf_releasebuffer</span></code></a> field is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>,
-which disallows mutable objects such as <a class="reference internal" href="../library/stdtypes.html#bytearray" title="bytearray"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code></a>.</p>
+<p>There are three ways strings and buffers can be converted to C:</p>
+<ul>
+<li><p>Formats such as <code class="docutils literal notranslate"><span class="pre">y*</span></code> and <code class="docutils literal notranslate"><span class="pre">s*</span></code> fill a <a class="reference internal" href="buffer.html#c.Py_buffer" title="Py_buffer"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_buffer</span></code></a> structure.
+This locks the underlying buffer so that the caller can subsequently use
+the buffer even inside a <a class="reference internal" href="init.html#c.Py_BEGIN_ALLOW_THREADS" title="Py_BEGIN_ALLOW_THREADS"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_BEGIN_ALLOW_THREADS</span></code></a>
+block without the risk of mutable data being resized or destroyed.
+As a result, <strong>you have to call</strong> <a class="reference internal" href="buffer.html#c.PyBuffer_Release" title="PyBuffer_Release"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyBuffer_Release()</span></code></a> after you have
+finished processing the data (or in any early abort case).</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">es</span></code>, <code class="docutils literal notranslate"><span class="pre">es#</span></code>, <code class="docutils literal notranslate"><span class="pre">et</span></code> and <code class="docutils literal notranslate"><span class="pre">et#</span></code> formats allocate the result buffer.
+<strong>You have to call</strong> <a class="reference internal" href="memory.html#c.PyMem_Free" title="PyMem_Free"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMem_Free()</span></code></a> after you have finished
+processing the data (or in any early abort case).</p></li>
+<li><p id="c-arg-borrowed-buffer">Other formats take a <a class="reference internal" href="../library/stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> or a read-only <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a>,
+such as <a class="reference internal" href="../library/stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>, and provide a <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">char</span> <span class="pre">*</span></code> pointer to
+its buffer.
+In this case the buffer is &quot;borrowed&quot;: it is managed by the corresponding
+Python object, and shares the lifetime of this object.
+You won't have to release any memory yourself.</p>
+<p>To ensure that the underlying buffer may be safely borrowed, the object's
+<a class="reference internal" href="typeobj.html#c.PyBufferProcs.bf_releasebuffer" title="PyBufferProcs.bf_releasebuffer"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyBufferProcs.bf_releasebuffer</span></code></a> field must be <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.
+This disallows common mutable objects such as <a class="reference internal" href="../library/stdtypes.html#bytearray" title="bytearray"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code></a>,
+but also some read-only objects such as <a class="reference internal" href="../library/stdtypes.html#memoryview" title="memoryview"><code class="xref py py-class docutils literal notranslate"><span class="pre">memoryview</span></code></a> of
+<a class="reference internal" href="../library/stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>.</p>
+<p>Besides this <code class="docutils literal notranslate"><span class="pre">bf_releasebuffer</span></code> requirement, there is no check to verify
+whether the input object is immutable (e.g. whether it would honor a request
+for a writable buffer, or whether another thread can mutate the data).</p>
+</li>
+</ul>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
 <p>For all <code class="docutils literal notranslate"><span class="pre">#</span></code> variants of formats (<code class="docutils literal notranslate"><span class="pre">s#</span></code>, <code class="docutils literal notranslate"><span class="pre">y#</span></code>, etc.), the macro
@@ -241,7 +254,7 @@ It fills a <a class="reference internal" href="buffer.html#c.Py_buffer" title="P
 In this case the resulting C string may contain embedded NUL bytes.
 Unicode objects are converted to C strings using <code class="docutils literal notranslate"><span class="pre">'utf-8'</span></code> encoding.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">s#</span></code> (<a class="reference internal" href="../library/stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, read-only <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a>) [const char *, <a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_ssize_t</span></code></a>]</dt><dd><p>Like <code class="docutils literal notranslate"><span class="pre">s*</span></code>, except that it doesn't accept mutable objects.
+<dt><code class="docutils literal notranslate"><span class="pre">s#</span></code> (<a class="reference internal" href="../library/stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, read-only <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a>) [const char *, <a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_ssize_t</span></code></a>]</dt><dd><p>Like <code class="docutils literal notranslate"><span class="pre">s*</span></code>, except that it provides a <a class="reference internal" href="#c-arg-borrowed-buffer"><span class="std std-ref">borrowed buffer</span></a>.
 The result is stored into two C variables,
 the first one a pointer to a C string, the second one its length.
 The string may contain embedded null bytes. Unicode objects are converted
@@ -256,8 +269,9 @@ pointer is set to <code class="docutils literal notranslate"><span class="pre">N
 <dt><code class="docutils literal notranslate"><span class="pre">z#</span></code> (<a class="reference internal" href="../library/stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, read-only <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a> or <code class="docutils literal notranslate"><span class="pre">None</span></code>) [const char *, <a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_ssize_t</span></code></a>]</dt><dd><p>Like <code class="docutils literal notranslate"><span class="pre">s#</span></code>, but the Python object may also be <code class="docutils literal notranslate"><span class="pre">None</span></code>, in which case the C
 pointer is set to <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">y</span></code>（唯讀 <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a>）[const char *]</dt><dd><p>This format converts a bytes-like object to a C pointer to a character
-string; it does not accept Unicode objects.  The bytes buffer must not
+<dt><code class="docutils literal notranslate"><span class="pre">y</span></code>（唯讀 <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a>）[const char *]</dt><dd><p>This format converts a bytes-like object to a C pointer to a
+<a class="reference internal" href="#c-arg-borrowed-buffer"><span class="std std-ref">borrowed</span></a> character string;
+it does not accept Unicode objects.  The bytes buffer must not
 contain embedded null bytes; if it does, a <a class="reference internal" href="../library/exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a>
 exception is raised.</p>
 <div class="versionchanged">
@@ -866,7 +880,7 @@ rather than a variable number of arguments.</p>
 <br />
     <br />
 
-    最後更新於 12月 23, 2022。
+    最後更新於 12月 26, 2022。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
