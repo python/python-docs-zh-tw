@@ -2075,33 +2075,39 @@ close the single quote and inject <code class="docutils literal notranslate"><sp
 <p>Instead, use the DB-API's parameter substitution. To insert a variable into a
 query string, use a placeholder in the string, and substitute the actual values
 into the query by providing them as a <a class="reference internal" href="stdtypes.html#tuple" title="tuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a> of values to the second
-argument of the cursor's <a class="reference internal" href="#sqlite3.Cursor.execute" title="sqlite3.Cursor.execute"><code class="xref py py-meth docutils literal notranslate"><span class="pre">execute()</span></code></a> method. An SQL statement may
-use one of two kinds of placeholders: question marks (qmark style) or named
-placeholders (named style). For the qmark style, <code class="docutils literal notranslate"><span class="pre">parameters</span></code> must be a
-<a class="reference internal" href="../glossary.html#term-sequence"><span class="xref std std-term">sequence</span></a>. For the named style, it can be either a
-<a class="reference internal" href="../glossary.html#term-sequence"><span class="xref std std-term">sequence</span></a> or <a class="reference internal" href="stdtypes.html#dict" title="dict"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> instance. The length of the
-<a class="reference internal" href="../glossary.html#term-sequence"><span class="xref std std-term">sequence</span></a> must match the number of placeholders, or a
-<a class="reference internal" href="#sqlite3.ProgrammingError" title="sqlite3.ProgrammingError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ProgrammingError</span></code></a> is raised. If a <a class="reference internal" href="stdtypes.html#dict" title="dict"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> is given, it must contain
-keys for all named parameters. Any extra items are ignored. Here's an example of
-both styles:</p>
+argument of the cursor's <a class="reference internal" href="#sqlite3.Cursor.execute" title="sqlite3.Cursor.execute"><code class="xref py py-meth docutils literal notranslate"><span class="pre">execute()</span></code></a> method.</p>
+<p>An SQL statement may use one of two kinds of placeholders:
+question marks (qmark style) or named placeholders (named style).
+For the qmark style, <em>parameters</em> must be a
+<a class="reference internal" href="../glossary.html#term-sequence"><span class="xref std std-term">sequence</span></a> whose length must match the number of placeholders,
+or a <a class="reference internal" href="#sqlite3.ProgrammingError" title="sqlite3.ProgrammingError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ProgrammingError</span></code></a> is raised.
+For the named style, <em>parameters</em> should be
+an instance of a <a class="reference internal" href="stdtypes.html#dict" title="dict"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> (or a subclass),
+which must contain keys for all named parameters;
+any extra items are ignored.
+Here's an example of both styles:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">con</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;:memory:&quot;</span><span class="p">)</span>
 <span class="n">cur</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;CREATE TABLE lang(name, first_appeared)&quot;</span><span class="p">)</span>
 
-<span class="c1"># This is the qmark style:</span>
-<span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;INSERT INTO lang VALUES(?, ?)&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="mi">1972</span><span class="p">))</span>
+<span class="c1"># This is the named style used with executemany():</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="mi">1972</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Fortran&quot;</span><span class="p">,</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="mi">1957</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Python&quot;</span><span class="p">,</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="mi">1991</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Go&quot;</span><span class="p">,</span> <span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="mi">2009</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="n">cur</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span><span class="s2">&quot;INSERT INTO lang VALUES(:name, :year)&quot;</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
 
-<span class="c1"># The qmark style used with executemany():</span>
-<span class="n">lang_list</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="p">(</span><span class="s2">&quot;Fortran&quot;</span><span class="p">,</span> <span class="mi">1957</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">&quot;Python&quot;</span><span class="p">,</span> <span class="mi">1991</span><span class="p">),</span>
-    <span class="p">(</span><span class="s2">&quot;Go&quot;</span><span class="p">,</span> <span class="mi">2009</span><span class="p">),</span>
-<span class="p">]</span>
-<span class="n">cur</span><span class="o">.</span><span class="n">executemany</span><span class="p">(</span><span class="s2">&quot;INSERT INTO lang VALUES(?, ?)&quot;</span><span class="p">,</span> <span class="n">lang_list</span><span class="p">)</span>
-
-<span class="c1"># And this is the named style:</span>
-<span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM lang WHERE first_appeared = :year&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;year&quot;</span><span class="p">:</span> <span class="mi">1972</span><span class="p">})</span>
+<span class="c1"># This is the qmark style used in a SELECT query:</span>
+<span class="n">params</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1972</span><span class="p">,)</span>
+<span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT * FROM lang WHERE first_appeared = ?&quot;</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">cur</span><span class="o">.</span><span class="n">fetchall</span><span class="p">())</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p><span class="target" id="index-6"></span><a class="pep reference external" href="https://peps.python.org/pep-0249/"><strong>PEP 249</strong></a> numeric placeholders are <em>not</em> supported.
+If used, they will be interpreted as named placeholders.</p>
 </div>
 </section>
 <section id="how-to-adapt-custom-python-types-to-sqlite-values">
@@ -2458,7 +2464,7 @@ instead of a <a class="reference internal" href="collections.html#collections.na
 <section id="transaction-control">
 <span id="sqlite3-controlling-transactions"></span><h3>Transaction control<a class="headerlink" href="#transaction-control" title="本標頭的永久連結">¶</a></h3>
 <p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code> module does not adhere to the transaction handling recommended
-by <span class="target" id="index-6"></span><a class="pep reference external" href="https://peps.python.org/pep-0249/"><strong>PEP 249</strong></a>.</p>
+by <span class="target" id="index-7"></span><a class="pep reference external" href="https://peps.python.org/pep-0249/"><strong>PEP 249</strong></a>.</p>
 <p>If the connection attribute <a class="reference internal" href="#sqlite3.Connection.isolation_level" title="sqlite3.Connection.isolation_level"><code class="xref py py-attr docutils literal notranslate"><span class="pre">isolation_level</span></code></a>
 is not <code class="docutils literal notranslate"><span class="pre">None</span></code>,
 new transactions are implicitly opened before
@@ -2740,7 +2746,7 @@ statements.  This is no longer the case.</p>
 <br />
     <br />
 
-    最後更新於 1月 11, 2023。
+    最後更新於 1月 23, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
