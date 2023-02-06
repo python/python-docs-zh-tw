@@ -86,6 +86,7 @@
 <li><a class="reference internal" href="#incremental-configuration">Incremental Configuration</a></li>
 <li><a class="reference internal" href="#object-connections">Object connections</a></li>
 <li><a class="reference internal" href="#user-defined-objects">User-defined objects</a></li>
+<li><a class="reference internal" href="#handler-configuration-order">Handler configuration order</a></li>
 <li><a class="reference internal" href="#access-to-external-objects">Access to external objects</a></li>
 <li><a class="reference internal" href="#access-to-internal-objects">Access to internal objects</a></li>
 <li><a class="reference internal" href="#import-resolution-and-custom-importers">Import resolution and custom importers</a></li>
@@ -665,6 +666,13 @@ returned by the call:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">my</span><span class="o">.</span><span class="n">package</span><span class="o">.</span><span class="n">customFormatterFactory</span><span class="p">(</span><span class="n">bar</span><span class="o">=</span><span class="s1">&#39;baz&#39;</span><span class="p">,</span> <span class="n">spam</span><span class="o">=</span><span class="mf">99.9</span><span class="p">,</span> <span class="n">answer</span><span class="o">=</span><span class="mi">42</span><span class="p">)</span>
 </pre></div>
 </div>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>The values for keys such as <code class="docutils literal notranslate"><span class="pre">bar</span></code>, <code class="docutils literal notranslate"><span class="pre">spam</span></code> and <code class="docutils literal notranslate"><span class="pre">answer</span></code> in
+the above example should not be configuration dictionaries or references such
+as <code class="docutils literal notranslate"><span class="pre">cfg://foo</span></code> or <code class="docutils literal notranslate"><span class="pre">ext://bar</span></code>, because they will not be processed by the
+configuration machinery, but passed to the callable as-is.</p>
+</div>
 <p>The key <code class="docutils literal notranslate"><span class="pre">'()'</span></code> has been used as the special key because it is not a
 valid keyword parameter name, and so will not clash with the names of
 the keyword arguments used in the call.  The <code class="docutils literal notranslate"><span class="pre">'()'</span></code> also serves as a
@@ -693,6 +701,32 @@ following configuration:</p>
 </div>
 <p>the returned formatter will have attribute <code class="docutils literal notranslate"><span class="pre">foo</span></code> set to <code class="docutils literal notranslate"><span class="pre">'bar'</span></code> and
 attribute <code class="docutils literal notranslate"><span class="pre">baz</span></code> set to <code class="docutils literal notranslate"><span class="pre">'bozz'</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>The values for attributes such as <code class="docutils literal notranslate"><span class="pre">foo</span></code> and <code class="docutils literal notranslate"><span class="pre">baz</span></code> in
+the above example should not be configuration dictionaries or references such
+as <code class="docutils literal notranslate"><span class="pre">cfg://foo</span></code> or <code class="docutils literal notranslate"><span class="pre">ext://bar</span></code>, because they will not be processed by the
+configuration machinery, but set as attribute values as-is.</p>
+</div>
+</section>
+<section id="handler-configuration-order">
+<span id="handler-config-dict-order"></span><h3>Handler configuration order<a class="headerlink" href="#handler-configuration-order" title="本標頭的永久連結">¶</a></h3>
+<p>Handlers are configured in alphabetical order of their keys, and a configured
+handler replaces the configuration dictionary in (a working copy of) the
+<code class="docutils literal notranslate"><span class="pre">handlers</span></code> dictionary in the schema. If you use a construct such as
+<code class="docutils literal notranslate"><span class="pre">cfg://handlers.foo</span></code>, then initially <code class="docutils literal notranslate"><span class="pre">handlers['foo']</span></code> points to the
+configuration dictionary for the handler named <code class="docutils literal notranslate"><span class="pre">foo</span></code>, and later (once that
+handler has been configured) it points to the configured handler instance.
+Thus, <code class="docutils literal notranslate"><span class="pre">cfg://handlers.foo</span></code> could resolve to either a dictionary or a handler
+instance. In general, it is wise to name handlers in a way such that dependent
+handlers are configured _after_ any handlers they depend on; that allows
+something like <code class="docutils literal notranslate"><span class="pre">cfg://handlers.foo</span></code> to be used in configuring a handler that
+depends on handler <code class="docutils literal notranslate"><span class="pre">foo</span></code>. If that dependent handler were named <code class="docutils literal notranslate"><span class="pre">bar</span></code>,
+problems would result, because the configuration of <code class="docutils literal notranslate"><span class="pre">bar</span></code> would be attempted
+before that of <code class="docutils literal notranslate"><span class="pre">foo</span></code>, and <code class="docutils literal notranslate"><span class="pre">foo</span></code> would not yet have been configured.
+However, if the dependent handler were named <code class="docutils literal notranslate"><span class="pre">foobar</span></code>, it would be configured
+after <code class="docutils literal notranslate"><span class="pre">foo</span></code>, with the result that <code class="docutils literal notranslate"><span class="pre">cfg://handlers.foo</span></code> would resolve to
+configured handler <code class="docutils literal notranslate"><span class="pre">foo</span></code>, and not its configuration dictionary.</p>
 </section>
 <section id="access-to-external-objects">
 <span id="logging-config-dict-externalobj"></span><h3>Access to external objects<a class="headerlink" href="#access-to-external-objects" title="本標頭的永久連結">¶</a></h3>
@@ -1002,6 +1036,7 @@ multiple users with no mutual trust run code on the same machine; see the
 <li><a class="reference internal" href="#incremental-configuration">Incremental Configuration</a></li>
 <li><a class="reference internal" href="#object-connections">Object connections</a></li>
 <li><a class="reference internal" href="#user-defined-objects">User-defined objects</a></li>
+<li><a class="reference internal" href="#handler-configuration-order">Handler configuration order</a></li>
 <li><a class="reference internal" href="#access-to-external-objects">Access to external objects</a></li>
 <li><a class="reference internal" href="#access-to-internal-objects">Access to internal objects</a></li>
 <li><a class="reference internal" href="#import-resolution-and-custom-importers">Import resolution and custom importers</a></li>
@@ -1105,7 +1140,7 @@ multiple users with no mutual trust run code on the same machine; see the
 <br />
     <br />
 
-    最後更新於 1月 23, 2023。
+    最後更新於 2月 06, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 

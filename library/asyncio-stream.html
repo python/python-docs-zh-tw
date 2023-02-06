@@ -413,7 +413,7 @@ server created. To close the socket, call the server's
 <dt class="sig sig-object py" id="asyncio.StreamWriter.close">
 <span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.StreamWriter.close" title="本定義的永久連結">¶</a></dt>
 <dd><p>此方法會關閉串流以及底層的 socket。</p>
-<p>此方法應與 <code class="docutils literal notranslate"><span class="pre">wait_closed()</span></code> 方法一起使用：</p>
+<p>此方法應與 <code class="docutils literal notranslate"><span class="pre">wait_closed()</span></code> 方法一起使用，但並非強制：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">stream</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 <span class="k">await</span> <span class="n">stream</span><span class="o">.</span><span class="n">wait_closed</span><span class="p">()</span>
 </pre></div>
@@ -486,7 +486,7 @@ if <code class="docutils literal notranslate"><span class="pre">None</span></cod
 <dt class="sig sig-object py" id="asyncio.StreamWriter.wait_closed">
 <em class="property"><span class="pre">coroutine</span> </em><span class="sig-name descname"><span class="pre">wait_closed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.StreamWriter.wait_closed" title="本定義的永久連結">¶</a></dt>
 <dd><p>等待直到串流被關閉。</p>
-<p>應當在 <a class="reference internal" href="#asyncio.StreamWriter.close" title="asyncio.StreamWriter.close"><code class="xref py py-meth docutils literal notranslate"><span class="pre">close()</span></code></a> 之後才被呼叫，這會持續等待直到底層的連線被關閉。</p>
+<p>應當在 <a class="reference internal" href="#asyncio.StreamWriter.close" title="asyncio.StreamWriter.close"><code class="xref py py-meth docutils literal notranslate"><span class="pre">close()</span></code></a> 之後才被呼叫，這會持續等待直到底層的連線被關閉，以確保在這之前（例如在程式退出前）所有資料都已經被清空</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.7 版本新加入.</span></p>
 </div>
@@ -515,6 +515,7 @@ if <code class="docutils literal notranslate"><span class="pre">None</span></cod
 
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Close the connection&#39;</span><span class="p">)</span>
     <span class="n">writer</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">await</span> <span class="n">writer</span><span class="o">.</span><span class="n">wait_closed</span><span class="p">()</span>
 
 <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tcp_echo_client</span><span class="p">(</span><span class="s1">&#39;Hello World!&#39;</span><span class="p">))</span>
 </pre></div>
@@ -542,6 +543,7 @@ if <code class="docutils literal notranslate"><span class="pre">None</span></cod
 
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Close the connection&quot;</span><span class="p">)</span>
     <span class="n">writer</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">await</span> <span class="n">writer</span><span class="o">.</span><span class="n">wait_closed</span><span class="p">()</span>
 
 <span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
     <span class="n">server</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">start_server</span><span class="p">(</span>
@@ -595,6 +597,7 @@ if <code class="docutils literal notranslate"><span class="pre">None</span></cod
 
     <span class="c1"># Ignore the body, close the socket</span>
     <span class="n">writer</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">await</span> <span class="n">writer</span><span class="o">.</span><span class="n">wait_closed</span><span class="p">()</span>
 
 <span class="n">url</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">print_http_headers</span><span class="p">(</span><span class="n">url</span><span class="p">))</span>
@@ -635,6 +638,7 @@ if <code class="docutils literal notranslate"><span class="pre">None</span></cod
     <span class="c1"># Got data, we are done: close the socket</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Received:&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">decode</span><span class="p">())</span>
     <span class="n">writer</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="k">await</span> <span class="n">writer</span><span class="o">.</span><span class="n">wait_closed</span><span class="p">()</span>
 
     <span class="c1"># Close the second socket</span>
     <span class="n">wsock</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -799,7 +803,7 @@ if <code class="docutils literal notranslate"><span class="pre">None</span></cod
 <br />
     <br />
 
-    最後更新於 1月 23, 2023。
+    最後更新於 2月 06, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
