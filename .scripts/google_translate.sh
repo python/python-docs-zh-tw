@@ -8,7 +8,8 @@ source utils/install_poetry.sh
 TEMP=tmp.po
 TARGET=../$1
 
-poetry install -q
+poetry lock
+poetry install
 poetry run bash -c "
     python google_translate/main.py $TARGET > $TEMP
     pomerge -t $TARGET -i $TEMP -o $TARGET

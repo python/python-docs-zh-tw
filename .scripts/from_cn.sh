@@ -29,7 +29,8 @@ TARGET=$1
 CN_PATH=$CN_REPO/$TARGET
 TW_PATH=../$TARGET
 
-poetry install -q
+poetry lock
+poetry install
 poetry run bash -c "
     opencc -i $CN_PATH -c s2twp.json -o /tmp/tmp.po
     pofilter --nonotes --excludefilter unchanged --excludefilter untranslated /tmp/tmp.po | msgattrib --set-fuzzy -o /tmp/tmp.po
