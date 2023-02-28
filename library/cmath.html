@@ -217,11 +217,27 @@ convert the object to a complex or floating-point number, respectively, and
 the function is then applied to the result of the conversion.</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>On platforms with hardware and system-level support for signed
-zeros, functions involving branch cuts are continuous on <em>both</em>
-sides of the branch cut: the sign of the zero distinguishes one
-side of the branch cut from the other.  On platforms that do not
-support signed zeros the continuity is as specified below.</p>
+<p>For functions involving branch cuts, we have the problem of deciding how to
+define those functions on the cut itself. Following Kahan's &quot;Branch cuts for
+complex elementary functions&quot; paper, as well as Annex G of C99 and later C
+standards, we use the sign of zero to distinguish one side of the branch cut
+from the other: for a branch cut along (a portion of) the real axis we look
+at the sign of the imaginary part, while for a branch cut along the
+imaginary axis we look at the sign of the real part.</p>
+<p>For example, the <a class="reference internal" href="#cmath.sqrt" title="cmath.sqrt"><code class="xref py py-func docutils literal notranslate"><span class="pre">cmath.sqrt()</span></code></a> function has a branch cut along the
+negative real axis. An argument of <code class="docutils literal notranslate"><span class="pre">complex(-2.0,</span> <span class="pre">-0.0)</span></code> is treated as
+though it lies <em>below</em> the branch cut, and so gives a result on the negative
+imaginary axis:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cmath</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.0</span><span class="p">))</span>
+<span class="go">-1.4142135623730951j</span>
+</pre></div>
+</div>
+<p>But an argument of <code class="docutils literal notranslate"><span class="pre">complex(-2.0,</span> <span class="pre">0.0)</span></code> is treated as though it lies above
+the branch cut:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">cmath</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="o">-</span><span class="mf">2.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+<span class="go">1.4142135623730951j</span>
+</pre></div>
+</div>
 </div>
 <section id="conversions-to-and-from-polar-coordinates">
 <h2>Conversions to and from polar coordinates<a class="headerlink" href="#conversions-to-and-from-polar-coordinates" title="本標頭的永久連結">¶</a></h2>
@@ -243,14 +259,11 @@ rectangular coordinates to polar coordinates and back.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="cmath.phase">
 <span class="sig-prename descclassname"><span class="pre">cmath.</span></span><span class="sig-name descname"><span class="pre">phase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cmath.phase" title="本定義的永久連結">¶</a></dt>
-<dd><p>Return the phase of <em>x</em> (also known as the <em>argument</em> of <em>x</em>), as a
-float.  <code class="docutils literal notranslate"><span class="pre">phase(x)</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">math.atan2(x.imag,</span>
-<span class="pre">x.real)</span></code>.  The result lies in the range [-<em>π</em>, <em>π</em>], and the branch
-cut for this operation lies along the negative real axis,
-continuous from above.  On systems with support for signed zeros
-(which includes most systems in current use), this means that the
-sign of the result is the same as the sign of <code class="docutils literal notranslate"><span class="pre">x.imag</span></code>, even when
-<code class="docutils literal notranslate"><span class="pre">x.imag</span></code> is zero:</p>
+<dd><p>Return the phase of <em>x</em> (also known as the <em>argument</em> of <em>x</em>), as a float.
+<code class="docutils literal notranslate"><span class="pre">phase(x)</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">math.atan2(x.imag,</span> <span class="pre">x.real)</span></code>.  The result
+lies in the range [-<em>π</em>, <em>π</em>], and the branch cut for this operation lies
+along the negative real axis.  The sign of the result is the same as the
+sign of <code class="docutils literal notranslate"><span class="pre">x.imag</span></code>, even when <code class="docutils literal notranslate"><span class="pre">x.imag</span></code> is zero:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">phase</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
 <span class="go">3.141592653589793</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">phase</span><span class="p">(</span><span class="nb">complex</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.0</span><span class="p">))</span>
@@ -295,8 +308,8 @@ logarithms.</p>
 <dt class="sig sig-object py" id="cmath.log">
 <span class="sig-prename descclassname"><span class="pre">cmath.</span></span><span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em><span class="optional">]</span><span class="sig-paren">)</span><a class="headerlink" href="#cmath.log" title="本定義的永久連結">¶</a></dt>
 <dd><p>Returns the logarithm of <em>x</em> to the given <em>base</em>. If the <em>base</em> is not
-specified, returns the natural logarithm of <em>x</em>. There is one branch cut, from 0
-along the negative real axis to -∞, continuous from above.</p>
+specified, returns the natural logarithm of <em>x</em>. There is one branch cut,
+from 0 along the negative real axis to -∞.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -318,9 +331,9 @@ along the negative real axis to -∞, continuous from above.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="cmath.acos">
 <span class="sig-prename descclassname"><span class="pre">cmath.</span></span><span class="sig-name descname"><span class="pre">acos</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cmath.acos" title="本定義的永久連結">¶</a></dt>
-<dd><p>Return the arc cosine of <em>x</em>. There are two branch cuts: One extends right from
-1 along the real axis to ∞, continuous from below. The other extends left from
--1 along the real axis to -∞, continuous from above.</p>
+<dd><p>Return the arc cosine of <em>x</em>. There are two branch cuts: One extends right
+from 1 along the real axis to ∞. The other extends left from -1 along the
+real axis to -∞.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -333,9 +346,8 @@ along the negative real axis to -∞, continuous from above.</p>
 <dt class="sig sig-object py" id="cmath.atan">
 <span class="sig-prename descclassname"><span class="pre">cmath.</span></span><span class="sig-name descname"><span class="pre">atan</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cmath.atan" title="本定義的永久連結">¶</a></dt>
 <dd><p>Return the arc tangent of <em>x</em>. There are two branch cuts: One extends from
-<code class="docutils literal notranslate"><span class="pre">1j</span></code> along the imaginary axis to <code class="docutils literal notranslate"><span class="pre">∞j</span></code>, continuous from the right. The
-other extends from <code class="docutils literal notranslate"><span class="pre">-1j</span></code> along the imaginary axis to <code class="docutils literal notranslate"><span class="pre">-∞j</span></code>, continuous
-from the left.</p>
+<code class="docutils literal notranslate"><span class="pre">1j</span></code> along the imaginary axis to <code class="docutils literal notranslate"><span class="pre">∞j</span></code>. The other extends from <code class="docutils literal notranslate"><span class="pre">-1j</span></code>
+along the imaginary axis to <code class="docutils literal notranslate"><span class="pre">-∞j</span></code>.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -363,25 +375,23 @@ from the left.</p>
 <dt class="sig sig-object py" id="cmath.acosh">
 <span class="sig-prename descclassname"><span class="pre">cmath.</span></span><span class="sig-name descname"><span class="pre">acosh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cmath.acosh" title="本定義的永久連結">¶</a></dt>
 <dd><p>Return the inverse hyperbolic cosine of <em>x</em>. There is one branch cut,
-extending left from 1 along the real axis to -∞, continuous from above.</p>
+extending left from 1 along the real axis to -∞.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="cmath.asinh">
 <span class="sig-prename descclassname"><span class="pre">cmath.</span></span><span class="sig-name descname"><span class="pre">asinh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cmath.asinh" title="本定義的永久連結">¶</a></dt>
 <dd><p>Return the inverse hyperbolic sine of <em>x</em>. There are two branch cuts:
-One extends from <code class="docutils literal notranslate"><span class="pre">1j</span></code> along the imaginary axis to <code class="docutils literal notranslate"><span class="pre">∞j</span></code>,
-continuous from the right.  The other extends from <code class="docutils literal notranslate"><span class="pre">-1j</span></code> along
-the imaginary axis to <code class="docutils literal notranslate"><span class="pre">-∞j</span></code>, continuous from the left.</p>
+One extends from <code class="docutils literal notranslate"><span class="pre">1j</span></code> along the imaginary axis to <code class="docutils literal notranslate"><span class="pre">∞j</span></code>.  The other
+extends from <code class="docutils literal notranslate"><span class="pre">-1j</span></code> along the imaginary axis to <code class="docutils literal notranslate"><span class="pre">-∞j</span></code>.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="cmath.atanh">
 <span class="sig-prename descclassname"><span class="pre">cmath.</span></span><span class="sig-name descname"><span class="pre">atanh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#cmath.atanh" title="本定義的永久連結">¶</a></dt>
 <dd><p>Return the inverse hyperbolic tangent of <em>x</em>. There are two branch cuts: One
-extends from <code class="docutils literal notranslate"><span class="pre">1</span></code> along the real axis to <code class="docutils literal notranslate"><span class="pre">∞</span></code>, continuous from below. The
-other extends from <code class="docutils literal notranslate"><span class="pre">-1</span></code> along the real axis to <code class="docutils literal notranslate"><span class="pre">-∞</span></code>, continuous from
-above.</p>
+extends from <code class="docutils literal notranslate"><span class="pre">1</span></code> along the real axis to <code class="docutils literal notranslate"><span class="pre">∞</span></code>. The other extends from
+<code class="docutils literal notranslate"><span class="pre">-1</span></code> along the real axis to <code class="docutils literal notranslate"><span class="pre">-∞</span></code>.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -699,7 +709,7 @@ in numerical analysis. Clarendon Press (1987) pp165--211.</p>
 <br />
     <br />
 
-    最後更新於 2月 18, 2023。
+    最後更新於 2月 28, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 

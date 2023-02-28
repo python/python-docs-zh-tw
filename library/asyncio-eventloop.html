@@ -503,11 +503,15 @@ asynchronous generators.</p>
 <dt class="sig sig-object py" id="asyncio.loop.shutdown_default_executor">
 <em class="property"><span class="pre">coroutine</span> </em><span class="sig-prename descclassname"><span class="pre">loop.</span></span><span class="sig-name descname"><span class="pre">shutdown_default_executor</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.loop.shutdown_default_executor" title="本定義的永久連結">¶</a></dt>
 <dd><p>Schedule the closure of the default executor and wait for it to join all of
-the threads in the <code class="xref py py-class docutils literal notranslate"><span class="pre">ThreadPoolExecutor</span></code>. After calling this method, a
-<a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> will be raised if <a class="reference internal" href="#asyncio.loop.run_in_executor" title="asyncio.loop.run_in_executor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">loop.run_in_executor()</span></code></a> is called
-while using the default executor.</p>
-<p>Note that there is no need to call this function when
-<a class="reference internal" href="asyncio-runner.html#asyncio.run" title="asyncio.run"><code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.run()</span></code></a> is used.</p>
+the threads in the <a class="reference internal" href="concurrent.futures.html#concurrent.futures.ThreadPoolExecutor" title="concurrent.futures.ThreadPoolExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ThreadPoolExecutor</span></code></a>.
+Once this method has been called,
+using the default executor with <a class="reference internal" href="#asyncio.loop.run_in_executor" title="asyncio.loop.run_in_executor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">loop.run_in_executor()</span></code></a>
+will raise a <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Do not call this method when using <a class="reference internal" href="asyncio-runner.html#asyncio.run" title="asyncio.run"><code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.run()</span></code></a>,
+as the latter handles default executor shutdown automatically.</p>
+</div>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.9 版本新加入.</span></p>
 </div>
@@ -521,21 +525,22 @@ while using the default executor.</p>
 <span class="sig-prename descclassname"><span class="pre">loop.</span></span><span class="sig-name descname"><span class="pre">call_soon</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callback</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.loop.call_soon" title="本定義的永久連結">¶</a></dt>
 <dd><p>Schedule the <em>callback</em> <a class="reference internal" href="../glossary.html#term-callback"><span class="xref std std-term">callback</span></a> to be called with
 <em>args</em> arguments at the next iteration of the event loop.</p>
+<p>Return an instance of <a class="reference internal" href="#asyncio.Handle" title="asyncio.Handle"><code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.Handle</span></code></a>,
+which can be used later to cancel the callback.</p>
 <p>Callbacks are called in the order in which they are registered.
 Each callback will be called exactly once.</p>
-<p>An optional keyword-only <em>context</em> argument allows specifying a
+<p>The optional keyword-only <em>context</em> argument specifies a
 custom <a class="reference internal" href="contextvars.html#contextvars.Context" title="contextvars.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">contextvars.Context</span></code></a> for the <em>callback</em> to run in.
-The current context is used when no <em>context</em> is provided.</p>
-<p>An instance of <a class="reference internal" href="#asyncio.Handle" title="asyncio.Handle"><code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.Handle</span></code></a> is returned, which can be
-used later to cancel the callback.</p>
-<p>This method is not thread-safe.</p>
+Callbacks use the current context when no <em>context</em> is provided.</p>
+<p>Unlike <a class="reference internal" href="#asyncio.loop.call_soon_threadsafe" title="asyncio.loop.call_soon_threadsafe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">call_soon_threadsafe()</span></code></a>, this method is not thread-safe.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="asyncio.loop.call_soon_threadsafe">
 <span class="sig-prename descclassname"><span class="pre">loop.</span></span><span class="sig-name descname"><span class="pre">call_soon_threadsafe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callback</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.loop.call_soon_threadsafe" title="本定義的永久連結">¶</a></dt>
-<dd><p>A thread-safe variant of <a class="reference internal" href="#asyncio.loop.call_soon" title="asyncio.loop.call_soon"><code class="xref py py-meth docutils literal notranslate"><span class="pre">call_soon()</span></code></a>.  Must be used to
-schedule callbacks <em>from another thread</em>.</p>
+<dd><p>A thread-safe variant of <a class="reference internal" href="#asyncio.loop.call_soon" title="asyncio.loop.call_soon"><code class="xref py py-meth docutils literal notranslate"><span class="pre">call_soon()</span></code></a>. When scheduling callbacks from
+another thread, this function <em>must</em> be used, since <a class="reference internal" href="#asyncio.loop.call_soon" title="asyncio.loop.call_soon"><code class="xref py py-meth docutils literal notranslate"><span class="pre">call_soon()</span></code></a> is not
+thread-safe.</p>
 <p>Raises <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> if called on a loop that's been closed.
 This can happen on a secondary thread when the main application is
 shutting down.</p>
@@ -789,8 +794,8 @@ for all TCP connections.</p>
 When a server's IPv4 path and protocol are working, but the server's
 IPv6 path and protocol are not working, a dual-stack client
 application experiences significant connection delay compared to an
-IPv4-only client.  This is undesirable because it causes the dual-
-stack client to have a worse user experience.  This document
+IPv4-only client.  This is undesirable because it causes the
+dual-stack client to have a worse user experience.  This document
 specifies requirements for algorithms that reduce this user-visible
 delay and provides an algorithm.</p>
 <p>更多資訊請見：<a class="reference external" href="https://tools.ietf.org/html/rfc6555">https://tools.ietf.org/html/rfc6555</a></p>
@@ -2329,7 +2334,7 @@ using the <a class="reference internal" href="#asyncio.loop.add_signal_handler" 
 <br />
     <br />
 
-    最後更新於 2月 18, 2023。
+    最後更新於 2月 28, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
