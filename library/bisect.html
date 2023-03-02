@@ -227,39 +227,23 @@
 
 <section id="performance-notes">
 <h2>效能考量<a class="headerlink" href="#performance-notes" title="本標頭的永久連結">¶</a></h2>
-<p>When writing time sensitive code using <em>bisect()</em> and <em>insort()</em>, keep these
-thoughts in mind:</p>
+<p>若在需要關注寫入時間的程式當中使用 <em>bisect()</em> 和 <em>insort()</em>，請特別注意幾個事項：</p>
 <ul class="simple">
-<li><p>Bisection is effective for searching ranges of values.
-For locating specific values, dictionaries are more performant.</p></li>
-<li><p>The <em>insort()</em> functions are <code class="docutils literal notranslate"><span class="pre">O(n)</span></code> because the logarithmic search step
-is dominated by the linear time insertion step.</p></li>
-<li><p>The search functions are stateless and discard key function results after
-they are used.  Consequently, if the search functions are used in a loop,
-the key function may be called again and again on the same array elements.
-If the key function isn't fast, consider wrapping it with
-<a class="reference internal" href="functools.html#functools.cache" title="functools.cache"><code class="xref py py-func docutils literal notranslate"><span class="pre">functools.cache()</span></code></a> to avoid duplicate computations.  Alternatively,
-consider searching an array of precomputed keys to locate the insertion
-point (as shown in the examples section below).</p></li>
+<li><p>二分法在一段範圍的數值中做搜索的效率較佳，但若是要存取特定數值，使用字典的表現還是比較好。</p></li>
+<li><p><em>insort()</em> 函式的複雜度為 <code class="docutils literal notranslate"><span class="pre">O(n)</span></code>，因為對數搜尋是以線性時間的插入步驟所主導 (dominate)。</p></li>
+<li><p>搜索函式為無狀態的 (stateless)，且鍵函式會在使用過後被丟棄。因此，如果搜索函式被使用於迴圈當中，鍵函式會不斷被重複呼叫於相同的 list 元素。如果鍵函式執行速度不快，請考慮將其以 <a class="reference internal" href="functools.html#functools.cache" title="functools.cache"><code class="xref py py-func docutils literal notranslate"><span class="pre">functools.cache()</span></code></a> 包裝起來以減少重複的計算。另外，也可以透過搜尋預先計算好的鍵列表 (array of precomputed keys) 來定位插入點（如下方範例所示）。</p></li>
 </ul>
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
 <ul class="simple">
-<li><p><a class="reference external" href="https://grantjenks.com/docs/sortedcollections/">Sorted Collections</a> is a high performance
-module that uses <em>bisect</em> to managed sorted collections of data.</p></li>
-<li><p>The <a class="reference external" href="https://code.activestate.com/recipes/577197-sortedcollection/">SortedCollection recipe</a> uses
-bisect to build a full-featured collection class with straight-forward search
-methods and support for a key-function.  The keys are precomputed to save
-unnecessary calls to the key function during searches.</p></li>
+<li><p><a class="reference external" href="https://grantjenks.com/docs/sortedcollections/">有序容器 (Sorted Collections)</a> 是一個使用 <em>bisect</em> 來管理資料之有序集合的高效能模組。</p></li>
+<li><p><a class="reference external" href="https://code.activestate.com/recipes/577197-sortedcollection/">SortedCollection recipe</a> 使用二分法來建立一個功能完整的集合類別 (collection class) 並帶有符合直覺的搜索方法 (search methods) 與支援鍵函式。鍵會預先被計算好，以減少搜索過程中多餘的鍵函式呼叫。</p></li>
 </ul>
 </div>
 </section>
 <section id="searching-sorted-lists">
 <h2>搜尋一個已排序的 list<a class="headerlink" href="#searching-sorted-lists" title="本標頭的永久連結">¶</a></h2>
-<p>The above <a class="reference internal" href="#module-bisect" title="bisect: Array bisection algorithms for binary searching."><code class="xref py py-func docutils literal notranslate"><span class="pre">bisect()</span></code></a> functions are useful for finding insertion points but
-can be tricky or awkward to use for common searching tasks. The following five
-functions show how to transform them into the standard lookups for sorted
-lists:</p>
+<p>上面的 <a class="reference internal" href="#module-bisect" title="bisect: Array bisection algorithms for binary searching."><code class="xref py py-func docutils literal notranslate"><span class="pre">bisect()</span></code></a> 函式在找到數值插入點上很有用，但一般的數值搜尋任務上就不是那麼的方便。以下的五個函式展示了如何將其轉換成標準的有序列表查找函式：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">index</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
     <span class="s1">&#39;Locate the leftmost value exactly equal to x&#39;</span>
     <span class="n">i</span> <span class="o">=</span> <span class="n">bisect_left</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
@@ -299,10 +283,7 @@ lists:</p>
 </section>
 <section id="examples">
 <h2>範例<a class="headerlink" href="#examples" title="本標頭的永久連結">¶</a></h2>
-<p id="bisect-example">The <a class="reference internal" href="#module-bisect" title="bisect: Array bisection algorithms for binary searching."><code class="xref py py-func docutils literal notranslate"><span class="pre">bisect()</span></code></a> function can be useful for numeric table lookups. This
-example uses <a class="reference internal" href="#module-bisect" title="bisect: Array bisection algorithms for binary searching."><code class="xref py py-func docutils literal notranslate"><span class="pre">bisect()</span></code></a> to look up a letter grade for an exam score (say)
-based on a set of ordered numeric breakpoints: 90 and up is an 'A', 80 to 89 is
-a 'B', and so on:</p>
+<p id="bisect-example"><a class="reference internal" href="#module-bisect" title="bisect: Array bisection algorithms for binary searching."><code class="xref py py-func docutils literal notranslate"><span class="pre">bisect()</span></code></a> 函式可用於數值表中的查找 (numeric table lookup)，這個範例使用 <a class="reference internal" href="#module-bisect" title="bisect: Array bisection algorithms for binary searching."><code class="xref py py-func docutils literal notranslate"><span class="pre">bisect()</span></code></a> 以基於一組有序的數值分界點來為一個考試成績找到相對應的字母等級：90 以上是 'A'、80 到 89 為 'B'，依此類推：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">grade</span><span class="p">(</span><span class="n">score</span><span class="p">,</span> <span class="n">breakpoints</span><span class="o">=</span><span class="p">[</span><span class="mi">60</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">90</span><span class="p">],</span> <span class="n">grades</span><span class="o">=</span><span class="s1">&#39;FDCBA&#39;</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">i</span> <span class="o">=</span> <span class="n">bisect</span><span class="p">(</span><span class="n">breakpoints</span><span class="p">,</span> <span class="n">score</span><span class="p">)</span>
 <span class="gp">... </span>    <span class="k">return</span> <span class="n">grades</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
@@ -311,9 +292,7 @@ a 'B', and so on:</p>
 <span class="go">[&#39;F&#39;, &#39;A&#39;, &#39;C&#39;, &#39;C&#39;, &#39;B&#39;, &#39;A&#39;, &#39;A&#39;]</span>
 </pre></div>
 </div>
-<p>The <a class="reference internal" href="#module-bisect" title="bisect: Array bisection algorithms for binary searching."><code class="xref py py-func docutils literal notranslate"><span class="pre">bisect()</span></code></a> and <a class="reference internal" href="#bisect.insort" title="bisect.insort"><code class="xref py py-func docutils literal notranslate"><span class="pre">insort()</span></code></a> functions also work with lists of
-tuples.  The <em>key</em> argument can serve to extract the field used for ordering
-records in a table:</p>
+<p><a class="reference internal" href="#module-bisect" title="bisect: Array bisection algorithms for binary searching."><code class="xref py py-func docutils literal notranslate"><span class="pre">bisect()</span></code></a> 與 <a class="reference internal" href="#bisect.insort" title="bisect.insort"><code class="xref py py-func docutils literal notranslate"><span class="pre">insort()</span></code></a> 函式也適用於內容為 tuples（元組）的 lists，<em>key</em> 引數可被用以取出在數值表中作為排序依據的欄位：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">namedtuple</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">attrgetter</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">bisect</span> <span class="kn">import</span> <span class="n">bisect</span><span class="p">,</span> <span class="n">insort</span>
@@ -345,8 +324,7 @@ records in a table:</p>
 <span class="go"> Movie(name=&#39;Titanic&#39;, released=1997, director=&#39;Cameron&#39;)]</span>
 </pre></div>
 </div>
-<p>If the key function is expensive, it is possible to avoid repeated function
-calls by searching a list of precomputed keys to find the index of a record:</p>
+<p>如果鍵函式會消耗較多運算資源，那可以在預先計算好的鍵列表中搜索該紀錄的索引值，以減少重複的函式呼叫：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;blue&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;yellow&#39;</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">data</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>       <span class="c1"># Or use operator.itemgetter(1).</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">keys</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>         <span class="c1"># Precompute a list of keys.</span>
@@ -480,7 +458,7 @@ calls by searching a list of precomputed keys to find the index of a record:</p>
 <br />
     <br />
 
-    最後更新於 3月 01, 2023。
+    最後更新於 3月 02, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
