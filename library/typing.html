@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>typing --- Support for type hints &#8212; Python 3.11.2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>typing --- Support for type hints &#8212; Python 3.11.3 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?digest=2d3badd06fe70b34b68db01f99471ce1624ffe4a" />
@@ -19,7 +19,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.11.2 說明文件 中搜尋"
+          title="在 Python 3.11.3 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -303,7 +303,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.2 Documentation</a> &#187;
+      <a href="../index.html">3.11.3 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -363,6 +363,12 @@ provides backports of these new features to older versions of Python.</p>
 <a class="reference internal" href="#deprecation-timeline-of-major-features">Deprecation Timeline of Major Features</a>.</p>
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
+<p>For a quick overview of type hints, refer to
+<a class="reference external" href="https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html">this cheat sheet</a>.</p>
+<p>The &quot;Type System Reference&quot; section of <a class="reference external" href="https://mypy.readthedocs.io/">https://mypy.readthedocs.io/</a> -- since
+the Python typing system is standardised via PEPs, this reference should
+broadly apply to most Python type checkers, although some parts may still be
+specific to mypy.</p>
 <p>The documentation at <a class="reference external" href="https://typing.readthedocs.io/">https://typing.readthedocs.io/</a> serves as useful reference
 for type system features, useful typing related tools and typing best practices.</p>
 </div>
@@ -1966,17 +1972,33 @@ in <a class="reference internal" href="collections.abc.html#module-collections.a
     <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="o">...</span>
 
 <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/some/file&#39;</span><span class="p">),</span> <span class="n">Closable</span><span class="p">)</span>
+
+<span class="nd">@runtime_checkable</span>
+<span class="k">class</span> <span class="nc">Named</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Bob&#39;</span><span class="p">),</span> <span class="n">Named</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p><a class="reference internal" href="#typing.runtime_checkable" title="typing.runtime_checkable"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtime_checkable()</span></code></a> will check only the presence of the required
-methods, not their type signatures. For example, <a class="reference internal" href="ssl.html#ssl.SSLObject" title="ssl.SSLObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">ssl.SSLObject</span></code></a>
+<p><code class="xref py py-func docutils literal notranslate"><span class="pre">runtime_checkable()</span></code> will check only the presence of the required
+methods or attributes, not their type signatures or types.
+For example, <a class="reference internal" href="ssl.html#ssl.SSLObject" title="ssl.SSLObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">ssl.SSLObject</span></code></a>
 is a class, therefore it passes an <a class="reference internal" href="functions.html#issubclass" title="issubclass"><code class="xref py py-func docutils literal notranslate"><span class="pre">issubclass()</span></code></a>
 check against <a class="reference internal" href="#typing.Callable" title="typing.Callable"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>.  However, the
 <code class="docutils literal notranslate"><span class="pre">ssl.SSLObject.__init__</span></code> method exists only to raise a
 <a class="reference internal" href="exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a> with a more informative message, therefore making
 it impossible to call (instantiate) <a class="reference internal" href="ssl.html#ssl.SSLObject" title="ssl.SSLObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">ssl.SSLObject</span></code></a>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>An <a class="reference internal" href="functions.html#isinstance" title="isinstance"><code class="xref py py-func docutils literal notranslate"><span class="pre">isinstance()</span></code></a> check against a runtime-checkable protocol can be
+surprisingly slow compared to an <code class="docutils literal notranslate"><span class="pre">isinstance()</span></code> check against
+a non-protocol class. Consider using alternative idioms such as
+<a class="reference internal" href="functions.html#hasattr" title="hasattr"><code class="xref py py-func docutils literal notranslate"><span class="pre">hasattr()</span></code></a> calls for structural checks in performance-sensitive
+code.</p>
 </div>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.8 版本新加入.</span></p>
@@ -3686,7 +3708,7 @@ collections</p></td>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.2 Documentation</a> &#187;
+      <a href="../index.html">3.11.3 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -3723,7 +3745,7 @@ collections</p></td>
 <br />
     <br />
 
-    最後更新於 3月 15, 2023。
+    最後更新於 4月 06, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 

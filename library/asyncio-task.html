@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Coroutines and Tasks &#8212; Python 3.11.2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coroutines and Tasks &#8212; Python 3.11.3 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?digest=2d3badd06fe70b34b68db01f99471ce1624ffe4a" />
@@ -19,7 +19,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.11.2 說明文件 中搜尋"
+          title="在 Python 3.11.3 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -127,6 +127,7 @@
 <li><a class="reference internal" href="#introspection">Introspection</a><ul>
 <li><a class="reference internal" href="#asyncio.current_task"><code class="docutils literal notranslate"><span class="pre">current_task()</span></code></a></li>
 <li><a class="reference internal" href="#asyncio.all_tasks"><code class="docutils literal notranslate"><span class="pre">all_tasks()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.iscoroutine"><code class="docutils literal notranslate"><span class="pre">iscoroutine()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#task-object">Task Object</a><ul>
@@ -206,7 +207,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.2 Documentation</a> &#187;
+      <a href="../index.html">3.11.3 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -519,12 +520,16 @@ in the task at the next opportunity.</p>
 <p>It is recommended that coroutines use <code class="docutils literal notranslate"><span class="pre">try/finally</span></code> blocks to robustly
 perform clean-up logic. In case <a class="reference internal" href="asyncio-exceptions.html#asyncio.CancelledError" title="asyncio.CancelledError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">asyncio.CancelledError</span></code></a>
 is explicitly caught, it should generally be propagated when
-clean-up is complete. Most code can safely ignore <a class="reference internal" href="asyncio-exceptions.html#asyncio.CancelledError" title="asyncio.CancelledError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">asyncio.CancelledError</span></code></a>.</p>
+clean-up is complete. <a class="reference internal" href="asyncio-exceptions.html#asyncio.CancelledError" title="asyncio.CancelledError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">asyncio.CancelledError</span></code></a> directly subclasses
+<a class="reference internal" href="exceptions.html#BaseException" title="BaseException"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BaseException</span></code></a> so most code will not need to be aware of it.</p>
 <p>The asyncio components that enable structured concurrency, like
 <a class="reference internal" href="#asyncio.TaskGroup" title="asyncio.TaskGroup"><code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.TaskGroup</span></code></a> and <a class="reference internal" href="#asyncio.timeout" title="asyncio.timeout"><code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.timeout()</span></code></a>,
 are implemented using cancellation internally and might misbehave if
 a coroutine swallows <a class="reference internal" href="asyncio-exceptions.html#asyncio.CancelledError" title="asyncio.CancelledError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">asyncio.CancelledError</span></code></a>. Similarly, user code
-should not call <a class="reference internal" href="#asyncio.Task.uncancel" title="asyncio.Task.uncancel"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncancel</span></code></a>.</p>
+should not generally call <a class="reference internal" href="#asyncio.Task.uncancel" title="asyncio.Task.uncancel"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncancel</span></code></a>.
+However, in cases when suppressing <a class="reference internal" href="asyncio-exceptions.html#asyncio.CancelledError" title="asyncio.CancelledError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">asyncio.CancelledError</span></code></a> is
+truly desired, it is necessary to also call <code class="docutils literal notranslate"><span class="pre">uncancel()</span></code> to completely
+remove the cancellation state.</p>
 </section>
 <section id="task-groups">
 <span id="taskgroups"></span><h2><a class="toc-backref" href="#id6" role="doc-backlink">Task Groups</a><a class="headerlink" href="#task-groups" title="本標頭的永久連結">¶</a></h2>
@@ -819,31 +824,28 @@ which means the <a class="reference internal" href="asyncio-exceptions.html#asyn
 rescheduled to a different deadline and inspected.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="asyncio.Timeout">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">Timeout</span></span><a class="headerlink" href="#asyncio.Timeout" title="本定義的永久連結">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">Timeout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">when</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Timeout" title="本定義的永久連結">¶</a></dt>
 <dd><p>An <a class="reference internal" href="../reference/datamodel.html#async-context-managers"><span class="std std-ref">asynchronous context manager</span></a>
-that limits time spent inside of it.</p>
+for cancelling overdue coroutines.</p>
+<p><code class="docutils literal notranslate"><span class="pre">when</span></code> should be an absolute time at which the context should time out,
+as measured by the event loop's clock:</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">when</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, the timeout will never trigger.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">when</span> <span class="pre">&lt;</span> <span class="pre">loop.time()</span></code>, the timeout will trigger on the next
+iteration of the event loop.</p></li>
+</ul>
 <blockquote>
-<div><div class="versionadded">
-<p><span class="versionmodified added">在 3.11 版本新加入.</span></p>
-</div>
-<dl class="py method">
+<div><dl class="py method">
 <dt class="sig sig-object py" id="asyncio.Timeout.when">
 <span class="sig-name descname"><span class="pre">when</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="functions.html#float" title="float"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="constants.html#None" title="None"><span class="pre">None</span></a></span></span><a class="headerlink" href="#asyncio.Timeout.when" title="本定義的永久連結">¶</a></dt>
 <dd><p>Return the current deadline, or <code class="docutils literal notranslate"><span class="pre">None</span></code> if the current
 deadline is not set.</p>
-<p>The deadline is a float, consistent with the time returned by
-<a class="reference internal" href="asyncio-eventloop.html#asyncio.loop.time" title="asyncio.loop.time"><code class="xref py py-meth docutils literal notranslate"><span class="pre">loop.time()</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="asyncio.Timeout.reschedule">
 <span class="sig-name descname"><span class="pre">reschedule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">when</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="functions.html#float" title="float"><span class="pre">float</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="constants.html#None" title="None"><span class="pre">None</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Timeout.reschedule" title="本定義的永久連結">¶</a></dt>
-<dd><p>Change the time the timeout will trigger.</p>
-<p>If <em>when</em> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, any current deadline will be removed, and the
-context manager will wait indefinitely.</p>
-<p>If <em>when</em> is a float, it is set as the new deadline.</p>
-<p>if <em>when</em> is in the past, the timeout will trigger on the next
-iteration of the event loop.</p>
+<dd><p>Reschedule the timeout.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1161,6 +1163,15 @@ current loop.</p>
 </div>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="asyncio.iscoroutine">
+<span class="sig-prename descclassname"><span class="pre">asyncio.</span></span><span class="sig-name descname"><span class="pre">iscoroutine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.iscoroutine" title="本定義的永久連結">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if <em>obj</em> is a coroutine object.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.4 版本新加入.</span></p>
+</div>
+</dd></dl>
+
 </section>
 <section id="task-object">
 <h2><a class="toc-backref" href="#id15" role="doc-backlink">Task Object</a><a class="headerlink" href="#task-object" title="本標頭的永久連結">¶</a></h2>
@@ -1334,7 +1345,9 @@ request by suppressing the exception with a <a class="reference internal" href="
 Therefore, unlike <a class="reference internal" href="asyncio-future.html#asyncio.Future.cancel" title="asyncio.Future.cancel"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Future.cancel()</span></code></a>, <a class="reference internal" href="#asyncio.Task.cancel" title="asyncio.Task.cancel"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Task.cancel()</span></code></a> does
 not guarantee that the Task will be cancelled, although
 suppressing cancellation completely is not common and is actively
-discouraged.</p>
+discouraged.  Should the coroutine nevertheless decide to suppress
+the cancellation, it needs to call <a class="reference internal" href="#asyncio.Task.uncancel" title="asyncio.Task.uncancel"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Task.uncancel()</span></code></a> in addition
+to catching the exception.</p>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.9 版本變更: </span>新增 <em>msg</em> 參數。</p>
 </div>
@@ -1422,6 +1435,9 @@ might get cancelled due to the timeout, <code class="docutils literal notranslat
 continue running even in case of the timeout.  This is implemented
 with <a class="reference internal" href="#asyncio.Task.uncancel" title="asyncio.Task.uncancel"><code class="xref py py-meth docutils literal notranslate"><span class="pre">uncancel()</span></code></a>.  <a class="reference internal" href="#asyncio.TaskGroup" title="asyncio.TaskGroup"><code class="xref py py-class docutils literal notranslate"><span class="pre">TaskGroup</span></code></a> context managers use
 <a class="reference internal" href="#asyncio.Task.uncancel" title="asyncio.Task.uncancel"><code class="xref py py-func docutils literal notranslate"><span class="pre">uncancel()</span></code></a> in a similar fashion.</p>
+<p>If end-user code is, for some reason, suppresing cancellation by
+catching <a class="reference internal" href="asyncio-exceptions.html#asyncio.CancelledError" title="asyncio.CancelledError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">CancelledError</span></code></a>, it needs to call this method to remove
+the cancellation state.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1512,6 +1528,7 @@ used by end-user code.  See <a class="reference internal" href="#asyncio.Task.un
 <li><a class="reference internal" href="#introspection">Introspection</a><ul>
 <li><a class="reference internal" href="#asyncio.current_task"><code class="docutils literal notranslate"><span class="pre">current_task()</span></code></a></li>
 <li><a class="reference internal" href="#asyncio.all_tasks"><code class="docutils literal notranslate"><span class="pre">all_tasks()</span></code></a></li>
+<li><a class="reference internal" href="#asyncio.iscoroutine"><code class="docutils literal notranslate"><span class="pre">iscoroutine()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#task-object">Task Object</a><ul>
@@ -1594,7 +1611,7 @@ used by end-user code.  See <a class="reference internal" href="#asyncio.Task.un
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.2 Documentation</a> &#187;
+      <a href="../index.html">3.11.3 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -1632,7 +1649,7 @@ used by end-user code.  See <a class="reference internal" href="#asyncio.Task.un
 <br />
     <br />
 
-    最後更新於 3月 15, 2023。
+    最後更新於 4月 06, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
