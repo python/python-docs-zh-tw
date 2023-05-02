@@ -18,77 +18,102 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: ../../howto/isolating-extensions.rst:5
+#, fuzzy
 msgid "Isolating Extension Modules"
-msgstr ""
+msgstr "隔離擴充模組"
 
 #: ../../howto/isolating-extensions.rst:-1
 msgid "Abstract"
-msgstr ""
+msgstr "摘要"
 
 #: ../../howto/isolating-extensions.rst:9
+#, fuzzy
 msgid ""
 "Traditionally, state belonging to Python extension modules was kept in C "
 "``static`` variables, which have process-wide scope. This document describes "
 "problems of such per-process state and shows a safer way: per-module state."
 msgstr ""
+"傳統上，屬於 Python 擴充模組的狀態保存在 C ``static`` "
+"變數中，這些變數具有行程範圍的範圍。本文檔描述了這種 per-process state "
+"的問題，並展示了一種更安全的方法：per-module state。"
 
 #: ../../howto/isolating-extensions.rst:14
+#, fuzzy
 msgid ""
 "The document also describes how to switch to per-module state where "
 "possible. This transition involves allocating space for that state, "
 "potentially switching from static types to heap types, and—perhaps most "
 "importantly—accessing per-module state from code."
 msgstr ""
+"該文檔還描述瞭如何盡可能切換到每個模組狀態。這種轉變涉及為該狀態分配空間，可"
+"能從靜態型別切換到堆型別，以及——也許最重要的——從程式碼訪問每個模組的狀態。"
 
 #: ../../howto/isolating-extensions.rst:21
+#, fuzzy
 msgid "Who should read this"
-msgstr ""
+msgstr "誰應該閱讀這篇文章"
 
 #: ../../howto/isolating-extensions.rst:23
+#, fuzzy
 msgid ""
 "This guide is written for maintainers of :ref:`C-API <c-api-index>` "
 "extensions who would like to make that extension safer to use in "
 "applications where Python itself is used as a library."
 msgstr ""
+"本指南是為 :ref:`C-API <c-api-index>` 擴充的維護者編寫的，"
+"他們希望使該擴充更安全地用於 Python 本身用作庫的應用程式。"
 
 #: ../../howto/isolating-extensions.rst:29
+#, fuzzy
 msgid "Background"
-msgstr ""
+msgstr "背景"
 
 #: ../../howto/isolating-extensions.rst:31
+#, fuzzy
 msgid ""
 "An *interpreter* is the context in which Python code runs. It contains "
 "configuration (e.g. the import path) and runtime state (e.g. the set of "
 "imported modules)."
-msgstr ""
+msgstr "*interpreter* 是 Python 程式碼運行的上下文。它包含配置（例如導入路徑）和運行"
+"時狀態（例如導入模組集）。"
 
 #: ../../howto/isolating-extensions.rst:35
+#, fuzzy
 msgid ""
 "Python supports running multiple interpreters in one process. There are two "
 "cases to think about—users may run interpreters:"
-msgstr ""
+msgstr "Python "
+"支援在一個行程中運行多個直譯器。有兩種情況需要考慮——使用者可能會運行直譯器："
 
 #: ../../howto/isolating-extensions.rst:38
+#, fuzzy
 msgid ""
 "in sequence, with several :c:func:`Py_InitializeEx`/:c:func:`Py_FinalizeEx` "
 "cycles, and"
-msgstr ""
+msgstr "按順序，有幾個 :c:func:`Py_InitializeEx`/:c:func:`Py_FinalizeEx` 循環，和"
 
 #: ../../howto/isolating-extensions.rst:40
+#, fuzzy
 msgid ""
 "in parallel, managing \"sub-interpreters\" using :c:func:"
 "`Py_NewInterpreter`/:c:func:`Py_EndInterpreter`."
-msgstr ""
+msgstr "同時，使用 :c:func:`Py_NewInterpreter`/:c:func:`Py_EndInterpreter` "
+"管理“子直譯器”。"
 
 #: ../../howto/isolating-extensions.rst:43
+#, fuzzy
 msgid ""
 "Both cases (and combinations of them) would be most useful when embedding "
 "Python within a library. Libraries generally shouldn't make assumptions "
 "about the application that uses them, which include assuming a process-wide "
 "\"main Python interpreter\"."
 msgstr ""
+"當在庫中嵌入 Python 時，這兩種情況（以及它們的組合）都是最有用的。圖書館通常"
+"不應該對使用它們的應用程式做出假設，包括假設一個行程範圍的“主 Python "
+"直譯器”。"
 
 #: ../../howto/isolating-extensions.rst:48
+#, fuzzy
 msgid ""
 "Historically, Python extension modules don't handle this use case well. Many "
 "extension modules (and even some stdlib modules) use *per-process* global "
@@ -98,19 +123,28 @@ msgid ""
 "introduce edge cases that lead to crashes when a module is loaded in more "
 "than one interpreter in the same process."
 msgstr ""
+"從歷史上看，Python 擴充模組不能很好地處理這種用例。許多擴充模組（甚至一些 "
+"stdlib 模組）使用 *per-process* 全局狀態，因為 C ``static`` 變數非常容易使用"
+"。因此，應該特定於口譯員的資料最終會在口譯員之間共享。除非擴充開發人員很小心"
+"，否則當一個模組在同一行程中的多個直譯器中加載時，很容易引入導致崩潰的邊緣情"
+"況。"
 
 #: ../../howto/isolating-extensions.rst:56
+#, fuzzy
 msgid ""
 "Unfortunately, *per-interpreter* state is not easy to achieve. Extension "
 "authors tend to not keep multiple interpreters in mind when developing, and "
 "it is currently cumbersome to test the behavior."
-msgstr ""
+msgstr "不幸的是，*per-interpreter* 狀態並不容易實作。擴充作者在開發時往往不會考慮多"
+"個直譯器，目前測試行為很麻煩。"
 
 #: ../../howto/isolating-extensions.rst:61
+#, fuzzy
 msgid "Enter Per-Module State"
-msgstr ""
+msgstr "輸入每個模組狀態"
 
 #: ../../howto/isolating-extensions.rst:63
+#, fuzzy
 msgid ""
 "Instead of focusing on per-interpreter state, Python's C API is evolving to "
 "better support the more granular *per-module* state. This means that C-level "
@@ -119,8 +153,13 @@ msgid ""
 "multiple module objects corresponding to a single extension can even be "
 "loaded in a single interpreter."
 msgstr ""
+"Python 的 C API 不是專注於每個直譯器的狀態，"
+"而是不斷發展以更好地支援更細粒度的 *per-module* 狀態。這意味著 C 級資料附加到"
+"*模組物件*。每個直譯器建立自己的模組物件，保持資料獨立。為了測試隔離性，甚至"
+"可以在單個直譯器中加載對應於單個擴充的多個模組物件。"
 
 #: ../../howto/isolating-extensions.rst:70
+#, fuzzy
 msgid ""
 "Per-module state provides an easy way to think about lifetime and resource "
 "ownership: the extension module will initialize when a module object is "
@@ -128,8 +167,12 @@ msgid ""
 "any other :c:expr:`PyObject *`; there are no \"on interpreter shutdown\" "
 "hooks to think—or forget—about."
 msgstr ""
+"每個模組狀態提供了一種考慮生命週期和資源所有權的簡單方法：擴充模組將在建立模"
+"組物件時初始化，並在釋放時清理。在這方面，模組就像任何其他模組一樣 :c:expr:`"
+"PyObject *`;沒有“關於直譯器關閉”的掛鉤需要考慮或忘記。"
 
 #: ../../howto/isolating-extensions.rst:76
+#, fuzzy
 msgid ""
 "Note that there are use cases for different kinds of \"globals\": per-"
 "process, per-interpreter, per-thread or per-task state. With per-module "
@@ -137,19 +180,26 @@ msgid ""
 "exceptional cases: if you need them, you should give them additional care "
 "and testing. (Note that this guide does not cover them.)"
 msgstr ""
+"請注意，有不同型別的“全局變數”的用例：每個行程、每個直譯器、每個執行緒或每個"
+"任務狀態。使用每個模組的預設狀態，這些仍然是可能的，但您應該將它們視為例外情"
+"況：如果您需要它們，您應該給予它們額外的關注和測試。 "
+"（請注意，本指南不涵蓋它們。）"
 
 #: ../../howto/isolating-extensions.rst:85
+#, fuzzy
 msgid "Isolated Module Objects"
-msgstr ""
+msgstr "隔離模組物件"
 
 #: ../../howto/isolating-extensions.rst:87
+#, fuzzy
 msgid ""
 "The key point to keep in mind when developing an extension module is that "
 "several module objects can be created from a single shared library. For "
 "example:"
-msgstr ""
+msgstr "開發擴充模組時要牢記的關鍵點是可以從單個共享庫建立多個模組物件。例如："
 
 #: ../../howto/isolating-extensions.rst:101
+#, fuzzy
 msgid ""
 "As a rule of thumb, the two modules should be completely independent. All "
 "objects and state specific to the module should be encapsulated within the "
@@ -158,19 +208,27 @@ msgid ""
 "are possible (see `Managing Global State`_), but they will need more thought "
 "and attention to edge cases."
 msgstr ""
+"根據經驗，這兩個模組應該完全獨立。所有特定於模組的物件和狀態都應該封裝在模組"
+"對像中，不與其他模組物件共享，並在模組對像被釋放時清除。由於這只是一個經驗法"
+"則，因此可能存在例外情況（請參閱“管理全局狀態”），但需要更多地考慮和關注邊緣"
+"情況。"
 
 #: ../../howto/isolating-extensions.rst:109
+#, fuzzy
 msgid ""
 "While some modules could do with less stringent restrictions, isolated "
 "modules make it easier to set clear expectations and guidelines that work "
 "across a variety of use cases."
-msgstr ""
+msgstr "雖然某些模組可以使用不太嚴格的限制，但獨立的模組可以更輕鬆地設定適用於各種用"
+"例的明確期望和指南。"
 
 #: ../../howto/isolating-extensions.rst:115
+#, fuzzy
 msgid "Surprising Edge Cases"
-msgstr ""
+msgstr "令人驚訝的邊緣案例"
 
 #: ../../howto/isolating-extensions.rst:117
+#, fuzzy
 msgid ""
 "Note that isolated modules do create some surprising edge cases. Most "
 "notably, each module object will typically not share its classes and "
@@ -179,44 +237,59 @@ msgid ""
 "``binascii.Error`` are separate objects. In the following code, the "
 "exception is *not* caught:"
 msgstr ""
+"請注意，孤立的模組確實會產生一些令人驚訝的邊緣情況。最值得注意的是，每個模組"
+"物件通常不會與其他類似模組共享其類和例外。繼續上面的例子 <Isolated Module "
+"Objects_>`__，注意 old_binascii.Error 和 binascii.Error "
+"是獨立的物件。在以下程式碼中，*未*捕獲例外："
 
 #: ../../howto/isolating-extensions.rst:137
+#, fuzzy
 msgid ""
 "This is expected. Notice that pure-Python modules behave the same way: it is "
 "a part of how Python works."
-msgstr ""
+msgstr "這是意料之中的。請注意，純 Python 模組的行為方式相同：它是 Python "
+"工作方式的一部分。"
 
 #: ../../howto/isolating-extensions.rst:140
+#, fuzzy
 msgid ""
 "The goal is to make extension modules safe at the C level, not to make hacks "
 "behave intuitively. Mutating ``sys.modules`` \"manually\" counts as a hack."
-msgstr ""
+msgstr "目標是使擴充模組在 C 級別安全，而不是讓黑客行為直觀。 “手動”改變 ``sys."
+"modules`` 算作 hack。"
 
 #: ../../howto/isolating-extensions.rst:146
+#, fuzzy
 msgid "Making Modules Safe with Multiple Interpreters"
-msgstr ""
+msgstr "使用多個直譯器使模組安全"
 
 #: ../../howto/isolating-extensions.rst:150
+#, fuzzy
 msgid "Managing Global State"
-msgstr ""
+msgstr "管理全局狀態"
 
 #: ../../howto/isolating-extensions.rst:152
+#, fuzzy
 msgid ""
 "Sometimes, the state associated with a Python module is not specific to that "
 "module, but to the entire process (or something else \"more global\" than a "
 "module). For example:"
-msgstr ""
+msgstr "有時，與 Python 模組關聯的狀態並不特定於該模組，而是特定於整個過程（或其他比"
+"模組“更全局”的東西）。例如："
 
 #: ../../howto/isolating-extensions.rst:156
+#, fuzzy
 msgid "The ``readline`` module manages *the* terminal."
-msgstr ""
+msgstr "``readline`` 模組管理 *the* 終端。"
 
 #: ../../howto/isolating-extensions.rst:157
+#, fuzzy
 msgid ""
 "A module running on a circuit board wants to control *the* on-board LED."
-msgstr ""
+msgstr "在電路板上運行的模組想要控制 *the* 板載 LED。"
 
 #: ../../howto/isolating-extensions.rst:160
+#, fuzzy
 msgid ""
 "In these cases, the Python module should provide *access* to the global "
 "state, rather than *own* it. If possible, write the module so that multiple "
@@ -224,27 +297,38 @@ msgid ""
 "whether for Python or other languages). If that is not possible, consider "
 "explicit locking."
 msgstr ""
+"在這些情況下，Python 模組應該提供對全局狀態的*訪問*，而不是*擁有*它。如果可能"
+"，編寫模組，使其多個副本可以獨立訪問狀態（連同其他庫，無論是 Python "
+"還是其他語言）。如果那不可能，請考慮顯式鎖定。"
 
 #: ../../howto/isolating-extensions.rst:166
+#, fuzzy
 msgid ""
 "If it is necessary to use process-global state, the simplest way to avoid "
 "issues with multiple interpreters is to explicitly prevent a module from "
 "being loaded more than once per process—see `Opt-Out: Limiting to One Module "
 "Object per Process`_."
 msgstr ""
+"如果有必要使用行程全局狀態，避免多個直譯器出現問題的最簡單方法是明確防止模組"
+"在每個行程中被加載多次——請參閱“選擇退出：每個行程限制為一個模組物件”_ ."
 
 #: ../../howto/isolating-extensions.rst:173
+#, fuzzy
 msgid "Managing Per-Module State"
-msgstr ""
+msgstr "管理每個模組的狀態"
 
 #: ../../howto/isolating-extensions.rst:175
+#, fuzzy
 msgid ""
 "To use per-module state, use :ref:`multi-phase extension module "
 "initialization <multi-phase-initialization>`. This signals that your module "
 "supports multiple interpreters correctly."
 msgstr ""
+"要使用每個模組狀態，請使用 :ref:`多階段擴充模組初始化 <multi-phase-"
+"initialization>`。這表明您的模組正確支援多個直譯器。"
 
 #: ../../howto/isolating-extensions.rst:179
+#, fuzzy
 msgid ""
 "Set ``PyModuleDef.m_size`` to a positive number to request that many bytes "
 "of storage local to the module. Usually, this will be set to the size of "
@@ -254,22 +338,32 @@ msgid ""
 "``csv``'s :py:data:`~csv.field_size_limit`) which the C code needs to "
 "function."
 msgstr ""
+"將 ``PyModuleDef.m_size`` 設定為正數以請求模組本地儲存的位元組數。通常，這將"
+"被設定為一些模組特定的“結構”的大小，它可以儲存模組的所有 C 級狀態。特別是，"
+"它是你應該放置指向 C 程式碼需要的類（包括例外，但不包括靜態型別）和設定（"
+"例如 ``csv``'s :py:data:`~csv.field_size_limit`）的指標功能。"
 
 #: ../../howto/isolating-extensions.rst:188
+#, fuzzy
 msgid ""
 "Another option is to store state in the module's ``__dict__``, but you must "
 "avoid crashing when users modify ``__dict__`` from Python code. This usually "
 "means error- and type-checking at the C level, which is easy to get wrong "
 "and hard to test sufficiently."
 msgstr ""
+"另一種選擇是將狀態儲存在模組的 ``__dict__`` 中，但是當使用者從 Python "
+"程式碼修改 ``__dict__`` 時，您必須避免崩潰。這通常意味著在 C "
+"級別進行錯誤和型別檢查，這很容易出錯並且很難進行充分測試。"
 
 #: ../../howto/isolating-extensions.rst:193
+#, fuzzy
 msgid ""
 "However, if module state is not needed in C code, storing it in ``__dict__`` "
 "only is a good idea."
-msgstr ""
+msgstr "但是，如果 C 程式碼中不需要模組狀態，則將其儲存在 ``__dict__`` 中是個好主意。"
 
 #: ../../howto/isolating-extensions.rst:196
+#, fuzzy
 msgid ""
 "If the module state includes ``PyObject`` pointers, the module object must "
 "hold references to those objects and implement the module-level hooks "
@@ -278,64 +372,91 @@ msgid ""
 "and make the code longer; this is the price for modules which can be "
 "unloaded cleanly."
 msgstr ""
+"如果模組狀態包含 ``PyObject`` 指標，則模組物件必須持有對這些物件的引用並實作模組"
+"級掛鉤“m_traverse”、“m_clear”和“m_free”。這些工作就像一個類的``tp_traverse``"
+"，``tp_clear``和``tp_free``。新增它們將需要一些工作並使程式碼更長；這是可以乾"
+"淨卸載的模組的價格。"
 
 #: ../../howto/isolating-extensions.rst:203
+#, fuzzy
 msgid ""
 "An example of a module with per-module state is currently available as "
 "`xxlimited <https://github.com/python/cpython/blob/master/Modules/xxlimited."
 "c>`__; example module initialization shown at the bottom of the file."
 msgstr ""
+"具有每個模組狀態的模組的示例當前可用為`xxlimited <https://github.com/python/"
+"cpython/blob/master/Modules/xxlimited.c>`__;文件底部顯示的示例模組初始化。"
 
 #: ../../howto/isolating-extensions.rst:209
+#, fuzzy
 msgid "Opt-Out: Limiting to One Module Object per Process"
-msgstr ""
+msgstr "選擇退出：每個行程限制為一個模組物件"
 
 #: ../../howto/isolating-extensions.rst:211
+#, fuzzy
 msgid ""
 "A non-negative ``PyModuleDef.m_size`` signals that a module supports "
 "multiple interpreters correctly. If this is not yet the case for your "
 "module, you can explicitly make your module loadable only once per process. "
 "For example::"
 msgstr ""
+"非負的“PyModuleDef.m_size”表示模組正確支援多個直譯器。如果您的模組還不是這種"
+"情況，您可以明確地讓您的模組每個行程只能加載一次。例如：："
 
 #: ../../howto/isolating-extensions.rst:232
+#, fuzzy
 msgid "Module State Access from Functions"
-msgstr ""
+msgstr "從函式訪問模組狀態"
 
 #: ../../howto/isolating-extensions.rst:234
+#, fuzzy
 msgid ""
 "Accessing the state from module-level functions is straightforward. "
 "Functions get the module object as their first argument; for extracting the "
 "state, you can use ``PyModule_GetState``::"
-msgstr ""
+msgstr "從模組級函式訪問狀態很簡單。函式獲取模組對像作為它們的第一個參數；為了提取狀"
+"態，您可以使用``PyModule_GetState``::"
 
 #: ../../howto/isolating-extensions.rst:249
+#, fuzzy
 msgid ""
 "``PyModule_GetState`` may return ``NULL`` without setting an exception if "
 "there is no module state, i.e. ``PyModuleDef.m_size`` was zero. In your own "
 "module, you're in control of ``m_size``, so this is easy to prevent."
 msgstr ""
+"如果沒有模組狀態，``PyModule_GetState`` 可能會回傳 ``NULL`` 而不會設定例外，"
+"即 ``PyModuleDef.m_size`` "
+"為零。在您自己的模組中，您可以控制“m_size”，因此很容易避免這種情況。"
 
 #: ../../howto/isolating-extensions.rst:256
+#, fuzzy
 msgid "Heap Types"
-msgstr ""
+msgstr "堆型別"
 
 #: ../../howto/isolating-extensions.rst:258
+#, fuzzy
 msgid ""
 "Traditionally, types defined in C code are *static*; that is, ``static "
 "PyTypeObject`` structures defined directly in code and initialized using "
 "``PyType_Ready()``."
 msgstr ""
+"傳統上，C 程式碼中定義的型別是*static*；也就是說，“靜態 "
+"PyTypeObject”結構直接在程式碼中定義並使用“PyType_Ready()”進行初始化。"
 
 #: ../../howto/isolating-extensions.rst:262
+#, fuzzy
 msgid ""
 "Such types are necessarily shared across the process. Sharing them between "
 "module objects requires paying attention to any state they own or access. To "
 "limit the possible issues, static types are immutable at the Python level: "
 "for example, you can't set ``str.myattribute = 123``."
 msgstr ""
+"這些型別必須在整個過程中共享。在模組物件之間共享它們需要注意它們擁有或訪問的"
+"任何狀態。為了限制可能出現的問題，靜態型別在 Python 級別是不可變的：例如，"
+"您不能設定 ``str.myattribute = 123``。"
 
 #: ../../howto/isolating-extensions.rst:268
+#, fuzzy
 msgid ""
 "Sharing truly immutable objects between interpreters is fine, as long as "
 "they don't provide access to mutable objects. However, in CPython, every "
@@ -344,8 +465,13 @@ msgid ""
 "Python objects across interpreters implicitly depends on CPython's current, "
 "process-wide GIL."
 msgstr ""
+"在直譯器之間共享真正不可變的對像是可以的，只要它們不提供對可變物件的訪問。然"
+"而，在 CPython 中，每個 Python 對像都有一個可變的實作細節：引用計數。"
+"對引用計數的更改由 GIL 保護。因此，跨直譯器共享任何 Python "
+"物件的程式碼隱式依賴於 CPython 當前的行程範圍的 GIL。"
 
 #: ../../howto/isolating-extensions.rst:275
+#, fuzzy
 msgid ""
 "Because they are immutable and process-global, static types cannot access "
 "\"their\" module state. If any method of such a type requires access to "
@@ -353,16 +479,22 @@ msgid ""
 "*heap type* for short. These correspond more closely to classes created by "
 "Python's ``class`` statement."
 msgstr ""
+"因為它們是不可變的和行程全局的，所以靜態型別無法訪問“它們的”模組狀態。如果這"
+"種型別的任何方法需要訪問模組狀態，則該型別必須轉換為*堆分配型別*，或簡稱為*堆"
+"型別*。這些更接近於由 Python 的 ``class`` 語句建立的類。"
 
 #: ../../howto/isolating-extensions.rst:282
+#, fuzzy
 msgid "For new modules, using heap types by default is a good rule of thumb."
-msgstr ""
+msgstr "對於新模組，預設使用堆型別是一個很好的經驗法則。"
 
 #: ../../howto/isolating-extensions.rst:286
+#, fuzzy
 msgid "Changing Static Types to Heap Types"
-msgstr ""
+msgstr "將靜態型別更改為堆型別"
 
 #: ../../howto/isolating-extensions.rst:288
+#, fuzzy
 msgid ""
 "Static types can be converted to heap types, but note that the heap type API "
 "was not designed for \"lossless\" conversion from static types—that is, "
@@ -371,180 +503,246 @@ msgid ""
 "unintentionally change a few details (e.g. pickleability or inherited "
 "slots). Always test the details that are important to you."
 msgstr ""
+"靜態型別可以轉換為堆型別，但請注意，堆型別 API 不是為靜態型別的“無損”轉換而設"
+"計的——也就是說，建立一個與給定靜態型別完全一樣工作的型別。因此，當在新的 API "
+"中重寫類定義時，您可能會無意中更改一些細節（例如，pickleability "
+"或繼承的插槽）。始終測試對您重要的細節。"
 
 #: ../../howto/isolating-extensions.rst:297
+#, fuzzy
 msgid ""
 "Watch out for the following two points in particular (but note that this is "
 "not a comprehensive list):"
-msgstr ""
+msgstr "特別注意以下兩點（但請注意，這不是一個完整的列表）："
 
 #: ../../howto/isolating-extensions.rst:300
+#, fuzzy
 msgid ""
 "Unlike static types, heap type objects are mutable by default. Use the :c:"
 "data:`Py_TPFLAGS_IMMUTABLETYPE` flag to prevent mutability."
-msgstr ""
+msgstr "與靜態型別不同，堆型別物件預設是可變的。使用 "
+":c:data:`Py_TPFLAGS_IMMUTABLETYPE` 旗標來防止可變性。"
 
 #: ../../howto/isolating-extensions.rst:302
+#, fuzzy
 msgid ""
 "Heap types inherit :c:member:`~PyTypeObject.tp_new` by default, so it may "
 "become possible to instantiate them from Python code. You can prevent this "
 "with the :c:data:`Py_TPFLAGS_DISALLOW_INSTANTIATION` flag."
 msgstr ""
+"堆型別預設繼承 :c:member:`~PyTypeObject.tp_new`，因此可以從 Python "
+"程式碼實例化它們。您可以使用 :c:data:`Py_TPFLAGS_DISALLOW_INSTANTIATION` "
+"旗標來防止這種情況。"
 
 #: ../../howto/isolating-extensions.rst:308
+#, fuzzy
 msgid "Defining Heap Types"
-msgstr ""
+msgstr "定義堆型別"
 
 #: ../../howto/isolating-extensions.rst:310
+#, fuzzy
 msgid ""
 "Heap types can be created by filling a :c:struct:`PyType_Spec` structure, a "
 "description or \"blueprint\" of a class, and calling :c:func:"
 "`PyType_FromModuleAndSpec` to construct a new class object."
 msgstr ""
+"可以通過填充 PyType_Spec 結構、類的描述或“藍圖”並呼叫 "
+"PyType_FromModuleAndSpec 來構造新的類物件來建立堆型別。"
 
 #: ../../howto/isolating-extensions.rst:315
+#, fuzzy
 msgid ""
 "Other functions, like :c:func:`PyType_FromSpec`, can also create heap types, "
 "but :c:func:`PyType_FromModuleAndSpec` associates the module with the class, "
 "allowing access to the module state from methods."
 msgstr ""
+"其他函式，如 :c:func:`PyType_FromSpec`，也可以建立堆型別，但:c:func:`PyType_F"
+"romModuleAndSpec` 將模組與類相關聯，允許從方法訪問模組狀態。"
 
 #: ../../howto/isolating-extensions.rst:319
+#, fuzzy
 msgid ""
 "The class should generally be stored in *both* the module state (for safe "
 "access from C) and the module's ``__dict__`` (for access from Python code)."
-msgstr ""
+msgstr "該類通常應儲存在 *both* 模組狀態（用於從 C 安全訪問）和模組的 ``__dict__``（"
+"用於從 Python 程式碼訪問）。"
 
 #: ../../howto/isolating-extensions.rst:325
+#, fuzzy
 msgid "Garbage-Collection Protocol"
-msgstr ""
+msgstr "垃圾收集協定"
 
 #: ../../howto/isolating-extensions.rst:327
+#, fuzzy
 msgid ""
 "Instances of heap types hold a reference to their type. This ensures that "
 "the type isn't destroyed before all its instances are, but may result in "
 "reference cycles that need to be broken by the garbage collector."
-msgstr ""
+msgstr "堆型別的實例持有對其型別的引用。這確保該型別不會在其所有實例被銷毀之前被銷毀"
+"，但可能會導致需要由垃圾收集器中斷的引用循環。"
 
 #: ../../howto/isolating-extensions.rst:332
+#, fuzzy
 msgid ""
 "To avoid memory leaks, instances of heap types must implement the garbage "
 "collection protocol. That is, heap types should:"
-msgstr ""
+msgstr "為避免記憶體洩漏，堆型別的實例必須實作垃圾收集協定。也就是說，堆型別應該："
 
 #: ../../howto/isolating-extensions.rst:336
+#, fuzzy
 msgid "Have the :c:data:`Py_TPFLAGS_HAVE_GC` flag."
-msgstr ""
+msgstr "有 :c:data:`Py_TPFLAGS_HAVE_GC` 旗標。"
 
 #: ../../howto/isolating-extensions.rst:337
+#, fuzzy
 msgid ""
 "Define a traverse function using ``Py_tp_traverse``, which visits the type "
 "(e.g. using :c:expr:`Py_VISIT(Py_TYPE(self))`)."
 msgstr ""
+"使用 Py_tp_traverse "
+"定義一個遍歷函式，它訪問型別（例如使用:c:expr:`Py_VISIT(Py_TYPE(self))`）。"
 
 #: ../../howto/isolating-extensions.rst:340
+#, fuzzy
 msgid ""
 "Please refer to the :ref:`the documentation <type-structs>` of :c:data:"
 "`Py_TPFLAGS_HAVE_GC` and :c:member:`~PyTypeObject.tp_traverse` for "
 "additional considerations."
 msgstr ""
+"請參考 :ref:`the documentation <type-structs>` of :c:data:`Py_TPFLAGS_HAVE_GC`"
+" 和 :c:member:`~PyTypeObject.tp_traverse` 的其他注意事項。"
 
 #: ../../howto/isolating-extensions.rst:344
+#, fuzzy
 msgid ""
 "If your traverse function delegates to the ``tp_traverse`` of its base class "
 "(or another type), ensure that ``Py_TYPE(self)`` is visited only once. Note "
 "that only heap type are expected to visit the type in ``tp_traverse``."
 msgstr ""
+"如果您的遍歷函式委託給其基底類別（或其他型別）的``tp_traverse``，請確保僅訪問"
+"一次``Py_TYPE(self)``。請注意，只有堆型別才能訪問 ``tp_traverse`` 中的型別。"
 
 #: ../../howto/isolating-extensions.rst:348
+#, fuzzy
 msgid "For example, if your traverse function includes::"
-msgstr ""
+msgstr "例如，如果您的遍歷函式包括："
 
 #: ../../howto/isolating-extensions.rst:352
+#, fuzzy
 msgid "...and ``base`` may be a static type, then it should also include::"
-msgstr ""
+msgstr "...並且 ``base`` 可能是靜態型別，那麼它還應該包括："
 
 #: ../../howto/isolating-extensions.rst:360
+#, fuzzy
 msgid ""
 "It is not necessary to handle the type's reference count in ``tp_new`` and "
 "``tp_clear``."
-msgstr ""
+msgstr "沒有必要在 ``tp_new`` 和 ``tp_clear`` 中處理型別的引用計數。"
 
 #: ../../howto/isolating-extensions.rst:365
+#, fuzzy
 msgid "Module State Access from Classes"
-msgstr ""
+msgstr "來自類的模組狀態訪問"
 
 #: ../../howto/isolating-extensions.rst:367
+#, fuzzy
 msgid ""
 "If you have a type object defined with :c:func:`PyType_FromModuleAndSpec`, "
 "you can call :c:func:`PyType_GetModule` to get the associated module, and "
 "then :c:func:`PyModule_GetState` to get the module's state."
 msgstr ""
+"如果你有一個用 PyType_FromModuleAndSpec 定義的型別物件，你可以呼叫 "
+"PyType_GetModule 來獲取關聯的模組，然後呼叫 PyModule_GetState "
+"來獲取模組的狀態。"
 
 #: ../../howto/isolating-extensions.rst:371
+#, fuzzy
 msgid ""
 "To save a some tedious error-handling boilerplate code, you can combine "
 "these two steps with :c:func:`PyType_GetModuleState`, resulting in::"
-msgstr ""
+msgstr "為了節省一些繁瑣的錯誤處理樣板程式碼，您可以將這兩個步驟與:c:func:`PyType_Get"
+"ModuleState` 結合起來，從而產生："
 
 #: ../../howto/isolating-extensions.rst:381
+#, fuzzy
 msgid "Module State Access from Regular Methods"
-msgstr ""
+msgstr "從常規方法訪問模組狀態"
 
 #: ../../howto/isolating-extensions.rst:383
+#, fuzzy
 msgid ""
 "Accessing the module-level state from methods of a class is somewhat more "
 "complicated, but is possible thanks to API introduced in Python 3.9. To get "
 "the state, you need to first get the *defining class*, and then get the "
 "module state from it."
 msgstr ""
+"從類的方法訪問模組級狀態稍微複雜一些，但由於 Python 3.9 中引入的 "
+"API，這成為可能。要獲取狀態，您需要首先獲取*定義類*，然後從中獲取模組狀態。"
 
 #: ../../howto/isolating-extensions.rst:388
+#, fuzzy
 msgid ""
 "The largest roadblock is getting *the class a method was defined in*, or "
 "that method's \"defining class\" for short. The defining class can have a "
 "reference to the module it is part of."
-msgstr ""
+msgstr "最大的障礙是獲取*定義方法的類*，或簡稱為該方法的“定義類”。定義類可以引用它所"
+"屬的模組。"
 
 #: ../../howto/isolating-extensions.rst:392
+#, fuzzy
 msgid ""
 "Do not confuse the defining class with :c:expr:`Py_TYPE(self)`. If the "
 "method is called on a *subclass* of your type, ``Py_TYPE(self)`` will refer "
 "to that subclass, which may be defined in different module than yours."
 msgstr ""
+"不要將定義類與 :c:expr:`Py_TYPE(self)` "
+"混淆。如果在您的型別的*子類別*上呼叫該方法，``Py_TYPE(self)`` "
+"將引用該子類別，它可能在與您的模組不同的模組中定義。"
 
 #: ../../howto/isolating-extensions.rst:397
+#, fuzzy
 msgid ""
 "The following Python code can illustrate the concept. ``Base."
 "get_defining_class`` returns ``Base`` even if ``type(self) == Sub``:"
 msgstr ""
+"下面的 Python 程式碼可以說明這個概念。 ``Base.get_defining_class`` 回傳 "
+"``Base`` 即使``type(self) == Sub``："
 
 #: ../../howto/isolating-extensions.rst:413
+#, fuzzy
 msgid ""
 "For a method to get its \"defining class\", it must use the :data:"
 "`METH_METHOD | METH_FASTCALL | METH_KEYWORDS` :c:type:`calling convention "
 "<PyMethodDef>` and the corresponding :c:type:`PyCMethod` signature::"
 msgstr ""
+"對於獲取其“定義類”的方法，它必須使用 :data:`METH_METHOD | METH_FASTCALL | "
+"METH_KEYWORDS` :c:type:`呼叫約定 <PyMethodDef>` 和相應的 :c:type:`PyCMethod` "
+"簽名::"
 
 #: ../../howto/isolating-extensions.rst:425
+#, fuzzy
 msgid ""
 "Once you have the defining class, call :c:func:`PyType_GetModuleState` to "
 "get the state of its associated module."
-msgstr ""
+msgstr "定義類後，呼叫 PyType_GetModuleState 獲取其關聯模組的狀態。"
 
 #: ../../howto/isolating-extensions.rst:428
+#, fuzzy
 msgid "For example::"
-msgstr ""
+msgstr "例如：："
 
 #: ../../howto/isolating-extensions.rst:456
+#, fuzzy
 msgid "Module State Access from Slot Methods, Getters and Setters"
-msgstr ""
+msgstr "從插槽方法、getter 和 setter 訪問模組狀態"
 
 #: ../../howto/isolating-extensions.rst:460
+#, fuzzy
 msgid "This is new in Python 3.11."
-msgstr ""
+msgstr "這是 Python 3.11 中的新功能。"
 
 #: ../../howto/isolating-extensions.rst:468
+#, fuzzy
 msgid ""
 "Slot methods—the fast C equivalents for special methods, such as :c:member:"
 "`~PyNumberMethods.nb_add` for :py:attr:`~object.__add__` or :c:member:"
@@ -552,41 +750,58 @@ msgid ""
 "allow passing in the defining class, unlike with :c:type:`PyCMethod`. The "
 "same goes for getters and setters defined with :c:type:`PyGetSetDef`."
 msgstr ""
+"插槽方法——特殊方法的快速 C 等價物，例如 :c:member:`~PyNumberMethods.nb_add` "
+"用於 :py:attr:`~object.__add__` 或 :c:member:`~PyType.tp_new` 用於初始化—"
+"有一個非常簡單的 API，它不允許傳入定義類，這與 :c:type:`PyCMethod` 不同。"
+"使用 :c:type:`PyGetSetDef` 定義的 getter 和 setter 也是如此。"
 
 #: ../../howto/isolating-extensions.rst:475
+#, fuzzy
 msgid ""
 "To access the module state in these cases, use the :c:func:"
 "`PyType_GetModuleByDef` function, and pass in the module definition. Once "
 "you have the module, call :c:func:`PyModule_GetState` to get the state::"
 msgstr ""
+"要在這些情況下訪問模組狀態，請使用 PyType_GetModuleByDef "
+"函式，並傳入模組定義。獲得模組後，呼叫 PyModule_GetState 獲取狀態："
 
 #: ../../howto/isolating-extensions.rst:486
+#, fuzzy
 msgid ""
 "``PyType_GetModuleByDef`` works by searching the :term:`method resolution "
 "order` (i.e. all superclasses) for the first superclass that has a "
 "corresponding module."
-msgstr ""
+msgstr "``PyType_GetModuleByDef`` "
+"通過搜索方法解析順序（即所有超類）來尋找具有相應模組的第一個超類。"
 
 #: ../../howto/isolating-extensions.rst:492
+#, fuzzy
 msgid ""
 "In very exotic cases (inheritance chains spanning multiple modules created "
 "from the same definition), ``PyType_GetModuleByDef`` might not return the "
 "module of the true defining class. However, it will always return a module "
 "with the same definition, ensuring a compatible C memory layout."
 msgstr ""
+"在非常奇特的情況下（繼承鏈跨越從同一定義建立的多個模組），``PyType_GetModuleB"
+"yDef`` 可能不會回傳真正定義類的模組。但是，它將始終回傳具有相同定義的模組，"
+"以確保相容的 C 記憶體佈局。"
 
 #: ../../howto/isolating-extensions.rst:500
+#, fuzzy
 msgid "Lifetime of the Module State"
-msgstr ""
+msgstr "模組狀態的生命週期"
 
 #: ../../howto/isolating-extensions.rst:502
+#, fuzzy
 msgid ""
 "When a module object is garbage-collected, its module state is freed. For "
 "each pointer to (a part of) the module state, you must hold a reference to "
 "the module object."
-msgstr ""
+msgstr "當一個模組對像被垃圾回收時，它的模組狀態被釋放。對於每個指向（部分）模組狀態"
+"的指標，您必須持有對模組物件的引用。"
 
 #: ../../howto/isolating-extensions.rst:506
+#, fuzzy
 msgid ""
 "Usually this is not an issue, because types created with :c:func:"
 "`PyType_FromModuleAndSpec`, and their instances, hold a reference to the "
@@ -594,40 +809,56 @@ msgid ""
 "reference module state from other places, such as callbacks for external "
 "libraries."
 msgstr ""
+"通常這不是問題，因為使用 PyType_FromModuleAndSpec 建立的型別及其實例持有對模"
+"組的引用。但是，當您從其他地方引用模組狀態時，例如外部庫的回呼，您必須小心引"
+"用計數。"
 
 #: ../../howto/isolating-extensions.rst:515
+#, fuzzy
 msgid "Open Issues"
-msgstr ""
+msgstr "開放式問題"
 
 #: ../../howto/isolating-extensions.rst:517
+#, fuzzy
 msgid "Several issues around per-module state and heap types are still open."
-msgstr ""
+msgstr "圍繞每個模組狀態和堆型別的幾個問題仍然懸而未決。"
 
 #: ../../howto/isolating-extensions.rst:519
+#, fuzzy
 msgid ""
 "Discussions about improving the situation are best held on the `capi-sig "
 "mailing list <https://mail.python.org/mailman3/lists/capi-sig.python.org/"
 ">`__."
 msgstr ""
+"關於改善情況的討論最好在`capi-sig 郵件列表 <https://mail.python.org/mailman3/"
+"lists/capi-sig.python.org/>`__ 上進行。"
 
 #: ../../howto/isolating-extensions.rst:524
+#, fuzzy
 msgid "Per-Class Scope"
-msgstr ""
+msgstr "每類作用域"
 
 #: ../../howto/isolating-extensions.rst:526
+#, fuzzy
 msgid ""
 "It is currently (as of Python 3.11) not possible to attach state to "
 "individual *types* without relying on CPython implementation details (which "
 "may change in the future—perhaps, ironically, to allow a proper solution for "
 "per-class scope)."
 msgstr ""
+"當前（從 Python 3.11 開始）不可能在不依賴 CPython 實作細節的情況下將狀態附加"
+"到單個*型別*（這可能在未來發生變化——具有諷刺意味的是，允許為每個類範圍提供適"
+"當的解決方案）。"
 
 #: ../../howto/isolating-extensions.rst:533
+#, fuzzy
 msgid "Lossless Conversion to Heap Types"
-msgstr ""
+msgstr "無損轉換為堆型別"
 
 #: ../../howto/isolating-extensions.rst:535
+#, fuzzy
 msgid ""
 "The heap type API was not designed for \"lossless\" conversion from static "
 "types; that is, creating a type that works exactly like a given static type."
-msgstr ""
+msgstr "堆型別 API 不是為靜態型別的“無損”轉換而設計的；也就是說，建立一個與給定靜態型"
+"別完全一樣的型別。"
