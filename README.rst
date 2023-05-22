@@ -73,6 +73,9 @@ the PSF for inclusion in the documentation.
 翻譯流程
 ------------
 
+**請注意**: 以下基於 ``make`` 的便捷指令僅能運作於 Unix 系統上（無法使用並不影響主要翻譯流程），\
+其他作業系統的使用者在翻譯後可考慮改於 `GitHub Codespace <https://github.com/features/codespaces>`_ 上呼叫 ``make`` 指令。
+
 事先需要有
 ~~~~~~~~~~
 
@@ -125,14 +128,14 @@ the PSF for inclusion in the documentation.
     git fetch upstream
     git checkout -b glossary upstream/3.11
 
-2. 接著就可以開始翻譯（翻譯時可參考`翻譯守則`_），你可以手動開啟 Poedit 應用程式再選檔案或用以下指令請 Poedit 將檔案\
+2. 接著就可以開始翻譯（翻譯時可參考 `翻譯守則`_），你可以手動開啟 Poedit 應用程式再選檔案或用以下指令請 Poedit 將檔案\
    打開，翻譯不同檔案時將 glossary 換成別的檔名） ::
 
     poedit glossary.po
 
 3. 存檔以後，執行以下列指令編譯輸出文件，以確保你的修改沒有 rST 的語法錯誤或警告 ::
 
-    make all
+    VERSION=3.11 make all
 
    如果你還沒有執行 `維護、預覽`_ 的 clone CPython 的動作，此指令會自動幫你 clone CPython，\
    並且會使用 Sphinx 幫你檢查 rST 語法錯誤，我們盡量保持沒有 warning \
