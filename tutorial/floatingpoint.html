@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>15. 浮點數運算：問題與限制 &#8212; Python 3.11.3 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>15. 浮點數運算：問題與限制 &#8212; Python 3.11.4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?digest=845a48175c3935ba0d7ff16b8ed0072d62fd099f" />
@@ -19,7 +19,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.11.3 說明文件 中搜尋"
+          title="在 Python 3.11.4 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -143,7 +143,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.3 Documentation</a> &#187;
+      <a href="../index.html">3.11.4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 教學</a> &#187;</li>
@@ -240,7 +240,7 @@
 <span class="go">True</span>
 </pre></div>
 </div>
-<p>二進位浮點數架構擁有很多這樣的驚喜。底下的「表示法誤差」章節，詳細地解釋了「0.1」的問題。如果想要其他常見驚喜的更完整描述，可以參考 <a class="reference external" href="https://www.lahey.com/float.htm">The Perils of Floating Point（浮點數的風險）</a>。</p>
+<p>二進位浮點數架構下還有很多這樣的意外。底下的「表示法誤差 (Representation Error)」章節，詳細地解釋了「0.1」的問題。<a class="reference external" href="https://jvns.ca/blog/2023/01/13/examples-of-floating-point-problems/">Examples of Floating Point Problems（浮點數問題範例）</a>一文提供了二進位浮點數的作用方式與現實中這類常見問題的摘錄。如果想要其他常見問題的更完整描述，可以參考 <a class="reference external" href="https://www.lahey.com/float.htm">The Perils of Floating Point（浮點數的風險）</a>。</p>
 <p>如同上文的末段所述，「這個問題並沒有簡單的答案。」不過，也不必對浮點過度擔心！Python 的 float（浮點數）運算中的誤差，是從浮點硬體繼承而來，而在大多數的計算機上，每次運算的誤差範圍不會大於 2**53 分之 1。這對大多數的任務來說已經相當足夠，但你需要記住，它並非十進位運算，且每一次 float 運算都可能會承受新的捨入誤差。</p>
 <p>雖然浮點運算確實存在一些問題，但在一般情況下，如果你只是把最終結果的顯示值，以十進位方式捨入至預期的位數，那麼仍會得到你預期的結果。<a class="reference internal" href="../library/stdtypes.html#str" title="str"><code class="xref py py-func docutils literal notranslate"><span class="pre">str()</span></code></a> 通常就能滿足要求，而若想要更細緻的控制，可參閱<a class="reference internal" href="../library/string.html#formatstrings"><span class="std std-ref">Format String Syntax</span></a>中關於 <a class="reference internal" href="../library/stdtypes.html#str.format" title="str.format"><code class="xref py py-meth docutils literal notranslate"><span class="pre">str.format()</span></code></a> method（方法）的格式規範。</p>
 <p>對於需要精準十進位表示法的用例，可以試著用 <a class="reference internal" href="../library/decimal.html#module-decimal" title="decimal: Implementation of the General Decimal Arithmetic  Specification."><code class="xref py py-mod docutils literal notranslate"><span class="pre">decimal</span></code></a> 模組，它可實作適用於會計應用程式與高精確度應用程式的十進位運算。</p>
@@ -279,7 +279,7 @@
 <span id="tut-fp-error"></span><h2><span class="section-number">15.1. </span>表示法誤差 (Representation Error)<a class="headerlink" href="#representation-error" title="本標頭的永久連結">¶</a></h2>
 <p>本節將會詳細解釋「0.1」的例子，並說明你自己要如何對類似案例執行精準的分析。 以下假設你對二進位浮點表示法已有基本程度的熟悉。</p>
 <p><em class="dfn">Representation error</em>（表示法誤差）是指在真實情況中，有些（實際上是大多數）十進位小數並不能精準地以二進位（基數為 2）小數表示。這是 Python（或 Perl、C、C++、JAVA、Fortran 和其他許多）通常不會顯示你期望的精準十進位數字的主要原因。</p>
-<p>為什麼呢？因為 1/10 無法精準地以一個二進位小數來表示。至今（2000 年 11 月）幾乎所有的計算機皆使用 IEEE-754 浮點數運算標準，並且幾乎所有的平台都以 IEEE-754 標準中的「雙精度 (double precision)」來繪製 Python 的 float。754 double 包含 53 位元的精度，所以在輸入時，電腦會努力把 0.1 轉換到最接近的分數，以 <em>J</em>/2**<em>N</em> 的形式表示，此處 <em>J</em> 是一個正好包含 53 位元的整數。可以將：</p>
+<p>為什麼呢？因為 1/10 無法精準地以一個二進位小數來表示。至少自從 2000 年以來，幾乎所有的計算機皆使用 IEEE-754 浮點數運算標準，並且幾乎所有的平台都以 IEEE 754 binary64 標準中的「雙精度 (double precision)」來作為 Python 的 float。IEEE 754 binary64 的值包含 53 位元的精度，所以在輸入時，電腦會努力把 0.1 轉換到最接近的分數，以 <em>J</em>/2**<em>N</em> 的形式表示，此處 <em>J</em> 是一個正好包含 53 位元的整數。可以將：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="mi">1</span> <span class="o">/</span> <span class="mi">10</span> <span class="o">~=</span> <span class="n">J</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="n">N</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -303,7 +303,7 @@
 <span class="go">7205759403792794</span>
 </pre></div>
 </div>
-<p>所以，在 754 雙精度下，1/10 的最佳近似值是：</p>
+<p>所以，在 IEEE 754 雙精度下，1/10 的最佳近似值是：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="mi">7205759403792794</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">56</span>
 </pre></div>
 </div>
@@ -312,8 +312,8 @@
 </pre></div>
 </div>
 <p>請注意，由於我們有進位，所以這實際上比 1/10 大了一點；如果我們沒有進位，商數將會有點小於 1/10。但在任何情況下都不可能是<em>精準的</em> 1/10！</p>
-<p>所以電腦從來沒有「看到」1/10：它看到的是上述的精準分數，也就是它能得到的 754 double 最佳近似值：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="mf">0.1</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">55</span>
+<p>所以電腦從來沒有「看到」1/10：它看到的是上述的精準分數，也就是它能得到的 IEEE 754 double 最佳近似值：</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="mf">0.1</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">55</span>
 <span class="go">3602879701896397.0</span>
 </pre></div>
 </div>
@@ -419,7 +419,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.3 Documentation</a> &#187;
+      <a href="../index.html">3.11.4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 教學</a> &#187;</li>
@@ -462,7 +462,7 @@
 <br />
     <br />
 
-    最後更新於 5月 23, 2023。
+    最後更新於 6月 23, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
