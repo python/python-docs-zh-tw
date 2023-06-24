@@ -90,6 +90,7 @@
 <li><a class="reference internal" href="#newtype">NewType</a></li>
 <li><a class="reference internal" href="#callable">Callable</a></li>
 <li><a class="reference internal" href="#generics">Generics</a></li>
+<li><a class="reference internal" href="#annotating-tuples">Annotating tuples</a></li>
 <li><a class="reference internal" href="#user-defined-generic-types">User-defined generic types</a></li>
 <li><a class="reference internal" href="#the-any-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code> 型別</a></li>
 <li><a class="reference internal" href="#nominal-vs-structural-subtyping">Nominal vs structural subtyping</a></li>
@@ -106,7 +107,6 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#special-forms">Special forms</a><ul>
-<li><a class="reference internal" href="#typing.Tuple"><code class="docutils literal notranslate"><span class="pre">Tuple</span></code></a></li>
 <li><a class="reference internal" href="#typing.Union"><code class="docutils literal notranslate"><span class="pre">Union</span></code></a></li>
 <li><a class="reference internal" href="#typing.Optional"><code class="docutils literal notranslate"><span class="pre">Optional</span></code></a></li>
 <li><a class="reference internal" href="#typing.Callable"><code class="docutils literal notranslate"><span class="pre">Callable</span></code></a></li>
@@ -215,6 +215,7 @@
 <li><a class="reference internal" href="#typing.List"><code class="docutils literal notranslate"><span class="pre">List</span></code></a></li>
 <li><a class="reference internal" href="#typing.Set"><code class="docutils literal notranslate"><span class="pre">Set</span></code></a></li>
 <li><a class="reference internal" href="#typing.FrozenSet"><code class="docutils literal notranslate"><span class="pre">FrozenSet</span></code></a></li>
+<li><a class="reference internal" href="#typing.Tuple"><code class="docutils literal notranslate"><span class="pre">Tuple</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#aliases-to-types-in-collections">Aliases to types in <code class="xref py py-mod docutils literal notranslate"><span class="pre">collections</span></code></a><ul>
@@ -691,6 +692,65 @@ called <a class="reference internal" href="#typing.TypeVar" title="typing.TypeVa
 
 <span class="k">def</span> <span class="nf">first</span><span class="p">(</span><span class="n">l</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>   <span class="c1"># Function is generic over the TypeVar &quot;T&quot;</span>
     <span class="k">return</span> <span class="n">l</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</pre></div>
+</div>
+</section>
+<section id="annotating-tuples">
+<span id="id4"></span><h2>Annotating tuples<a class="headerlink" href="#annotating-tuples" title="本標頭的永久連結">¶</a></h2>
+<p>For most containers in Python, the typing system assumes that all elements in
+the container will be of the same type. For example:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Mapping</span>
+
+<span class="c1"># Type checker will infer that all elements in ``x`` are meant to be ints</span>
+<span class="n">x</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="c1"># Type checker error: ``list`` only accepts a single type argument:</span>
+<span class="n">y</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">]</span>
+
+<span class="c1"># Type checker will infer that all keys in ``z`` are meant to be strings,</span>
+<span class="c1"># and that all values in ``z`` are meant to be either strings or ints</span>
+<span class="n">z</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="stdtypes.html#list" title="list"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> only accepts one type argument, so a type checker would emit an
+error on the <code class="docutils literal notranslate"><span class="pre">y</span></code> assignment above. Similarly,
+<a class="reference internal" href="collections.abc.html#collections.abc.Mapping" title="collections.abc.Mapping"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a> only accepts two type arguments: the first
+indicates the type of the keys, and the second indicates the type of the
+values.</p>
+<p>Unlike most other Python containers, however, it is common in idiomatic Python
+code for tuples to have elements which are not all of the same type. For this
+reason, tuples are special-cased in Python's typing system. <a class="reference internal" href="stdtypes.html#tuple" title="tuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>
+accepts <em>any number</em> of type arguments:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># OK: ``x`` is assigned to a tuple of length 1 where the sole element is an int</span>
+<span class="n">x</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,)</span>
+
+<span class="c1"># OK: ``y`` is assigned to a tuple of length 2;</span>
+<span class="c1"># element 1 is an int, element 2 is a str</span>
+<span class="n">y</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;foo&quot;</span><span class="p">)</span>
+
+<span class="c1"># Error: the type annotation indicates a tuple of length 1,</span>
+<span class="c1"># but ``z`` has been assigned to a tuple of length 3</span>
+<span class="n">z</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To denote a tuple which could be of <em>any</em> length, and in which all elements are
+of the same type <code class="docutils literal notranslate"><span class="pre">T</span></code>, use <code class="docutils literal notranslate"><span class="pre">tuple[T,</span> <span class="pre">...]</span></code>. To denote an empty tuple, use
+<code class="docutils literal notranslate"><span class="pre">tuple[()]</span></code>. Using plain <code class="docutils literal notranslate"><span class="pre">tuple</span></code> as an annotation is equivalent to using
+<code class="docutils literal notranslate"><span class="pre">tuple[Any,</span> <span class="pre">...]</span></code>:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="c1"># These reassignments are OK: ``tuple[int, ...]`` indicates x can be of any length</span>
+<span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">x</span> <span class="o">=</span> <span class="p">()</span>
+<span class="c1"># This reassignment is an error: all elements in ``x`` must be ints</span>
+<span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">,</span> <span class="s2">&quot;bar&quot;</span><span class="p">)</span>
+
+<span class="c1"># ``y`` can only ever be assigned to an empty tuple</span>
+<span class="n">y</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[()]</span> <span class="o">=</span> <span class="p">()</span>
+
+<span class="n">z</span><span class="p">:</span> <span class="nb">tuple</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;foo&quot;</span><span class="p">,</span> <span class="s2">&quot;bar&quot;</span><span class="p">)</span>
+<span class="c1"># These reassignments are OK: plain ``tuple`` is equivalent to ``tuple[Any, ...]``</span>
+<span class="n">z</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">z</span> <span class="o">=</span> <span class="p">()</span>
 </pre></div>
 </div>
 </section>
@@ -1172,25 +1232,6 @@ checkers to distinguish these from normal variable assignments:</p>
 <p>These can be used as types in annotations. They all support subscription using
 <code class="docutils literal notranslate"><span class="pre">[]</span></code>, but each has a unique syntax.</p>
 <dl class="py data">
-<dt class="sig sig-object py" id="typing.Tuple">
-<span class="sig-prename descclassname"><span class="pre">typing.</span></span><span class="sig-name descname"><span class="pre">Tuple</span></span><a class="headerlink" href="#typing.Tuple" title="本定義的永久連結">¶</a></dt>
-<dd><p>Deprecated alias for <a class="reference internal" href="stdtypes.html#tuple" title="tuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">Tuple[X,</span> <span class="pre">Y]</span></code> is the type of a tuple of two items
-with the first item of type X and the second of type Y. The type of
-the empty tuple can be written as <code class="docutils literal notranslate"><span class="pre">Tuple[()]</span></code>.</p>
-<p>Example: <code class="docutils literal notranslate"><span class="pre">Tuple[T1,</span> <span class="pre">T2]</span></code> is a tuple of two elements corresponding
-to type variables T1 and T2.  <code class="docutils literal notranslate"><span class="pre">Tuple[int,</span> <span class="pre">float,</span> <span class="pre">str]</span></code> is a tuple
-of an int, a float and a string.</p>
-<p>To specify a variable-length tuple of homogeneous type,
-use literal ellipsis, e.g. <code class="docutils literal notranslate"><span class="pre">Tuple[int,</span> <span class="pre">...]</span></code>. A plain <code class="docutils literal notranslate"><span class="pre">Tuple</span></code> annotation
-is equivalent to <code class="docutils literal notranslate"><span class="pre">tuple</span></code>, <code class="docutils literal notranslate"><span class="pre">Tuple[Any,</span> <span class="pre">...]</span></code>, or <code class="docutils literal notranslate"><span class="pre">tuple[Any,</span> <span class="pre">...]</span></code>.</p>
-<div class="deprecated">
-<p><span class="versionmodified deprecated">在 3.9 版之後被棄用: </span><a class="reference internal" href="stdtypes.html#tuple" title="tuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">builtins.tuple</span></code></a> now supports subscripting (<code class="docutils literal notranslate"><span class="pre">[]</span></code>).
-See <span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a class="reference internal" href="stdtypes.html#types-genericalias"><span class="std std-ref">Generic Alias Type</span></a>.</p>
-</div>
-</dd></dl>
-
-<dl class="py data">
 <dt class="sig sig-object py" id="typing.Union">
 <span class="sig-prename descclassname"><span class="pre">typing.</span></span><span class="sig-name descname"><span class="pre">Union</span></span><a class="headerlink" href="#typing.Union" title="本定義的永久連結">¶</a></dt>
 <dd><p>Union type; <code class="docutils literal notranslate"><span class="pre">Union[X,</span> <span class="pre">Y]</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">X</span> <span class="pre">|</span> <span class="pre">Y</span></code> and means either X or Y.</p>
@@ -1280,11 +1321,11 @@ take the form <code class="docutils literal notranslate"><span class="pre">Calla
 respectively.</p>
 <div class="deprecated">
 <p><span class="versionmodified deprecated">在 3.9 版之後被棄用: </span><a class="reference internal" href="collections.abc.html#collections.abc.Callable" title="collections.abc.Callable"><code class="xref py py-class docutils literal notranslate"><span class="pre">collections.abc.Callable</span></code></a> now supports subscripting (<code class="docutils literal notranslate"><span class="pre">[]</span></code>).
-See <span class="target" id="index-30"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a class="reference internal" href="stdtypes.html#types-genericalias"><span class="std std-ref">Generic Alias Type</span></a>.</p>
+See <span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a class="reference internal" href="stdtypes.html#types-genericalias"><span class="std std-ref">Generic Alias Type</span></a>.</p>
 </div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.10 版的變更: </span><code class="docutils literal notranslate"><span class="pre">Callable</span></code> now supports <a class="reference internal" href="#typing.ParamSpec" title="typing.ParamSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParamSpec</span></code></a> and <a class="reference internal" href="#typing.Concatenate" title="typing.Concatenate"><code class="xref py py-data docutils literal notranslate"><span class="pre">Concatenate</span></code></a>.
-See <span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0612/"><strong>PEP 612</strong></a> for more details.</p>
+See <span class="target" id="index-30"></span><a class="pep reference external" href="https://peps.python.org/pep-0612/"><strong>PEP 612</strong></a> for more details.</p>
 </div>
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
@@ -1346,7 +1387,7 @@ callable being passed in:</p>
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
 <ul class="simple">
-<li><p><span class="target" id="index-32"></span><a class="pep reference external" href="https://peps.python.org/pep-0612/"><strong>PEP 612</strong></a> -- Parameter Specification Variables (the PEP which introduced
+<li><p><span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0612/"><strong>PEP 612</strong></a> -- Parameter Specification Variables (the PEP which introduced
 <code class="docutils literal notranslate"><span class="pre">ParamSpec</span></code> and <code class="docutils literal notranslate"><span class="pre">Concatenate</span></code>).</p></li>
 <li><p><a class="reference internal" href="#typing.ParamSpec" title="typing.ParamSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ParamSpec</span></code></a> 和 <a class="reference internal" href="#typing.Callable" title="typing.Callable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a>。</p></li>
 </ul>
@@ -1384,7 +1425,7 @@ signatures as <code class="docutils literal notranslate"><span class="pre">C</sp
 but should also allow constructor calls in subclasses that match the
 constructor calls in the indicated base class. How the type checker is
 required to handle this particular case may change in future revisions of
-<span class="target" id="index-33"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a>.</p>
+<span class="target" id="index-32"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a>.</p>
 <p>The only legal parameters for <a class="reference internal" href="#typing.Type" title="typing.Type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a> are classes, <a class="reference internal" href="#typing.Any" title="typing.Any"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>,
 <a class="reference internal" href="#generics"><span class="std std-ref">type variables</span></a>, and unions of any of these types.
 For example:</p>
@@ -1398,7 +1439,7 @@ to <code class="docutils literal notranslate"><span class="pre">type</span></cod
 </div>
 <div class="deprecated">
 <p><span class="versionmodified deprecated">在 3.9 版之後被棄用: </span><a class="reference internal" href="functions.html#type" title="type"><code class="xref py py-class docutils literal notranslate"><span class="pre">builtins.type</span></code></a> now supports subscripting (<code class="docutils literal notranslate"><span class="pre">[]</span></code>).
-See <span class="target" id="index-34"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a class="reference internal" href="stdtypes.html#types-genericalias"><span class="std std-ref">Generic Alias Type</span></a>.</p>
+See <span class="target" id="index-33"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a class="reference internal" href="stdtypes.html#types-genericalias"><span class="std std-ref">Generic Alias Type</span></a>.</p>
 </div>
 </dd></dl>
 
@@ -1423,7 +1464,7 @@ provided literals.</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">Literal[...]</span></code> cannot be subclassed. At runtime, an arbitrary value
 is allowed as type argument to <code class="docutils literal notranslate"><span class="pre">Literal[...]</span></code>, but type checkers may
-impose restrictions. See <span class="target" id="index-35"></span><a class="pep reference external" href="https://peps.python.org/pep-0586/"><strong>PEP 586</strong></a> for more details about literal types.</p>
+impose restrictions. See <span class="target" id="index-34"></span><a class="pep reference external" href="https://peps.python.org/pep-0586/"><strong>PEP 586</strong></a> for more details about literal types.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.8 版新加入.</span></p>
 </div>
@@ -1439,7 +1480,7 @@ if one of their parameters are not <a class="reference internal" href="../glossa
 <dt class="sig sig-object py" id="typing.ClassVar">
 <span class="sig-prename descclassname"><span class="pre">typing.</span></span><span class="sig-name descname"><span class="pre">ClassVar</span></span><a class="headerlink" href="#typing.ClassVar" title="本定義的永久連結">¶</a></dt>
 <dd><p>Special type construct to mark class variables.</p>
-<p>As introduced in <span class="target" id="index-36"></span><a class="pep reference external" href="https://peps.python.org/pep-0526/"><strong>PEP 526</strong></a>, a variable annotation wrapped in ClassVar
+<p>As introduced in <span class="target" id="index-35"></span><a class="pep reference external" href="https://peps.python.org/pep-0526/"><strong>PEP 526</strong></a>, a variable annotation wrapped in ClassVar
 indicates that a given attribute is intended to be used as a class variable
 and should not be set on instances of that class. Usage:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Starship</span><span class="p">:</span>
@@ -1480,7 +1521,7 @@ scopes cannot be overridden in subclasses.</p>
     <span class="n">TIMEOUT</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># Error reported by type checker</span>
 </pre></div>
 </div>
-<p>There is no runtime checking of these properties. See <span class="target" id="index-37"></span><a class="pep reference external" href="https://peps.python.org/pep-0591/"><strong>PEP 591</strong></a> for
+<p>There is no runtime checking of these properties. See <span class="target" id="index-36"></span><a class="pep reference external" href="https://peps.python.org/pep-0591/"><strong>PEP 591</strong></a> for
 more details.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.8 版新加入.</span></p>
@@ -1639,7 +1680,7 @@ retrieved via the <code class="xref py py-attr docutils literal notranslate"><sp
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
 <dl class="simple">
-<dt><span class="target" id="index-40"></span><a class="pep reference external" href="https://peps.python.org/pep-0593/"><strong>PEP 593</strong></a> - Flexible function and variable annotations</dt><dd><p>The PEP introducing <code class="docutils literal notranslate"><span class="pre">Annotated</span></code> to the standard library.</p>
+<dt><span class="target" id="index-39"></span><a class="pep reference external" href="https://peps.python.org/pep-0593/"><strong>PEP 593</strong></a> - Flexible function and variable annotations</dt><dd><p>The PEP introducing <code class="docutils literal notranslate"><span class="pre">Annotated</span></code> to the standard library.</p>
 </dd>
 </dl>
 </div>
@@ -1708,7 +1749,7 @@ narrowing <code class="docutils literal notranslate"><span class="pre">list[obje
 is not a subtype of the former, since <code class="docutils literal notranslate"><span class="pre">list</span></code> is invariant.
 The responsibility of writing type-safe type guards is left to the user.</p>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">TypeGuard</span></code> also works with type variables.  See <span class="target" id="index-41"></span><a class="pep reference external" href="https://peps.python.org/pep-0647/"><strong>PEP 647</strong></a> for more details.</p>
+<p><code class="docutils literal notranslate"><span class="pre">TypeGuard</span></code> also works with type variables.  See <span class="target" id="index-40"></span><a class="pep reference external" href="https://peps.python.org/pep-0647/"><strong>PEP 647</strong></a> for more details.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.10 版新加入.</span></p>
 </div>
@@ -1812,7 +1853,7 @@ information on generic types.  Generic functions work as follows:</p>
 <p>Note that type variables can be <em>bound</em>, <em>constrained</em>, or neither, but
 cannot be both bound <em>and</em> constrained.</p>
 <p>Type variables may be marked covariant or contravariant by passing
-<code class="docutils literal notranslate"><span class="pre">covariant=True</span></code> or <code class="docutils literal notranslate"><span class="pre">contravariant=True</span></code>.  See <span class="target" id="index-42"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a> for more
+<code class="docutils literal notranslate"><span class="pre">covariant=True</span></code> or <code class="docutils literal notranslate"><span class="pre">contravariant=True</span></code>.  See <span class="target" id="index-41"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a> for more
 details.  By default, type variables are invariant.</p>
 <p>Bound type variables and constrained type variables have different
 semantics in several important ways. Using a <em>bound</em> type variable means
@@ -1977,7 +2018,7 @@ enables reference to the types of the <em>individual</em> arguments in <code cla
 Here, this allows us to ensure the types of the <code class="docutils literal notranslate"><span class="pre">*args</span></code> passed
 to <code class="docutils literal notranslate"><span class="pre">call_soon</span></code> match the types of the (positional) arguments of
 <code class="docutils literal notranslate"><span class="pre">callback</span></code>.</p>
-<p>See <span class="target" id="index-43"></span><a class="pep reference external" href="https://peps.python.org/pep-0646/"><strong>PEP 646</strong></a> for more details on type variable tuples.</p>
+<p>See <span class="target" id="index-42"></span><a class="pep reference external" href="https://peps.python.org/pep-0646/"><strong>PEP 646</strong></a> for more details on type variable tuples.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="typing.TypeVarTuple.__name__">
 <span class="sig-name descname"><span class="pre">__name__</span></span><a class="headerlink" href="#typing.TypeVarTuple.__name__" title="本定義的永久連結">¶</a></dt>
@@ -2079,7 +2120,7 @@ be pickled.</p>
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
 <ul class="simple">
-<li><p><span class="target" id="index-44"></span><a class="pep reference external" href="https://peps.python.org/pep-0612/"><strong>PEP 612</strong></a> -- Parameter Specification Variables (the PEP which introduced
+<li><p><span class="target" id="index-43"></span><a class="pep reference external" href="https://peps.python.org/pep-0612/"><strong>PEP 612</strong></a> -- Parameter Specification Variables (the PEP which introduced
 <code class="docutils literal notranslate"><span class="pre">ParamSpec</span></code> and <code class="docutils literal notranslate"><span class="pre">Concatenate</span></code>).</p></li>
 <li><p><a class="reference internal" href="#typing.Callable" title="typing.Callable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Callable</span></code></a> 和 <a class="reference internal" href="#typing.Concatenate" title="typing.Concatenate"><code class="xref py py-class docutils literal notranslate"><span class="pre">Concatenate</span></code></a>。</p></li>
 </ul>
@@ -2169,7 +2210,7 @@ API.)</p>
 </pre></div>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.6 版的變更: </span>Added support for <span class="target" id="index-45"></span><a class="pep reference external" href="https://peps.python.org/pep-0526/"><strong>PEP 526</strong></a> variable annotation syntax.</p>
+<p><span class="versionmodified changed">在 3.6 版的變更: </span>Added support for <span class="target" id="index-44"></span><a class="pep reference external" href="https://peps.python.org/pep-0526/"><strong>PEP 526</strong></a> variable annotation syntax.</p>
 </div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.6.1 版的變更: </span>Added support for default values, methods, and docstrings.</p>
@@ -2246,7 +2287,7 @@ structural subtyping (static duck-typing), for example:</p>
 <span class="n">func</span><span class="p">(</span><span class="n">C</span><span class="p">())</span>  <span class="c1"># Passes static type check</span>
 </pre></div>
 </div>
-<p>See <span class="target" id="index-46"></span><a class="pep reference external" href="https://peps.python.org/pep-0544/"><strong>PEP 544</strong></a> for more details. Protocol classes decorated with
+<p>See <span class="target" id="index-45"></span><a class="pep reference external" href="https://peps.python.org/pep-0544/"><strong>PEP 544</strong></a> for more details. Protocol classes decorated with
 <a class="reference internal" href="#typing.runtime_checkable" title="typing.runtime_checkable"><code class="xref py py-func docutils literal notranslate"><span class="pre">runtime_checkable()</span></code></a> (described later) act as simple-minded runtime
 protocols that check only the presence of given attributes, ignoring their
 type signatures.</p>
@@ -2331,7 +2372,7 @@ Usage:</p>
 </pre></div>
 </div>
 <p>To allow using this feature with older versions of Python that do not
-support <span class="target" id="index-47"></span><a class="pep reference external" href="https://peps.python.org/pep-0526/"><strong>PEP 526</strong></a>, <code class="docutils literal notranslate"><span class="pre">TypedDict</span></code> supports two additional equivalent
+support <span class="target" id="index-46"></span><a class="pep reference external" href="https://peps.python.org/pep-0526/"><strong>PEP 526</strong></a>, <code class="docutils literal notranslate"><span class="pre">TypedDict</span></code> supports two additional equivalent
 syntactic forms:</p>
 <ul>
 <li><p>Using a literal <a class="reference internal" href="stdtypes.html#dict" title="dict"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> as the second argument:</p>
@@ -2505,13 +2546,13 @@ inheriting from it in another <code class="docutils literal notranslate"><span c
 </div>
 </dd></dl>
 
-<p>See <span class="target" id="index-48"></span><a class="pep reference external" href="https://peps.python.org/pep-0589/"><strong>PEP 589</strong></a> for more examples and detailed rules of using <code class="docutils literal notranslate"><span class="pre">TypedDict</span></code>.</p>
+<p>See <span class="target" id="index-47"></span><a class="pep reference external" href="https://peps.python.org/pep-0589/"><strong>PEP 589</strong></a> for more examples and detailed rules of using <code class="docutils literal notranslate"><span class="pre">TypedDict</span></code>.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.8 版新加入.</span></p>
 </div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.11 版的變更: </span>Added support for marking individual keys as <a class="reference internal" href="#typing.Required" title="typing.Required"><code class="xref py py-data docutils literal notranslate"><span class="pre">Required</span></code></a> or <a class="reference internal" href="#typing.NotRequired" title="typing.NotRequired"><code class="xref py py-data docutils literal notranslate"><span class="pre">NotRequired</span></code></a>.
-See <span class="target" id="index-49"></span><a class="pep reference external" href="https://peps.python.org/pep-0655/"><strong>PEP 655</strong></a>.</p>
+See <span class="target" id="index-48"></span><a class="pep reference external" href="https://peps.python.org/pep-0655/"><strong>PEP 655</strong></a>.</p>
 </div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.11 版的變更: </span>Added support for generic <code class="docutils literal notranslate"><span class="pre">TypedDict</span></code>s.</p>
@@ -2779,8 +2820,8 @@ possible future extensions.</p></li>
 </dl>
 <p>Type checkers recognize the following optional parameters on field
 specifiers:</p>
-<table class="docutils align-default" id="id5">
-<caption><span class="caption-text"><strong>Recognised parameters for field specifiers</strong></span><a class="headerlink" href="#id5" title="本表格的永久連結">¶</a></caption>
+<table class="docutils align-default" id="id6">
+<caption><span class="caption-text"><strong>Recognised parameters for field specifiers</strong></span><a class="headerlink" href="#id6" title="本表格的永久連結">¶</a></caption>
 <colgroup>
 <col style="width: 20.0%" />
 <col style="width: 80.0%" />
@@ -2862,7 +2903,7 @@ precise type than can be expressed using a union or a type variable:</p>
     <span class="o">...</span>  <span class="c1"># actual implementation goes here</span>
 </pre></div>
 </div>
-<p>See <span class="target" id="index-51"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a> for more details and comparison with other typing semantics.</p>
+<p>See <span class="target" id="index-50"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a> for more details and comparison with other typing semantics.</p>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.11 版的變更: </span>Overloaded functions can now be introspected at runtime using
 <a class="reference internal" href="#typing.get_overloads" title="typing.get_overloads"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_overloads()</span></code></a>.</p>
@@ -2920,7 +2961,7 @@ indicates that it cannot be subclassed.</p>
     <span class="o">...</span>
 </pre></div>
 </div>
-<p>There is no runtime checking of these properties. See <span class="target" id="index-52"></span><a class="pep reference external" href="https://peps.python.org/pep-0591/"><strong>PEP 591</strong></a> for
+<p>There is no runtime checking of these properties. See <span class="target" id="index-51"></span><a class="pep reference external" href="https://peps.python.org/pep-0591/"><strong>PEP 591</strong></a> for
 more details.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.8 版新加入.</span></p>
@@ -3004,7 +3045,7 @@ more information). For example:</p>
 <p class="admonition-title">備註</p>
 <p><a class="reference internal" href="#typing.get_type_hints" title="typing.get_type_hints"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_type_hints()</span></code></a> does not work with imported
 <a class="reference internal" href="#type-aliases"><span class="std std-ref">type aliases</span></a> that include forward references.
-Enabling postponed evaluation of annotations (<span class="target" id="index-53"></span><a class="pep reference external" href="https://peps.python.org/pep-0563/"><strong>PEP 563</strong></a>) may remove
+Enabling postponed evaluation of annotations (<span class="target" id="index-52"></span><a class="pep reference external" href="https://peps.python.org/pep-0563/"><strong>PEP 563</strong></a>) may remove
 the need for most forward references.</p>
 </div>
 <div class="versionchanged">
@@ -3092,7 +3133,7 @@ Return <code class="docutils literal notranslate"><span class="pre">()</span></c
 a user, but may be used by introspection tools.</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p><span class="target" id="index-55"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> generic types such as <code class="docutils literal notranslate"><span class="pre">list[&quot;SomeClass&quot;]</span></code> will not be
+<p><span class="target" id="index-54"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> generic types such as <code class="docutils literal notranslate"><span class="pre">list[&quot;SomeClass&quot;]</span></code> will not be
 implicitly transformed into <code class="docutils literal notranslate"><span class="pre">list[ForwardRef(&quot;SomeClass&quot;)]</span></code> and thus
 will not automatically resolve to <code class="docutils literal notranslate"><span class="pre">list[SomeClass]</span></code>.</p>
 </div>
@@ -3127,7 +3168,7 @@ evaluated, so the second annotation does not need to be enclosed in quotes.</p>
 annotations are not evaluated at function definition time.
 Instead, they are stored as strings in <code class="docutils literal notranslate"><span class="pre">__annotations__</span></code>.
 This makes it unnecessary to use quotes around the annotation
-(see <span class="target" id="index-56"></span><a class="pep reference external" href="https://peps.python.org/pep-0563/"><strong>PEP 563</strong></a>).</p>
+(see <span class="target" id="index-55"></span><a class="pep reference external" href="https://peps.python.org/pep-0563/"><strong>PEP 563</strong></a>).</p>
 </div>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.5.2 版新加入.</span></p>
@@ -3148,7 +3189,7 @@ It is expected that type checkers will flag the deprecated types
 when the checked program targets Python 3.9 or newer.</p>
 <p>The deprecated types will be removed from the <a class="reference internal" href="#module-typing" title="typing: Support for type hints (see :pep:`484`)."><code class="xref py py-mod docutils literal notranslate"><span class="pre">typing</span></code></a> module
 no sooner than the first Python version released 5 years after the release of Python 3.9.0.
-See details in <span class="target" id="index-57"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a>—<em>Type Hinting Generics In Standard Collections</em>.</p>
+See details in <span class="target" id="index-56"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a>—<em>Type Hinting Generics In Standard Collections</em>.</p>
 <section id="aliases-to-built-in-types">
 <span id="corresponding-to-built-in-types"></span><h4>Aliases to built-in types<a class="headerlink" href="#aliases-to-built-in-types" title="本標頭的永久連結">¶</a></h4>
 <dl class="py class">
@@ -3165,7 +3206,7 @@ rather than to use <a class="reference internal" href="stdtypes.html#dict" title
 </div>
 <div class="deprecated">
 <p><span class="versionmodified deprecated">在 3.9 版之後被棄用: </span><a class="reference internal" href="stdtypes.html#dict" title="dict"><code class="xref py py-class docutils literal notranslate"><span class="pre">builtins.dict</span></code></a> now supports subscripting (<code class="docutils literal notranslate"><span class="pre">[]</span></code>).
-See <span class="target" id="index-58"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a class="reference internal" href="stdtypes.html#types-genericalias"><span class="std std-ref">Generic Alias Type</span></a>.</p>
+See <span class="target" id="index-57"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a class="reference internal" href="stdtypes.html#types-genericalias"><span class="std std-ref">Generic Alias Type</span></a>.</p>
 </div>
 </dd></dl>
 
@@ -3188,7 +3229,7 @@ to use an abstract collection type such as <a class="reference internal" href="#
 </div>
 <div class="deprecated">
 <p><span class="versionmodified deprecated">在 3.9 版之後被棄用: </span><a class="reference internal" href="stdtypes.html#list" title="list"><code class="xref py py-class docutils literal notranslate"><span class="pre">builtins.list</span></code></a> now supports subscripting (<code class="docutils literal notranslate"><span class="pre">[]</span></code>).
-See <span class="target" id="index-59"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a class="reference internal" href="stdtypes.html#types-genericalias"><span class="std std-ref">Generic Alias Type</span></a>.</p>
+See <span class="target" id="index-58"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a class="reference internal" href="stdtypes.html#types-genericalias"><span class="std std-ref">Generic Alias Type</span></a>.</p>
 </div>
 </dd></dl>
 
@@ -3201,7 +3242,7 @@ to use an abstract collection type such as <a class="reference internal" href="#
 rather than to use <a class="reference internal" href="stdtypes.html#set" title="set"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a> or <code class="xref py py-class docutils literal notranslate"><span class="pre">typing.Set</span></code>.</p>
 <div class="deprecated">
 <p><span class="versionmodified deprecated">在 3.9 版之後被棄用: </span><a class="reference internal" href="stdtypes.html#set" title="set"><code class="xref py py-class docutils literal notranslate"><span class="pre">builtins.set</span></code></a> now supports subscripting (<code class="docutils literal notranslate"><span class="pre">[]</span></code>).
-See <span class="target" id="index-60"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a class="reference internal" href="stdtypes.html#types-genericalias"><span class="std std-ref">Generic Alias Type</span></a>.</p>
+See <span class="target" id="index-59"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a class="reference internal" href="stdtypes.html#types-genericalias"><span class="std std-ref">Generic Alias Type</span></a>.</p>
 </div>
 </dd></dl>
 
@@ -3212,14 +3253,22 @@ See <span class="target" id="index-60"></span><a class="pep reference external" 
 <div class="deprecated">
 <p><span class="versionmodified deprecated">在 3.9 版之後被棄用: </span><a class="reference internal" href="stdtypes.html#frozenset" title="frozenset"><code class="xref py py-class docutils literal notranslate"><span class="pre">builtins.frozenset</span></code></a>
 now supports subscripting (<code class="docutils literal notranslate"><span class="pre">[]</span></code>).
+See <span class="target" id="index-60"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a class="reference internal" href="stdtypes.html#types-genericalias"><span class="std std-ref">Generic Alias Type</span></a>.</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="typing.Tuple">
+<span class="sig-prename descclassname"><span class="pre">typing.</span></span><span class="sig-name descname"><span class="pre">Tuple</span></span><a class="headerlink" href="#typing.Tuple" title="本定義的永久連結">¶</a></dt>
+<dd><p>Deprecated alias for <a class="reference internal" href="stdtypes.html#tuple" title="tuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>.</p>
+<p><a class="reference internal" href="stdtypes.html#tuple" title="tuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a> and <code class="docutils literal notranslate"><span class="pre">Tuple</span></code> are special-cased in the type system; see
+<a class="reference internal" href="#annotating-tuples"><span class="std std-ref">Annotating tuples</span></a> for more details.</p>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">在 3.9 版之後被棄用: </span><a class="reference internal" href="stdtypes.html#tuple" title="tuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">builtins.tuple</span></code></a> now supports subscripting (<code class="docutils literal notranslate"><span class="pre">[]</span></code>).
 See <span class="target" id="index-61"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> and <a class="reference internal" href="stdtypes.html#types-genericalias"><span class="std std-ref">Generic Alias Type</span></a>.</p>
 </div>
 </dd></dl>
 
-<div class="admonition note">
-<p class="admonition-title">備註</p>
-<p><a class="reference internal" href="#typing.Tuple" title="typing.Tuple"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a> is a special form.</p>
-</div>
 </section>
 <section id="aliases-to-types-in-collections">
 <span id="corresponding-to-types-in-collections"></span><h4>Aliases to types in <a class="reference internal" href="collections.html#module-collections" title="collections: Container datatypes"><code class="xref py py-mod docutils literal notranslate"><span class="pre">collections</span></code></a><a class="headerlink" href="#aliases-to-types-in-collections" title="本標頭的永久連結">¶</a></h4>
@@ -3774,6 +3823,7 @@ collections</p></td>
 <li><a class="reference internal" href="#newtype">NewType</a></li>
 <li><a class="reference internal" href="#callable">Callable</a></li>
 <li><a class="reference internal" href="#generics">Generics</a></li>
+<li><a class="reference internal" href="#annotating-tuples">Annotating tuples</a></li>
 <li><a class="reference internal" href="#user-defined-generic-types">User-defined generic types</a></li>
 <li><a class="reference internal" href="#the-any-type"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code> 型別</a></li>
 <li><a class="reference internal" href="#nominal-vs-structural-subtyping">Nominal vs structural subtyping</a></li>
@@ -3790,7 +3840,6 @@ collections</p></td>
 </ul>
 </li>
 <li><a class="reference internal" href="#special-forms">Special forms</a><ul>
-<li><a class="reference internal" href="#typing.Tuple"><code class="docutils literal notranslate"><span class="pre">Tuple</span></code></a></li>
 <li><a class="reference internal" href="#typing.Union"><code class="docutils literal notranslate"><span class="pre">Union</span></code></a></li>
 <li><a class="reference internal" href="#typing.Optional"><code class="docutils literal notranslate"><span class="pre">Optional</span></code></a></li>
 <li><a class="reference internal" href="#typing.Callable"><code class="docutils literal notranslate"><span class="pre">Callable</span></code></a></li>
@@ -3899,6 +3948,7 @@ collections</p></td>
 <li><a class="reference internal" href="#typing.List"><code class="docutils literal notranslate"><span class="pre">List</span></code></a></li>
 <li><a class="reference internal" href="#typing.Set"><code class="docutils literal notranslate"><span class="pre">Set</span></code></a></li>
 <li><a class="reference internal" href="#typing.FrozenSet"><code class="docutils literal notranslate"><span class="pre">FrozenSet</span></code></a></li>
+<li><a class="reference internal" href="#typing.Tuple"><code class="docutils literal notranslate"><span class="pre">Tuple</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#aliases-to-types-in-collections">Aliases to types in <code class="xref py py-mod docutils literal notranslate"><span class="pre">collections</span></code></a><ul>
@@ -4062,7 +4112,7 @@ collections</p></td>
 <br />
     <br />
 
-    最後更新於 6月 23, 2023。
+    最後更新於 6月 24, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
