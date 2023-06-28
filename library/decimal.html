@@ -1112,12 +1112,19 @@ be the same as the sign of the second operand.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="decimal.Decimal.normalize">
 <span class="sig-name descname"><span class="pre">normalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#decimal.Decimal.normalize" title="本定義的永久連結">¶</a></dt>
-<dd><p>Normalize the number by stripping the rightmost trailing zeros and
-converting any result equal to <code class="docutils literal notranslate"><span class="pre">Decimal('0')</span></code> to
-<code class="docutils literal notranslate"><span class="pre">Decimal('0e0')</span></code>. Used for producing canonical values for attributes
-of an equivalence class. For example, <code class="docutils literal notranslate"><span class="pre">Decimal('32.100')</span></code> and
-<code class="docutils literal notranslate"><span class="pre">Decimal('0.321000e+2')</span></code> both normalize to the equivalent value
-<code class="docutils literal notranslate"><span class="pre">Decimal('32.1')</span></code>.</p>
+<dd><p>Used for producing canonical values of an equivalence
+class within either the current context or the specified context.</p>
+<p>This has the same semantics as the unary plus operation, except that if
+the final result is finite it is reduced to its simplest form, with all
+trailing zeros removed and its sign preserved. That is, while the
+coefficient is non-zero and a multiple of ten the coefficient is divided
+by ten and the exponent is incremented by 1. Otherwise (the coefficient is
+zero) the exponent is set to 0. In all cases the sign is unchanged.</p>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">Decimal('32.100')</span></code> and <code class="docutils literal notranslate"><span class="pre">Decimal('0.321000e+2')</span></code> both
+normalize to the equivalent value <code class="docutils literal notranslate"><span class="pre">Decimal('32.1')</span></code>.</p>
+<p>Note that rounding is applied <em>before</em> reducing to simplest form.</p>
+<p>In the latest versions of the specification, this operation is also known
+as <code class="docutils literal notranslate"><span class="pre">reduce</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2521,6 +2528,25 @@ representative:</p>
 <span class="go">[Decimal(&#39;2E+2&#39;), Decimal(&#39;2E+2&#39;), Decimal(&#39;2E+2&#39;), Decimal(&#39;2E+2&#39;)]</span>
 </pre></div>
 </div>
+<p>Q. When does rounding occur in a computation?</p>
+<p>A. It occurs <em>after</em> the computation.  The philosophy of the decimal
+specification is that numbers are considered exact and are created
+independent of the current context.  They can even have greater
+precision than current context.  Computations process with those
+exact inputs and then rounding (or other context operations) is
+applied to the <em>result</em> of the computation:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">getcontext</span><span class="p">()</span><span class="o">.</span><span class="n">prec</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span> <span class="o">=</span> <span class="n">Decimal</span><span class="p">(</span><span class="s1">&#39;3.1415926535&#39;</span><span class="p">)</span>   <span class="c1"># More than 5 digits</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span>                             <span class="c1"># All digits are retained</span>
+<span class="go">Decimal(&#39;3.1415926535&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span> <span class="o">+</span> <span class="mi">0</span>                         <span class="c1"># Rounded after an addition</span>
+<span class="go">Decimal(&#39;3.1416&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span> <span class="o">-</span> <span class="n">Decimal</span><span class="p">(</span><span class="s1">&#39;0.00005&#39;</span><span class="p">)</span>        <span class="c1"># Subtract unrounded numbers, then round</span>
+<span class="go">Decimal(&#39;3.1415&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pi</span> <span class="o">+</span> <span class="mi">0</span> <span class="o">-</span> <span class="n">Decimal</span><span class="p">(</span><span class="s1">&#39;0.00005&#39;</span><span class="p">)</span><span class="o">.</span>   <span class="c1"># Intermediate values are rounded</span>
+<span class="go">Decimal(&#39;3.1416&#39;)</span>
+</pre></div>
+</div>
 <p>Q. Some decimal values always print with exponential notation.  Is there a way
 to get a non-exponential representation?</p>
 <p>A. For some values, exponential notation is the only way to express the number
@@ -2944,7 +2970,7 @@ are expected to be exact.</p>
 <br />
     <br />
 
-    最後更新於 6月 25, 2023。
+    最後更新於 6月 28, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
