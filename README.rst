@@ -345,7 +345,7 @@ rST 語法注意事項
 - Discord channel `discord.gg/44XheGXhWH`_
 - `Doc-SIG mailing list <https://mail.python.org/mailman/listinfo/doc-sig>`_
 - `PEP 545 <https://www.python.org/dev/peps/pep-0545/>`_
-- `zh_CN Translation of the Python Documentation
+- (Broken Link) `zh_CN Translation of the Python Documentation
   <https://zhsj.github.io/python-docs-zh-cn/>`_
 - `Cambridge Dictionary <https://dictionary.cambridge.org/>`_
 
