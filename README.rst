@@ -318,10 +318,10 @@ rST 語法注意事項
 ===============
 
 為了讓翻譯保持統一，我們整理了一份 `術語列表 
-<https://airtable.com/shrHlRP52bZ9C7aY3/tbl7dhPe9Ph9XIAy3>`_ \
-如果翻譯過程中你覺得需要術語列表有所缺漏，請填寫 `術語列表擴充表單 \
-<https://airtable.com/shr6sU4HHSKAz0Y7J>`_。新增的術語，將會於每次\
-Sprint中共同討論是否合併進術語列表。
+<https://github.com/python/python-docs-zh-tw/wiki/%E8%A1%93%E8%AA%9E%E5%88%97%E8%A1%A8>`_ \
+如果翻譯過程中你覺得需要術語列表有所缺漏，請至 `Discussion \
+<https://github.com/python/python-docs-zh-tw/discussions>`_ 開啟新的討論補充術語。\
+新增的術語，將會於每次 Sprint 中共同討論是否合併進術語列表。
 
 
 
@@ -346,7 +346,7 @@ Sprint中共同討論是否合併進術語列表。
 - `Doc-SIG mailing list <https://mail.python.org/mailman/listinfo/doc-sig>`_
 - `PEP 545 <https://www.python.org/dev/peps/pep-0545/>`_
 - `zh_CN Translation of the Python Documentation
-  <https://zhsj.github.io/python-docs-zh-cn/>`_
+  <https://github.com/python/python-docs-zh-cn>`_
 - `Cambridge Dictionary <https://dictionary.cambridge.org/>`_
 
 
