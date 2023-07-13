@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Socket Programming HOWTO &#8212; Python 3.11.4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket 程式設計指南 &#8212; Python 3.11.4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?digest=845a48175c3935ba0d7ff16b8ed0072d62fd099f" />
@@ -85,12 +85,12 @@
   <div>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
-<li><a class="reference internal" href="#">Socket Programming HOWTO</a><ul>
+<li><a class="reference internal" href="#">Socket 程式設計指南</a><ul>
 <li><a class="reference internal" href="#sockets">Sockets</a><ul>
-<li><a class="reference internal" href="#history">History</a></li>
+<li><a class="reference internal" href="#history">歷史</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#creating-a-socket">Creating a Socket</a><ul>
+<li><a class="reference internal" href="#creating-a-socket">建立一個 Socket</a><ul>
 <li><a class="reference internal" href="#ipc">IPC</a></li>
 </ul>
 </li>
@@ -164,7 +164,7 @@
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 如何達成任務</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Socket Programming HOWTO</a></li>
+        <li class="nav-item nav-item-this"><a href="">Socket 程式設計指南</a></li>
                 <li class="right">
                     
 
@@ -195,7 +195,7 @@
           <div class="body" role="main">
             
   <section id="socket-programming-howto">
-<span id="socket-howto"></span><h1>Socket Programming HOWTO<a class="headerlink" href="#socket-programming-howto" title="本標頭的永久連結">¶</a></h1>
+<span id="socket-howto"></span><h1>Socket 程式設計指南<a class="headerlink" href="#socket-programming-howto" title="本標頭的永久連結">¶</a></h1>
 <dl class="field-list simple">
 <dt class="field-odd">作者<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Gordon McMillan</p>
@@ -203,57 +203,29 @@
 </dl>
 <aside class="topic">
 <p class="topic-title">摘要</p>
-<p>Sockets are used nearly everywhere, but are one of the most severely
-misunderstood technologies around. This is a 10,000 foot overview of sockets.
-It's not really a tutorial - you'll still have work to do in getting things
-operational. It doesn't cover the fine points (and there are a lot of them), but
-I hope it will give you enough background to begin using them decently.</p>
+<p>Sockets 在各處都被廣泛使用，但卻是一項被誤解最嚴重的技術之一。這是一篇對 sockets 的概論介紹。這並不是一個完整的教學指南 - 你還需要做許多準備才能讓 sockets 正常運作。這篇文章也沒有包含細節（其中有非常多的細節），但我希望這篇文章能夠讓你有足夠的背景知識，以便開始正確的使用 sockets 程式設計。</p>
 </aside>
 <section id="sockets">
 <h2>Sockets<a class="headerlink" href="#sockets" title="本標頭的永久連結">¶</a></h2>
-<p>I'm only going to talk about INET (i.e. IPv4) sockets, but they account for at least 99% of
-the sockets in use. And I'll only talk about STREAM (i.e. TCP) sockets - unless you really
-know what you're doing (in which case this HOWTO isn't for you!), you'll get
-better behavior and performance from a STREAM socket than anything else. I will
-try to clear up the mystery of what a socket is, as well as some hints on how to
-work with blocking and non-blocking sockets. But I'll start by talking about
-blocking sockets. You'll need to know how they work before dealing with
-non-blocking sockets.</p>
-<p>Part of the trouble with understanding these things is that &quot;socket&quot; can mean a
-number of subtly different things, depending on context. So first, let's make a
-distinction between a &quot;client&quot; socket - an endpoint of a conversation, and a
-&quot;server&quot; socket, which is more like a switchboard operator. The client
-application (your browser, for example) uses &quot;client&quot; sockets exclusively; the
-web server it's talking to uses both &quot;server&quot; sockets and &quot;client&quot; sockets.</p>
+<p>我只會討論關於 INET（例如：IPv4）的 sockets，但它們涵蓋了幾乎 99% 的 sockets 使用場景。而我也將僅討論關於 STREAM（比如：TCP）類型的 sockets - 除非你真的知道你在做什麼（在這種情況下，這份指南可能不適合你），使用 STREAM 類型的 socket 會獲得比其他 sockets 類型更好的表現和性能。我將會嘗試解釋 socket 是什麼，以及如何使用阻塞 (blocking) 和非阻塞 (non-blocking) sockets 的一些建議。但首先我會先談論阻塞 sockets。在處理非阻塞 sockets 之前，你需要了解它們的工作原理。</p>
+<p>要理解這些東西的困難點之一在於 &quot;scoket&quot; 可以代表多種具有些微差異的東西，這主要取決於上下文。所以首先，讓我們先區分「用戶端 (client)」socket 和「伺服器端 (server)」socket 的差別，「用戶端」socket 表示通訊的一端，「伺服器端」socket 更像是一個電話總機接線員。用戶端應用程式（例如：你的瀏覽器）只能使用「用戶端」socket; 它所連接的網路伺服器則同時使用「伺服器端」socket 和 「用戶端」socket 來進行通訊。</p>
 <section id="history">
-<h3>History<a class="headerlink" href="#history" title="本標頭的永久連結">¶</a></h3>
-<p>Of the various forms of <abbr title="Inter Process Communication">IPC</abbr>,
-sockets are by far the most popular.  On any given platform, there are
-likely to be other forms of IPC that are faster, but for
-cross-platform communication, sockets are about the only game in town.</p>
-<p>They were invented in Berkeley as part of the BSD flavor of Unix. They spread
-like wildfire with the internet. With good reason --- the combination of sockets
-with INET makes talking to arbitrary machines around the world unbelievably easy
-(at least compared to other schemes).</p>
+<h3>歷史<a class="headerlink" href="#history" title="本標頭的永久連結">¶</a></h3>
+<p>在各種形式的 <abbr title="Inter Process Communication">IPC</abbr> 中，sockets 是最受歡迎的。在任何特定的平台上，可能會存在其他更快速的 IPC 形式，但對於跨平台通訊來說，sockets 是唯一的選擇。</p>
+<p>Sockets 作為 Unix 的 BSD 分支的一部分在 Berkeley 被發明出來。它們隨著網際網路的普及而迅速蔓延開來。這是有很好的理由 — sockets 和 INET 的結合讓世界各地任何的機器之間的通訊變得非常簡單（至少與其它方案相比是如此）。</p>
 </section>
 </section>
 <section id="creating-a-socket">
-<h2>Creating a Socket<a class="headerlink" href="#creating-a-socket" title="本標頭的永久連結">¶</a></h2>
-<p>Roughly speaking, when you clicked on the link that brought you to this page,
-your browser did something like the following:</p>
+<h2>建立一個 Socket<a class="headerlink" href="#creating-a-socket" title="本標頭的永久連結">¶</a></h2>
+<p>大致上來說，當你點擊了帶你來到這個頁面的連結時，你的瀏覽器做了以下的操作：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># create an INET, STREAMing socket</span>
 <span class="n">s</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span>
 <span class="c1"># now connect to the web server on port 80 - the normal http port</span>
 <span class="n">s</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="s2">&quot;www.python.org&quot;</span><span class="p">,</span> <span class="mi">80</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>When the <code class="docutils literal notranslate"><span class="pre">connect</span></code> completes, the socket <code class="docutils literal notranslate"><span class="pre">s</span></code> can be used to send
-in a request for the text of the page. The same socket will read the
-reply, and then be destroyed. That's right, destroyed. Client sockets
-are normally only used for one exchange (or a small set of sequential
-exchanges).</p>
-<p>What happens in the web server is a bit more complex. First, the web server
-creates a &quot;server socket&quot;:</p>
+<p>當 <code class="docutils literal notranslate"><span class="pre">connect</span></code> 完成時，這個 socket <code class="docutils literal notranslate"><span class="pre">s</span></code> 可以用來發送請求來取得頁面的文本。同一個 socket 也會讀取回傳值，然後再被銷毀。是的，會被銷毀。用戶端 socket 通常只用來做一次交換（或是一小組連續交換）。</p>
+<p>網路伺服器 (web server) 的運作就稍微複雜一點。首先，網路伺服器會建立一個「伺服器端 socket」：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># create an INET, STREAMing socket</span>
 <span class="n">serversocket</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span>
 <span class="c1"># bind the socket to a public host, and a well-known port</span>
@@ -262,20 +234,10 @@ creates a &quot;server socket&quot;:</p>
 <span class="n">serversocket</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>A couple things to notice: we used <code class="docutils literal notranslate"><span class="pre">socket.gethostname()</span></code> so that the socket
-would be visible to the outside world.  If we had used <code class="docutils literal notranslate"><span class="pre">s.bind(('localhost',</span>
-<span class="pre">80))</span></code> or <code class="docutils literal notranslate"><span class="pre">s.bind(('127.0.0.1',</span> <span class="pre">80))</span></code> we would still have a &quot;server&quot; socket,
-but one that was only visible within the same machine.  <code class="docutils literal notranslate"><span class="pre">s.bind(('',</span> <span class="pre">80))</span></code>
-specifies that the socket is reachable by any address the machine happens to
-have.</p>
-<p>A second thing to note: low number ports are usually reserved for &quot;well known&quot;
-services (HTTP, SNMP etc). If you're playing around, use a nice high number (4
-digits).</p>
-<p>Finally, the argument to <code class="docutils literal notranslate"><span class="pre">listen</span></code> tells the socket library that we want it to
-queue up as many as 5 connect requests (the normal max) before refusing outside
-connections. If the rest of the code is written properly, that should be plenty.</p>
-<p>Now that we have a &quot;server&quot; socket, listening on port 80, we can enter the
-mainloop of the web server:</p>
+<p>有幾件事需要注意：我們使用了 <code class="docutils literal notranslate"><span class="pre">socket.gethostname()</span></code>，這樣 socket 才能對外部網路可見。如果我們使用了 <code class="docutils literal notranslate"><span class="pre">s.bind(('localhost',</span> <span class="pre">80))</span></code> 或 <code class="docutils literal notranslate"><span class="pre">s.bind(('127.0.0.1',</span> <span class="pre">80))</span></code>，我們會得到一個「伺服器端」socket，但是只能在同一台機器內可見。<code class="docutils literal notranslate"><span class="pre">s.bind(('',</span> <span class="pre">80))</span></code> 指定 socket 可以透過機器的任何地址存取。</p>
+<p>第二個要注意的是：數字小的連接埠 (port) 通常保留給「廣為人知的」服務（HTTP、SNMP等）。如果你只是想執行程式，可以使用一個數字較大的連接埠（4 位數字）。</p>
+<p>最後，<code class="docutils literal notranslate"><span class="pre">listen</span></code> 引數告訴 socket 函式庫 (library)，我們希望在佇列 (queue) 中累積達 5 個（正常的最大值）連接請求後再拒絕外部連接。如果其餘的程式碼編寫正確，這應該足夠了。</p>
+<p>現在我們有一個監聽 80 連接埠的「伺服器端」socket 了，我們可以進入網路伺服器的主迴圈了：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
     <span class="c1"># accept connections from outside</span>
     <span class="p">(</span><span class="n">clientsocket</span><span class="p">,</span> <span class="n">address</span><span class="p">)</span> <span class="o">=</span> <span class="n">serversocket</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
@@ -285,18 +247,7 @@ mainloop of the web server:</p>
     <span class="n">ct</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>There's actually 3 general ways in which this loop could work - dispatching a
-thread to handle <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code>, create a new process to handle
-<code class="docutils literal notranslate"><span class="pre">clientsocket</span></code>, or restructure this app to use non-blocking sockets, and
-multiplex between our &quot;server&quot; socket and any active <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code>s using
-<code class="docutils literal notranslate"><span class="pre">select</span></code>. More about that later. The important thing to understand now is
-this: this is <em>all</em> a &quot;server&quot; socket does. It doesn't send any data. It doesn't
-receive any data. It just produces &quot;client&quot; sockets. Each <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code> is
-created in response to some <em>other</em> &quot;client&quot; socket doing a <code class="docutils literal notranslate"><span class="pre">connect()</span></code> to the
-host and port we're bound to. As soon as we've created that <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code>, we
-go back to listening for more connections. The two &quot;clients&quot; are free to chat it
-up - they are using some dynamically allocated port which will be recycled when
-the conversation ends.</p>
+<p>事實上，有三種方法可以讓這個迴圈運作 - 分配一個執行緒 (thread) 來處理 <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code> 、建立一個新行程 (process) 來處理 <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code>，或者將這個程式重新改寫成使用非阻塞 socket，並使用 <code class="docutils literal notranslate"><span class="pre">select</span></code> 在我們的「伺服器端」socket 和任何有效的 <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code> 之間進行多工處理。稍後將會更詳細的介紹。現在最重要的是理解：這就是「伺服器端」socket 做的<em>所有</em> 事情。它不會發送任何資料、也不接收任何資料，它只會建立「伺服器端」socket。每個 <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code> 都是為了回應某些<em>其他</em> <code class="docutils literal notranslate"><span class="pre">connect()</span></code> 到我們綁定的主機上的「用戶端」socket。一但 <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code> 建立完成，就會繼續監聽更多的連接請求。兩個「用戶端」可以隨意的通訊 - 它們使用的是一些動態分配的連接埠，會在通訊結束的時候被回收並重新利用。</p>
 <section id="ipc">
 <h3>IPC<a class="headerlink" href="#ipc" title="本標頭的永久連結">¶</a></h3>
 <p>If you need fast IPC between two processes on one machine, you should look into
@@ -545,12 +496,12 @@ very, very well) with my sockets.</p>
   <div>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
-<li><a class="reference internal" href="#">Socket Programming HOWTO</a><ul>
+<li><a class="reference internal" href="#">Socket 程式設計指南</a><ul>
 <li><a class="reference internal" href="#sockets">Sockets</a><ul>
-<li><a class="reference internal" href="#history">History</a></li>
+<li><a class="reference internal" href="#history">歷史</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#creating-a-socket">Creating a Socket</a><ul>
+<li><a class="reference internal" href="#creating-a-socket">建立一個 Socket</a><ul>
 <li><a class="reference internal" href="#ipc">IPC</a></li>
 </ul>
 </li>
@@ -627,7 +578,7 @@ very, very well) with my sockets.</p>
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 如何達成任務</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">Socket Programming HOWTO</a></li>
+        <li class="nav-item nav-item-this"><a href="">Socket 程式設計指南</a></li>
                 <li class="right">
                     
 
@@ -666,7 +617,7 @@ very, very well) with my sockets.</p>
 <br />
     <br />
 
-    最後更新於 7月 12, 2023。
+    最後更新於 7月 13, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
