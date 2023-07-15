@@ -3,6 +3,7 @@
 # Here is what you can do:
 #
 # - make all # Automatically build an html local version
+# - make validate # Validate translation (.po) files
 # - make todo  # To list remaining tasks
 # - make merge  # To merge pot from upstream
 # - make fuzzy  # To find fuzzy strings
@@ -72,6 +73,13 @@ $(VENV)/bin/sphinx-build: $(VENV)/bin/activate
 
 $(VENV)/bin/blurb: $(VENV)/bin/activate
 	. $(VENV)/bin/activate; python3 -m pip install blurb
+
+.PHONY: validate
+validate: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build an html local version
+	mkdir -p $(LC_MESSAGES)
+	for dirname in $$(find . -name '*.po' | xargs -n1 dirname | sort -u | grep -v '^\.$$'); do mkdir -p $(LC_MESSAGES)/$$dirname; done
+	for file in *.po */*.po; do ln -f $$file $(LC_MESSAGES)/$$file; done
+	. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D locale_dirs=locales -D language=$(LANGUAGE) -D gettext_compact=0' text
 
 
 .PHONY: upgrade_venv

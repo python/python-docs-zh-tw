@@ -133,7 +133,11 @@ the PSF for inclusion in the documentation.
 
     poedit glossary.po
 
-3. 存檔以後，執行以下列指令編譯輸出文件，以確保你的修改沒有 rST 的語法錯誤或警告 ::
+3. 存檔以後，執行以下列指令檢查翻譯檔，以確保你的修改沒有 rST 的語法錯誤或警告 ::
+
+    VERSION=3.11 make validate
+
+   或者輸出完整html文件 ::
 
     VERSION=3.11 make all
 
