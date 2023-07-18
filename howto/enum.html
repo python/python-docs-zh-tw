@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Enum HOWTO &#8212; Python 3.11.4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enum HOWTO &#8212; Python 3.12.0b4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?digest=845a48175c3935ba0d7ff16b8ed0072d62fd099f" />
@@ -19,7 +19,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.11.4 說明文件 中搜尋"
+          title="在 Python 3.12.0b4 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -94,6 +94,7 @@
 <li><a class="reference internal" href="#comparisons">Comparisons</a></li>
 <li><a class="reference internal" href="#allowed-members-and-attributes-of-enumerations">Allowed members and attributes of enumerations</a></li>
 <li><a class="reference internal" href="#restricted-enum-subclassing">Restricted Enum subclassing</a></li>
+<li><a class="reference internal" href="#dataclass-support">Dataclass support</a></li>
 <li><a class="reference internal" href="#pickling">Pickling</a></li>
 <li><a class="reference internal" href="#functional-api">Functional API</a></li>
 <li><a class="reference internal" href="#derived-enumerations">Derived Enumerations</a><ul>
@@ -161,7 +162,7 @@
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.11/Doc/howto/enum.rst"
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/enum.rst"
             rel="nofollow">顯示原始碼
         </a>
       </li>
@@ -198,7 +199,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.4 Documentation</a> &#187;
+      <a href="../index.html">3.12.0b4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 如何達成任務</a> &#187;</li>
@@ -263,8 +264,10 @@ inherits from <a class="reference internal" href="../library/enum.html#enum.Enum
 <div class="admonition note">
 <p class="admonition-title">備註</p>
 <p>Case of Enum Members</p>
-<p>Because Enums are used to represent constants we recommend using
-UPPER_CASE names for members, and will be using that style in our examples.</p>
+<p>Because Enums are used to represent constants, and to help avoid issues
+with name clashes between mixin-class methods/attributes and enum names,
+we strongly recommend using UPPER_CASE names for members, and will be using
+that style in our examples.</p>
 </div>
 <p>Depending on the nature of the enum a member's value may or may not be
 important, but either way that value can be used to get the corresponding
@@ -381,6 +384,7 @@ variable:</p>
 <span class="gp">... </span>    <span class="k">for</span> <span class="n">chore</span><span class="p">,</span> <span class="n">days</span> <span class="ow">in</span> <span class="n">chores</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 <span class="gp">... </span>        <span class="k">if</span> <span class="n">day</span> <span class="ow">in</span> <span class="n">days</span><span class="p">:</span>
 <span class="gp">... </span>            <span class="nb">print</span><span class="p">(</span><span class="n">chore</span><span class="p">)</span>
+<span class="gp">...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">show_chores</span><span class="p">(</span><span class="n">chores_for_ethan</span><span class="p">,</span> <span class="n">Weekday</span><span class="o">.</span><span class="n">SATURDAY</span><span class="p">)</span>
 <span class="go">answer SO questions</span>
 </pre></div>
@@ -498,6 +502,7 @@ When this behavior isn't desired, you can use the <a class="reference internal" 
 <p>The values are chosen by <code class="xref py py-func docutils literal notranslate"><span class="pre">_generate_next_value_()</span></code>, which can be
 overridden:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">AutoName</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="nd">@staticmethod</span>
 <span class="gp">... </span>    <span class="k">def</span> <span class="nf">_generate_next_value_</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">last_values</span><span class="p">):</span>
 <span class="gp">... </span>        <span class="k">return</span> <span class="n">name</span>
 <span class="gp">...</span>
@@ -672,6 +677,31 @@ any members.  So this is forbidden:</p>
 some important invariants of types and instances.  On the other hand, it makes
 sense to allow sharing some common behavior between a group of enumerations.
 (See <a class="reference internal" href="#orderedenum">OrderedEnum</a> for an example.)</p>
+</section>
+<section id="dataclass-support">
+<span id="enum-dataclass-support"></span><h2>Dataclass support<a class="headerlink" href="#dataclass-support" title="本標頭的永久連結">¶</a></h2>
+<p>When inheriting from a <a class="reference internal" href="../library/dataclasses.html#dataclasses.dataclass" title="dataclasses.dataclass"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataclass</span></code></a>,
+the <a class="reference internal" href="../library/enum.html#enum.Enum.__repr__" title="enum.Enum.__repr__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__repr__()</span></code></a> omits the inherited class' name.  For example:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@dataclass</span>
+<span class="gp">... </span><span class="k">class</span> <span class="nc">CreatureDataMixin</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">size</span><span class="p">:</span> <span class="nb">str</span>
+<span class="gp">... </span>    <span class="n">legs</span><span class="p">:</span> <span class="nb">int</span>
+<span class="gp">... </span>    <span class="n">tail</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Creature</span><span class="p">(</span><span class="n">CreatureDataMixin</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">BEETLE</span> <span class="o">=</span> <span class="s1">&#39;small&#39;</span><span class="p">,</span> <span class="mi">6</span>
+<span class="gp">... </span>    <span class="n">DOG</span> <span class="o">=</span> <span class="s1">&#39;medium&#39;</span><span class="p">,</span> <span class="mi">4</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Creature</span><span class="o">.</span><span class="n">DOG</span>
+<span class="go">&lt;Creature.DOG: size=&#39;medium&#39;, legs=4&gt;</span>
+</pre></div>
+</div>
+<p>Use the <code class="xref py py-func docutils literal notranslate"><span class="pre">dataclass()</span></code> argument <code class="docutils literal notranslate"><span class="pre">repr=False</span></code>
+to use the standard <a class="reference internal" href="../library/functions.html#repr" title="repr"><code class="xref py py-func docutils literal notranslate"><span class="pre">repr()</span></code></a>.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>Only the dataclass fields are shown in the value area, not the dataclass'
+name.</p>
+</div>
 </section>
 <section id="pickling">
 <h2>Pickling<a class="headerlink" href="#pickling" title="本標頭的永久連結">¶</a></h2>
@@ -910,6 +940,7 @@ details.</p>
 <span class="gp">... </span>    <span class="n">W</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="gp">... </span>    <span class="n">X</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="gp">... </span>    <span class="n">RWX</span> <span class="o">=</span> <span class="mi">7</span>
+<span class="gp">...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Perm</span><span class="o">.</span><span class="n">RWX</span>
 <span class="go">&lt;Perm.RWX: 7&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="o">~</span><span class="n">Perm</span><span class="o">.</span><span class="n">RWX</span>
@@ -1057,7 +1088,8 @@ add methods and don't specify another type.</p></li>
 <li><p>When another data type is mixed in, the <code class="xref py py-attr docutils literal notranslate"><span class="pre">value</span></code> attribute is <em>not the
 same</em> as the enum member itself, although it is equivalent and will compare
 equal.</p></li>
-<li><p>A <code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">type</span></code> is a mixin that defines <code class="xref py py-meth docutils literal notranslate"><span class="pre">__new__()</span></code>.</p></li>
+<li><p>A <code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">type</span></code> is a mixin that defines <code class="xref py py-meth docutils literal notranslate"><span class="pre">__new__()</span></code>, or a
+<a class="reference internal" href="../library/dataclasses.html#dataclasses.dataclass" title="dataclasses.dataclass"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataclass</span></code></a></p></li>
 <li><p>%-style formatting:  <code class="docutils literal notranslate"><span class="pre">%s</span></code> and <code class="docutils literal notranslate"><span class="pre">%r</span></code> call the <a class="reference internal" href="../library/enum.html#enum.Enum" title="enum.Enum"><code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></a> class's
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">__str__()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">__repr__()</span></code> respectively; other codes (such as
 <code class="docutils literal notranslate"><span class="pre">%i</span></code> or <code class="docutils literal notranslate"><span class="pre">%h</span></code> for IntEnum) treat the enum member as its mixed-in type.</p></li>
@@ -1177,7 +1209,9 @@ but remain normal attributes.</p>
 <p>Enum members are instances of their enum class, and are normally accessed as
 <code class="docutils literal notranslate"><span class="pre">EnumClass.member</span></code>.  In certain situations, such as writing custom enum
 behavior, being able to access one member directly from another is useful,
-and is supported.</p>
+and is supported; however, in order to avoid name clashes between member names
+and attributes/methods from mixed-in classes, upper-case names are strongly
+recommended.</p>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.5 版的變更.</span></p>
 </div>
@@ -1650,6 +1684,7 @@ subclassed to provide a different Enum experience.</p>
 <li><a class="reference internal" href="#comparisons">Comparisons</a></li>
 <li><a class="reference internal" href="#allowed-members-and-attributes-of-enumerations">Allowed members and attributes of enumerations</a></li>
 <li><a class="reference internal" href="#restricted-enum-subclassing">Restricted Enum subclassing</a></li>
+<li><a class="reference internal" href="#dataclass-support">Dataclass support</a></li>
 <li><a class="reference internal" href="#pickling">Pickling</a></li>
 <li><a class="reference internal" href="#functional-api">Functional API</a></li>
 <li><a class="reference internal" href="#derived-enumerations">Derived Enumerations</a><ul>
@@ -1717,7 +1752,7 @@ subclassed to provide a different Enum experience.</p>
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.11/Doc/howto/enum.rst"
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/enum.rst"
             rel="nofollow">顯示原始碼
         </a>
       </li>
@@ -1757,7 +1792,7 @@ subclassed to provide a different Enum experience.</p>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.4 Documentation</a> &#187;
+      <a href="../index.html">3.12.0b4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 如何達成任務</a> &#187;</li>

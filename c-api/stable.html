@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>C API 穩定性 &#8212; Python 3.11.4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C API 穩定性 &#8212; Python 3.12.0b4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?digest=845a48175c3935ba0d7ff16b8ed0072d62fd099f" />
@@ -19,7 +19,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.11.4 說明文件 中搜尋"
+          title="在 Python 3.12.0b4 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -86,7 +86,10 @@
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#">C API 穩定性</a><ul>
+<li><a class="reference internal" href="#unstable-c-api">不穩定的 C API</a></li>
 <li><a class="reference internal" href="#stable-application-binary-interface">穩定的應用程式二進位介面</a><ul>
+<li><a class="reference internal" href="#limited-c-api">受限 C API</a></li>
+<li><a class="reference internal" href="#stable-abi">穩定 ABI</a></li>
 <li><a class="reference internal" href="#limited-api-scope-and-performance">受限 API 範圍和性能</a></li>
 <li><a class="reference internal" href="#limited-api-caveats">受限 API 注意事項</a></li>
 </ul>
@@ -113,7 +116,7 @@
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.11/Doc/c-api/stable.rst"
+        <a href="https://github.com/python/cpython/blob/main/Doc/c-api/stable.rst"
             rel="nofollow">顯示原始碼
         </a>
       </li>
@@ -150,7 +153,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.4 Documentation</a> &#187;
+      <a href="../index.html">3.12.0b4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python/C API 參考手冊</a> &#187;</li>
@@ -186,14 +189,38 @@
             
   <section id="c-api-stability">
 <span id="stable"></span><h1>C API 穩定性<a class="headerlink" href="#c-api-stability" title="本標頭的永久連結">¶</a></h1>
-<p>Python 的 C API 被包含在向後相容性策略 <span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0387/"><strong>PEP 387</strong></a> 中。雖然 C API 會隨著每個次要版本（例如從 3.9 到 3.10）而變化，但大多數變化都是與原始碼相容的，通常只是加入新的 API。更改現有 API 或刪除 API 僅在棄用期後或修復嚴重問題時進行。</p>
+<p>除非有另外記錄於文件，Python 的 C API 被包含在向後相容性策略 <span class="target" id="index-3"></span><a class="pep reference external" href="https://peps.python.org/pep-0387/"><strong>PEP 387</strong></a> 中。大多數改動都是相容於原始碼的（通常只會增加新的 API）。更改現有 API 或刪除 API 僅在棄用期後或修復嚴重問題時進行。</p>
 <p>CPython 的應用程式二進位介面 (Application Binary Interface, ABI) 在次要版本中是向前和向後相容的（如果它們以相同的方式編譯；請參閱下面的<a class="reference internal" href="#stable-abi-platform"><span class="std std-ref">平台注意事項</span></a>）。因此，為 Python 3.10.0 編譯的程式碼將能夠在 3.10.8 上運行，反之亦然，但 3.9.x 和 3.10.x 就需要分別編譯。</p>
-<p>帶有底線前綴的名稱是私有 API (private API)，像是 <code class="docutils literal notranslate"><span class="pre">_Py_InternalState</span></code>，即使在補丁版本 (patch release) 中也可能被更改，不會另行通知。</p>
+<p>There are two tiers of C API with different stability exepectations:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#unstable-c-api"><span class="std std-ref">Unstable API</span></a>, may change in minor versions without
+a deprecation period. It is marked by the <code class="docutils literal notranslate"><span class="pre">PyUnstable</span></code> prefix in names.</p></li>
+<li><p><a class="reference internal" href="#limited-c-api"><span class="std std-ref">Limited API</span></a>, is compatible across several minor releases.
+When <a class="reference internal" href="#c.Py_LIMITED_API" title="Py_LIMITED_API"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code></a> is defined, only this subset is exposed
+from <code class="docutils literal notranslate"><span class="pre">Python.h</span></code>.</p></li>
+</ul>
+<p>These are discussed in more detail below.</p>
+<p>Names prefixed by an underscore, such as <code class="docutils literal notranslate"><span class="pre">_Py_InternalState</span></code>,
+are private API that can change without notice even in patch releases.
+If you need to use this API, consider reaching out to
+<a class="reference external" href="https://discuss.python.org/c/core-dev/c-api/30">CPython developers</a>
+to discuss adding public API for your use case.</p>
+<section id="unstable-c-api">
+<span id="id1"></span><h2>不穩定的 C API<a class="headerlink" href="#unstable-c-api" title="本標頭的永久連結">¶</a></h2>
+<p id="index-1">Any API named with the <code class="docutils literal notranslate"><span class="pre">PyUnstable</span></code> prefix exposes CPython implementation
+details, and may change in every minor release (e.g. from 3.9 to 3.10) without
+any deprecation warnings.
+However, it will not change in a bugfix release (e.g. from 3.10.0 to 3.10.1).</p>
+<p>It is generally intended for specialized, low-level tools like debuggers.</p>
+<p>Projects that use this API are expected to follow
+CPython development and spend extra effort adjusting to changes.</p>
+</section>
 <section id="stable-application-binary-interface">
 <h2>穩定的應用程式二進位介面<a class="headerlink" href="#stable-application-binary-interface" title="本標頭的永久連結">¶</a></h2>
-<p>Python 3.2 引入了<em>受限 API (Limited API)</em>，它是 Python C API 的一個子集。僅使用受限 API 的擴充可以只編譯一次就使用於多個版本的 Python。受限 API 的內容<a class="reference internal" href="#stable-abi-list"><span class="std std-ref">列在下方</span></a>。</p>
-<p>為了實現它，Python 提供了一個<em>穩定 ABI (Stable ABI)</em>：一組將在各個 Python 3.x 版本之間保持相容的符號。穩定 ABI 被包含在受限 API 中開放的符號，但也包含其他符號 - 例如，支援舊版受限 API 所必需的函式。</p>
-<p>（為簡單起見，本文件討論<em>擴充 (extension)</em>，但受限 API 和穩定 ABI 在所有 API 使用方式中都以相同的方式運作 -- 例如在嵌入式 Python (embedding Python) 中。）</p>
+<p>為簡單起見，本文件討論<em>擴充 (extension)</em>，但受限 API 和穩定 ABI 在所有 API 使用方式中都以相同的方式運作 -- 例如在嵌入式 Python (embedding Python) 中。</p>
+<section id="limited-c-api">
+<span id="id2"></span><h3>受限 C API<a class="headerlink" href="#limited-c-api" title="本標頭的永久連結">¶</a></h3>
+<p>Python 3.2 引入了<em>受限 API (Limited API)</em>，它是 Python C API 的一個子集。僅使用受限 API 的擴充可以只編譯一次就使用於多個版本的 Python。受限 API 的內容<a class="reference internal" href="#limited-api-list"><span class="std std-ref">列在下方</span></a>。</p>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_LIMITED_API">
 <span class="sig-name descname"><span class="n"><span class="pre">Py_LIMITED_API</span></span></span><a class="headerlink" href="#c.Py_LIMITED_API" title="本定義的永久連結">¶</a><br /></dt>
@@ -203,9 +230,15 @@
 <p>你還可以將 <code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code> 定義為 <code class="docutils literal notranslate"><span class="pre">3</span></code>，這與 <code class="docutils literal notranslate"><span class="pre">0x03020000</span></code>（Python 3.2，引入了受限 API 的版本）相同。</p>
 </dd></dl>
 
+</section>
+<section id="stable-abi">
+<span id="id3"></span><h3>穩定 ABI<a class="headerlink" href="#stable-abi" title="本標頭的永久連結">¶</a></h3>
+<p>為了實現它，Python 提供了一個<em>穩定 ABI (Stable ABI)</em>：一組將在各個 Python 3.x 版本之間保持相容的符號。</p>
+<p>穩定 ABI 被包含在<a class="reference internal" href="#limited-c-api"><span class="std std-ref">受限 API</span></a> 中開放的符號，但也包含其他符號 - 例如，支援舊版受限 API 所必需的函式。</p>
 <p>在 Windows 上，使用穩定 ABI 的擴充應該連接到 <code class="docutils literal notranslate"><span class="pre">python3.dll</span></code> 而不是特定版本的函式庫，例如 <code class="docutils literal notranslate"><span class="pre">python39.dll</span></code>。</p>
 <p>在某些平台上，Python 將查找並加載以 <code class="docutils literal notranslate"><span class="pre">abi3</span></code> 標籤命名的共享函式庫檔案（例如 <code class="docutils literal notranslate"><span class="pre">mymodule.abi3.so</span></code>）。它不檢查此類擴充是否符合穩定的 ABI。確保的責任在使用者（或者打包工具）身上，例如使用 3.10+ 受限 API 建置的擴充不會為較低版本的 Python 所安裝。</p>
 <p>穩定 ABI 中的所有函式都作為函式存在於 Python 的共享函式庫中，而不僅是作為巨集。這使得它們可被用於不使用 C 預處理器 (preprocessor) 的語言。</p>
+</section>
 <section id="limited-api-scope-and-performance">
 <h3>受限 API 範圍和性能<a class="headerlink" href="#limited-api-scope-and-performance" title="本標頭的永久連結">¶</a></h3>
 <p>受限 API 的目標是允許使用完整的 C API 進行所有可能的操作，但可能會降低性能。</p>
@@ -215,7 +248,7 @@
 </section>
 <section id="limited-api-caveats">
 <h3>受限 API 注意事項<a class="headerlink" href="#limited-api-caveats" title="本標頭的永久連結">¶</a></h3>
-<p>請注意，使用 <code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code> 進行編譯<em>不</em>完全保證程式碼符合受限 API 或穩定 ABI。<code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code> 僅涵蓋定義，但 API 還包括其他問題，例如預期的語義 (semantic)。</p>
+<p>請注意，使用 <code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code> 進行編譯<em>不</em>完全保證程式碼符合<a class="reference internal" href="#limited-c-api"><span class="std std-ref">受限 API</span></a> 或<a class="reference internal" href="#stable-abi"><span class="std std-ref">穩定 ABI</span></a>。<code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code> 僅涵蓋定義，但 API 還包括其他議題，例如預期的語義 (semantic)。</p>
 <p><code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code> 無法防範的一個問題是使用在較低 Python 版本中無效的引數來呼叫函式。例如一個開始接受 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> 作為引數的函式。在 Python 3.9 中，<code class="docutils literal notranslate"><span class="pre">NULL</span></code> 現在代表選擇預設行為，但在 Python 3.8 中，引數將被直接使用，導致 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> 取消參照 (dereference) 且崩潰 (crash)。類似的引數適用於結構 (struct) 的欄位。</p>
 <p>另一個問題是，當有定義 <code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code> 時，一些結構欄位目前不會被隱藏，即使它們是受限 API 的一部分。</p>
 <p>出於這些原因，我們建議要以它支援的<em>所有</em>次要 Python 版本來測試擴充，並且最好使用<em>最低</em>版本進行建置。</p>
@@ -225,13 +258,14 @@
 </section>
 <section id="platform-considerations">
 <span id="stable-abi-platform"></span><h2>平台注意事項<a class="headerlink" href="#platform-considerations" title="本標頭的永久連結">¶</a></h2>
-<p>ABI 穩定性不僅取決於 Python，還取決於使用的編譯器、低階函式庫和編譯器選項。出於穩定 ABI 的目的，這些細節定義了一個「平台」。它們通常取決於作業系統種類和處理器架構</p>
+<p>ABI 穩定性不僅取決於 Python，還取決於使用的編譯器、低階函式庫和編譯器選項。出於<a class="reference internal" href="#stable-abi"><span class="std std-ref">穩定 ABI</span></a> 的目的，這些細節定義了一個「平台」。它們通常取決於作業系統種類和處理器架構</p>
 <p>每個特定的 Python 發布者都有責任確保特定平台上的所有 Python 版本都以不破壞穩定 ABI 的方式建置。<code class="docutils literal notranslate"><span class="pre">python.org</span></code> 和許多第三方發布者發布的 Windows 和 macOS 版本就是這種情況。</p>
 </section>
 <section id="contents-of-limited-api">
-<span id="stable-abi-list"></span><h2>受限 API 的內容<a class="headerlink" href="#contents-of-limited-api" title="本標頭的永久連結">¶</a></h2>
-<p>目前，受限 API 包括以下項目：</p>
+<span id="limited-api-list"></span><h2>受限 API 的內容<a class="headerlink" href="#contents-of-limited-api" title="本標頭的永久連結">¶</a></h2>
+<p>目前，<a class="reference internal" href="#limited-c-api"><span class="std std-ref">受限 API</span></a> 包括以下項目：</p>
 <p><ul class="simple">
+<li><p><code class="xref c c-macro docutils literal notranslate"><span class="pre">PY_VECTORCALL_ARGUMENTS_OFFSET</span></code></p></li>
 <li><p><a class="reference internal" href="iter.html#c.PyAIter_Check" title="PyAIter_Check"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyAIter_Check()</span></code></a></p></li>
 <li><p><a class="reference internal" href="arg.html#c.PyArg_Parse" title="PyArg_Parse"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_Parse()</span></code></a></p></li>
 <li><p><a class="reference internal" href="arg.html#c.PyArg_ParseTuple" title="PyArg_ParseTuple"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code></a></p></li>
@@ -365,12 +399,14 @@
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_CheckSignals" title="PyErr_CheckSignals"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_CheckSignals()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_Clear" title="PyErr_Clear"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_Clear()</span></code></a></p></li>
 <li><p><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_Display()</span></code></p></li>
+<li><p><a class="reference internal" href="exceptions.html#c.PyErr_DisplayException" title="PyErr_DisplayException"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_DisplayException()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_ExceptionMatches" title="PyErr_ExceptionMatches"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_ExceptionMatches()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_Fetch" title="PyErr_Fetch"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_Fetch()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_Format" title="PyErr_Format"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_Format()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_FormatV" title="PyErr_FormatV"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_FormatV()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_GetExcInfo" title="PyErr_GetExcInfo"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_GetExcInfo()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_GetHandledException" title="PyErr_GetHandledException"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_GetHandledException()</span></code></a></p></li>
+<li><p><a class="reference internal" href="exceptions.html#c.PyErr_GetRaisedException" title="PyErr_GetRaisedException"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_GetRaisedException()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_GivenExceptionMatches" title="PyErr_GivenExceptionMatches"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_GivenExceptionMatches()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_NewException" title="PyErr_NewException"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_NewException()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_NewExceptionWithDoc" title="PyErr_NewExceptionWithDoc"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_NewExceptionWithDoc()</span></code></a></p></li>
@@ -400,6 +436,7 @@
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_SetInterruptEx" title="PyErr_SetInterruptEx"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_SetInterruptEx()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_SetNone" title="PyErr_SetNone"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_SetNone()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_SetObject" title="PyErr_SetObject"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_SetObject()</span></code></a></p></li>
+<li><p><a class="reference internal" href="exceptions.html#c.PyErr_SetRaisedException" title="PyErr_SetRaisedException"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_SetRaisedException()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_SetString" title="PyErr_SetString"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_SetString()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_SyntaxLocation" title="PyErr_SyntaxLocation"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_SyntaxLocation()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyErr_SyntaxLocationEx" title="PyErr_SyntaxLocationEx"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_SyntaxLocationEx()</span></code></a></p></li>
@@ -498,9 +535,11 @@
 <li><p><code class="xref c c-data docutils literal notranslate"><span class="pre">PyExc_WindowsError</span></code></p></li>
 <li><p><code class="xref c c-data docutils literal notranslate"><span class="pre">PyExc_ZeroDivisionError</span></code></p></li>
 <li><p><code class="xref c c-func docutils literal notranslate"><span class="pre">PyExceptionClass_Name()</span></code></p></li>
+<li><p><a class="reference internal" href="exceptions.html#c.PyException_GetArgs" title="PyException_GetArgs"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyException_GetArgs()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyException_GetCause" title="PyException_GetCause"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyException_GetCause()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyException_GetContext" title="PyException_GetContext"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyException_GetContext()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyException_GetTraceback" title="PyException_GetTraceback"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyException_GetTraceback()</span></code></a></p></li>
+<li><p><a class="reference internal" href="exceptions.html#c.PyException_SetArgs" title="PyException_SetArgs"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyException_SetArgs()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyException_SetCause" title="PyException_SetCause"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyException_SetCause()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyException_SetContext" title="PyException_SetContext"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyException_SetContext()</span></code></a></p></li>
 <li><p><a class="reference internal" href="exceptions.html#c.PyException_SetTraceback" title="PyException_SetTraceback"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyException_SetTraceback()</span></code></a></p></li>
@@ -618,6 +657,8 @@
 <li><p><a class="reference internal" href="memory.html#c.PyMem_Realloc" title="PyMem_Realloc"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMem_Realloc()</span></code></a></p></li>
 <li><p><a class="reference internal" href="structures.html#c.PyMemberDef" title="PyMemberDef"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMemberDef</span></code></a></p></li>
 <li><p><code class="xref c c-data docutils literal notranslate"><span class="pre">PyMemberDescr_Type</span></code></p></li>
+<li><p><a class="reference internal" href="structures.html#c.PyMember_GetOne" title="PyMember_GetOne"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMember_GetOne()</span></code></a></p></li>
+<li><p><a class="reference internal" href="structures.html#c.PyMember_SetOne" title="PyMember_SetOne"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMember_SetOne()</span></code></a></p></li>
 <li><p><a class="reference internal" href="memoryview.html#c.PyMemoryView_FromBuffer" title="PyMemoryView_FromBuffer"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMemoryView_FromBuffer()</span></code></a></p></li>
 <li><p><a class="reference internal" href="memoryview.html#c.PyMemoryView_FromMemory" title="PyMemoryView_FromMemory"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMemoryView_FromMemory()</span></code></a></p></li>
 <li><p><a class="reference internal" href="memoryview.html#c.PyMemoryView_FromObject" title="PyMemoryView_FromObject"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMemoryView_FromObject()</span></code></a></p></li>
@@ -746,6 +787,7 @@
 <li><p><a class="reference internal" href="buffer.html#c.PyObject_GetBuffer" title="PyObject_GetBuffer"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_GetBuffer()</span></code></a></p></li>
 <li><p><a class="reference internal" href="object.html#c.PyObject_GetItem" title="PyObject_GetItem"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_GetItem()</span></code></a></p></li>
 <li><p><a class="reference internal" href="object.html#c.PyObject_GetIter" title="PyObject_GetIter"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_GetIter()</span></code></a></p></li>
+<li><p><a class="reference internal" href="object.html#c.PyObject_GetTypeData" title="PyObject_GetTypeData"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_GetTypeData()</span></code></a></p></li>
 <li><p><a class="reference internal" href="object.html#c.PyObject_HasAttr" title="PyObject_HasAttr"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_HasAttr()</span></code></a></p></li>
 <li><p><a class="reference internal" href="object.html#c.PyObject_HasAttrString" title="PyObject_HasAttrString"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_HasAttrString()</span></code></a></p></li>
 <li><p><a class="reference internal" href="object.html#c.PyObject_Hash" title="PyObject_Hash"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_Hash()</span></code></a></p></li>
@@ -769,6 +811,8 @@
 <li><p><a class="reference internal" href="object.html#c.PyObject_Size" title="PyObject_Size"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_Size()</span></code></a></p></li>
 <li><p><a class="reference internal" href="object.html#c.PyObject_Str" title="PyObject_Str"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_Str()</span></code></a></p></li>
 <li><p><a class="reference internal" href="object.html#c.PyObject_Type" title="PyObject_Type"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_Type()</span></code></a></p></li>
+<li><p><a class="reference internal" href="call.html#c.PyObject_Vectorcall" title="PyObject_Vectorcall"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_Vectorcall()</span></code></a></p></li>
+<li><p><a class="reference internal" href="call.html#c.PyObject_VectorcallMethod" title="PyObject_VectorcallMethod"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_VectorcallMethod()</span></code></a></p></li>
 <li><p><a class="reference internal" href="descriptor.html#c.PyProperty_Type" title="PyProperty_Type"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyProperty_Type</span></code></a></p></li>
 <li><p><code class="xref c c-data docutils literal notranslate"><span class="pre">PyRangeIter_Type</span></code></p></li>
 <li><p><code class="xref c c-data docutils literal notranslate"><span class="pre">PyRange_Type</span></code></p></li>
@@ -886,6 +930,7 @@
 <li><p><a class="reference internal" href="tuple.html#c.PyTuple_Type" title="PyTuple_Type"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTuple_Type</span></code></a></p></li>
 <li><p><a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyTypeObject</span></code></a></p></li>
 <li><p><a class="reference internal" href="type.html#c.PyType_ClearCache" title="PyType_ClearCache"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_ClearCache()</span></code></a></p></li>
+<li><p><a class="reference internal" href="type.html#c.PyType_FromMetaclass" title="PyType_FromMetaclass"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_FromMetaclass()</span></code></a></p></li>
 <li><p><a class="reference internal" href="type.html#c.PyType_FromModuleAndSpec" title="PyType_FromModuleAndSpec"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_FromModuleAndSpec()</span></code></a></p></li>
 <li><p><a class="reference internal" href="type.html#c.PyType_FromSpec" title="PyType_FromSpec"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_FromSpec()</span></code></a></p></li>
 <li><p><a class="reference internal" href="type.html#c.PyType_FromSpecWithBases" title="PyType_FromSpecWithBases"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_FromSpecWithBases()</span></code></a></p></li>
@@ -897,6 +942,7 @@
 <li><p><a class="reference internal" href="type.html#c.PyType_GetName" title="PyType_GetName"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_GetName()</span></code></a></p></li>
 <li><p><a class="reference internal" href="type.html#c.PyType_GetQualName" title="PyType_GetQualName"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_GetQualName()</span></code></a></p></li>
 <li><p><a class="reference internal" href="type.html#c.PyType_GetSlot" title="PyType_GetSlot"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_GetSlot()</span></code></a></p></li>
+<li><p><a class="reference internal" href="object.html#c.PyType_GetTypeDataSize" title="PyType_GetTypeDataSize"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_GetTypeDataSize()</span></code></a></p></li>
 <li><p><a class="reference internal" href="type.html#c.PyType_IsSubtype" title="PyType_IsSubtype"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_IsSubtype()</span></code></a></p></li>
 <li><p><a class="reference internal" href="type.html#c.PyType_Modified" title="PyType_Modified"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_Modified()</span></code></a></p></li>
 <li><p><a class="reference internal" href="type.html#c.PyType_Ready" title="PyType_Ready"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_Ready()</span></code></a></p></li>
@@ -994,9 +1040,7 @@
 <li><p><a class="reference internal" href="unicode.html#c.PyUnicode_FromWideChar" title="PyUnicode_FromWideChar"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_FromWideChar()</span></code></a></p></li>
 <li><p><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_GetDefaultEncoding()</span></code></p></li>
 <li><p><a class="reference internal" href="unicode.html#c.PyUnicode_GetLength" title="PyUnicode_GetLength"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_GetLength()</span></code></a></p></li>
-<li><p><a class="reference internal" href="unicode.html#c.PyUnicode_GetSize" title="PyUnicode_GetSize"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_GetSize()</span></code></a></p></li>
 <li><p><a class="reference internal" href="unicode.html#c.PyUnicode_InternFromString" title="PyUnicode_InternFromString"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_InternFromString()</span></code></a></p></li>
-<li><p><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_InternImmortal()</span></code></p></li>
 <li><p><a class="reference internal" href="unicode.html#c.PyUnicode_InternInPlace" title="PyUnicode_InternInPlace"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_InternInPlace()</span></code></a></p></li>
 <li><p><a class="reference internal" href="unicode.html#c.PyUnicode_IsIdentifier" title="PyUnicode_IsIdentifier"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_IsIdentifier()</span></code></a></p></li>
 <li><p><a class="reference internal" href="unicode.html#c.PyUnicode_Join" title="PyUnicode_Join"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_Join()</span></code></a></p></li>
@@ -1017,6 +1061,8 @@
 <li><p><a class="reference internal" href="structures.html#c.PyVarObject" title="PyVarObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyVarObject</span></code></a></p></li>
 <li><p><code class="xref c c-member docutils literal notranslate"><span class="pre">PyVarObject.ob_base</span></code></p></li>
 <li><p><a class="reference internal" href="typeobj.html#c.PyVarObject.ob_size" title="PyVarObject.ob_size"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyVarObject.ob_size</span></code></a></p></li>
+<li><p><a class="reference internal" href="call.html#c.PyVectorcall_Call" title="PyVectorcall_Call"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyVectorcall_Call()</span></code></a></p></li>
+<li><p><a class="reference internal" href="call.html#c.PyVectorcall_NARGS" title="PyVectorcall_NARGS"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyVectorcall_NARGS()</span></code></a></p></li>
 <li><p><code class="xref c c-type docutils literal notranslate"><span class="pre">PyWeakReference</span></code></p></li>
 <li><p><a class="reference internal" href="weakref.html#c.PyWeakref_GetObject" title="PyWeakref_GetObject"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyWeakref_GetObject()</span></code></a></p></li>
 <li><p><a class="reference internal" href="weakref.html#c.PyWeakref_NewProxy" title="PyWeakref_NewProxy"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyWeakref_NewProxy()</span></code></a></p></li>
@@ -1094,6 +1140,7 @@
 <li><p><a class="reference internal" href="typeobj.html#c.destructor" title="destructor"><code class="xref c c-type docutils literal notranslate"><span class="pre">destructor</span></code></a></p></li>
 <li><p><a class="reference internal" href="typeobj.html#c.getattrfunc" title="getattrfunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">getattrfunc</span></code></a></p></li>
 <li><p><a class="reference internal" href="typeobj.html#c.getattrofunc" title="getattrofunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">getattrofunc</span></code></a></p></li>
+<li><p><a class="reference internal" href="typeobj.html#c.getbufferproc" title="getbufferproc"><code class="xref c c-type docutils literal notranslate"><span class="pre">getbufferproc</span></code></a></p></li>
 <li><p><a class="reference internal" href="typeobj.html#c.getiterfunc" title="getiterfunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">getiterfunc</span></code></a></p></li>
 <li><p><code class="xref c c-type docutils literal notranslate"><span class="pre">getter</span></code></p></li>
 <li><p><a class="reference internal" href="typeobj.html#c.hashfunc" title="hashfunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">hashfunc</span></code></a></p></li>
@@ -1104,6 +1151,7 @@
 <li><p><a class="reference internal" href="typeobj.html#c.newfunc" title="newfunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">newfunc</span></code></a></p></li>
 <li><p><a class="reference internal" href="typeobj.html#c.objobjargproc" title="objobjargproc"><code class="xref c c-type docutils literal notranslate"><span class="pre">objobjargproc</span></code></a></p></li>
 <li><p><a class="reference internal" href="typeobj.html#c.objobjproc" title="objobjproc"><code class="xref c c-type docutils literal notranslate"><span class="pre">objobjproc</span></code></a></p></li>
+<li><p><a class="reference internal" href="typeobj.html#c.releasebufferproc" title="releasebufferproc"><code class="xref c c-type docutils literal notranslate"><span class="pre">releasebufferproc</span></code></a></p></li>
 <li><p><a class="reference internal" href="typeobj.html#c.reprfunc" title="reprfunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">reprfunc</span></code></a></p></li>
 <li><p><a class="reference internal" href="typeobj.html#c.richcmpfunc" title="richcmpfunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">richcmpfunc</span></code></a></p></li>
 <li><p><a class="reference internal" href="typeobj.html#c.setattrfunc" title="setattrfunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">setattrfunc</span></code></a></p></li>
@@ -1117,6 +1165,7 @@
 <li><p><a class="reference internal" href="typeobj.html#c.ternaryfunc" title="ternaryfunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">ternaryfunc</span></code></a></p></li>
 <li><p><a class="reference internal" href="gcsupport.html#c.traverseproc" title="traverseproc"><code class="xref c c-type docutils literal notranslate"><span class="pre">traverseproc</span></code></a></p></li>
 <li><p><a class="reference internal" href="typeobj.html#c.unaryfunc" title="unaryfunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">unaryfunc</span></code></a></p></li>
+<li><p><a class="reference internal" href="call.html#c.vectorcallfunc" title="vectorcallfunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">vectorcallfunc</span></code></a></p></li>
 <li><p><a class="reference internal" href="gcsupport.html#c.visitproc" title="visitproc"><code class="xref c c-type docutils literal notranslate"><span class="pre">visitproc</span></code></a></p></li>
 </ul>
 </p>
@@ -1134,7 +1183,10 @@
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#">C API 穩定性</a><ul>
+<li><a class="reference internal" href="#unstable-c-api">不穩定的 C API</a></li>
 <li><a class="reference internal" href="#stable-application-binary-interface">穩定的應用程式二進位介面</a><ul>
+<li><a class="reference internal" href="#limited-c-api">受限 C API</a></li>
+<li><a class="reference internal" href="#stable-abi">穩定 ABI</a></li>
 <li><a class="reference internal" href="#limited-api-scope-and-performance">受限 API 範圍和性能</a></li>
 <li><a class="reference internal" href="#limited-api-caveats">受限 API 注意事項</a></li>
 </ul>
@@ -1161,7 +1213,7 @@
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.11/Doc/c-api/stable.rst"
+        <a href="https://github.com/python/cpython/blob/main/Doc/c-api/stable.rst"
             rel="nofollow">顯示原始碼
         </a>
       </li>
@@ -1201,7 +1253,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.4 Documentation</a> &#187;
+      <a href="../index.html">3.12.0b4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python/C API 參考手冊</a> &#187;</li>

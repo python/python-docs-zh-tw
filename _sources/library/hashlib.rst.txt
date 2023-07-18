@@ -93,6 +93,11 @@ accessible by name via :func:`new`.  See :data:`algorithms_available`.
 .. versionchanged:: 3.9
    Hashlib now uses SHA3 and SHAKE from OpenSSL if it provides it.
 
+.. versionchanged:: 3.12
+   For any of the MD5, SHA1, SHA2, or SHA3 algorithms that the linked
+   OpenSSL does not provide we fall back to a verified implementation from
+   the `HACL\* project`_.
+
 Usage
 -----
 
@@ -204,11 +209,6 @@ A hash object has the following methods:
    Repeated calls are equivalent to a single call with the
    concatenation of all the arguments: ``m.update(a); m.update(b)`` is
    equivalent to ``m.update(a+b)``.
-
-   .. versionchanged:: 3.1
-      The Python GIL is released to allow other threads to run while hash
-      updates on data larger than 2047 bytes is taking place when using hash
-      algorithms supplied by OpenSSL.
 
 
 .. method:: hash.digest()
@@ -335,23 +335,17 @@ include a `salt <https://en.wikipedia.org/wiki/Salt_%28cryptography%29>`_.
 
    >>> from hashlib import pbkdf2_hmac
    >>> our_app_iters = 500_000  # Application specific, read above.
-   >>> dk = pbkdf2_hmac('sha256', b'password', b'bad salt'*2, our_app_iters)
+   >>> dk = pbkdf2_hmac('sha256', b'password', b'bad salt' * 2, our_app_iters)
    >>> dk.hex()
    '15530bba69924174860db778f2c6f8104d3aaf9d26241840c8c4a641c8d000a9'
 
+   Function only available when Python is compiled with OpenSSL.
+
    .. versionadded:: 3.4
 
-   .. note::
-
-      A fast implementation of *pbkdf2_hmac* is available with OpenSSL.  The
-      Python implementation uses an inline version of :mod:`hmac`. It is about
-      three times slower and doesn't release the GIL.
-
-   .. deprecated:: 3.10
-
-      Slow Python implementation of *pbkdf2_hmac* is deprecated. In the
-      future the function will only be available when Python is compiled
-      with OpenSSL.
+   .. versionchanged:: 3.12
+      Function now only available when Python is built with OpenSSL. The slow
+      pure Python implementation has been removed.
 
 .. function:: scrypt(password, *, salt, n, r, p, maxmem=0, dklen=64)
 
@@ -539,6 +533,7 @@ update the hash:
     >>> h = blake2b()
     >>> for item in items:
     ...     h.update(item)
+    ...
     >>> h.hexdigest()
     '6ff843ba685842aa82031d3f53c48b66326df7639a63d128974c5c14f31a0f33343a8c65551134ed1ae0f2b0dd2bb495dc81039e3eeb0aa1bb0388bbeac29183'
 
@@ -816,6 +811,7 @@ Domain Dedication 1.0 Universal:
 .. _Attacks on cryptographic hash algorithms: https://en.wikipedia.org/wiki/Cryptographic_hash_function#Attacks_on_cryptographic_hash_algorithms
 .. _the FIPS 180-4 standard: https://csrc.nist.gov/publications/detail/fips/180/4/final
 .. _the FIPS 202 standard: https://csrc.nist.gov/publications/detail/fips/202/final
+.. _HACL\* project: https://github.com/hacl-star/hacl-star
 
 
 .. _hashlib-seealso:

@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>zipapp --- Manage executable Python zip archives &#8212; Python 3.11.4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>zipapp --- Manage executable Python zip archives &#8212; Python 3.12.0b4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?digest=845a48175c3935ba0d7ff16b8ed0072d62fd099f" />
@@ -19,7 +19,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.11.4 說明文件 中搜尋"
+          title="在 Python 3.12.0b4 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -96,7 +96,6 @@
 <li><a class="reference internal" href="#examples">範例</a></li>
 <li><a class="reference internal" href="#specifying-the-interpreter">Specifying the Interpreter</a></li>
 <li><a class="reference internal" href="#creating-standalone-applications-with-zipapp">Creating Standalone Applications with zipapp</a><ul>
-<li><a class="reference internal" href="#making-a-windows-executable">Making a Windows executable</a></li>
 <li><a class="reference internal" href="#caveats">Caveats</a></li>
 </ul>
 </li>
@@ -121,7 +120,7 @@
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.11/Doc/library/zipapp.rst"
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/zipapp.rst"
             rel="nofollow">顯示原始碼
         </a>
       </li>
@@ -158,7 +157,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.4 Documentation</a> &#187;
+      <a href="../index.html">3.12.0b4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -198,7 +197,7 @@
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.5 版新加入.</span></p>
 </div>
-<p><strong>原始碼：</strong><a class="reference external" href="https://github.com/python/cpython/tree/3.11/Lib/zipapp.py">Lib/zipapp.py</a></p>
+<p><strong>原始碼：</strong><a class="reference external" href="https://github.com/python/cpython/tree/3.12/Lib/zipapp.py">Lib/zipapp.py</a></p>
 <hr class="docutils" id="index-0" />
 <p>This module provides tools to manage the creation of zip files containing
 Python code, which can be  <a class="reference internal" href="../using/cmdline.html#using-on-interface-options"><span class="std std-ref">executed directly by the Python interpreter</span></a>.  The module provides both a
@@ -459,87 +458,9 @@ file to remove the <code class="docutils literal notranslate"><span class="pre">
 Windows, the <code class="docutils literal notranslate"><span class="pre">myapp.pyz[w]</span></code> file is executable by virtue of the fact that
 the Python interpreter registers the <code class="docutils literal notranslate"><span class="pre">.pyz</span></code> and <code class="docutils literal notranslate"><span class="pre">.pyzw</span></code> file extensions
 when installed.</p>
-<section id="making-a-windows-executable">
-<h3>Making a Windows executable<a class="headerlink" href="#making-a-windows-executable" title="本標頭的永久連結">¶</a></h3>
-<p>On Windows, registration of the <code class="docutils literal notranslate"><span class="pre">.pyz</span></code> extension is optional, and
-furthermore, there are certain places that don't recognise registered
-extensions &quot;transparently&quot; (the simplest example is that
-<code class="docutils literal notranslate"><span class="pre">subprocess.run(['myapp'])</span></code> won't find your application - you need to
-explicitly specify the extension).</p>
-<p>On Windows, therefore, it is often preferable to create an executable from the
-zipapp.  This is relatively easy, although it does require a C compiler.  The
-basic approach relies on the fact that zipfiles can have arbitrary data
-prepended, and Windows exe files can have arbitrary data appended.  So by
-creating a suitable launcher and tacking the <code class="docutils literal notranslate"><span class="pre">.pyz</span></code> file onto the end of it,
-you end up with a single-file executable that runs your application.</p>
-<p>A suitable launcher can be as simple as the following:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#define Py_LIMITED_API 1</span>
-<span class="c1">#include &quot;Python.h&quot;</span>
-
-<span class="c1">#define WIN32_LEAN_AND_MEAN</span>
-<span class="c1">#include &lt;windows.h&gt;</span>
-
-<span class="c1">#ifdef WINDOWS</span>
-<span class="nb">int</span> <span class="n">WINAPI</span> <span class="n">wWinMain</span><span class="p">(</span>
-    <span class="n">HINSTANCE</span> <span class="n">hInstance</span><span class="p">,</span>      <span class="o">/*</span> <span class="n">handle</span> <span class="n">to</span> <span class="n">current</span> <span class="n">instance</span> <span class="o">*/</span>
-    <span class="n">HINSTANCE</span> <span class="n">hPrevInstance</span><span class="p">,</span>  <span class="o">/*</span> <span class="n">handle</span> <span class="n">to</span> <span class="n">previous</span> <span class="n">instance</span> <span class="o">*/</span>
-    <span class="n">LPWSTR</span> <span class="n">lpCmdLine</span><span class="p">,</span>         <span class="o">/*</span> <span class="n">pointer</span> <span class="n">to</span> <span class="n">command</span> <span class="n">line</span> <span class="o">*/</span>
-    <span class="nb">int</span> <span class="n">nCmdShow</span>              <span class="o">/*</span> <span class="n">show</span> <span class="n">state</span> <span class="n">of</span> <span class="n">window</span> <span class="o">*/</span>
-<span class="p">)</span>
-<span class="c1">#else</span>
-<span class="nb">int</span> <span class="n">wmain</span><span class="p">()</span>
-<span class="c1">#endif</span>
-<span class="p">{</span>
-    <span class="n">wchar_t</span> <span class="o">**</span><span class="n">myargv</span> <span class="o">=</span> <span class="n">_alloca</span><span class="p">((</span><span class="n">__argc</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">sizeof</span><span class="p">(</span><span class="n">wchar_t</span><span class="o">*</span><span class="p">));</span>
-    <span class="n">myargv</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">__wargv</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-    <span class="n">memcpy</span><span class="p">(</span><span class="n">myargv</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">__wargv</span><span class="p">,</span> <span class="n">__argc</span> <span class="o">*</span> <span class="n">sizeof</span><span class="p">(</span><span class="n">wchar_t</span> <span class="o">*</span><span class="p">));</span>
-    <span class="k">return</span> <span class="n">Py_Main</span><span class="p">(</span><span class="n">__argc</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">myargv</span><span class="p">);</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-<p>If you define the <code class="docutils literal notranslate"><span class="pre">WINDOWS</span></code> preprocessor symbol, this will generate a
-GUI executable, and without it, a console executable.</p>
-<p>To compile the executable, you can either just use the standard MSVC
-command line tools, or you can take advantage of the fact that distutils
-knows how to compile Python source:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">distutils.ccompiler</span> <span class="kn">import</span> <span class="n">new_compiler</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">distutils.sysconfig</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">os</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="n">src</span><span class="p">):</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">src</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">cc</span> <span class="o">=</span> <span class="n">new_compiler</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">exe</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">stem</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">cc</span><span class="o">.</span><span class="n">add_include_dir</span><span class="p">(</span><span class="n">distutils</span><span class="o">.</span><span class="n">sysconfig</span><span class="o">.</span><span class="n">get_python_inc</span><span class="p">())</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">cc</span><span class="o">.</span><span class="n">add_library_dir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">base_exec_prefix</span><span class="p">,</span> <span class="s1">&#39;libs&#39;</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="c1"># First the CLI executable</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">objs</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">compile</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">src</span><span class="p">)])</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">cc</span><span class="o">.</span><span class="n">link_executable</span><span class="p">(</span><span class="n">objs</span><span class="p">,</span> <span class="n">exe</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="c1"># Now the GUI executable</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">cc</span><span class="o">.</span><span class="n">define_macro</span><span class="p">(</span><span class="s1">&#39;WINDOWS&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">objs</span> <span class="o">=</span> <span class="n">cc</span><span class="o">.</span><span class="n">compile</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">src</span><span class="p">)])</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="n">cc</span><span class="o">.</span><span class="n">link_executable</span><span class="p">(</span><span class="n">objs</span><span class="p">,</span> <span class="n">exe</span> <span class="o">+</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
-
-<span class="gp">&gt;&gt;&gt; </span><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">compile</span><span class="p">(</span><span class="s2">&quot;zastub.c&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The resulting launcher uses the &quot;Limited ABI&quot;, so it will run unchanged with
-any version of Python 3.x.  All it needs is for Python (<code class="docutils literal notranslate"><span class="pre">python3.dll</span></code>) to be
-on the user's <code class="docutils literal notranslate"><span class="pre">PATH</span></code>.</p>
-<p>For a fully standalone distribution, you can distribute the launcher with your
-application appended, bundled with the Python &quot;embedded&quot; distribution.  This
-will run on any PC with the appropriate architecture (32 bit or 64 bit).</p>
-</section>
 <section id="caveats">
 <h3>Caveats<a class="headerlink" href="#caveats" title="本標頭的永久連結">¶</a></h3>
-<p>There are some limitations to the process of bundling your application into
-a single file.  In most, if not all, cases they can be addressed without
-needing major changes to your application.</p>
-<ol class="arabic simple">
-<li><p>If your application depends on a package that includes a C extension, that
+<p>If your application depends on a package that includes a C extension, that
 package cannot be run from a zip file (this is an OS limitation, as executable
 code must be present in the filesystem for the OS loader to load it). In this
 case, you can exclude that dependency from the zipfile, and either require
@@ -547,19 +468,7 @@ your users to have it installed, or ship it alongside your zipfile and add code
 to your <code class="docutils literal notranslate"><span class="pre">__main__.py</span></code> to include the directory containing the unzipped
 module in <code class="docutils literal notranslate"><span class="pre">sys.path</span></code>. In this case, you will need to make sure to ship
 appropriate binaries for your target architecture(s) (and potentially pick the
-correct version to add to <code class="docutils literal notranslate"><span class="pre">sys.path</span></code> at runtime, based on the user's machine).</p></li>
-<li><p>If you are shipping a Windows executable as described above, you either need to
-ensure that your users have <code class="docutils literal notranslate"><span class="pre">python3.dll</span></code> on their PATH (which is not the
-default behaviour of the installer) or you should bundle your application with
-the embedded distribution.</p></li>
-<li><p>The suggested launcher above uses the Python embedding API.  This means that in
-your application, <code class="docutils literal notranslate"><span class="pre">sys.executable</span></code> will be your application, and <em>not</em> a
-conventional Python interpreter.  Your code and its dependencies need to be
-prepared for this possibility.  For example, if your application uses the
-<a class="reference internal" href="multiprocessing.html#module-multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">multiprocessing</span></code></a> module, it will need to call
-<a class="reference internal" href="multiprocessing.html#multiprocessing.set_executable" title="multiprocessing.set_executable"><code class="xref py py-func docutils literal notranslate"><span class="pre">multiprocessing.set_executable()</span></code></a> to let the module know where to find the
-standard Python interpreter.</p></li>
-</ol>
+correct version to add to <code class="docutils literal notranslate"><span class="pre">sys.path</span></code> at runtime, based on the user's machine).</p>
 </section>
 </section>
 <section id="the-python-zip-application-archive-format">
@@ -614,7 +523,6 @@ format created by any means are acceptable to Python.</p>
 <li><a class="reference internal" href="#examples">範例</a></li>
 <li><a class="reference internal" href="#specifying-the-interpreter">Specifying the Interpreter</a></li>
 <li><a class="reference internal" href="#creating-standalone-applications-with-zipapp">Creating Standalone Applications with zipapp</a><ul>
-<li><a class="reference internal" href="#making-a-windows-executable">Making a Windows executable</a></li>
 <li><a class="reference internal" href="#caveats">Caveats</a></li>
 </ul>
 </li>
@@ -639,7 +547,7 @@ format created by any means are acceptable to Python.</p>
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.11/Doc/library/zipapp.rst"
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/zipapp.rst"
             rel="nofollow">顯示原始碼
         </a>
       </li>
@@ -679,7 +587,7 @@ format created by any means are acceptable to Python.</p>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.4 Documentation</a> &#187;
+      <a href="../index.html">3.12.0b4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
