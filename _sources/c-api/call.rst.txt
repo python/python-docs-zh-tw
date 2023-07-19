@@ -57,15 +57,6 @@ This bears repeating:
    A class supporting vectorcall **must** also implement
    :c:member:`~PyTypeObject.tp_call` with the same semantics.
 
-.. versionchanged:: 3.12
-
-   The :const:`Py_TPFLAGS_HAVE_VECTORCALL` flag is now removed from a class
-   when the class's :py:meth:`~object.__call__` method is reassigned.
-   (This internally sets :c:member:`~PyTypeObject.tp_call` only, and thus
-   may make it behave differently than the vectorcall function.)
-   In earlier Python versions, vectorcall should only be used with
-   :const:`immutable <Py_TPFLAGS_IMMUTABLETYPE>` or static types.
-
 A class should not implement vectorcall if that would be slower
 than *tp_call*. For example, if the callee needs to convert
 the arguments to an args tuple and kwargs dict anyway, then there is no point
@@ -93,7 +84,7 @@ This is a pointer to a function with the following signature:
    and they must be unique.
    If there are no keyword arguments, then *kwnames* can instead be *NULL*.
 
-.. data:: PY_VECTORCALL_ARGUMENTS_OFFSET
+.. c:macro:: PY_VECTORCALL_ARGUMENTS_OFFSET
 
    If this flag is set in a vectorcall *nargsf* argument, the callee is allowed
    to temporarily change ``args[-1]``. In other words, *args* points to

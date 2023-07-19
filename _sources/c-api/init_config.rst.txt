@@ -828,34 +828,14 @@ PyConfig
 
       Default: ``0``.
 
-   .. c:member:: int int_max_str_digits
-
-      Configures the :ref:`integer string conversion length limitation
-      <int_max_str_digits>`.  An initial value of ``-1`` means the value will
-      be taken from the command line or environment or otherwise default to
-      4300 (:data:`sys.int_info.default_max_str_digits`).  A value of ``0``
-      disables the limitation.  Values greater than zero but less than 640
-      (:data:`sys.int_info.str_digits_check_threshold`) are unsupported and
-      will produce an error.
-
-      Configured by the :option:`-X int_max_str_digits <-X>` command line
-      flag or the :envvar:`PYTHONINTMAXSTRDIGITS` environment variable.
-
-      Default: ``-1`` in Python mode.  4300
-      (:data:`sys.int_info.default_max_str_digits`) in isolated mode.
-
-      .. versionadded:: 3.12
-
    .. c:member:: int isolated
 
       If greater than ``0``, enable isolated mode:
 
       * Set :c:member:`~PyConfig.safe_path` to ``1``:
         don't prepend a potentially unsafe path to :data:`sys.path` at Python
-        startup, such as the current directory, the script's directory or an
-        empty string.
-      * Set :c:member:`~PyConfig.use_environment` to ``0``: ignore ``PYTHON``
-        environment variables.
+        startup.
+      * Set :c:member:`~PyConfig.use_environment` to ``0``.
       * Set :c:member:`~PyConfig.user_site_directory` to ``0``: don't add the user
         site directory to :data:`sys.path`.
       * Python REPL doesn't import :mod:`readline` nor enable default readline
@@ -865,8 +845,7 @@ PyConfig
 
       Default: ``0`` in Python mode, ``1`` in isolated mode.
 
-      See also the :ref:`Isolated Configuration <init-isolated-conf>` and
-      :c:member:`PyPreConfig.isolated`.
+      See also :c:member:`PyPreConfig.isolated`.
 
    .. c:member:: int legacy_windows_stdio
 
@@ -1002,9 +981,6 @@ PyConfig
 
       Incremented by the :option:`-d` command line option. Set to the
       :envvar:`PYTHONDEBUG` environment variable value.
-
-      Need a :ref:`debug build of Python <debug-build>` (the ``Py_DEBUG`` macro
-      must be defined).
 
       Default: ``0``.
 
@@ -1173,20 +1149,6 @@ PyConfig
 
       Default: ``-1`` in Python mode, ``0`` in isolated mode.
 
-   .. c:member:: int perf_profiling
-
-      Enable compatibility mode with the perf profiler?
-
-      If non-zero, initialize the perf trampoline. See :ref:`perf_profiling`
-      for more information.
-
-      Set by :option:`-X perf <-X>` command line option and by the
-      :envvar:`PYTHONPERFSUPPORT` environment variable.
-
-      Default: ``-1``.
-
-      .. versionadded:: 3.12
-
    .. c:member:: int use_environment
 
       Use :ref:`environment variables <using-on-envvars>`?
@@ -1214,13 +1176,13 @@ PyConfig
       imported, showing the place (filename or built-in module) from which
       it is loaded.
 
-      If greater than or equal to ``2``, print a message for each file that is
-      checked for when searching for a module. Also provides information on
-      module cleanup at exit.
+      If greater or equal to ``2``, print a message for each file that is checked
+      for when searching for a module. Also provides information on module
+      cleanup at exit.
 
       Incremented by the :option:`-v` command line option.
 
-      Set by the :envvar:`PYTHONVERBOSE` environment variable value.
+      Set to the :envvar:`PYTHONVERBOSE` environment variable value.
 
       Default: ``0``.
 
@@ -1571,6 +1533,8 @@ Private provisional API:
 
 * :c:member:`PyConfig._init_main`: if set to ``0``,
   :c:func:`Py_InitializeFromConfig` stops at the "Core" initialization phase.
+* :c:member:`PyConfig._isolated_interpreter`: if non-zero,
+  disallow threads, subprocesses and fork.
 
 .. c:function:: PyStatus _Py_InitializeMain(void)
 
@@ -1582,7 +1546,7 @@ applied during the "Main" phase. It may allow to customize Python in Python to
 override or tune the :ref:`Path Configuration <init-path-config>`, maybe
 install a custom :data:`sys.meta_path` importer or an import hook, etc.
 
-It may become possible to calculate the :ref:`Path Configuration
+It may become possible to calculatin the :ref:`Path Configuration
 <init-path-config>` in Python, after the Core phase and before the Main phase,
 which is one of the :pep:`432` motivation.
 

@@ -57,8 +57,6 @@ This module defines the following constants and functions:
    When the function raises a :exc:`SystemExit` exception, it is silently
    ignored.
 
-   .. audit-event:: _thread.start_new_thread function,args,kwargs start_new_thread
-
    .. versionchanged:: 3.8
       :func:`sys.unraisablehook` is now used to handle unhandled exceptions.
 
@@ -120,7 +118,7 @@ This module defines the following constants and functions:
    Its value may be used to uniquely identify this particular thread system-wide
    (until the thread terminates, after which the value may be recycled by the OS).
 
-   .. availability:: Windows, FreeBSD, Linux, macOS, OpenBSD, NetBSD, AIX, DragonFlyBSD.
+   .. availability:: Windows, FreeBSD, Linux, macOS, OpenBSD, NetBSD, AIX.
 
    .. versionadded:: 3.8
 

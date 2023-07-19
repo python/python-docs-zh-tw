@@ -126,24 +126,11 @@ command line, allowing scripted installers to replicate an installation on many
 machines without user interaction.  These options may also be set without
 suppressing the UI in order to change some of the defaults.
 
-The following options (found by executing the installer with ``/?``) can be
-passed into the installer:
-
-+---------------------+--------------------------------------------------------+
-| Name                | Description                                            |
-+=====================+========================================================+
-| /passive            | to display progress without requiring user interaction |
-+---------------------+--------------------------------------------------------+
-| /quiet              | to install/uninstall without displaying any UI         |
-+---------------------+--------------------------------------------------------+
-| /simple             | to prevent user customization                          |
-+---------------------+--------------------------------------------------------+
-| /uninstall          | to remove Python (without confirmation)                |
-+---------------------+--------------------------------------------------------+
-| /layout [directory] | to pre-download all components                         |
-+---------------------+--------------------------------------------------------+
-| /log [filename]     | to specify log files location                          |
-+---------------------+--------------------------------------------------------+
+To completely hide the installer UI and install Python silently, pass the
+``/quiet`` option. To skip past the user interaction but still display
+progress and errors, pass the ``/passive`` option. The ``/uninstall``
+option may be passed to immediately begin removing Python - no confirmation
+prompt will be displayed.
 
 All other options are passed as ``name=value``, where the value is usually
 ``0`` to disable a feature, ``1`` to enable a feature, or a path. The full list
@@ -1246,10 +1233,11 @@ shipped with PyWin32.  It is an embeddable IDE with a built-in debugger.
 cx_Freeze
 ---------
 
-`cx_Freeze <https://cx-freeze.readthedocs.io/en/latest/>`_ is a ``distutils``
-extension which wraps Python scripts into executable Windows programs
-(:file:`{*}.exe` files).  When you have done this, you can distribute your
-application without requiring your users to install Python.
+`cx_Freeze <https://cx-freeze.readthedocs.io/en/latest/>`_ is a :mod:`distutils`
+extension (see :ref:`extending-distutils`) which wraps Python scripts into
+executable Windows programs (:file:`{*}.exe` files).  When you have done this,
+you can distribute your application without requiring your users to install
+Python.
 
 
 Compiling Python on Windows
