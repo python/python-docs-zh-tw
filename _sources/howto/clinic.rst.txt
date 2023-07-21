@@ -13,12 +13,20 @@ Argument Clinic How-To
 
   Argument Clinic is a preprocessor for CPython C files.
   Its purpose is to automate all the boilerplate involved
-  with writing argument parsing code for "builtins".
-  This document shows you how to convert your first C
-  function to work with Argument Clinic, and then introduces
-  some advanced topics on Argument Clinic usage.
+  with writing argument parsing code for "builtins",
+  module level functions, and class methods.
+  This document is divided in three major sections:
 
-  Currently Argument Clinic is considered internal-only
+  * :ref:`clinic-background` talks about the basic concepts and goals of
+    Argument Clinic.
+  * :ref:`clinic-tutorial` guides you through all the steps required to
+    adapt an existing C function to Argument Clinic.
+  * :ref:`clinic-howtos` details how to handle specific tasks.
+
+
+.. note::
+
+  Argument Clinic is considered internal-only
   for CPython.  Its use is not supported for files outside
   CPython, and no guarantees are made regarding backwards
   compatibility for future versions.  In other words: if you
@@ -28,8 +36,14 @@ Argument Clinic How-To
   of CPython *could* be totally incompatible and break all your code.
 
 
+.. _clinic-background:
+
+Background
+==========
+
+
 The goals of Argument Clinic
-============================
+----------------------------
 
 Argument Clinic's primary goal
 is to take over responsibility for all argument parsing code
@@ -80,14 +94,14 @@ things with all the information you give it.
 
 
 Basic concepts and usage
-========================
+------------------------
 
 Argument Clinic ships with CPython; you'll find it in ``Tools/clinic/clinic.py``.
 If you run that script, specifying a C file as an argument:
 
 .. code-block:: shell-session
 
-    $ python3 Tools/clinic/clinic.py foo.c
+    $ python Tools/clinic/clinic.py foo.c
 
 Argument Clinic will scan over the file looking for lines that
 look exactly like this:
@@ -142,8 +156,10 @@ For the sake of clarity, here's the terminology we'll use with Argument Clinic:
   a block.)
 
 
-Converting your first function
-==============================
+.. _clinic-tutorial:
+
+Tutorial
+========
 
 The best way to get a sense of how Argument Clinic works is to
 convert a function to work with it.  Here, then, are the bare
@@ -542,7 +558,15 @@ Let's dive in!
         };
 
 
-16. Compile, then run the relevant portions of the regression-test suite.
+16. Argument Clinic may generate new instances of ``_Py_ID``. For example::
+
+        &_Py_ID(new_unique_py_id)
+
+    If it does, you'll have to run ``Tools/scripts/generate_global_objects.py``
+    to regenerate the list of precompiled identifiers at this point.
+
+
+17. Compile, then run the relevant portions of the regression-test suite.
     This change should not introduce any new compile-time warnings or errors,
     and there should be no externally visible change to Python's behavior.
 
@@ -551,6 +575,8 @@ Let's dive in!
 
     Congratulations, you've ported your first function to work with Argument Clinic!
 
+
+.. _clinic-howtos:
 
 How-to guides
 =============
@@ -751,6 +777,9 @@ All Argument Clinic converters accept the following arguments:
     because :pep:`8` mandates that the Python library may not use
     annotations.
 
+  ``unused``
+    Wrap the argument with :c:macro:`Py_UNUSED` in the impl function signature.
+
 In addition, some converters accept additional arguments.  Here is a list
 of these arguments, along with their meanings:
 
@@ -834,15 +863,15 @@ on the right is the text you'd replace it with.
 ``'s#'``    ``str(zeroes=True)``
 ``'s*'``    ``Py_buffer(accept={buffer, str})``
 ``'U'``     ``unicode``
-``'u'``     ``Py_UNICODE``
-``'u#'``    ``Py_UNICODE(zeroes=True)``
+``'u'``     ``wchar_t``
+``'u#'``    ``wchar_t(zeroes=True)``
 ``'w*'``    ``Py_buffer(accept={rwbuffer})``
 ``'Y'``     ``PyByteArrayObject``
 ``'y'``     ``str(accept={bytes})``
 ``'y#'``    ``str(accept={robuffer}, zeroes=True)``
 ``'y*'``    ``Py_buffer``
-``'Z'``     ``Py_UNICODE(accept={str, NoneType})``
-``'Z#'``    ``Py_UNICODE(accept={str, NoneType}, zeroes=True)``
+``'Z'``     ``wchar_t(accept={str, NoneType})``
+``'Z#'``    ``wchar_t(accept={str, NoneType}, zeroes=True)``
 ``'z'``     ``str(accept={str, NoneType})``
 ``'z#'``    ``str(accept={str, NoneType}, zeroes=True)``
 ``'z*'``    ``Py_buffer(accept={buffer, str, NoneType})``
@@ -1086,11 +1115,6 @@ Currently Argument Clinic supports only a few return converters:
 
 None of these take parameters.
 For all of these, return ``-1`` to indicate error.
-
-(There's also an experimental ``NoneType`` converter, which lets you
-return ``Py_None`` on success or ``NULL`` on failure, without having
-to increment the reference count on ``Py_None``.  I'm not sure it adds
-enough clarity to be worth using.)
 
 To see all the return converters Argument Clinic supports, along with
 their parameters (if any),
