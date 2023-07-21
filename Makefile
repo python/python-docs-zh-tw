@@ -135,4 +135,4 @@ rm_cpython: ## Remove cloned cpython repo
 
 .PHONY: lint
 lint:  $(VENV)/bin/sphinx-lint  ## Run sphinx-lint
-	$(VENV)/bin/sphinx-lint .
+	$(VENV)/bin/sphinx-lint --enable default-role
