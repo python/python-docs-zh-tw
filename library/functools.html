@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>functools --- Higher-order functions and operations on callable objects &#8212; Python 3.11.4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>functools --- Higher-order functions and operations on callable objects &#8212; Python 3.12.0b4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?digest=845a48175c3935ba0d7ff16b8ed0072d62fd099f" />
@@ -19,7 +19,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.11.4 說明文件 中搜尋"
+          title="在 Python 3.12.0b4 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -124,7 +124,7 @@
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.11/Doc/library/functools.rst"
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/functools.rst"
             rel="nofollow">顯示原始碼
         </a>
       </li>
@@ -161,7 +161,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.4 Documentation</a> &#187;
+      <a href="../index.html">3.12.0b4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -198,7 +198,7 @@
             
   <section id="module-functools">
 <span id="functools-higher-order-functions-and-operations-on-callable-objects"></span><h1><a class="reference internal" href="#module-functools" title="functools: Higher-order functions and operations on callable objects."><code class="xref py py-mod docutils literal notranslate"><span class="pre">functools</span></code></a> --- Higher-order functions and operations on callable objects<a class="headerlink" href="#module-functools" title="本標頭的永久連結">¶</a></h1>
-<p><strong>原始碼：</strong><a class="reference external" href="https://github.com/python/cpython/tree/3.11/Lib/functools.py">Lib/functools.py</a></p>
+<p><strong>原始碼：</strong><a class="reference external" href="https://github.com/python/cpython/tree/3.12/Lib/functools.py">Lib/functools.py</a></p>
 <hr class="docutils" />
 <p>The <a class="reference internal" href="#module-functools" title="functools: Higher-order functions and operations on callable objects."><code class="xref py py-mod docutils literal notranslate"><span class="pre">functools</span></code></a> module is for higher-order functions: functions that act on
 or return other functions. In general, any callable object can be treated as a
@@ -265,6 +265,13 @@ attribute reads and writes take precedence over the <em>cached_property</em>
 method and it works like a normal attribute.</p>
 <p>The cached value can be cleared by deleting the attribute.  This
 allows the <em>cached_property</em> method to run again.</p>
+<p>The <em>cached_property</em> does not prevent a possible race condition in
+multi-threaded usage. The getter function could run more than once on the
+same instance, with the latest run setting the cached value. If the cached
+property is idempotent or otherwise not harmful to run more than once on an
+instance, this is fine. If synchronization is needed, implement the necessary
+locking inside the decorated getter function or around the cached property
+access.</p>
 <p>Note, this decorator interferes with the operation of <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0412/"><strong>PEP 412</strong></a>
 key-sharing dictionaries.  This means that instance dictionaries
 can take more space than usual.</p>
@@ -280,6 +287,13 @@ stacking <a class="reference internal" href="functions.html#property" title="pro
 <a class="reference internal" href="../faq/programming.html#faq-cache-method-calls"><span class="std std-ref">How do I cache method calls?</span></a> for more details on how this differs from <a class="reference internal" href="#functools.cached_property" title="functools.cached_property"><code class="xref py py-func docutils literal notranslate"><span class="pre">cached_property()</span></code></a>.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.8 版新加入.</span></p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>Prior to Python 3.12, <code class="docutils literal notranslate"><span class="pre">cached_property</span></code> included an undocumented lock to
+ensure that in multi-threaded usage the getter function was guaranteed to
+run only once per instance. However, the lock was per-property, not
+per-instance, which could result in unacceptably high lock contention. In
+Python 3.12+ this locking is removed.</p>
 </div>
 </dd></dl>
 
@@ -376,7 +390,7 @@ objects on each call, or impure functions such as time() or random().</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">get_pep</span><span class="p">(</span><span class="n">num</span><span class="p">):</span>
     <span class="s1">&#39;Retrieve text of a Python Enhancement Proposal&#39;</span>
-    <span class="n">resource</span> <span class="o">=</span> <span class="s1">&#39;https://peps.python.org/pep-</span><span class="si">%04d</span><span class="s1">/&#39;</span> <span class="o">%</span> <span class="n">num</span>
+    <span class="n">resource</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;https://peps.python.org/pep-</span><span class="si">{</span><span class="n">num</span><span class="si">:</span><span class="s1">04d</span><span class="si">}</span><span class="s1">&#39;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">with</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">resource</span><span class="p">)</span> <span class="k">as</span> <span class="n">s</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
@@ -943,7 +957,7 @@ during instance attribute look-up.</p>
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.11/Doc/library/functools.rst"
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/functools.rst"
             rel="nofollow">顯示原始碼
         </a>
       </li>
@@ -983,7 +997,7 @@ during instance attribute look-up.</p>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.4 Documentation</a> &#187;
+      <a href="../index.html">3.12.0b4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>

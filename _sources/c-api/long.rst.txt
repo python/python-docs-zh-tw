@@ -84,14 +84,15 @@ distinguished from a number.  Use :c:func:`PyErr_Occurred` to disambiguate.
 .. c:function:: PyObject* PyLong_FromString(const char *str, char **pend, int base)
 
    Return a new :c:type:`PyLongObject` based on the string value in *str*, which
-   is interpreted according to the radix in *base*.  If *pend* is non-``NULL``,
-   *\*pend* will point to the first character in *str* which follows the
-   representation of the number.  If *base* is ``0``, *str* is interpreted using
-   the :ref:`integers` definition; in this case, leading zeros in a
-   non-zero decimal number raises a :exc:`ValueError`. If *base* is not ``0``,
-   it must be between ``2`` and ``36``, inclusive.  Leading spaces and single
-   underscores after a base specifier and between digits are ignored.  If there
-   are no digits, :exc:`ValueError` will be raised.
+   is interpreted according to the radix in *base*, or ``NULL`` on failure.  If
+   *pend* is non-``NULL``, *\*pend* will point to the end of *str* on success or
+   to the first character that could not be processed on error.  If *base* is ``0``,
+   *str* is interpreted using the :ref:`integers` definition; in this case, leading
+   zeros in a non-zero decimal number raises a :exc:`ValueError`.  If *base* is not
+   ``0``, it must be between ``2`` and ``36``, inclusive.  Leading and trailing
+   whitespace and single underscores after a base specifier and between digits are
+   ignored.  If there are no digits or *str* is not NULL-terminated following the
+   digits and trailing whitespace, :exc:`ValueError` will be raised.
 
    .. seealso:: Python methods :meth:`int.to_bytes` and :meth:`int.from_bytes`
       to convert a :c:type:`PyLongObject` to/from an array of bytes in base
@@ -321,3 +322,27 @@ distinguished from a number.  Use :c:func:`PyErr_Occurred` to disambiguate.
    with :c:func:`PyLong_FromVoidPtr`.
 
    Returns ``NULL`` on error.  Use :c:func:`PyErr_Occurred` to disambiguate.
+
+
+.. c:function:: int PyUnstable_Long_IsCompact(const PyLongObject* op)
+
+   Return 1 if *op* is compact, 0 otherwise.
+
+   This function makes it possible for performance-critical code to implement
+   a “fast path” for small integers. For compact values use
+   :c:func:`PyUnstable_Long_CompactValue`; for others fall back to a
+   :c:func:`PyLong_As* <PyLong_AsSize_t>` function or
+   :c:func:`calling <PyObject_CallMethod>` :meth:`int.to_bytes`.
+
+   The speedup is expected to be negligible for most users.
+
+   Exactly what values are considered compact is an implementation detail
+   and is subject to change.
+
+.. c:function:: Py_ssize_t PyUnstable_Long_CompactValue(const PyLongObject* op)
+
+   If *op* is compact, as determined by :c:func:`PyUnstable_Long_IsCompact`,
+   return its value.
+
+   Otherwise, the return value is undefined.
+

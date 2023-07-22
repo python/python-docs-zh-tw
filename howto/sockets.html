@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Socket 程式設計指南 &#8212; Python 3.11.4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket 程式設計指南 &#8212; Python 3.12.0b4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?digest=845a48175c3935ba0d7ff16b8ed0072d62fd099f" />
@@ -19,7 +19,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.11.4 說明文件 中搜尋"
+          title="在 Python 3.12.0b4 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -94,7 +94,7 @@
 <li><a class="reference internal" href="#ipc">IPC</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#using-a-socket">使用一個 Socket</a><ul>
+<li><a class="reference internal" href="#using-a-socket">Using a Socket</a><ul>
 <li><a class="reference internal" href="#binary-data">Binary Data</a></li>
 </ul>
 </li>
@@ -123,7 +123,7 @@
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.11/Doc/howto/sockets.rst"
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/sockets.rst"
             rel="nofollow">顯示原始碼
         </a>
       </li>
@@ -160,7 +160,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.4 Documentation</a> &#187;
+      <a href="../index.html">3.12.0b4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 如何達成任務</a> &#187;</li>
@@ -236,7 +236,7 @@
 </div>
 <p>有幾件事需要注意：我們使用了 <code class="docutils literal notranslate"><span class="pre">socket.gethostname()</span></code>，這樣 socket 才能對外部網路可見。如果我們使用了 <code class="docutils literal notranslate"><span class="pre">s.bind(('localhost',</span> <span class="pre">80))</span></code> 或 <code class="docutils literal notranslate"><span class="pre">s.bind(('127.0.0.1',</span> <span class="pre">80))</span></code>，我們會得到一個「伺服器端」socket，但是只能在同一台機器內可見。<code class="docutils literal notranslate"><span class="pre">s.bind(('',</span> <span class="pre">80))</span></code> 指定 socket 可以透過機器的任何地址存取。</p>
 <p>第二個要注意的是：數字小的連接埠 (port) 通常保留給「廣為人知的」服務（HTTP、SNMP等）。如果你只是想執行程式，可以使用一個數字較大的連接埠（4 位數字）。</p>
-<p>最後，<code class="docutils literal notranslate"><span class="pre">listen</span></code> 引數告訴 socket 函式庫 (library)，我們希望在佇列 (queue) 中累積達 5 個（正常的最大值）連線請求後再拒絕外部連線。如果其餘的程式碼編寫正確，這應該足夠了。</p>
+<p>最後，<code class="docutils literal notranslate"><span class="pre">listen</span></code> 引數告訴 socket 函式庫 (library)，我們希望在佇列 (queue) 中累積達 5 個（正常的最大值）連接請求後再拒絕外部連接。如果其餘的程式碼編寫正確，這應該足夠了。</p>
 <p>現在我們有一個監聽 80 連接埠的「伺服器端」socket 了，我們可以進入網路伺服器的主迴圈了：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
     <span class="c1"># accept connections from outside</span>
@@ -247,25 +247,62 @@
     <span class="n">ct</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>事實上，有三種方法可以讓這個迴圈運作 - 分配一個執行緒 (thread) 來處理 <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code> 、建立一個新行程 (process) 來處理 <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code>，或者將這個程式重新改寫成使用非阻塞 socket，並使用 <code class="docutils literal notranslate"><span class="pre">select</span></code> 在我們的「伺服器端」socket 和任何有效的 <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code> 之間進行多工處理。稍後將會更詳細的介紹。現在最重要的是理解：這就是「伺服器端」socket 做的<em>所有</em> 事情。它不會發送任何資料、也不接收任何資料，它只會建立「伺服器端」socket。每個 <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code> 都是為了回應某些<em>其他</em> <code class="docutils literal notranslate"><span class="pre">connect()</span></code> 到我們綁定的主機上的「用戶端」socket。一但 <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code> 建立完成，就會繼續監聽更多的連線請求。兩個「用戶端」可以隨意的通訊 - 它們使用的是一些動態分配的連接埠，會在通訊結束的時候被回收並重新利用。</p>
+<p>事實上，有三種方法可以讓這個迴圈運作 - 分配一個執行緒 (thread) 來處理 <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code> 、建立一個新行程 (process) 來處理 <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code>，或者將這個程式重新改寫成使用非阻塞 socket，並使用 <code class="docutils literal notranslate"><span class="pre">select</span></code> 在我們的「伺服器端」socket 和任何有效的 <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code> 之間進行多工處理。稍後將會更詳細的介紹。現在最重要的是理解：這就是「伺服器端」socket 做的<em>所有</em> 事情。它不會發送任何資料、也不接收任何資料，它只會建立「伺服器端」socket。每個 <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code> 都是為了回應某些<em>其他</em> <code class="docutils literal notranslate"><span class="pre">connect()</span></code> 到我們綁定的主機上的「用戶端」socket。一但 <code class="docutils literal notranslate"><span class="pre">clientsocket</span></code> 建立完成，就會繼續監聽更多的連接請求。兩個「用戶端」可以隨意的通訊 - 它們使用的是一些動態分配的連接埠，會在通訊結束的時候被回收並重新利用。</p>
 <section id="ipc">
 <h3>IPC<a class="headerlink" href="#ipc" title="本標頭的永久連結">¶</a></h3>
-<p>如果你需要在一台機器上的兩個行程間進行快速的行程間通訊 (IPC)，你應該考慮使用管道 (pipes) 或共享記憶體 (shared memory)。如果你確定要使用 AF_INET sockets，請將「伺服器端」socket 綁定到 <code class="docutils literal notranslate"><span class="pre">'localhost'</span></code>。在大多數平台上，這樣將會繞過幾個網路程式碼層，並且速度會更快一些。</p>
+<p>If you need fast IPC between two processes on one machine, you should look into
+pipes or shared memory.  If you do decide to use AF_INET sockets, bind the
+&quot;server&quot; socket to <code class="docutils literal notranslate"><span class="pre">'localhost'</span></code>. On most platforms, this will take a
+shortcut around a couple of layers of network code and be quite a bit faster.</p>
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
-<p><a class="reference internal" href="../library/multiprocessing.html#module-multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">multiprocessing</span></code></a> 將跨平台的行程間通訊整合到更高層的 API 中。</p>
+<p>The <a class="reference internal" href="../library/multiprocessing.html#module-multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">multiprocessing</span></code></a> integrates cross-platform IPC into a higher-level
+API.</p>
 </div>
 </section>
 </section>
 <section id="using-a-socket">
-<h2>使用一個 Socket<a class="headerlink" href="#using-a-socket" title="本標頭的永久連結">¶</a></h2>
-<p>首先需要注意，網頁瀏覽器的「用戶端」socket 和網路伺服器的「用戶端」socket 是非常類似的。也就是說，這是一個「點對點 (peer to peer)」的通訊方式，或者也可以說<em>作為設計者，你必須決定通訊的規則</em>。通常情況下，<code class="docutils literal notranslate"><span class="pre">connect</span></code> 的 socket 會通過發送一個請求或者信號來開始一次通訊。但這屬於設計決策，而不是 socket 的規則。</p>
-<p>現在有兩組可供通訊使用的動詞。你可以使用 <code class="docutils literal notranslate"><span class="pre">send</span></code> 和 <code class="docutils literal notranslate"><span class="pre">recv</span></code>，或者可以將用戶端 socket 轉換成類似檔案的形式，並使用 <code class="docutils literal notranslate"><span class="pre">read</span></code> 和 <code class="docutils literal notranslate"><span class="pre">write</span></code>。後者是 Java 中呈現 socket 的方式。我不打算在這裡討論它，只是提醒你需要在 socket 上使用 <code class="docutils literal notranslate"><span class="pre">flush</span></code>。這些是緩衝的「檔案」，一個常見的錯誤是使用 <code class="docutils literal notranslate"><span class="pre">write</span></code> 寫入某些內容，然後直接 <code class="docutils literal notranslate"><span class="pre">read</span></code> 回覆。如果不使用 <code class="docutils literal notranslate"><span class="pre">flush</span></code>，你可能會一直等待這個回覆，因為請求可能還在你的輸出緩衝中。</p>
-<p>現在我們來到 sockets 的主要障礙 - <code class="docutils literal notranslate"><span class="pre">send</span></code> 和 <code class="docutils literal notranslate"><span class="pre">recv</span></code> 操作的是網路緩衝區。他們不一定會處理你提供給它們的所有位元組（或者是你期望它處理的位元組），因為它們主要的重點是處理網路緩衝區。一般來說，它們會在關聯的網路衝區已滿 (<code class="docutils literal notranslate"><span class="pre">send</span></code>) 或已清空 (<code class="docutils literal notranslate"><span class="pre">recv</span></code>) 時回傳，然後告訴你它們處理了多少位元組。<em>你</em> 的責任是一直呼叫它們直到你所有的訊息處理完成。</p>
-<p>當 <code class="docutils literal notranslate"><span class="pre">recv</span></code> 回傳「零位元組 (0 bytes)」時，就表示另一端已經關閉（或著正在關閉）連線。你再也不能從這個連線上取得任何資料了。你可能還是可以成功發送資料；我稍後會對此進行更詳細的解釋。</p>
-<p>像 HTTP 這樣的協議只使用一個 socket 進行一次傳輸，用戶端發送一個請求，然後讀取一個回覆。就這樣，然後這個 socket 就會被銷毀。這表示者用戶端可以通過接收「零位元組」來檢測回覆的結束。</p>
-<p>但是如果你打算在之後的傳輸中重新利用 socket 的話，你需要明白<em>socket 中是不存在</em> <abbr>EOT （傳輸結束）</abbr>。重申一次：如果一個 socket 的 <code class="docutils literal notranslate"><span class="pre">send</span></code> 或 <code class="docutils literal notranslate"><span class="pre">recv</span></code> 處理了「零位元組」後回傳，表示連線已經斷開。如果連線<em>沒有</em> 斷開，你可能會永遠處於等待 <code class="docutils literal notranslate"><span class="pre">recv</span></code> 的狀態，因為（就目前來說）socket <em>不會</em> 告訴你沒有更多資料可以讀取了。現在，如果你稍微思考一下，你就會意識到 socket 的一個基本事實：<em>訊息要麼是一個固定的長度（不好的做法），要麼是可以被分隔的（普通的做法），要麼是指定其長度（更好地做法），要麼通過關閉連線來結束。</em>完全由你來決定要使用哪種方式（但有些方法比其他方法來的更好）。</p>
-<p>假設你不想結束連線，最簡單的方式就是使用固定長度的訊息：</p>
+<h2>Using a Socket<a class="headerlink" href="#using-a-socket" title="本標頭的永久連結">¶</a></h2>
+<p>The first thing to note, is that the web browser's &quot;client&quot; socket and the web
+server's &quot;client&quot; socket are identical beasts. That is, this is a &quot;peer to peer&quot;
+conversation. Or to put it another way, <em>as the designer, you will have to
+decide what the rules of etiquette are for a conversation</em>. Normally, the
+<code class="docutils literal notranslate"><span class="pre">connect</span></code>ing socket starts the conversation, by sending in a request, or
+perhaps a signon. But that's a design decision - it's not a rule of sockets.</p>
+<p>Now there are two sets of verbs to use for communication. You can use <code class="docutils literal notranslate"><span class="pre">send</span></code>
+and <code class="docutils literal notranslate"><span class="pre">recv</span></code>, or you can transform your client socket into a file-like beast and
+use <code class="docutils literal notranslate"><span class="pre">read</span></code> and <code class="docutils literal notranslate"><span class="pre">write</span></code>. The latter is the way Java presents its sockets.
+I'm not going to talk about it here, except to warn you that you need to use
+<code class="docutils literal notranslate"><span class="pre">flush</span></code> on sockets. These are buffered &quot;files&quot;, and a common mistake is to
+<code class="docutils literal notranslate"><span class="pre">write</span></code> something, and then <code class="docutils literal notranslate"><span class="pre">read</span></code> for a reply. Without a <code class="docutils literal notranslate"><span class="pre">flush</span></code> in
+there, you may wait forever for the reply, because the request may still be in
+your output buffer.</p>
+<p>Now we come to the major stumbling block of sockets - <code class="docutils literal notranslate"><span class="pre">send</span></code> and <code class="docutils literal notranslate"><span class="pre">recv</span></code> operate
+on the network buffers. They do not necessarily handle all the bytes you hand
+them (or expect from them), because their major focus is handling the network
+buffers. In general, they return when the associated network buffers have been
+filled (<code class="docutils literal notranslate"><span class="pre">send</span></code>) or emptied (<code class="docutils literal notranslate"><span class="pre">recv</span></code>). They then tell you how many bytes they
+handled. It is <em>your</em> responsibility to call them again until your message has
+been completely dealt with.</p>
+<p>When a <code class="docutils literal notranslate"><span class="pre">recv</span></code> returns 0 bytes, it means the other side has closed (or is in
+the process of closing) the connection.  You will not receive any more data on
+this connection. Ever.  You may be able to send data successfully; I'll talk
+more about this later.</p>
+<p>A protocol like HTTP uses a socket for only one transfer. The client sends a
+request, then reads a reply.  That's it. The socket is discarded. This means that
+a client can detect the end of the reply by receiving 0 bytes.</p>
+<p>But if you plan to reuse your socket for further transfers, you need to realize
+that <em>there is no</em> <abbr title="End of Transfer">EOT</abbr> <em>on a socket.</em> I repeat: if a socket
+<code class="docutils literal notranslate"><span class="pre">send</span></code> or <code class="docutils literal notranslate"><span class="pre">recv</span></code> returns after handling 0 bytes, the connection has been
+broken.  If the connection has <em>not</em> been broken, you may wait on a <code class="docutils literal notranslate"><span class="pre">recv</span></code>
+forever, because the socket will <em>not</em> tell you that there's nothing more to
+read (for now).  Now if you think about that a bit, you'll come to realize a
+fundamental truth of sockets: <em>messages must either be fixed length</em> (yuck), <em>or
+be delimited</em> (shrug), <em>or indicate how long they are</em> (much better), <em>or end by
+shutting down the connection</em>. The choice is entirely yours, (but some ways are
+righter than others).</p>
+<p>Assuming you don't want to end the connection, the simplest solution is a fixed
+length message:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MySocket</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;demonstration class only</span>
 <span class="sd">      - coded for clarity, not efficiency</span>
@@ -301,11 +338,34 @@
         <span class="k">return</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>發送部分的程式碼幾乎可用於任何訊息的傳送方式 - 在 Python 中你發送一個字串，可以用 <code class="docutils literal notranslate"><span class="pre">len()</span></code> 來確認他的長度（即使字串包含了 <code class="docutils literal notranslate"><span class="pre">\0</span></code> 字元）。在這裡，主要是接收的程式碼變得更複雜一些。（在 C 語言中，情況沒有變得更糟，只是如果訊息中包含了 <code class="docutils literal notranslate"><span class="pre">\0</span></code> 字元，你就不能使用 <code class="docutils literal notranslate"><span class="pre">strlen</span></code> 函式。）</p>
-<p>最簡單的改進方法是將訊息的第一個字元表示訊息的類型，並根據訊息的類型來決定訊息的長度。現在你需要使用兩次 <code class="docutils literal notranslate"><span class="pre">recv</span></code> - 第一次用於接收（至少）第一個字元來得知長度，第二次用於在迴圈中接收剩下的訊息。如果你決定使用分隔符號的方式，你將會以某個任意的區塊大小進行接收（4096 或 8192 通常是網路緩衝區大小的良好選擇），並在收到的內容中掃描分隔符號。</p>
-<p>需要注意的一個複雜情況是，如果你的通訊協議允許連續發送多個訊息（沒有任何回應），並且你傳遞給 <code class="docutils literal notranslate"><span class="pre">recv</span></code> 函式一個任意的區塊大小，最後有可能讀取到下一條訊息的開頭。你需要將其放在一旁並保留下來，直到需要使用的時候。</p>
-<p>使用長度作為訊息的前綴（例如，使用 5 個數字字元表示）會變得更複雜，因為（信不信由你）你可能無法在一次 <code class="docutils literal notranslate"><span class="pre">recv</span></code> 中獲得所有 5 個字元。在一般使用下，可能不會有這個狀況，但在高負載的網路下，除非使用兩個 <code class="docutils literal notranslate"><span class="pre">recv</span></code> （第一個用於確定長度，第二個用於取得訊息的資料部分），否則你的程式碼很快就會出現錯誤。這令人非常頭痛。同樣的情況也會讓你發現 <code class="docutils literal notranslate"><span class="pre">send</span></code> 並不總能在一次傳輸中完全清除所有內容。儘管已經閱讀了這篇文章，但最終還是無法解決！</p>
-<p>為了節省篇幅、培養你的技能（並保持我的競爭優勢），這些改進方法留給讀者自行練習。現在讓我們開始進行清理工作。</p>
+<p>The sending code here is usable for almost any messaging scheme - in Python you
+send strings, and you can use <code class="docutils literal notranslate"><span class="pre">len()</span></code> to determine its length (even if it has
+embedded <code class="docutils literal notranslate"><span class="pre">\0</span></code> characters). It's mostly the receiving code that gets more
+complex. (And in C, it's not much worse, except you can't use <code class="docutils literal notranslate"><span class="pre">strlen</span></code> if the
+message has embedded <code class="docutils literal notranslate"><span class="pre">\0</span></code>s.)</p>
+<p>The easiest enhancement is to make the first character of the message an
+indicator of message type, and have the type determine the length. Now you have
+two <code class="docutils literal notranslate"><span class="pre">recv</span></code>s - the first to get (at least) that first character so you can
+look up the length, and the second in a loop to get the rest. If you decide to
+go the delimited route, you'll be receiving in some arbitrary chunk size, (4096
+or 8192 is frequently a good match for network buffer sizes), and scanning what
+you've received for a delimiter.</p>
+<p>One complication to be aware of: if your conversational protocol allows multiple
+messages to be sent back to back (without some kind of reply), and you pass
+<code class="docutils literal notranslate"><span class="pre">recv</span></code> an arbitrary chunk size, you may end up reading the start of a
+following message. You'll need to put that aside and hold onto it, until it's
+needed.</p>
+<p>Prefixing the message with its length (say, as 5 numeric characters) gets more
+complex, because (believe it or not), you may not get all 5 characters in one
+<code class="docutils literal notranslate"><span class="pre">recv</span></code>. In playing around, you'll get away with it; but in high network loads,
+your code will very quickly break unless you use two <code class="docutils literal notranslate"><span class="pre">recv</span></code> loops - the first
+to determine the length, the second to get the data part of the message. Nasty.
+This is also when you'll discover that <code class="docutils literal notranslate"><span class="pre">send</span></code> does not always manage to get
+rid of everything in one pass. And despite having read this, you will eventually
+get bit by it!</p>
+<p>In the interests of space, building your character, (and preserving my
+competitive position), these enhancements are left as an exercise for the
+reader. Lets move on to cleaning up.</p>
 <section id="binary-data">
 <h3>Binary Data<a class="headerlink" href="#binary-data" title="本標頭的永久連結">¶</a></h3>
 <p>It is perfectly possible to send binary data over a socket. The major problem is
@@ -445,7 +505,7 @@ very, very well) with my sockets.</p>
 <li><a class="reference internal" href="#ipc">IPC</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#using-a-socket">使用一個 Socket</a><ul>
+<li><a class="reference internal" href="#using-a-socket">Using a Socket</a><ul>
 <li><a class="reference internal" href="#binary-data">Binary Data</a></li>
 </ul>
 </li>
@@ -474,7 +534,7 @@ very, very well) with my sockets.</p>
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.11/Doc/howto/sockets.rst"
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/sockets.rst"
             rel="nofollow">顯示原始碼
         </a>
       </li>
@@ -514,7 +574,7 @@ very, very well) with my sockets.</p>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.4 Documentation</a> &#187;
+      <a href="../index.html">3.12.0b4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 如何達成任務</a> &#187;</li>

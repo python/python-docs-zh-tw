@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>types --- Dynamic type creation and names for built-in types &#8212; Python 3.11.4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>types --- Dynamic type creation and names for built-in types &#8212; Python 3.12.0b4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?digest=845a48175c3935ba0d7ff16b8ed0072d62fd099f" />
@@ -19,7 +19,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.11.4 說明文件 中搜尋"
+          title="在 Python 3.12.0b4 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -90,6 +90,7 @@
 <li><a class="reference internal" href="#types.new_class"><code class="docutils literal notranslate"><span class="pre">new_class()</span></code></a></li>
 <li><a class="reference internal" href="#types.prepare_class"><code class="docutils literal notranslate"><span class="pre">prepare_class()</span></code></a></li>
 <li><a class="reference internal" href="#types.resolve_bases"><code class="docutils literal notranslate"><span class="pre">resolve_bases()</span></code></a></li>
+<li><a class="reference internal" href="#types.get_original_bases"><code class="docutils literal notranslate"><span class="pre">get_original_bases()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#standard-interpreter-types">Standard Interpreter Types</a><ul>
@@ -166,7 +167,7 @@
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.11/Doc/library/types.rst"
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/types.rst"
             rel="nofollow">顯示原始碼
         </a>
       </li>
@@ -203,7 +204,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.4 Documentation</a> &#187;
+      <a href="../index.html">3.12.0b4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -240,7 +241,7 @@
             
   <section id="module-types">
 <span id="types-dynamic-type-creation-and-names-for-built-in-types"></span><h1><a class="reference internal" href="#module-types" title="types: Names for built-in types."><code class="xref py py-mod docutils literal notranslate"><span class="pre">types</span></code></a> --- Dynamic type creation and names for built-in types<a class="headerlink" href="#module-types" title="本標頭的永久連結">¶</a></h1>
-<p><strong>原始碼：</strong><a class="reference external" href="https://github.com/python/cpython/tree/3.11/Lib/types.py">Lib/types.py</a></p>
+<p><strong>原始碼：</strong><a class="reference external" href="https://github.com/python/cpython/tree/3.12/Lib/types.py">Lib/types.py</a></p>
 <hr class="docutils" />
 <p>This module defines utility functions to assist in dynamic creation of
 new types.</p>
@@ -314,9 +315,51 @@ the return tuple unchanged.</p>
 </div>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="types.get_original_bases">
+<span class="sig-prename descclassname"><span class="pre">types.</span></span><span class="sig-name descname"><span class="pre">get_original_bases</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cls</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">/</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#types.get_original_bases" title="本定義的永久連結">¶</a></dt>
+<dd><p>Return the tuple of objects originally given as the bases of <em>cls</em> before
+the <a class="reference internal" href="../reference/datamodel.html#object.__mro_entries__" title="object.__mro_entries__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__mro_entries__()</span></code></a> method has been called on any bases
+(following the mechanisms laid out in <span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0560/"><strong>PEP 560</strong></a>). This is useful for
+introspecting <a class="reference internal" href="typing.html#user-defined-generics"><span class="std std-ref">Generics</span></a>.</p>
+<p>For classes that have an <code class="docutils literal notranslate"><span class="pre">__orig_bases__</span></code> attribute, this
+function returns the value of <code class="docutils literal notranslate"><span class="pre">cls.__orig_bases__</span></code>.
+For classes without the <code class="docutils literal notranslate"><span class="pre">__orig_bases__</span></code> attribute, <code class="docutils literal notranslate"><span class="pre">cls.__bases__</span></code> is
+returned.</p>
+<p>Examples:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">TypedDict</span>
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Foo</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span> <span class="o">...</span>
+<span class="k">class</span> <span class="nc">Bar</span><span class="p">(</span><span class="n">Foo</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">float</span><span class="p">):</span> <span class="o">...</span>
+<span class="k">class</span> <span class="nc">Baz</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span> <span class="o">...</span>
+<span class="n">Eggs</span> <span class="o">=</span> <span class="n">NamedTuple</span><span class="p">(</span><span class="s2">&quot;Eggs&quot;</span><span class="p">,</span> <span class="p">[(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">)])</span>
+<span class="n">Spam</span> <span class="o">=</span> <span class="n">TypedDict</span><span class="p">(</span><span class="s2">&quot;Spam&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">})</span>
+
+<span class="k">assert</span> <span class="n">Bar</span><span class="o">.</span><span class="vm">__bases__</span> <span class="o">==</span> <span class="p">(</span><span class="n">Foo</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">get_original_bases</span><span class="p">(</span><span class="n">Bar</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">Foo</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">float</span><span class="p">)</span>
+
+<span class="k">assert</span> <span class="n">Baz</span><span class="o">.</span><span class="vm">__bases__</span> <span class="o">==</span> <span class="p">(</span><span class="nb">list</span><span class="p">,)</span>
+<span class="k">assert</span> <span class="n">get_original_bases</span><span class="p">(</span><span class="n">Baz</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],)</span>
+
+<span class="k">assert</span> <span class="n">Eggs</span><span class="o">.</span><span class="vm">__bases__</span> <span class="o">==</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,)</span>
+<span class="k">assert</span> <span class="n">get_original_bases</span><span class="p">(</span><span class="n">Eggs</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">NamedTuple</span><span class="p">,)</span>
+
+<span class="k">assert</span> <span class="n">Spam</span><span class="o">.</span><span class="vm">__bases__</span> <span class="o">==</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,)</span>
+<span class="k">assert</span> <span class="n">get_original_bases</span><span class="p">(</span><span class="n">Spam</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">TypedDict</span><span class="p">,)</span>
+
+<span class="k">assert</span> <span class="nb">int</span><span class="o">.</span><span class="vm">__bases__</span> <span class="o">==</span> <span class="p">(</span><span class="nb">object</span><span class="p">,)</span>
+<span class="k">assert</span> <span class="n">get_original_bases</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="nb">object</span><span class="p">,)</span>
+</pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.12 版新加入.</span></p>
+</div>
+</dd></dl>
+
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
-<p><span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0560/"><strong>PEP 560</strong></a> - Core support for typing module and generic types</p>
+<p><span class="target" id="index-3"></span><a class="pep reference external" href="https://peps.python.org/pep-0560/"><strong>PEP 560</strong></a> - Core support for typing module and generic types</p>
 </div>
 </section>
 <section id="standard-interpreter-types">
@@ -380,7 +423,7 @@ asynchronous generator functions.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="types.CodeType">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">types.</span></span><span class="sig-name descname"><span class="pre">CodeType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#types.CodeType" title="本定義的永久連結">¶</a></dt>
-<dd><p id="index-3">The type for code objects such as returned by <a class="reference internal" href="functions.html#compile" title="compile"><code class="xref py py-func docutils literal notranslate"><span class="pre">compile()</span></code></a>.</p>
+<dd><p id="index-4">The type for code objects such as returned by <a class="reference internal" href="functions.html#compile" title="compile"><code class="xref py py-func docutils literal notranslate"><span class="pre">compile()</span></code></a>.</p>
 <p class="audit-hook">引發一個附帶引數 <code class="docutils literal notranslate"><span class="pre">code</span></code>、<code class="docutils literal notranslate"><span class="pre">filename</span></code>、<code class="docutils literal notranslate"><span class="pre">name</span></code>、<code class="docutils literal notranslate"><span class="pre">argcount</span></code>、<code class="docutils literal notranslate"><span class="pre">posonlyargcount</span></code>、<code class="docutils literal notranslate"><span class="pre">kwonlyargcount</span></code>、<code class="docutils literal notranslate"><span class="pre">nlocals</span></code>、<code class="docutils literal notranslate"><span class="pre">stacksize</span></code>、<code class="docutils literal notranslate"><span class="pre">flags</span></code> 的<a class="reference internal" href="sys.html#auditing"><span class="std std-ref">稽核事件</span></a> <code class="docutils literal notranslate"><span class="pre">code.__new__</span></code>。</p>
 <p>Note that the audited arguments may not match the names or positions
 required by the initializer.  The audit event only occurs for direct
@@ -582,7 +625,7 @@ length 1) of types which parameterize <code class="docutils literal notranslate"
 <dl class="simple">
 <dt><a class="reference internal" href="stdtypes.html#types-genericalias"><span class="std std-ref">Generic Alias Types</span></a></dt><dd><p>In-depth documentation on instances of <code class="xref py py-class docutils literal notranslate"><span class="pre">types.GenericAlias</span></code></p>
 </dd>
-<dt><span class="target" id="index-4"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> - Type Hinting Generics In Standard Collections</dt><dd><p>Introducing the <code class="xref py py-class docutils literal notranslate"><span class="pre">types.GenericAlias</span></code> class</p>
+<dt><span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0585/"><strong>PEP 585</strong></a> - Type Hinting Generics In Standard Collections</dt><dd><p>Introducing the <code class="xref py py-class docutils literal notranslate"><span class="pre">types.GenericAlias</span></code> class</p>
 </dd>
 </dl>
 </div>
@@ -647,7 +690,7 @@ changes.</p>
 <p><span class="versionmodified added">在 3.3 版新加入.</span></p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.9 版的變更: </span>Updated to support the new union (<code class="docutils literal notranslate"><span class="pre">|</span></code>) operator from <span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0584/"><strong>PEP 584</strong></a>, which
+<p><span class="versionmodified changed">在 3.9 版的變更: </span>Updated to support the new union (<code class="docutils literal notranslate"><span class="pre">|</span></code>) operator from <span class="target" id="index-6"></span><a class="pep reference external" href="https://peps.python.org/pep-0584/"><strong>PEP 584</strong></a>, which
 simply delegates to the underlying mapping.</p>
 </div>
 <dl class="describe">
@@ -716,6 +759,15 @@ pairs).</p>
 <dd><p>Return a reverse iterator over the keys of the underlying mapping.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.9 版新加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="describe">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">hash(proxy)</span></span></dt>
+<dd><p>Return a hash of the underlying mapping.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.12 版新加入.</span></p>
 </div>
 </dd></dl>
 
@@ -814,6 +866,7 @@ of objects will be returned as is.</p>
 <li><a class="reference internal" href="#types.new_class"><code class="docutils literal notranslate"><span class="pre">new_class()</span></code></a></li>
 <li><a class="reference internal" href="#types.prepare_class"><code class="docutils literal notranslate"><span class="pre">prepare_class()</span></code></a></li>
 <li><a class="reference internal" href="#types.resolve_bases"><code class="docutils literal notranslate"><span class="pre">resolve_bases()</span></code></a></li>
+<li><a class="reference internal" href="#types.get_original_bases"><code class="docutils literal notranslate"><span class="pre">get_original_bases()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#standard-interpreter-types">Standard Interpreter Types</a><ul>
@@ -890,7 +943,7 @@ of objects will be returned as is.</p>
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.11/Doc/library/types.rst"
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/types.rst"
             rel="nofollow">顯示原始碼
         </a>
       </li>
@@ -930,7 +983,7 @@ of objects will be returned as is.</p>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.11.4 Documentation</a> &#187;
+      <a href="../index.html">3.12.0b4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
