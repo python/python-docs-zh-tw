@@ -413,11 +413,6 @@ the current directory::
        print("serving at port", PORT)
        httpd.serve_forever()
 
-
-:class:`SimpleHTTPRequestHandler` can also be subclassed to enhance behavior,
-such as using different index file names by overriding the class attribute
-:attr:`index_pages`.
-
 .. _http-server-cli:
 
 :mod:`http.server` can also be invoked directly using the :option:`-m`
@@ -524,5 +519,5 @@ default :class:`BaseHTTPRequestHandler` ``.log_message``
 implementation. This could allow remote clients connecting to your
 server to send nefarious control codes to your terminal.
 
-.. versionadded:: 3.12
+.. versionadded:: 3.11.1
    Control characters are scrubbed in stderr logs.

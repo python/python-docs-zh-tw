@@ -166,7 +166,7 @@ always available.
    Python interpreter.  (This information is not available in any other way ---
    ``modules.keys()`` only lists the imported modules.)
 
-   See also the :attr:`sys.stdlib_module_names` list.
+   See also the :data:`sys.stdlib_module_names` list.
 
 
 .. function:: call_tracing(func, args)
@@ -219,10 +219,6 @@ always available.
    This function should be used for internal and specialized purposes only.
 
    .. audit-event:: sys._current_exceptions "" sys._current_exceptions
-
-   .. versionchanged:: 3.12
-      Each value in the dictionary is now a single exception instance, rather
-      than a 3-tuple as returned from ``sys.exc_info()``.
 
 .. function:: breakpointhook()
 
@@ -670,13 +666,6 @@ always available.
    .. versionadded:: 3.4
 
 
-.. function:: getunicodeinternedsize()
-
-   Return the number of unicode objects that have been interned.
-
-   .. versionadded:: 3.12
-
-
 .. function:: getandroidapilevel()
 
    Return the build time API version of Android as an integer.
@@ -697,7 +686,7 @@ always available.
    Return the current value of the flags that are used for
    :c:func:`dlopen` calls.  Symbolic names for the flag values can be
    found in the :mod:`os` module (``RTLD_xxx`` constants, e.g.
-   :data:`os.RTLD_LAZY`).
+   :const:`os.RTLD_LAZY`).
 
    .. availability:: Unix.
 
@@ -812,22 +801,6 @@ always available.
    for *depth* is zero, returning the frame at the top of the call stack.
 
    .. audit-event:: sys._getframe frame sys._getframe
-
-   .. impl-detail::
-
-      This function should be used for internal and specialized purposes only.
-      It is not guaranteed to exist in all implementations of Python.
-
-
-.. function:: _getframemodulename([depth])
-
-   Return the name of a module from the call stack.  If optional integer *depth*
-   is given, return the module that many calls below the top of the stack.  If
-   that is deeper than the call stack, or if the module is unidentifiable,
-   ``None`` is returned.  The default for *depth* is zero, returning the
-   module at the top of the call stack.
-
-   .. audit-event:: sys._getframemodulename depth sys._getframemodulename
 
    .. impl-detail::
 
@@ -1113,25 +1086,22 @@ always available.
 
    .. versionadded:: 3.5
 
-.. data:: last_exc
-
-   This variable is not always defined; it is set to the exception instance
-   when an exception is not handled and the interpreter prints an error message
-   and a stack traceback.  Its intended use is to allow an interactive user to
-   import a debugger module and engage in post-mortem debugging without having
-   to re-execute the command that caused the error.  (Typical use is
-   ``import pdb; pdb.pm()`` to enter the post-mortem debugger; see :mod:`pdb`
-   module for more information.)
-
-   .. versionadded:: 3.12
 
 .. data:: last_type
           last_value
           last_traceback
 
-   These three variables are deprecated; use :data:`sys.last_exc` instead.
-   They hold the legacy representation of ``sys.last_exc``, as returned
-   from :func:`exc_info` above.
+   These three variables are not always defined; they are set when an exception is
+   not handled and the interpreter prints an error message and a stack traceback.
+   Their intended use is to allow an interactive user to import a debugger module
+   and engage in post-mortem debugging without having to re-execute the command
+   that caused the error.  (Typical use is ``import pdb; pdb.pm()`` to enter the
+   post-mortem debugger; see :mod:`pdb` module for
+   more information.)
+
+   The meaning of the variables is the same as that of the return values from
+   :func:`exc_info` above.
+
 
 .. data:: maxsize
 
@@ -1177,7 +1147,7 @@ always available.
 
         :term:`Module specs <module spec>` were introduced in Python 3.4, by
         :pep:`451`. Earlier versions of Python looked for a method called
-        :meth:`!find_module`.
+        :meth:`~importlib.abc.MetaPathFinder.find_module`.
         This is still called as a fallback if a :data:`meta_path` entry doesn't
         have a :meth:`~importlib.abc.MetaPathFinder.find_spec` method.
 
@@ -1253,6 +1223,10 @@ always available.
 
     Originally specified in :pep:`302`.
 
+    .. versionchanged:: 3.3
+       ``None`` is stored instead of :class:`imp.NullImporter` when no finder
+       is found.
+
 
 .. data:: platform
 
@@ -1287,20 +1261,20 @@ always available.
    ================ ===========================
 
    .. versionchanged:: 3.3
-      On Linux, :attr:`sys.platform` doesn't contain the major version anymore.
+      On Linux, :data:`sys.platform` doesn't contain the major version anymore.
       It is always ``'linux'``, instead of ``'linux2'`` or ``'linux3'``.  Since
       older Python versions include the version number, it is recommended to
       always use the ``startswith`` idiom presented above.
 
    .. versionchanged:: 3.8
-      On AIX, :attr:`sys.platform` doesn't contain the major version anymore.
+      On AIX, :data:`sys.platform` doesn't contain the major version anymore.
       It is always ``'aix'``, instead of ``'aix5'`` or ``'aix7'``.  Since
       older Python versions include the version number, it is recommended to
       always use the ``startswith`` idiom presented above.
 
    .. seealso::
 
-      :attr:`os.name` has a coarser granularity.  :func:`os.uname` gives
+      :data:`os.name` has a coarser granularity.  :func:`os.uname` gives
       system-dependent version information.
 
       The :mod:`platform` module provides detailed checks for the
@@ -1368,7 +1342,7 @@ always available.
    ``sys.setdlopenflags(0)``.  To share symbols across extension modules, call as
    ``sys.setdlopenflags(os.RTLD_GLOBAL)``.  Symbolic names for the flag values
    can be found in the :mod:`os` module (``RTLD_xxx`` constants, e.g.
-   :data:`os.RTLD_LAZY`).
+   :const:`os.RTLD_LAZY`).
 
    .. availability:: Unix.
 
@@ -1596,38 +1570,6 @@ always available.
       This function has been added on a provisional basis (see :pep:`411`
       for details.)  Use it only for debugging purposes.
 
-.. function:: activate_stack_trampoline(backend, /)
-
-   Activate the stack profiler trampoline *backend*.
-   The only supported backend is ``"perf"``.
-
-   .. availability:: Linux.
-
-   .. versionadded:: 3.12
-
-   .. seealso::
-
-      * :ref:`perf_profiling`
-      * https://perf.wiki.kernel.org
-
-.. function:: deactivate_stack_trampoline()
-
-   Deactivate the current stack profiler trampoline backend.
-
-   If no stack profiler is activated, this function has no effect.
-
-   .. availability:: Linux.
-
-   .. versionadded:: 3.12
-
-.. function:: is_stack_trampoline_active()
-
-   Return ``True`` if a stack profiler trampoline is active.
-
-   .. availability:: Linux.
-
-   .. versionadded:: 3.12
-
 .. function:: _enablelegacywindowsfsencoding()
 
    Changes the :term:`filesystem encoding and error handler` to 'mbcs' and
@@ -1743,7 +1685,7 @@ always available.
    ``email.mime`` sub-package and the ``email.message`` sub-module are not
    listed.
 
-   See also the :attr:`sys.builtin_module_names` list.
+   See also the :data:`sys.builtin_module_names` list.
 
    .. versionadded:: 3.10
 

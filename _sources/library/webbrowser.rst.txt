@@ -115,7 +115,13 @@ for the controller classes, all defined in this module.
 +------------------------+-----------------------------------------+-------+
 | ``'firefox'``          | :class:`Mozilla('mozilla')`             |       |
 +------------------------+-----------------------------------------+-------+
-| ``'epiphany'``         | :class:`Epiphany('epiphany')`           |       |
+| ``'netscape'``         | :class:`Mozilla('netscape')`            |       |
++------------------------+-----------------------------------------+-------+
+| ``'galeon'``           | :class:`Galeon('galeon')`               |       |
++------------------------+-----------------------------------------+-------+
+| ``'epiphany'``         | :class:`Galeon('epiphany')`             |       |
++------------------------+-----------------------------------------+-------+
+| ``'skipstone'``        | :class:`BackgroundBrowser('skipstone')` |       |
 +------------------------+-----------------------------------------+-------+
 | ``'kfmclient'``        | :class:`Konqueror()`                    | \(1)  |
 +------------------------+-----------------------------------------+-------+
@@ -123,7 +129,11 @@ for the controller classes, all defined in this module.
 +------------------------+-----------------------------------------+-------+
 | ``'kfm'``              | :class:`Konqueror()`                    | \(1)  |
 +------------------------+-----------------------------------------+-------+
+| ``'mosaic'``           | :class:`BackgroundBrowser('mosaic')`    |       |
++------------------------+-----------------------------------------+-------+
 | ``'opera'``            | :class:`Opera()`                        |       |
++------------------------+-----------------------------------------+-------+
+| ``'grail'``            | :class:`Grail()`                        |       |
 +------------------------+-----------------------------------------+-------+
 | ``'links'``            | :class:`GenericBrowser('links')`        |       |
 +------------------------+-----------------------------------------+-------+
@@ -165,11 +175,6 @@ Notes:
 
 .. versionadded:: 3.3
    Support for Chrome/Chromium has been added.
-
-.. versionchanged:: 3.12
-   Support for several obsolete browsers has been removed.
-   Removed browsers include Grail, Mosaic, Netscape, Galeon,
-   Skipstone, Iceape, and Firefox versions 35 and below.
 
 .. deprecated-removed:: 3.11 3.13
    :class:`MacOSX` is deprecated, use :class:`MacOSXOSAScript` instead.

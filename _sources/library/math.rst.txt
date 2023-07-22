@@ -108,7 +108,12 @@ Number-theoretic and representation functions
 .. function:: fsum(iterable)
 
    Return an accurate floating point sum of values in the iterable.  Avoids
-   loss of precision by tracking multiple intermediate partial sums.
+   loss of precision by tracking multiple intermediate partial sums::
+
+        >>> sum([.1, .1, .1, .1, .1, .1, .1, .1, .1, .1])
+        0.9999999999999999
+        >>> fsum([.1, .1, .1, .1, .1, .1, .1, .1, .1, .1])
+        1.0
 
    The algorithm's accuracy depends on IEEE-754 arithmetic guarantees and the
    typical case where the rounding mode is half-even.  On some non-Windows
@@ -224,11 +229,11 @@ Number-theoretic and representation functions
    of *x* and are floats.
 
 
-.. function:: nextafter(x, y, steps=1)
+.. function:: nextafter(x, y)
 
-   Return the floating-point value *steps* steps after *x* towards *y*.
+   Return the next floating-point value after *x* towards *y*.
 
-   If *x* is equal to *y*, return *y*, unless *steps* is zero.
+   If *x* is equal to *y*, return *y*.
 
    Examples:
 
@@ -238,9 +243,6 @@ Number-theoretic and representation functions
    * ``math.nextafter(x, math.copysign(math.inf, x))`` goes away from zero.
 
    See also :func:`math.ulp`.
-
-   .. versionchanged:: 3.12
-      Added the *steps* argument.
 
    .. versionadded:: 3.9
 
@@ -292,22 +294,6 @@ Number-theoretic and representation functions
    operation is always exactly representable: no rounding error is introduced.
 
    .. versionadded:: 3.7
-
-
-.. function:: sumprod(p, q)
-
-   Return the sum of products of values from two iterables *p* and *q*.
-
-   Raises :exc:`ValueError` if the inputs do not have the same length.
-
-   Roughly equivalent to::
-
-       sum(itertools.starmap(operator.mul, zip(p, q, strict=True)))
-
-   For float and mixed int/float inputs, the intermediate products
-   and sums are computed with extended precision.
-
-   .. versionadded:: 3.12
 
 
 .. function:: trunc(x)
@@ -385,7 +371,7 @@ Power and logarithmic functions
    logarithms.  For small floats *x*, the subtraction in ``exp(x) - 1``
    can result in a `significant loss of precision
    <https://en.wikipedia.org/wiki/Loss_of_significance>`_\; the :func:`expm1`
-   function provides a way to compute this quantity to full precision:
+   function provides a way to compute this quantity to full precision::
 
       >>> from math import exp, expm1
       >>> exp(1e-5) - 1  # gives result accurate to 11 places
@@ -548,7 +534,7 @@ Angular conversion
 Hyperbolic functions
 --------------------
 
-`Hyperbolic functions <https://en.wikipedia.org/wiki/Hyperbolic_functions>`_
+`Hyperbolic functions <https://en.wikipedia.org/wiki/Hyperbolic_function>`_
 are analogs of trigonometric functions that are based on hyperbolas
 instead of circles.
 
@@ -668,7 +654,7 @@ Constants
    not considered to equal to any other numeric value, including themselves. To check
    whether a number is a NaN, use the :func:`isnan` function to test
    for NaNs instead of ``is`` or ``==``.
-   Example:
+   Example::
 
       >>> import math
       >>> math.nan == math.nan
