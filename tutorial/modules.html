@@ -483,6 +483,22 @@
 </pre></div>
 </div>
 <p>意思是，<code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">sound.effects</span> <span class="pre">import</span> <span class="pre">*</span></code> 將會 import <code class="xref py py-mod docutils literal notranslate"><span class="pre">sound.effects</span></code> 套件中，這三個被提名的子模組。</p>
+<p>Be aware that submodules might become shadowed by locally defined names. For
+example, if you added a <code class="docutils literal notranslate"><span class="pre">reverse</span></code> function to the
+<code class="file docutils literal notranslate"><span class="pre">sound/effects/__init__.py</span></code> file, the <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">sound.effects</span> <span class="pre">import</span> <span class="pre">*</span></code>
+would only import the two submodules <code class="docutils literal notranslate"><span class="pre">echo</span></code> and <code class="docutils literal notranslate"><span class="pre">surround</span></code>, but <em>not</em> the
+<code class="docutils literal notranslate"><span class="pre">reverse</span></code> submodule, because it is shadowed by the locally defined
+<code class="docutils literal notranslate"><span class="pre">reverse</span></code> function:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;echo&quot;</span><span class="p">,</span>      <span class="c1"># refers to the &#39;echo.py&#39; file</span>
+    <span class="s2">&quot;surround&quot;</span><span class="p">,</span>  <span class="c1"># refers to the &#39;surround.py&#39; file</span>
+    <span class="s2">&quot;reverse&quot;</span><span class="p">,</span>   <span class="c1"># !!! refers to the &#39;reverse&#39; function now !!!</span>
+<span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">reverse</span><span class="p">(</span><span class="n">msg</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>  <span class="c1"># &lt;-- this name shadows the &#39;reverse.py&#39; submodule</span>
+    <span class="k">return</span> <span class="n">msg</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>    <span class="c1">#     in the case of a &#39;from sound.effects import *&#39;</span>
+</pre></div>
+</div>
 <p>如果 <code class="docutils literal notranslate"><span class="pre">__all__</span></code> 沒有被定義，<code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">sound.effects</span> <span class="pre">import</span> <span class="pre">*</span></code> 陳述式<em>並不會</em>把 <code class="xref py py-mod docutils literal notranslate"><span class="pre">sound.effects</span></code> 套件中所有子模組都 import 到當前的命名空間；它只保證 <code class="xref py py-mod docutils literal notranslate"><span class="pre">sound.effects</span></code> 套件有被 import（可能會運行 <code class="file docutils literal notranslate"><span class="pre">__init__.py</span></code> 中的初始化程式碼），然後 import 套件中被定義的全部名稱。這包含 <code class="file docutils literal notranslate"><span class="pre">__init__.py</span></code> 定義（以及被明確載入的子模組）的任何名稱。它也包括任何之前被 <a class="reference internal" href="../reference/simple_stmts.html#import"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code></a> 陳述式明確載入的套件子模組。請看以下程式碼：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">sound.effects.echo</span>
 <span class="kn">import</span> <span class="nn">sound.effects.surround</span>
@@ -647,7 +663,7 @@
 <br />
     <br />
 
-    最後更新於 7月 22, 2023。
+    最後更新於 7月 24, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
