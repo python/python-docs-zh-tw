@@ -88,7 +88,12 @@
 <li><a class="reference internal" href="#">Argument Clinic How-To</a><ul>
 <li><a class="reference internal" href="#background">Background</a><ul>
 <li><a class="reference internal" href="#the-goals-of-argument-clinic">The goals of Argument Clinic</a></li>
-<li><a class="reference internal" href="#basic-concepts-and-usage">Basic concepts and usage</a></li>
+<li><a class="reference internal" href="#basic-concepts">Basic concepts</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#reference">Reference</a><ul>
+<li><a class="reference internal" href="#terminology">Terminology</a></li>
+<li><a class="reference internal" href="#command-line-interface">Command-line interface</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#tutorial">Tutorial</a></li>
@@ -230,16 +235,19 @@
 <dd class="field-odd"><p>Larry Hastings</p>
 </dd>
 </dl>
+<p><strong>原始碼：</strong> <a class="reference external" href="https://github.com/python/cpython/tree/3.12/Tools/clinic/clinic.py">Tools/clinic/clinic.py</a>。</p>
 <aside class="topic">
 <p class="topic-title">摘要</p>
 <p>Argument Clinic is a preprocessor for CPython C files.
 Its purpose is to automate all the boilerplate involved
 with writing argument parsing code for &quot;builtins&quot;,
 module level functions, and class methods.
-This document is divided in three major sections:</p>
+This document is divided in four major sections:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#clinic-background"><span class="std std-ref">Background</span></a> talks about the basic concepts and goals of
 Argument Clinic.</p></li>
+<li><p><a class="reference internal" href="#clinic-reference"><span class="std std-ref">Reference</span></a> describes the command-line interface and Argument
+Clinic terminology.</p></li>
 <li><p><a class="reference internal" href="#clinic-tutorial"><span class="std std-ref">Tutorial</span></a> guides you through all the steps required to
 adapt an existing C function to Argument Clinic.</p></li>
 <li><p><a class="reference internal" href="#clinic-howtos"><span class="std std-ref">How-to guides</span></a> details how to handle specific tasks.</p></li>
@@ -302,57 +310,138 @@ now.  But as it evolves it will get more sophisticated,
 and it should be able to do many interesting and smart
 things with all the information you give it.</p>
 </section>
-<section id="basic-concepts-and-usage">
-<h3>Basic concepts and usage<a class="headerlink" href="#basic-concepts-and-usage" title="本標頭的永久連結">¶</a></h3>
-<p>Argument Clinic ships with CPython; you'll find it in
-<a class="reference external" href="https://github.com/python/cpython/tree/3.12/Tools/clinic/clinic.py">Tools/clinic/clinic.py</a>.
-If you run that script, specifying a C file as an argument:</p>
-<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>Tools/clinic/clinic.py<span class="w"> </span>foo.c
-</pre></div>
-</div>
-<p>Argument Clinic will scan over the file looking for lines that
-look exactly like this:</p>
+<section id="basic-concepts">
+<h3>Basic concepts<a class="headerlink" href="#basic-concepts" title="本標頭的永久連結">¶</a></h3>
+<p>When Argument Clinic is run on a file, either via the <a class="reference internal" href="#clinic-cli"><span class="std std-ref">Command-line interface</span></a>
+or via <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">clinic</span></code>, it will scan over the input files looking for
+<a class="reference internal" href="#term-start-line"><span class="xref std std-term">start lines</span></a>:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/*[clinic input]
 </pre></div>
 </div>
-<p>When it finds one, it reads everything up to a line that looks
-exactly like this:</p>
+<p>When it finds one, it reads everything up to the <a class="reference internal" href="#term-end-line"><span class="xref std std-term">end line</span></a>:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>[clinic start generated code]*/
 </pre></div>
 </div>
-<p>Everything in between these two lines is input for Argument Clinic.
-All of these lines, including the beginning and ending comment
-lines, are collectively called an Argument Clinic &quot;block&quot;.</p>
-<p>When Argument Clinic parses one of these blocks, it
-generates output.  This output is rewritten into the C file
-immediately after the block, followed by a comment containing a checksum.
-The Argument Clinic block now looks like this:</p>
+<p>Everything in between these two lines is Argument Clinic <a class="reference internal" href="#term-input"><span class="xref std std-term">input</span></a>.
+When Argument Clinic parses input, it generates <a class="reference internal" href="#term-output"><span class="xref std std-term">output</span></a>.
+The output is rewritten into the C file immediately after the input,
+followed by a <a class="reference internal" href="#term-checksum-line"><span class="xref std std-term">checksum line</span></a>.
+All of these lines, including the <a class="reference internal" href="#term-start-line"><span class="xref std std-term">start line</span></a> and <a class="reference internal" href="#term-checksum-line"><span class="xref std std-term">checksum line</span></a>,
+are collectively called an Argument Clinic <a class="reference internal" href="#term-block"><span class="xref std std-term">block</span></a>:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/*[clinic input]
 ... clinic input goes here ...
 [clinic start generated code]*/
 ... clinic output goes here ...
-/*[clinic end generated code: checksum=...]*/
+/*[clinic end generated code: ...]*/
 </pre></div>
 </div>
 <p>If you run Argument Clinic on the same file a second time, Argument Clinic
-will discard the old output and write out the new output with a fresh checksum
-line.  However, if the input hasn't changed, the output won't change either.</p>
-<p>You should never modify the output portion of an Argument Clinic block.  Instead,
-change the input until it produces the output you want.  (That's the purpose of the
-checksum—to detect if someone changed the output, as these edits would be lost
-the next time Argument Clinic writes out fresh output.)</p>
-<p>For the sake of clarity, here's the terminology we'll use with Argument Clinic:</p>
-<ul class="simple">
-<li><p>The first line of the comment (<code class="docutils literal notranslate"><span class="pre">/*[clinic</span> <span class="pre">input]</span></code>) is the <em>start line</em>.</p></li>
-<li><p>The last line of the initial comment (<code class="docutils literal notranslate"><span class="pre">[clinic</span> <span class="pre">start</span> <span class="pre">generated</span> <span class="pre">code]*/</span></code>) is the <em>end line</em>.</p></li>
-<li><p>The last line (<code class="docutils literal notranslate"><span class="pre">/*[clinic</span> <span class="pre">end</span> <span class="pre">generated</span> <span class="pre">code:</span> <span class="pre">checksum=...]*/</span></code>) is the <em>checksum line</em>.</p></li>
-<li><p>In between the start line and the end line is the <em>input</em>.</p></li>
-<li><p>In between the end line and the checksum line is the <em>output</em>.</p></li>
-<li><p>All the text collectively, from the start line to the checksum line inclusively,
-is the <em>block</em>.  (A block that hasn't been successfully processed by Argument
-Clinic yet doesn't have output or a checksum line, but it's still considered
-a block.)</p></li>
-</ul>
+will discard the old <a class="reference internal" href="#term-output"><span class="xref std std-term">output</span></a> and write out the new output with a fresh
+<a class="reference internal" href="#term-checksum-line"><span class="xref std std-term">checksum line</span></a>.
+If the <a class="reference internal" href="#term-input"><span class="xref std std-term">input</span></a> hasn't changed, the output won't change either.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>You should never modify the output of an Argument Clinic block,
+as any change will be lost in future Argument Clinic runs;
+Argument Clinic will detect an output checksum mismatch and regenerate the
+correct output.
+If you are not happy with the generated output,
+you should instead change the input until it produces the output you want.</p>
+</div>
+</section>
+</section>
+<section id="reference">
+<span id="clinic-reference"></span><h2>Reference<a class="headerlink" href="#reference" title="本標頭的永久連結">¶</a></h2>
+<section id="terminology">
+<span id="clinic-terminology"></span><h3>Terminology<a class="headerlink" href="#terminology" title="本標頭的永久連結">¶</a></h3>
+<dl class="simple glossary">
+<dt id="term-start-line">start line<a class="headerlink" href="#term-start-line" title="本術語的永久連結">¶</a></dt><dd><p>The line <code class="docutils literal notranslate"><span class="pre">/*[clinic</span> <span class="pre">input]</span></code>.
+This line marks the beginning of Argument Clinic input.
+Note that the <em>start line</em> opens a C block comment.</p>
+</dd>
+<dt id="term-end-line">end line<a class="headerlink" href="#term-end-line" title="本術語的永久連結">¶</a></dt><dd><p>The line <code class="docutils literal notranslate"><span class="pre">[clinic</span> <span class="pre">start</span> <span class="pre">generated</span> <span class="pre">code]*/</span></code>.
+The <em>end line</em> marks the _end_ of Argument Clinic <a class="reference internal" href="#term-input"><span class="xref std std-term">input</span></a>,
+but at the same time marks the _start_ of Argument Clinic <a class="reference internal" href="#term-output"><span class="xref std std-term">output</span></a>,
+thus the text <em>&quot;clinic start start generated code&quot;</em>
+Note that the <em>end line</em> closes the C block comment opened
+by the <em>start line</em>.</p>
+</dd>
+<dt id="term-checksum">checksum<a class="headerlink" href="#term-checksum" title="本術語的永久連結">¶</a></dt><dd><p>A hash to distinguish unique <a class="reference internal" href="#term-input"><span class="xref std std-term">inputs</span></a>
+and <a class="reference internal" href="#term-output"><span class="xref std std-term">outputs</span></a>.</p>
+</dd>
+<dt id="term-checksum-line">checksum line<a class="headerlink" href="#term-checksum-line" title="本術語的永久連結">¶</a></dt><dd><p>A line that looks like <code class="docutils literal notranslate"><span class="pre">/*[clinic</span> <span class="pre">end</span> <span class="pre">generated</span> <span class="pre">code:</span> <span class="pre">...]*/</span></code>.
+The three dots will be replaced by a <a class="reference internal" href="#term-checksum"><span class="xref std std-term">checksum</span></a> generated from the
+<a class="reference internal" href="#term-input"><span class="xref std std-term">input</span></a>, and a <a class="reference internal" href="#term-checksum"><span class="xref std std-term">checksum</span></a> generated from the <a class="reference internal" href="#term-output"><span class="xref std std-term">output</span></a>.
+The checksum line marks the end of Argument Clinic generated code,
+and is used by Argument Clinic to determine if it needs to regenerate
+output.</p>
+</dd>
+<dt id="term-input">input<a class="headerlink" href="#term-input" title="本術語的永久連結">¶</a></dt><dd><p>The text between the <a class="reference internal" href="#term-start-line"><span class="xref std std-term">start line</span></a> and the <a class="reference internal" href="#term-end-line"><span class="xref std std-term">end line</span></a>.
+Note that the start and end lines open and close a C block comment;
+the <em>input</em> is thus a part of that same C block comment.</p>
+</dd>
+<dt id="term-output">output<a class="headerlink" href="#term-output" title="本術語的永久連結">¶</a></dt><dd><p>The text between the <a class="reference internal" href="#term-end-line"><span class="xref std std-term">end line</span></a> and the <a class="reference internal" href="#term-checksum-line"><span class="xref std std-term">checksum line</span></a>.</p>
+</dd>
+<dt id="term-block">block<a class="headerlink" href="#term-block" title="本術語的永久連結">¶</a></dt><dd><p>All text from the <a class="reference internal" href="#term-start-line"><span class="xref std std-term">start line</span></a> to the <a class="reference internal" href="#term-checksum-line"><span class="xref std std-term">checksum line</span></a> inclusively.</p>
+</dd>
+</dl>
+</section>
+<section id="command-line-interface">
+<span id="clinic-cli"></span><h3>Command-line interface<a class="headerlink" href="#command-line-interface" title="本標頭的永久連結">¶</a></h3>
+<p>The Argument Clinic <abbr title="Command-Line Interface">CLI</abbr> is typically used to
+process a single source file, like this:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python3<span class="w"> </span>./Tools/clinic/clinic.py<span class="w"> </span>foo.c
+</pre></div>
+</div>
+<p>The CLI supports the following options:</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-h">
+<span id="cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-help"></span><span class="sig-name descname"><span class="pre">-h</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--help</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-h" title="本定義的永久連結">¶</a></dt>
+<dd><p>Print CLI usage.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-f">
+<span id="cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-force"></span><span class="sig-name descname"><span class="pre">-f</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--force</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-f" title="本定義的永久連結">¶</a></dt>
+<dd><p>Force output regeneration.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-o">
+<span id="cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-output"></span><span class="sig-name descname"><span class="pre">-o</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--output</span></span><span class="sig-prename descclassname"> <span class="pre">OUTPUT</span></span><a class="headerlink" href="#cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-o" title="本定義的永久連結">¶</a></dt>
+<dd><p>Redirect file output to OUTPUT</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-v">
+<span id="cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-verbose"></span><span class="sig-name descname"><span class="pre">-v</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--verbose</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-v" title="本定義的永久連結">¶</a></dt>
+<dd><p>Enable verbose mode.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-converters">
+<span class="sig-name descname"><span class="pre">--converters</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-converters" title="本定義的永久連結">¶</a></dt>
+<dd><p>Print a list of all supported converters and return converters.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-make">
+<span class="sig-name descname"><span class="pre">--make</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-make" title="本定義的永久連結">¶</a></dt>
+<dd><p>Walk <a class="reference internal" href="#cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-srcdir"><code class="xref std std-option docutils literal notranslate"><span class="pre">--srcdir</span></code></a> to run over all relevant files.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-srcdir">
+<span class="sig-name descname"><span class="pre">--srcdir</span></span><span class="sig-prename descclassname"> <span class="pre">SRCDIR</span></span><a class="headerlink" href="#cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-srcdir" title="本定義的永久連結">¶</a></dt>
+<dd><p>The directory tree to walk in <a class="reference internal" href="#cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-make"><code class="xref std std-option docutils literal notranslate"><span class="pre">--make</span></code></a> mode.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-arg-FILE">
+<span class="sig-name descname"><span class="pre">FILE</span></span><span class="sig-prename descclassname"> <span class="pre">...</span></span><a class="headerlink" href="#cmdoption-.-Tools-clinic-clinic.py-h-f-o-OUTPUT-v-converters-make-srcdir-SRCDIR-FILE-...-arg-FILE" title="本定義的永久連結">¶</a></dt>
+<dd><p>The list of files to process.</p>
+</dd></dl>
+
 </section>
 </section>
 <section id="tutorial">
@@ -362,21 +451,22 @@ convert a function to work with it.  Here, then, are the bare
 minimum steps you'd need to follow to convert a function to
 work with Argument Clinic.  Note that for code you plan to
 check in to CPython, you really should take the conversion farther,
-using some of the advanced concepts you'll see later on in
-the document (like &quot;return converters&quot; and &quot;self converters&quot;).
+using some of the <a class="reference internal" href="#clinic-howtos"><span class="std std-ref">advanced concepts</span></a>
+you'll see later on in the document,
+like <a class="reference internal" href="#clinic-howto-return-converters"><span class="std std-ref">How to use return converters</span></a>
+and <a class="reference internal" href="#clinic-howto-self-converter"><span class="std std-ref">How to use the &quot;self converter&quot;</span></a>.
 But we'll keep it simple for this walkthrough so you can learn.</p>
-<p>Let's dive in!</p>
-<ol class="arabic" start="0">
-<li><p>Make sure you're working with a freshly updated checkout
-of the CPython trunk.</p></li>
-<li><p>Find a Python builtin that calls either <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTuple" title="PyArg_ParseTuple"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code></a>
+<p>First, make sure you're working with a freshly updated checkout
+of the CPython trunk.</p>
+<p>Next, find a Python builtin that calls either <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTuple" title="PyArg_ParseTuple"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code></a>
 or <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTupleAndKeywords" title="PyArg_ParseTupleAndKeywords"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTupleAndKeywords()</span></code></a>, and hasn't been converted
 to work with Argument Clinic yet.
-For my example I'm using
-<a class="reference internal" href="../library/pickle.html#pickle.Pickler.dump" title="pickle.Pickler.dump"><code class="xref py py-meth docutils literal notranslate"><span class="pre">_pickle.Pickler.dump</span></code></a>.</p></li>
-<li><p>If the call to the <code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_Parse*()</span></code> function uses any of the
-following format units:</p>
-<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>O&amp;
+For this tutorial, we'll be using
+<a class="reference internal" href="../library/pickle.html#pickle.Pickler.dump" title="pickle.Pickler.dump"><code class="xref py py-meth docutils literal notranslate"><span class="pre">_pickle.Pickler.dump</span></code></a>.</p>
+<p>If the call to the <code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_Parse*()</span></code> function uses any of the
+following format units...:</p>
+<blockquote>
+<div><div class="highlight-none notranslate"><div class="highlight"><pre><span></span>O&amp;
 O!
 es
 es#
@@ -384,54 +474,53 @@ et
 et#
 </pre></div>
 </div>
-<p>or if it has multiple calls to <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTuple" title="PyArg_ParseTuple"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code></a>,
-you should choose a different function.  Argument Clinic <em>does</em>
-support all of these scenarios.  But these are advanced
-topics—let's do something simpler for your first function.</p>
+</div></blockquote>
+<p>... or if it has multiple calls to <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTuple" title="PyArg_ParseTuple"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code></a>,
+you should choose a different function.
+(See <a class="reference internal" href="#clinic-howto-advanced-converters"><span class="std std-ref">How to use advanced converters</span></a> for those scenarios.)</p>
 <p>Also, if the function has multiple calls to <code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code>
 or <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTupleAndKeywords" title="PyArg_ParseTupleAndKeywords"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTupleAndKeywords()</span></code></a> where it supports different
 types for the same argument, or if the function uses something besides
 <code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_Parse*()</span></code> functions to parse its arguments, it probably
 isn't suitable for conversion to Argument Clinic.  Argument Clinic
 doesn't support generic functions or polymorphic parameters.</p>
-</li>
-<li><p>Add the following boilerplate above the function, creating our block:</p>
+<p>Next, add the following boilerplate above the function,
+creating our input block:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/*[clinic input]</span>
 <span class="cm">[clinic start generated code]*/</span>
 </pre></div>
 </div>
-</li>
-<li><p>Cut the docstring and paste it in between the <code class="docutils literal notranslate"><span class="pre">[clinic]</span></code> lines,
+<p>Cut the docstring and paste it in between the <code class="docutils literal notranslate"><span class="pre">[clinic]</span></code> lines,
 removing all the junk that makes it a properly quoted C string.
 When you're done you should have just the text, based at the left
 margin, with no line wider than 80 characters.
-(Argument Clinic will preserve indents inside the docstring.)</p>
+Argument Clinic will preserve indents inside the docstring.</p>
 <p>If the old docstring had a first line that looked like a function
-signature, throw that line away.  (The docstring doesn't need it
-anymore—when you use <a class="reference internal" href="../library/functions.html#help" title="help"><code class="xref py py-func docutils literal notranslate"><span class="pre">help()</span></code></a> on your builtin in the future,
-the first line will be built automatically based on the function's
-signature.)</p>
-<p>Sample:</p>
+signature, throw that line away; The docstring doesn't need it anymore ---
+when you use <a class="reference internal" href="../library/functions.html#help" title="help"><code class="xref py py-func docutils literal notranslate"><span class="pre">help()</span></code></a> on your builtin in the future,
+the first line will be built automatically based on the function's signature.</p>
+<p>Example docstring summary line:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/*[clinic input]</span>
 <span class="cm">Write a pickled representation of obj to the open file.</span>
 <span class="cm">[clinic start generated code]*/</span>
 </pre></div>
 </div>
-</li>
-<li><p>If your docstring doesn't have a &quot;summary&quot; line, Argument Clinic will
-complain.  So let's make sure it has one.  The &quot;summary&quot; line should
+<p>If your docstring doesn't have a &quot;summary&quot; line, Argument Clinic will
+complain, so let's make sure it has one.  The &quot;summary&quot; line should
 be a paragraph consisting of a single 80-column line
-at the beginning of the docstring.</p>
-<p>(Our example docstring consists solely of a summary line, so the sample
-code doesn't have to change for this step.)</p>
-</li>
-<li><p>Above the docstring, enter the name of the function, followed
+at the beginning of the docstring.
+(See <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0257/"><strong>PEP 257</strong></a> regarding docstring conventions.)</p>
+<p>Our example docstring consists solely of a summary line, so the sample
+code doesn't have to change for this step.</p>
+<p>Now, above the docstring, enter the name of the function, followed
 by a blank line.  This should be the Python name of the function,
-and should be the full dotted path
-to the function—it should start with the name of the module,
+and should be the full dotted path to the function ---
+it should start with the name of the module,
 include any sub-modules, and if the function is a method on
 a class it should include the class name too.</p>
-<p>Sample:</p>
+<p>In our example, <code class="xref py py-mod docutils literal notranslate"><span class="pre">_pickle</span></code> is the module, <code class="xref py py-class docutils literal notranslate"><span class="pre">Pickler</span></code> is the class,
+and <code class="xref py py-meth docutils literal notranslate"><span class="pre">dump()</span></code> is the method, so the name becomes
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">_pickle.Pickler.dump()</span></code>:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/*[clinic input]</span>
 <span class="cm">_pickle.Pickler.dump</span>
 
@@ -439,21 +528,19 @@ a class it should include the class name too.</p>
 <span class="cm">[clinic start generated code]*/</span>
 </pre></div>
 </div>
-</li>
-<li><p>If this is the first time that module or class has been used with Argument
+<p>If this is the first time that module or class has been used with Argument
 Clinic in this C file,
 you must declare the module and/or class.  Proper Argument Clinic hygiene
 prefers declaring these in a separate block somewhere near the
 top of the C file, in the same way that include files and statics go at
-the top.  (In our sample code we'll just show the two blocks next to
-each other.)</p>
+the top.
+In our sample code we'll just show the two blocks next to each other.</p>
 <p>The name of the class and module should be the same as the one
 seen by Python.  Check the name defined in the <a class="reference internal" href="../c-api/module.html#c.PyModuleDef" title="PyModuleDef"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyModuleDef</span></code></a>
 or <a class="reference internal" href="../c-api/type.html#c.PyTypeObject" title="PyTypeObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyTypeObject</span></code></a> as appropriate.</p>
 <p>When you declare a class, you must also specify two aspects of its type
 in C: the type declaration you'd use for a pointer to an instance of
-this class, and a pointer to the <code class="xref c c-type docutils literal notranslate"><span class="pre">PyTypeObject</span></code> for this class.</p>
-<p>Sample:</p>
+this class, and a pointer to the <code class="xref c c-type docutils literal notranslate"><span class="pre">PyTypeObject</span></code> for this class:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/*[clinic input]</span>
 <span class="cm">module _pickle</span>
 <span class="cm">class _pickle.Pickler &quot;PicklerObject *&quot; &quot;&amp;Pickler_Type&quot;</span>
@@ -466,11 +553,10 @@ this class, and a pointer to the <code class="xref c c-type docutils literal not
 <span class="cm">[clinic start generated code]*/</span>
 </pre></div>
 </div>
-</li>
-<li><p>Declare each of the parameters to the function.  Each parameter
+<p>Declare each of the parameters to the function.  Each parameter
 should get its own line.  All the parameter lines should be
-indented from the function name and the docstring.</p>
-<p>The general form of these parameter lines is as follows:</p>
+indented from the function name and the docstring.
+The general form of these parameter lines is as follows:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>name_of_parameter: converter
 </pre></div>
 </div>
@@ -480,33 +566,32 @@ converter:</p>
 </pre></div>
 </div>
 <p>Argument Clinic's support for &quot;default values&quot; is quite sophisticated;
-please see <a class="reference internal" href="#default-values"><span class="std std-ref">the section below on default values</span></a>
-for more information.</p>
-<p>Add a blank line below the parameters.</p>
-<p>What's a &quot;converter&quot;?  It establishes both the type
-of the variable used in C, and the method to convert the Python
-value into a C value at runtime.
-For now you're going to use what's called a &quot;legacy converter&quot;—a
-convenience syntax intended to make porting old code into Argument
+see <a class="reference internal" href="#clinic-howto-default-values"><span class="std std-ref">How to assign default values to parameter</span></a> for more information.</p>
+<p>Next, add a blank line below the parameters.</p>
+<p>What's a &quot;converter&quot;?
+It establishes both the type of the variable used in C,
+and the method to convert the Python value into a C value at runtime.
+For now you're going to use what's called a &quot;legacy converter&quot; ---
+a convenience syntax intended to make porting old code into Argument
 Clinic easier.</p>
 <p>For each parameter, copy the &quot;format unit&quot; for that
 parameter from the <a class="reference internal" href="../c-api/arg.html#c.PyArg_Parse" title="PyArg_Parse"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_Parse()</span></code></a> format argument and
-specify <em>that</em> as its converter, as a quoted
-string.  (&quot;format unit&quot; is the formal name for the one-to-three
+specify <em>that</em> as its converter, as a quoted string.
+The &quot;format unit&quot; is the formal name for the one-to-three
 character substring of the <em>format</em> parameter that tells
 the argument parsing function what the type of the variable
-is and how to convert it.  For more on format units please
-see <a class="reference internal" href="../c-api/arg.html#arg-parsing"><span class="std std-ref">剖析引數與建置數值</span></a>.)</p>
-<p>For multicharacter format units like <code class="docutils literal notranslate"><span class="pre">z#</span></code>, use the
-entire two-or-three character string.</p>
+is and how to convert it.
+For more on format units please see <a class="reference internal" href="../c-api/arg.html#arg-parsing"><span class="std std-ref">剖析引數與建置數值</span></a>.</p>
+<p>For multicharacter format units like <code class="docutils literal notranslate"><span class="pre">z#</span></code>,
+use the entire two-or-three character string.</p>
 <p>Sample:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="cm">/*[clinic input]</span>
-<span class="cm"> module _pickle</span>
-<span class="cm"> class _pickle.Pickler &quot;PicklerObject *&quot; &quot;&amp;Pickler_Type&quot;</span>
-<span class="cm"> [clinic start generated code]*/</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/*[clinic input]</span>
+<span class="cm">module _pickle</span>
+<span class="cm">class _pickle.Pickler &quot;PicklerObject *&quot; &quot;&amp;Pickler_Type&quot;</span>
+<span class="cm">[clinic start generated code]*/</span>
 
-<span class="w"> </span><span class="cm">/*[clinic input]</span>
-<span class="cm"> _pickle.Pickler.dump</span>
+<span class="cm">/*[clinic input]</span>
+<span class="cm">_pickle.Pickler.dump</span>
 
 <span class="cm">    obj: &#39;O&#39;</span>
 
@@ -514,26 +599,21 @@ entire two-or-three character string.</p>
 <span class="cm">[clinic start generated code]*/</span>
 </pre></div>
 </div>
-</li>
-<li><p>If your function has <code class="docutils literal notranslate"><span class="pre">|</span></code> in the format string, meaning some
-parameters have default values, you can ignore it.  Argument
-Clinic infers which parameters are optional based on whether
-or not they have default values.</p>
-<p>If your function has <code class="docutils literal notranslate"><span class="pre">$</span></code> in the format string, meaning it
-takes keyword-only arguments, specify <code class="docutils literal notranslate"><span class="pre">*</span></code> on a line by
-itself before the first keyword-only argument, indented the
-same as the parameter lines.</p>
-<p>(<code class="xref py py-meth docutils literal notranslate"><span class="pre">_pickle.Pickler.dump()</span></code> has neither, so our sample is unchanged.)</p>
-</li>
-<li><p>If the existing C function calls <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTuple" title="PyArg_ParseTuple"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code></a>
+<p>If your function has <code class="docutils literal notranslate"><span class="pre">|</span></code> in the format string,
+meaning some parameters have default values, you can ignore it.
+Argument Clinic infers which parameters are optional
+based on whether or not they have default values.</p>
+<p>If your function has <code class="docutils literal notranslate"><span class="pre">$</span></code> in the format string,
+meaning it takes keyword-only arguments,
+specify <code class="docutils literal notranslate"><span class="pre">*</span></code> on a line by itself before the first keyword-only argument,
+indented the same as the parameter lines.</p>
+<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">_pickle.Pickler.dump()</span></code> has neither, so our sample is unchanged.</p>
+<p>Next, if the existing C function calls <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTuple" title="PyArg_ParseTuple"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code></a>
 (as opposed to <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTupleAndKeywords" title="PyArg_ParseTupleAndKeywords"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTupleAndKeywords()</span></code></a>), then all its
 arguments are positional-only.</p>
-<p>To mark all parameters as positional-only in Argument Clinic,
-add a <code class="docutils literal notranslate"><span class="pre">/</span></code> on a line by itself after the last parameter,
+<p>To mark parameters as positional-only in Argument Clinic,
+add a <code class="docutils literal notranslate"><span class="pre">/</span></code> on a line by itself after the last positional-only parameter,
 indented the same as the parameter lines.</p>
-<p>Currently this is all-or-nothing; either all parameters are
-positional-only, or none of them are.  (In the future Argument
-Clinic may relax this restriction.)</p>
 <p>Sample:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/*[clinic input]</span>
 <span class="cm">module _pickle</span>
@@ -550,16 +630,16 @@ Clinic may relax this restriction.)</p>
 <span class="cm">[clinic start generated code]*/</span>
 </pre></div>
 </div>
-</li>
-<li><p>It's helpful to write a per-parameter docstring for each parameter.
-But per-parameter docstrings are optional; you can skip this step
-if you prefer.</p>
-<p>Here's how to add a per-parameter docstring.  The first line
-of the per-parameter docstring must be indented further than the
-parameter definition.  The left margin of this first line establishes
-the left margin for the whole per-parameter docstring; all the text
-you write will be outdented by this amount.  You can write as much
-text as you like, across multiple lines if you wish.</p>
+<p>It can be helpful to write a per-parameter docstring for each parameter.
+Since per-parameter docstrings are optional,
+you can skip this step if you prefer.</p>
+<p>Nevertheless, here's how to add a per-parameter docstring.
+The first line of the per-parameter docstring
+must be indented further than the parameter definition.
+The left margin of this first line establishes
+the left margin for the whole per-parameter docstring;
+all the text you write will be outdented by this amount.
+You can write as much text as you like, across multiple lines if you wish.</p>
 <p>Sample:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/*[clinic input]</span>
 <span class="cm">module _pickle</span>
@@ -577,11 +657,10 @@ text as you like, across multiple lines if you wish.</p>
 <span class="cm">[clinic start generated code]*/</span>
 </pre></div>
 </div>
-</li>
-<li><p>Save and close the file, then run <code class="docutils literal notranslate"><span class="pre">Tools/clinic/clinic.py</span></code> on
-it.  With luck everything worked---your block now has output, and
-a <code class="file docutils literal notranslate"><span class="pre">.c.h</span></code> file has been generated! Reopen the file in your
-text editor to see:</p>
+<p>Save and close the file, then run <code class="docutils literal notranslate"><span class="pre">Tools/clinic/clinic.py</span></code> on it.
+With luck everything worked---your block now has output,
+and a <code class="file docutils literal notranslate"><span class="pre">.c.h</span></code> file has been generated!
+Reload the file in your text editor to see the generated code:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/*[clinic input]</span>
 <span class="cm">_pickle.Pickler.dump</span>
 
@@ -597,17 +676,17 @@ text editor to see:</p>
 <span class="cm">/*[clinic end generated code: output=87ecad1261e02ac7 input=552eb1c0f52260d9]*/</span>
 </pre></div>
 </div>
-<p>Obviously, if Argument Clinic didn't produce any output, it's because
-it found an error in your input.  Keep fixing your errors and retrying
-until Argument Clinic processes your file without complaint.</p>
+<p>Obviously, if Argument Clinic didn't produce any output,
+it's because it found an error in your input.
+Keep fixing your errors and retrying until Argument Clinic processes your file
+without complaint.</p>
 <p>For readability, most of the glue code has been generated to a <code class="file docutils literal notranslate"><span class="pre">.c.h</span></code>
 file.  You'll need to include that in your original <code class="file docutils literal notranslate"><span class="pre">.c</span></code> file,
 typically right after the clinic module block:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;clinic/_pickle.c.h&quot;</span>
 </pre></div>
 </div>
-</li>
-<li><p>Double-check that the argument-parsing code Argument Clinic generated
+<p>Double-check that the argument-parsing code Argument Clinic generated
 looks basically the same as the existing code.</p>
 <p>First, ensure both places use the same argument-parsing function.
 The existing code must call either
@@ -616,19 +695,19 @@ ensure that the code generated by Argument Clinic calls the
 <em>exact</em> same function.</p>
 <p>Second, the format string passed in to <code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code> or
 <code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTupleAndKeywords()</span></code> should be <em>exactly</em> the same
-as the hand-written one in the existing function, up to the colon
-or semi-colon.</p>
-<p>(Argument Clinic always generates its format strings
-with a <code class="docutils literal notranslate"><span class="pre">:</span></code> followed by the name of the function.  If the
-existing code's format string ends with <code class="docutils literal notranslate"><span class="pre">;</span></code>, to provide
-usage help, this change is harmless—don't worry about it.)</p>
-<p>Third, for parameters whose format units require two arguments
-(like a length variable, or an encoding string, or a pointer
-to a conversion function), ensure that the second argument is
+as the hand-written one in the existing function,
+up to the colon or semi-colon.</p>
+<p>Argument Clinic always generates its format strings
+with a <code class="docutils literal notranslate"><span class="pre">:</span></code> followed by the name of the function.
+If the existing code's format string ends with <code class="docutils literal notranslate"><span class="pre">;</span></code>,
+to provide usage help, this change is harmless --- don't worry about it.</p>
+<p>Third, for parameters whose format units require two arguments,
+like a length variable, an encoding string, or a pointer
+to a conversion function, ensure that the second argument is
 <em>exactly</em> the same between the two invocations.</p>
-<p>Fourth, inside the output portion of the block you'll find a preprocessor
-macro defining the appropriate static <a class="reference internal" href="../c-api/structures.html#c.PyMethodDef" title="PyMethodDef"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMethodDef</span></code></a> structure for
-this builtin:</p>
+<p>Fourth, inside the output portion of the block,
+you'll find a preprocessor macro defining the appropriate static
+<a class="reference internal" href="../c-api/structures.html#c.PyMethodDef" title="PyMethodDef"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMethodDef</span></code></a> structure for this builtin:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#define __PICKLE_PICKLER_DUMP_METHODDEF    \</span>
 <span class="cp">{&quot;dump&quot;, (PyCFunction)__pickle_Pickler_dump, METH_O, __pickle_Pickler_dump__doc__},</span>
 </pre></div>
@@ -638,25 +717,24 @@ this builtin:</p>
 <p>If any of these items differ in <em>any way</em>,
 adjust your Argument Clinic function specification and rerun
 <code class="docutils literal notranslate"><span class="pre">Tools/clinic/clinic.py</span></code> until they <em>are</em> the same.</p>
-</li>
-<li><p>Notice that the last line of its output is the declaration
+<p>Notice that the last line of its output is the declaration
 of your &quot;impl&quot; function.  This is where the builtin's implementation goes.
 Delete the existing prototype of the function you're modifying, but leave
 the opening curly brace.  Now delete its argument parsing code and the
 declarations of all the variables it dumps the arguments into.
 Notice how the Python arguments are now arguments to this impl function;
 if the implementation used different names for these variables, fix it.</p>
-<p>Let's reiterate, just because it's kind of weird.  Your code should now
-look like this:</p>
+<p>Let's reiterate, just because it's kind of weird.
+Your code should now look like this:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">return_type</span>
 <span class="nf">your_function_impl</span><span class="p">(...)</span>
-<span class="cm">/*[clinic end generated code: checksum=...]*/</span>
+<span class="cm">/*[clinic end generated code: input=..., output=...]*/</span>
 <span class="p">{</span>
 <span class="p">...</span>
 </pre></div>
 </div>
 <p>Argument Clinic generated the checksum line and the function prototype just
-above it.  You should write the opening (and closing) curly braces for the
+above it.  You should write the opening and closing curly braces for the
 function, and the implementation inside.</p>
 <p>Sample:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/*[clinic input]</span>
@@ -693,20 +771,20 @@ function, and the implementation inside.</p>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">_Pickler_ClearBuffer</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">_Pickler_ClearBuffer</span><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 
 <span class="w">    </span><span class="p">...</span>
 </pre></div>
 </div>
-</li>
-<li><p>Remember the macro with the <a class="reference internal" href="../c-api/structures.html#c.PyMethodDef" title="PyMethodDef"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMethodDef</span></code></a> structure for this
-function?  Find the existing <code class="xref c c-type docutils literal notranslate"><span class="pre">PyMethodDef</span></code> structure for this
-function and replace it with a reference to the macro.  (If the builtin
+<p>Remember the macro with the <a class="reference internal" href="../c-api/structures.html#c.PyMethodDef" title="PyMethodDef"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMethodDef</span></code></a> structure for this function?
+Find the existing <code class="xref c c-type docutils literal notranslate"><span class="pre">PyMethodDef</span></code> structure for this
+function and replace it with a reference to the macro.  If the builtin
 is at module scope, this will probably be very near the end of the file;
 if the builtin is a class method, this will probably be below but relatively
-near to the implementation.)</p>
-<p>Note that the body of the macro contains a trailing comma.  So when you
+near to the implementation.</p>
+<p>Note that the body of the macro contains a trailing comma; when you
 replace the existing static <code class="xref c c-type docutils literal notranslate"><span class="pre">PyMethodDef</span></code> structure with the macro,
 <em>don't</em> add a comma to the end.</p>
 <p>Sample:</p>
@@ -717,22 +795,18 @@ replace the existing static <code class="xref c c-type docutils literal notransl
 <span class="p">};</span>
 </pre></div>
 </div>
-</li>
-<li><p>Argument Clinic may generate new instances of <code class="docutils literal notranslate"><span class="pre">_Py_ID</span></code>. For example:</p>
+<p>Argument Clinic may generate new instances of <code class="docutils literal notranslate"><span class="pre">_Py_ID</span></code>. For example:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="o">&amp;</span><span class="n">_Py_ID</span><span class="p">(</span><span class="n">new_unique_py_id</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>If it does, you'll have to run <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">regen-global-objects</span></code>
 to regenerate the list of precompiled identifiers at this point.</p>
-</li>
-<li><p>Compile, then run the relevant portions of the regression-test suite.
+<p>Finally, compile, then run the relevant portions of the regression-test suite.
 This change should not introduce any new compile-time warnings or errors,
-and there should be no externally visible change to Python's behavior.</p>
-<p>Well, except for one difference: <a class="reference internal" href="../library/inspect.html#inspect.signature" title="inspect.signature"><code class="xref py py-func docutils literal notranslate"><span class="pre">inspect.signature()</span></code></a> run on your function
+and there should be no externally visible change to Python's behavior,
+except for one difference: <a class="reference internal" href="../library/inspect.html#inspect.signature" title="inspect.signature"><code class="xref py py-func docutils literal notranslate"><span class="pre">inspect.signature()</span></code></a> run on your function
 should now provide a valid signature!</p>
 <p>Congratulations, you've ported your first function to work with Argument Clinic!</p>
-</li>
-</ol>
 </section>
 <section id="how-to-guides">
 <span id="clinic-howtos"></span><h2>How-to guides<a class="headerlink" href="#how-to-guides" title="本標頭的永久連結">¶</a></h2>
@@ -907,7 +981,7 @@ for how to use this.
 Specified as a string.</p>
 </dd>
 <dt><em>annotation</em></dt><dd><p>The annotation value for this parameter.  Not currently supported,
-because <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0008/"><strong>PEP 8</strong></a> mandates that the Python library may not use
+because <span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0008/"><strong>PEP 8</strong></a> mandates that the Python library may not use
 annotations.</p>
 </dd>
 <dt><em>unused</em></dt><dd><p>Wrap the argument with <a class="reference internal" href="../c-api/intro.html#c.Py_UNUSED" title="Py_UNUSED"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_UNUSED</span></code></a> in the impl function signature.</p>
@@ -1117,7 +1191,7 @@ you <em>must</em> not call <a class="reference internal" href="../c-api/buffer.h
 Argument Clinic generates code that does it for you (in the parsing function).</p>
 </section>
 <section id="how-to-use-advanced-converters">
-<h3>How to use advanced converters<a class="headerlink" href="#how-to-use-advanced-converters" title="本標頭的永久連結">¶</a></h3>
+<span id="clinic-howto-advanced-converters"></span><h3>How to use advanced converters<a class="headerlink" href="#how-to-use-advanced-converters" title="本標頭的永久連結">¶</a></h3>
 <p>Remember those format units you skipped for your first
 time because they were advanced?  Here's how to handle those too.</p>
 <p>The trick is, all those format units take arguments—either
@@ -1142,7 +1216,7 @@ This restriction doesn't seem unreasonable; CPython itself always passes in stat
 hard-coded encoding strings for parameters whose format units start with <code class="docutils literal notranslate"><span class="pre">e</span></code>.</p>
 </section>
 <section id="how-to-assign-default-values-to-parameter">
-<span id="default-values"></span><h3>How to assign default values to parameter<a class="headerlink" href="#how-to-assign-default-values-to-parameter" title="本標頭的永久連結">¶</a></h3>
+<span id="default-values"></span><span id="clinic-howto-default-values"></span><h3>How to assign default values to parameter<a class="headerlink" href="#how-to-assign-default-values-to-parameter" title="本標頭的永久連結">¶</a></h3>
 <p>Default values for parameters can be any of a number of values.
 At their simplest, they can be string, int, or float literals:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>foo: str = &quot;abc&quot;
@@ -1229,7 +1303,7 @@ you're not permitted to use:</p>
 </section>
 </section>
 <section id="how-to-use-return-converters">
-<h3>How to use return converters<a class="headerlink" href="#how-to-use-return-converters" title="本標頭的永久連結">¶</a></h3>
+<span id="clinic-howto-return-converters"></span><h3>How to use return converters<a class="headerlink" href="#how-to-use-return-converters" title="本標頭的永久連結">¶</a></h3>
 <p>By default, the impl function Argument Clinic generates for you returns
 <a class="reference internal" href="../c-api/structures.html#c.PyObject" title="PyObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyObject</span> <span class="pre">*</span></code></a>.
 But your C function often computes some C type,
@@ -1347,7 +1421,7 @@ variable to the C code:</p>
 </div>
 </section>
 <section id="how-to-use-the-self-converter">
-<h3>How to use the &quot;self converter&quot;<a class="headerlink" href="#how-to-use-the-self-converter" title="本標頭的永久連結">¶</a></h3>
+<span id="clinic-howto-self-converter"></span><h3>How to use the &quot;self converter&quot;<a class="headerlink" href="#how-to-use-the-self-converter" title="本標頭的永久連結">¶</a></h3>
 <p>Argument Clinic automatically adds a &quot;self&quot; parameter for you
 using a default converter.  It automatically sets the <code class="docutils literal notranslate"><span class="pre">type</span></code>
 of this parameter to the &quot;pointer to an instance&quot; you specified
@@ -1448,7 +1522,7 @@ state.  Example from the <code class="docutils literal notranslate"><span class=
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>也請見 <span class="target" id="index-3"></span><a class="pep reference external" href="https://peps.python.org/pep-0573/"><strong>PEP 573</strong></a>。</p>
+<p>也請見 <span class="target" id="index-4"></span><a class="pep reference external" href="https://peps.python.org/pep-0573/"><strong>PEP 573</strong></a>。</p>
 </section>
 <section id="how-to-write-a-custom-converter">
 <h3>How to write a custom converter<a class="headerlink" href="#how-to-write-a-custom-converter" title="本標頭的永久連結">¶</a></h3>
@@ -1951,7 +2025,12 @@ blocks embedded in Python files look slightly different.  They look like this:</
 <li><a class="reference internal" href="#">Argument Clinic How-To</a><ul>
 <li><a class="reference internal" href="#background">Background</a><ul>
 <li><a class="reference internal" href="#the-goals-of-argument-clinic">The goals of Argument Clinic</a></li>
-<li><a class="reference internal" href="#basic-concepts-and-usage">Basic concepts and usage</a></li>
+<li><a class="reference internal" href="#basic-concepts">Basic concepts</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#reference">Reference</a><ul>
+<li><a class="reference internal" href="#terminology">Terminology</a></li>
+<li><a class="reference internal" href="#command-line-interface">Command-line interface</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#tutorial">Tutorial</a></li>
@@ -2098,11 +2177,11 @@ blocks embedded in Python files look slightly different.  They look like this:</
 <br />
     <br />
 
-    最後更新於 7月 26, 2023。
+    最後更新於 7月 29, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
-    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.0 建立。
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.1.1 建立。
     </div>
 
   </body>
