@@ -92,6 +92,7 @@
 <li><a class="reference internal" href="#pep-701-syntactic-formalization-of-f-strings">PEP 701: Syntactic formalization of f-strings</a></li>
 <li><a class="reference internal" href="#pep-709-comprehension-inlining">PEP 709: Comprehension inlining</a></li>
 <li><a class="reference internal" href="#pep-688-making-the-buffer-protocol-accessible-in-python">PEP 688: Making the buffer protocol accessible in Python</a></li>
+<li><a class="reference internal" href="#pep-684-a-per-interpreter-gil">PEP 684: A Per-Interpreter GIL</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#new-features-related-to-type-hints">New Features Related to Type Hints</a><ul>
@@ -252,7 +253,7 @@
 <dd class="field-odd"><p>3.12.0b4</p>
 </dd>
 <dt class="field-even">日期<span class="colon">:</span></dt>
-<dd class="field-even"><p>7月 31, 2023</p>
+<dd class="field-even"><p>8月 01, 2023</p>
 </dd>
 </dl>
 <p>此文章解釋了 Python 3.12 和 3.11 相比多了哪些新特性。</p>
@@ -268,6 +269,10 @@ so it's worth checking back even after reading earlier versions.</p>
 <p>新增語法特性：</p>
 <ul class="simple">
 <li><p><span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a>: Syntactic formalization of f-strings</p></li>
+</ul>
+<p>Interpreter improvements:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#whatsnew312-pep684"><span class="std std-ref">PEP 684: A Per-Interpreter GIL</span></a></p></li>
 </ul>
 <p>新增型別特性：</p>
 <ul class="simple">
@@ -404,7 +409,7 @@ can define expressions like this:</p>
 </div>
 </li>
 </ul>
-<p>詳情請見 <span class="target" id="index-44"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a>。</p>
+<p>詳情請見 <span class="target" id="index-46"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a>。</p>
 <p>As a positive side-effect of how this feature has been implemented (by parsing f-strings
 with the PEG parser (see <span class="target" id="index-7"></span><a class="pep reference external" href="https://peps.python.org/pep-0617/"><strong>PEP 617</strong></a>), now error messages for f-strings are more precise
 and include the exact location of the error. For example, in Python 3.11, the following
@@ -466,14 +471,38 @@ The new <a class="reference internal" href="../library/inspect.html#inspect.Buff
 can be used to customize buffer creation.
 (Contributed by Jelle Zijlstra in <a class="reference external" href="https://github.com/python/cpython/issues/102500">gh-102500</a>.)</p>
 </section>
+<section id="pep-684-a-per-interpreter-gil">
+<span id="whatsnew312-pep684"></span><h3>PEP 684: A Per-Interpreter GIL<a class="headerlink" href="#pep-684-a-per-interpreter-gil" title="本標頭的永久連結">¶</a></h3>
+<p>Sub-interpreters may now be created with a unique GIL per interpreter.
+This allows Python programs to take full advantage of multiple CPU
+cores.</p>
+<p>Use the new <a class="reference internal" href="../c-api/init.html#c.Py_NewInterpreterFromConfig" title="Py_NewInterpreterFromConfig"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_NewInterpreterFromConfig()</span></code></a> function to
+create an interpreter with its own GIL:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">PyInterpreterConfig</span> <span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="o">.</span><span class="n">check_multi_interp_extensions</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="o">.</span><span class="n">gil</span> <span class="o">=</span> <span class="n">PyInterpreterConfig_OWN_GIL</span><span class="p">,</span>
+<span class="p">};</span>
+<span class="n">PyThreadState</span> <span class="o">*</span><span class="n">tstate</span> <span class="o">=</span> <span class="n">NULL</span><span class="p">;</span>
+<span class="n">PyStatus</span> <span class="n">status</span> <span class="o">=</span> <span class="n">Py_NewInterpreterFromConfig</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tstate</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">config</span><span class="p">);</span>
+<span class="k">if</span> <span class="p">(</span><span class="n">PyStatus_Exception</span><span class="p">(</span><span class="n">status</span><span class="p">))</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="o">/*</span> <span class="n">The</span> <span class="n">new</span> <span class="n">interpeter</span> <span class="ow">is</span> <span class="n">now</span> <span class="n">active</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">current</span> <span class="n">thread</span><span class="o">.</span> <span class="o">*/</span>
+</pre></div>
+</div>
+<p>For further examples how to use the C-API for sub-interpreters with a
+per-interpreter GIL, see <a class="reference external" href="https://github.com/python/cpython/tree/3.12/Modules/_xxsubinterpretersmodule.c">Modules/_xxsubinterpretersmodule.c</a>.</p>
+<p>A Python API is anticipated for 3.13.  (See <span class="target" id="index-10"></span><a class="pep reference external" href="https://peps.python.org/pep-0554/"><strong>PEP 554</strong></a>.)</p>
+<p>(Contributed by Eric Snow in <a class="reference external" href="https://github.com/python/cpython/issues/104210">gh-104210</a>, etc.)</p>
+</section>
 </section>
 <section id="new-features-related-to-type-hints">
 <h2>New Features Related to Type Hints<a class="headerlink" href="#new-features-related-to-type-hints" title="本標頭的永久連結">¶</a></h2>
-<p>This section covers major changes affecting <span class="target" id="index-10"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a> type hints and
+<p>This section covers major changes affecting <span class="target" id="index-11"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a> type hints and
 the <a class="reference internal" href="../library/typing.html#module-typing" title="typing: Support for type hints (see :pep:`484`)."><code class="xref py py-mod docutils literal notranslate"><span class="pre">typing</span></code></a> module.</p>
 <section id="pep-692-using-typeddict-for-more-precise-kwargs-typing">
 <span id="whatsnew312-pep692"></span><h3>PEP 692: Using <code class="docutils literal notranslate"><span class="pre">TypedDict</span></code> for more precise <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> typing<a class="headerlink" href="#pep-692-using-typeddict-for-more-precise-kwargs-typing" title="本標頭的永久連結">¶</a></h3>
-<p>Typing <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> in a function signature as introduced by <span class="target" id="index-11"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a> allowed
+<p>Typing <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> in a function signature as introduced by <span class="target" id="index-12"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a> allowed
 for valid annotations only in cases where all of the <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> were of the
 same type.</p>
 <p>This PEP specifies a more precise way of typing <code class="docutils literal notranslate"><span class="pre">**kwargs</span></code> by relying on
@@ -487,7 +516,7 @@ typed dictionaries:</p>
 <span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Unpack</span><span class="p">[</span><span class="n">Movie</span><span class="p">]):</span> <span class="o">...</span>
 </pre></div>
 </div>
-<p>See <span class="target" id="index-12"></span><a class="pep reference external" href="https://peps.python.org/pep-0692/"><strong>PEP 692</strong></a> for more details.</p>
+<p>See <span class="target" id="index-13"></span><a class="pep reference external" href="https://peps.python.org/pep-0692/"><strong>PEP 692</strong></a> for more details.</p>
 <p>(Contributed by Franek Magiera in <a class="reference external" href="https://github.com/python/cpython/issues/103629">gh-103629</a>.)</p>
 </section>
 <section id="pep-698-override-decorator-for-static-typing">
@@ -519,10 +548,10 @@ does not in fact do so.</p>
 </section>
 <section id="pep-695-type-parameter-syntax">
 <span id="whatsnew312-pep695"></span><h3>PEP 695: Type Parameter Syntax<a class="headerlink" href="#pep-695-type-parameter-syntax" title="本標頭的永久連結">¶</a></h3>
-<p>Generic classes and functions under <span class="target" id="index-13"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a> were declared using a verbose syntax
+<p>Generic classes and functions under <span class="target" id="index-14"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a> were declared using a verbose syntax
 that left the scope of type parameters unclear and required explicit declarations of
 variance.</p>
-<p><span class="target" id="index-14"></span><a class="pep reference external" href="https://peps.python.org/pep-0695/"><strong>PEP 695</strong></a> introduces a new, more compact and explicit way to create
+<p><span class="target" id="index-15"></span><a class="pep reference external" href="https://peps.python.org/pep-0695/"><strong>PEP 695</strong></a> introduces a new, more compact and explicit way to create
 <a class="reference internal" href="../reference/compound_stmts.html#generic-classes"><span class="std std-ref">generic classes</span></a> and <a class="reference internal" href="../reference/compound_stmts.html#generic-functions"><span class="std std-ref">functions</span></a>:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">max</span><span class="p">[</span><span class="n">T</span><span class="p">](</span><span class="n">args</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">T</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">T</span><span class="p">:</span>
     <span class="o">...</span>
@@ -569,7 +598,7 @@ the <a class="reference internal" href="../reference/executionmodel.html#annotat
 most part like function scopes, but interact differently with enclosing class scopes.
 In Python 3.13, <a class="reference internal" href="../glossary.html#term-annotation"><span class="xref std std-term">annotations</span></a> will also be evaluated in
 annotation scopes.</p>
-<p>詳情請見 <span class="target" id="index-45"></span><a class="pep reference external" href="https://peps.python.org/pep-0695/"><strong>PEP 695</strong></a>。</p>
+<p>詳情請見 <span class="target" id="index-47"></span><a class="pep reference external" href="https://peps.python.org/pep-0695/"><strong>PEP 695</strong></a>。</p>
 <p>(PEP written by Eric Traut. Implementation by Jelle Zijlstra, Eric Traut,
 and others in <a class="reference external" href="https://github.com/python/cpython/issues/103764">gh-103764</a>.)</p>
 </section>
@@ -578,7 +607,7 @@ and others in <a class="reference external" href="https://github.com/python/cpyt
 <h2>其他語言更動<a class="headerlink" href="#other-language-changes" title="本標頭的永久連結">¶</a></h2>
 <ul class="simple">
 <li><p>Add <a class="reference internal" href="../howto/perf_profiling.html#perf-profiling"><span class="std std-ref">Python support for the Linux perf profiler</span></a> through the new
-environment variable <span class="target" id="index-16"></span><a class="reference internal" href="../using/cmdline.html#envvar-PYTHONPERFSUPPORT"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHONPERFSUPPORT</span></code></a>,
+environment variable <span class="target" id="index-17"></span><a class="reference internal" href="../using/cmdline.html#envvar-PYTHONPERFSUPPORT"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHONPERFSUPPORT</span></code></a>,
 the new command-line option <a class="reference internal" href="../using/cmdline.html#cmdoption-X"><code class="xref std std-option docutils literal notranslate"><span class="pre">-X</span> <span class="pre">perf</span></code></a>,
 as well as the new <a class="reference internal" href="../library/sys.html#sys.activate_stack_trampoline" title="sys.activate_stack_trampoline"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.activate_stack_trampoline()</span></code></a>,
 <a class="reference internal" href="../library/sys.html#sys.deactivate_stack_trampoline" title="sys.deactivate_stack_trampoline"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.deactivate_stack_trampoline()</span></code></a>,
@@ -592,7 +621,7 @@ surprising or dangerous, such as creating files outside the destination
 directory.
 See <a class="reference internal" href="../library/tarfile.html#tarfile-extraction-filter"><span class="std std-ref">Extraction filters</span></a> for details.
 In Python 3.14, the default will switch to <code class="docutils literal notranslate"><span class="pre">'data'</span></code>.
-(Contributed by Petr Viktorin in <span class="target" id="index-17"></span><a class="pep reference external" href="https://peps.python.org/pep-0706/"><strong>PEP 706</strong></a>.)</p></li>
+(Contributed by Petr Viktorin in <span class="target" id="index-18"></span><a class="pep reference external" href="https://peps.python.org/pep-0706/"><strong>PEP 706</strong></a>.)</p></li>
 <li><p><a class="reference internal" href="../library/types.html#types.MappingProxyType" title="types.MappingProxyType"><code class="xref py py-class docutils literal notranslate"><span class="pre">types.MappingProxyType</span></code></a> instances are now hashable if the underlying
 mapping is hashable.
 (Contributed by Serhiy Storchaka in <a class="reference external" href="https://github.com/python/cpython/issues/87995">gh-87995</a>.)</p></li>
@@ -629,7 +658,7 @@ arguments of any type instead of just <a class="reference internal" href="../lib
 can now be used in assignment expressions (<code class="docutils literal notranslate"><span class="pre">:=</span></code>).
 For example, in <code class="docutils literal notranslate"><span class="pre">[(b</span> <span class="pre">:=</span> <span class="pre">1)</span> <span class="pre">for</span> <span class="pre">a,</span> <span class="pre">b.prop</span> <span class="pre">in</span> <span class="pre">some_iter]</span></code>, the assignment to
 <code class="docutils literal notranslate"><span class="pre">b</span></code> is now allowed. Note that assigning to variables stored to in the target
-part of comprehensions (like <code class="docutils literal notranslate"><span class="pre">a</span></code>) is still disallowed, as per <span class="target" id="index-18"></span><a class="pep reference external" href="https://peps.python.org/pep-0572/"><strong>PEP 572</strong></a>.
+part of comprehensions (like <code class="docutils literal notranslate"><span class="pre">a</span></code>) is still disallowed, as per <span class="target" id="index-19"></span><a class="pep reference external" href="https://peps.python.org/pep-0572/"><strong>PEP 572</strong></a>.
 (Contributed by Nikita Sobolev in <a class="reference external" href="https://github.com/python/cpython/issues/100581">gh-100581</a>.)</p></li>
 <li><p><a class="reference internal" href="../library/functions.html#slice" title="slice"><code class="xref py py-class docutils literal notranslate"><span class="pre">slice</span></code></a> objects are now hashable, allowing them to be used as dict keys and
 set items. (Contributed by Will Bradshaw, Furkan Onder, and Raymond Hettinger in <a class="reference external" href="https://github.com/python/cpython/issues/101264">gh-101264</a>.)</p></li>
@@ -638,7 +667,7 @@ floats or mixed ints and floats.
 (Contributed by Raymond Hettinger in <a class="reference external" href="https://github.com/python/cpython/issues/100425">gh-100425</a>.)</p></li>
 <li><p>Exceptions raised in a typeobject's <code class="docutils literal notranslate"><span class="pre">__set_name__</span></code> method are no longer
 wrapped by a <a class="reference internal" href="../library/exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>. Context information is added to the
-exception as a <span class="target" id="index-19"></span><a class="pep reference external" href="https://peps.python.org/pep-0678/"><strong>PEP 678</strong></a> note. (Contributed by Irit Katriel in <a class="reference external" href="https://github.com/python/cpython/issues/77757">gh-77757</a>.)</p></li>
+exception as a <span class="target" id="index-20"></span><a class="pep reference external" href="https://peps.python.org/pep-0678/"><strong>PEP 678</strong></a> note. (Contributed by Irit Katriel in <a class="reference external" href="https://github.com/python/cpython/issues/77757">gh-77757</a>.)</p></li>
 <li><p>When a <code class="docutils literal notranslate"><span class="pre">try-except*</span></code> construct handles the entire <a class="reference internal" href="../library/exceptions.html#ExceptionGroup" title="ExceptionGroup"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ExceptionGroup</span></code></a>
 and raises one other exception, that exception is no longer wrapped in an
 <a class="reference internal" href="../library/exceptions.html#ExceptionGroup" title="ExceptionGroup"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ExceptionGroup</span></code></a>. Also changed in version 3.11.4. (Contributed by Irit
@@ -875,7 +904,7 @@ Windows.
 <li><p>Add the <a class="reference internal" href="../library/sqlite3.html#sqlite3.Connection.autocommit" title="sqlite3.Connection.autocommit"><code class="xref py py-attr docutils literal notranslate"><span class="pre">autocommit</span></code></a> attribute
 to <a class="reference internal" href="../library/sqlite3.html#sqlite3.Connection" title="sqlite3.Connection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connection</span></code></a>
 and the <em>autocommit</em> parameter to <a class="reference internal" href="../library/sqlite3.html#sqlite3.connect" title="sqlite3.connect"><code class="xref py py-func docutils literal notranslate"><span class="pre">connect()</span></code></a>
-to control <span class="target" id="index-20"></span><a class="pep reference external" href="https://peps.python.org/pep-0249/"><strong>PEP 249</strong></a>-compliant
+to control <span class="target" id="index-21"></span><a class="pep reference external" href="https://peps.python.org/pep-0249/"><strong>PEP 249</strong></a>-compliant
 <a class="reference internal" href="../library/sqlite3.html#sqlite3-transaction-control-autocommit"><span class="std std-ref">transaction handling</span></a>.
 (Contributed by Erlend E. Aasland in <a class="reference external" href="https://github.com/python/cpython/issues/83638">gh-83638</a>.)</p></li>
 <li><p>Add <em>entrypoint</em> keyword-only parameter to
@@ -950,7 +979,7 @@ like <code class="docutils literal notranslate"><span class="pre">create_*()</sp
 <section id="tokenize">
 <h3>tokenize<a class="headerlink" href="#tokenize" title="本標頭的永久連結">¶</a></h3>
 <ul class="simple">
-<li><p>The <a class="reference internal" href="../library/tokenize.html#module-tokenize" title="tokenize: Lexical scanner for Python source code."><code class="xref py py-mod docutils literal notranslate"><span class="pre">tokenize</span></code></a> module includes the changes introduced in <span class="target" id="index-21"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a>. (
+<li><p>The <a class="reference internal" href="../library/tokenize.html#module-tokenize" title="tokenize: Lexical scanner for Python source code."><code class="xref py py-mod docutils literal notranslate"><span class="pre">tokenize</span></code></a> module includes the changes introduced in <span class="target" id="index-22"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a>. (
 Contributed by Marta Gómez Macías and Pablo Galindo in <a class="reference external" href="https://github.com/python/cpython/issues/102856">gh-102856</a>.)
 See <a class="reference internal" href="#whatsnew312-porting-to-python312"><span class="std std-ref">Porting to Python 3.12</span></a> for more information on the
 changes to the <a class="reference internal" href="../library/tokenize.html#module-tokenize" title="tokenize: Lexical scanner for Python source code."><code class="xref py py-mod docutils literal notranslate"><span class="pre">tokenize</span></code></a> module.</p></li>
@@ -1055,7 +1084,7 @@ Benjamin Peterson in <a class="reference external" href="https://github.com/pyth
 <h2>Optimizations<a class="headerlink" href="#optimizations" title="本標頭的永久連結">¶</a></h2>
 <ul class="simple">
 <li><p>Removed <code class="docutils literal notranslate"><span class="pre">wstr</span></code> and <code class="docutils literal notranslate"><span class="pre">wstr_length</span></code> members from Unicode objects.
-It reduces object size by 8 or 16 bytes on 64bit platform. (<span class="target" id="index-22"></span><a class="pep reference external" href="https://peps.python.org/pep-0623/"><strong>PEP 623</strong></a>)
+It reduces object size by 8 or 16 bytes on 64bit platform. (<span class="target" id="index-23"></span><a class="pep reference external" href="https://peps.python.org/pep-0623/"><strong>PEP 623</strong></a>)
 (Contributed by Inada Naoki in <a class="reference external" href="https://github.com/python/cpython/issues/92536">gh-92536</a>.)</p></li>
 <li><p>Added experimental support for using the BOLT binary optimizer in the build
 process, which improves performance by 1-5%.
@@ -1067,7 +1096,7 @@ replacement strings containing group references by 2--3 times.
 <li><p>Speed up <a class="reference internal" href="../library/asyncio-task.html#asyncio.Task" title="asyncio.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.Task</span></code></a> creation by deferring expensive string formatting.
 (Contributed by Itamar O in <a class="reference external" href="https://github.com/python/cpython/issues/103793">gh-103793</a>.)</p></li>
 <li><p>The <a class="reference internal" href="../library/tokenize.html#tokenize.tokenize" title="tokenize.tokenize"><code class="xref py py-func docutils literal notranslate"><span class="pre">tokenize.tokenize()</span></code></a> and <a class="reference internal" href="../library/tokenize.html#tokenize.generate_tokens" title="tokenize.generate_tokens"><code class="xref py py-func docutils literal notranslate"><span class="pre">tokenize.generate_tokens()</span></code></a> functions are
-up to 64% faster as a side effect of the changes required to cover <span class="target" id="index-23"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a> in
+up to 64% faster as a side effect of the changes required to cover <span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a> in
 the <a class="reference internal" href="../library/tokenize.html#module-tokenize" title="tokenize: Lexical scanner for Python source code."><code class="xref py py-mod docutils literal notranslate"><span class="pre">tokenize</span></code></a> module. (Contributed by Marta Gómez Macías and Pablo Galindo
 in <a class="reference external" href="https://github.com/python/cpython/issues/102856">gh-102856</a>.)</p></li>
 <li><p>Speed up <a class="reference internal" href="../library/functions.html#super" title="super"><code class="xref py py-func docutils literal notranslate"><span class="pre">super()</span></code></a> method calls and attribute loads via the
@@ -1085,9 +1114,9 @@ Vladimir Matveev in <a class="reference external" href="https://github.com/pytho
 <li><p>Remove the <code class="xref std std-opcode docutils literal notranslate"><span class="pre">JUMP_IF_FALSE_OR_POP</span></code> and <code class="xref std std-opcode docutils literal notranslate"><span class="pre">JUMP_IF_TRUE_OR_POP</span></code>
 instructions. (Contributed by Irit Katriel in <a class="reference external" href="https://github.com/python/cpython/issues/102859">gh-102859</a>.)</p></li>
 <li><p>Add the <a class="reference internal" href="../library/dis.html#opcode-LOAD_FAST_AND_CLEAR"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_FAST_AND_CLEAR</span></code></a> instruction as part of the
-implementation of <span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0709/"><strong>PEP 709</strong></a>. (Contributed by Carl Meyer in <a class="reference external" href="https://github.com/python/cpython/issues/101441">gh-101441</a>.)</p></li>
+implementation of <span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0709/"><strong>PEP 709</strong></a>. (Contributed by Carl Meyer in <a class="reference external" href="https://github.com/python/cpython/issues/101441">gh-101441</a>.)</p></li>
 <li><p>Add the <a class="reference internal" href="../library/dis.html#opcode-LOAD_FROM_DICT_OR_DEREF"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_FROM_DICT_OR_DEREF</span></code></a>, <a class="reference internal" href="../library/dis.html#opcode-LOAD_FROM_DICT_OR_GLOBALS"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_FROM_DICT_OR_GLOBALS</span></code></a>,
-and <a class="reference internal" href="../library/dis.html#opcode-LOAD_LOCALS"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_LOCALS</span></code></a> opcodes as part of the implementation of <span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0695/"><strong>PEP 695</strong></a>.
+and <a class="reference internal" href="../library/dis.html#opcode-LOAD_LOCALS"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_LOCALS</span></code></a> opcodes as part of the implementation of <span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0695/"><strong>PEP 695</strong></a>.
 Remove the <code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_CLASSDEREF</span></code> opcode, which can be replaced with
 <a class="reference internal" href="../library/dis.html#opcode-LOAD_LOCALS"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_LOCALS</span></code></a> plus <a class="reference internal" href="../library/dis.html#opcode-LOAD_FROM_DICT_OR_DEREF"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_FROM_DICT_OR_DEREF</span></code></a>. (Contributed
 by Jelle Zijlstra in <a class="reference external" href="https://github.com/python/cpython/issues/103764">gh-103764</a>.)</p></li>
@@ -1166,7 +1195,7 @@ of these functions instead. (Contributed by Ofey Chan in <a class="reference ext
 module differs from <code class="docutils literal notranslate"><span class="pre">__spec__.parent</span></code> (previously it was
 <a class="reference internal" href="../library/exceptions.html#ImportWarning" title="ImportWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportWarning</span></code></a>).
 (Contributed by Brett Cannon in <a class="reference external" href="https://github.com/python/cpython/issues/65961">gh-65961</a>.)</p></li>
-<li><p>In accordance with <span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0699/"><strong>PEP 699</strong></a>, the <code class="docutils literal notranslate"><span class="pre">ma_version_tag</span></code> field in <a class="reference internal" href="../c-api/dict.html#c.PyDictObject" title="PyDictObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyDictObject</span></code></a>
+<li><p>In accordance with <span class="target" id="index-27"></span><a class="pep reference external" href="https://peps.python.org/pep-0699/"><strong>PEP 699</strong></a>, the <code class="docutils literal notranslate"><span class="pre">ma_version_tag</span></code> field in <a class="reference internal" href="../c-api/dict.html#c.PyDictObject" title="PyDictObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyDictObject</span></code></a>
 is deprecated for extension modules. Accessing this field will generate a compiler
 warning at compile time. This field will be removed in Python 3.14.
 (Contributed by Ramvikrams and Kumar Aditya in <a class="reference external" href="https://github.com/python/cpython/issues/101193">gh-101193</a>. PEP by Ken Jin.)</p></li>
@@ -1180,7 +1209,7 @@ in <a class="reference external" href="https://github.com/python/cpython/issues/
 <h3>Pending Removal in Python 3.13<a class="headerlink" href="#pending-removal-in-python-3-13" title="本標頭的永久連結">¶</a></h3>
 <p>The following modules and APIs have been deprecated in earlier Python releases,
 and will be removed in Python 3.13.</p>
-<p>Modules (see <span class="target" id="index-27"></span><a class="pep reference external" href="https://peps.python.org/pep-0594/"><strong>PEP 594</strong></a>):</p>
+<p>Modules (see <span class="target" id="index-28"></span><a class="pep reference external" href="https://peps.python.org/pep-0594/"><strong>PEP 594</strong></a>):</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="../library/aifc.html#module-aifc" title="aifc: Read and write audio files in AIFF or AIFC format.（已棄用）"><code class="xref py py-mod docutils literal notranslate"><span class="pre">aifc</span></code></a></p></li>
 <li><p><a class="reference internal" href="../library/audioop.html#module-audioop" title="audioop: Manipulate raw audio data.（已棄用）"><code class="xref py py-mod docutils literal notranslate"><span class="pre">audioop</span></code></a></p></li>
@@ -1284,7 +1313,7 @@ is deprecated and will raise an exception in Python 3.14.</p></li>
 bases using the C API.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">__package__</span></code> and <code class="docutils literal notranslate"><span class="pre">__cached__</span></code> will cease to be set or taken
 into consideration by the import system (<a class="reference external" href="https://github.com/python/cpython/issues/97879">gh-97879</a>).</p></li>
-<li><p>Accessing <code class="docutils literal notranslate"><span class="pre">co_lnotab</span></code> was deprecated in <span class="target" id="index-28"></span><a class="pep reference external" href="https://peps.python.org/pep-0626/"><strong>PEP 626</strong></a> since 3.10
+<li><p>Accessing <code class="docutils literal notranslate"><span class="pre">co_lnotab</span></code> was deprecated in <span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0626/"><strong>PEP 626</strong></a> since 3.10
 and was planned to be removed in 3.12
 but it only got a proper <a class="reference internal" href="../library/exceptions.html#DeprecationWarning" title="DeprecationWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DeprecationWarning</span></code></a> in 3.12.
 May be removed in 3.14.
@@ -1312,7 +1341,7 @@ In a future release it will be changed to a syntax error. (<a class="reference e
 <h2>Removed<a class="headerlink" href="#removed" title="本標頭的永久連結">¶</a></h2>
 <ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">asynchat</span></code> and <code class="docutils literal notranslate"><span class="pre">asyncore</span></code>: These two modules have been removed
-according to the schedule in <span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0594/"><strong>PEP 594</strong></a>,
+according to the schedule in <span class="target" id="index-30"></span><a class="pep reference external" href="https://peps.python.org/pep-0594/"><strong>PEP 594</strong></a>,
 having been deprecated in Python 3.6.
 Use <a class="reference internal" href="../library/asyncio.html#module-asyncio" title="asyncio: Asynchronous I/O."><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code></a> instead.
 (Contributed by Nikita Sobolev in <a class="reference external" href="https://github.com/python/cpython/issues/96580">gh-96580</a>.)</p></li>
@@ -1328,7 +1357,7 @@ Use <a class="reference internal" href="../library/configparser.html#configparse
 </ul>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">distutils</span></code>: Remove the <code class="docutils literal notranslate"><span class="pre">distutils</span></code> package. It was deprecated in Python 3.10 by
-<span class="target" id="index-30"></span><a class="pep reference external" href="https://peps.python.org/pep-0632/"><strong>PEP 632</strong></a> &quot;Deprecate distutils module&quot;. For projects still using
+<span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0632/"><strong>PEP 632</strong></a> &quot;Deprecate distutils module&quot;. For projects still using
 <code class="docutils literal notranslate"><span class="pre">distutils</span></code> and cannot be updated to something else, the <code class="docutils literal notranslate"><span class="pre">setuptools</span></code>
 project can be installed: it still provides <code class="docutils literal notranslate"><span class="pre">distutils</span></code>.
 (Contributed by Victor Stinner in <a class="reference external" href="https://github.com/python/cpython/issues/92584">gh-92584</a>.)</p></li>
@@ -1347,6 +1376,9 @@ the <code class="docutils literal notranslate"><span class="pre">setuptools</spa
 installed separately (typically, using pip).</p>
 <p>(Contributed by Pradyun Gedam in <a class="reference external" href="https://github.com/python/cpython/issues/95299">gh-95299</a>.)</p>
 </li>
+<li><p><a class="reference internal" href="../library/enum.html#module-enum" title="enum: Implementation of an enumeration class."><code class="xref py py-mod docutils literal notranslate"><span class="pre">enum</span></code></a>: Remove <code class="docutils literal notranslate"><span class="pre">EnumMeta.__getattr__</span></code>, which is no longer needed for
+enum attribute access.
+(Contributed by Ethan Furman in <a class="reference external" href="https://github.com/python/cpython/issues/95083">gh-95083</a>.)</p></li>
 <li><p><a class="reference internal" href="../library/ftplib.html#module-ftplib" title="ftplib: FTP protocol client (requires sockets)."><code class="xref py py-mod docutils literal notranslate"><span class="pre">ftplib</span></code></a>: Remove the <code class="docutils literal notranslate"><span class="pre">FTP_TLS.ssl_version</span></code> class attribute: use the
 <em>context</em> parameter instead.
 (Contributed by Victor Stinner in <a class="reference external" href="https://github.com/python/cpython/issues/94172">gh-94172</a>.)</p></li>
@@ -1357,7 +1389,7 @@ extension if it was not present.
 (Contributed by Victor Stinner in <a class="reference external" href="https://github.com/python/cpython/issues/94196">gh-94196</a>.)</p></li>
 <li><p><a class="reference internal" href="../library/hashlib.html#module-hashlib" title="hashlib: Secure hash and message digest algorithms."><code class="xref py py-mod docutils literal notranslate"><span class="pre">hashlib</span></code></a>: Remove the pure Python implementation of
 <a class="reference internal" href="../library/hashlib.html#hashlib.pbkdf2_hmac" title="hashlib.pbkdf2_hmac"><code class="xref py py-func docutils literal notranslate"><span class="pre">hashlib.pbkdf2_hmac()</span></code></a>, deprecated in Python 3.10. Python 3.10 and
-newer requires OpenSSL 1.1.1 (<span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0644/"><strong>PEP 644</strong></a>): this OpenSSL version provides
+newer requires OpenSSL 1.1.1 (<span class="target" id="index-32"></span><a class="pep reference external" href="https://peps.python.org/pep-0644/"><strong>PEP 644</strong></a>): this OpenSSL version provides
 a C implementation of <a class="reference internal" href="../library/hashlib.html#hashlib.pbkdf2_hmac" title="hashlib.pbkdf2_hmac"><code class="xref py py-func docutils literal notranslate"><span class="pre">pbkdf2_hmac()</span></code></a> which is faster.
 (Contributed by Victor Stinner in <a class="reference external" href="https://github.com/python/cpython/issues/94199">gh-94199</a>.)</p></li>
 <li><p><a class="reference internal" href="../library/importlib.html#module-importlib" title="importlib: The implementation of the import machinery."><code class="xref py py-mod docutils literal notranslate"><span class="pre">importlib</span></code></a>: Many previously deprecated cleanups in <a class="reference internal" href="../library/importlib.html#module-importlib" title="importlib: The implementation of the import machinery."><code class="xref py py-mod docutils literal notranslate"><span class="pre">importlib</span></code></a> have now been
@@ -1457,7 +1489,7 @@ also a static method.
 <li><p><a class="reference internal" href="../library/locale.html#module-locale" title="locale: Internationalization services."><code class="xref py py-mod docutils literal notranslate"><span class="pre">locale</span></code></a>: Remove the <code class="xref py py-func docutils literal notranslate"><span class="pre">locale.format()</span></code> function, deprecated in Python 3.7:
 use <a class="reference internal" href="../library/locale.html#locale.format_string" title="locale.format_string"><code class="xref py py-func docutils literal notranslate"><span class="pre">locale.format_string()</span></code></a> instead.
 (Contributed by Victor Stinner in <a class="reference external" href="https://github.com/python/cpython/issues/94226">gh-94226</a>.)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">smtpd</span></code>: The module has been removed according to the schedule in <span class="target" id="index-32"></span><a class="pep reference external" href="https://peps.python.org/pep-0594/"><strong>PEP 594</strong></a>,
+<li><p><code class="docutils literal notranslate"><span class="pre">smtpd</span></code>: The module has been removed according to the schedule in <span class="target" id="index-33"></span><a class="pep reference external" href="https://peps.python.org/pep-0594/"><strong>PEP 594</strong></a>,
 having been deprecated in Python 3.4.7 and 3.5.4.
 Use <a class="reference external" href="https://pypi.org/project/aiosmtpd/">aiosmtpd</a> PyPI module or any other
 <a class="reference internal" href="../library/asyncio.html#module-asyncio" title="asyncio: Asynchronous I/O."><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code></a>-based server instead.
@@ -1594,7 +1626,7 @@ has no <code class="docutils literal notranslate"><span class="pre">copy()</span
 (Contributed by Victor Stinner in <a class="reference external" href="https://github.com/python/cpython/issues/94383">gh-94383</a>.)</p></li>
 <li><p><a class="reference internal" href="../library/zipimport.html#module-zipimport" title="zipimport: Support for importing Python modules from ZIP archives."><code class="xref py py-mod docutils literal notranslate"><span class="pre">zipimport</span></code></a>: Remove <code class="docutils literal notranslate"><span class="pre">find_loader()</span></code> and <code class="docutils literal notranslate"><span class="pre">find_module()</span></code> methods,
 deprecated in Python 3.10: use the <code class="docutils literal notranslate"><span class="pre">find_spec()</span></code> method instead.  See
-<span class="target" id="index-33"></span><a class="pep reference external" href="https://peps.python.org/pep-0451/"><strong>PEP 451</strong></a> for the rationale.
+<span class="target" id="index-34"></span><a class="pep reference external" href="https://peps.python.org/pep-0451/"><strong>PEP 451</strong></a> for the rationale.
 (Contributed by Victor Stinner in <a class="reference external" href="https://github.com/python/cpython/issues/94379">gh-94379</a>.)</p></li>
 <li><p>Removed the <code class="docutils literal notranslate"><span class="pre">suspicious</span></code> rule from the documentation Makefile, and
 removed <code class="docutils literal notranslate"><span class="pre">Doc/tools/rstlint.py</span></code>, both in favor of <a class="reference external" href="https://github.com/sphinx-contrib/sphinx-lint">sphinx-lint</a>.
@@ -1668,9 +1700,9 @@ exception instance, rather than to a <code class="docutils literal notranslate">
 that may be surprising or dangerous.
 See <a class="reference internal" href="../library/tarfile.html#tarfile-extraction-filter"><span class="std std-ref">Extraction filters</span></a> for details.</p></li>
 <li><p>The output of the <a class="reference internal" href="../library/tokenize.html#tokenize.tokenize" title="tokenize.tokenize"><code class="xref py py-func docutils literal notranslate"><span class="pre">tokenize.tokenize()</span></code></a> and <a class="reference internal" href="../library/tokenize.html#tokenize.generate_tokens" title="tokenize.generate_tokens"><code class="xref py py-func docutils literal notranslate"><span class="pre">tokenize.generate_tokens()</span></code></a>
-functions is now changed due to the changes introduced in <span class="target" id="index-34"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a>. This
+functions is now changed due to the changes introduced in <span class="target" id="index-35"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a>. This
 means that <code class="docutils literal notranslate"><span class="pre">STRING</span></code> tokens are not emitted any more for f-strings and the
-tokens described in <span class="target" id="index-35"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a> are now produced instead: <code class="docutils literal notranslate"><span class="pre">FSTRING_START</span></code>,
+tokens described in <span class="target" id="index-36"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a> are now produced instead: <code class="docutils literal notranslate"><span class="pre">FSTRING_START</span></code>,
 <code class="docutils literal notranslate"><span class="pre">FSRING_MIDDLE</span></code> and <code class="docutils literal notranslate"><span class="pre">FSTRING_END</span></code> are now emitted for f-string &quot;string&quot;
 parts in addition to the appropriate tokens for the tokenization in the
 expression components. For example for the f-string <code class="docutils literal notranslate"><span class="pre">f&quot;start</span> <span class="pre">{1+1}</span> <span class="pre">end&quot;</span></code>
@@ -1691,7 +1723,7 @@ the old version of the tokenizer emitted:</p>
 </pre></div>
 </div>
 <p>Additionally, there may be some minor behavioral changes as a consecuence of the
-changes required to support <span class="target" id="index-36"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a>. Some of these changes include:</p>
+changes required to support <span class="target" id="index-37"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a>. Some of these changes include:</p>
 <ul class="simple">
 <li><p>The <code class="docutils literal notranslate"><span class="pre">type</span></code> attribute of the tokens emitted when tokenizing some invalid Python
 characters such as <code class="docutils literal notranslate"><span class="pre">!</span></code> has changed from <code class="docutils literal notranslate"><span class="pre">ERRORTOKEN</span></code> to <code class="docutils literal notranslate"><span class="pre">OP</span></code>.</p></li>
@@ -1746,7 +1778,7 @@ optimization levels (0, 1, 2) at once.
 <section id="id2">
 <h3>新增特性<a class="headerlink" href="#id2" title="本標頭的永久連結">¶</a></h3>
 <ul>
-<li><p><span class="target" id="index-37"></span><a class="pep reference external" href="https://peps.python.org/pep-0697/"><strong>PEP 697</strong></a>: Introduced the <a class="reference internal" href="../c-api/stable.html#unstable-c-api"><span class="std std-ref">Unstable C API tier</span></a>,
+<li><p><span class="target" id="index-38"></span><a class="pep reference external" href="https://peps.python.org/pep-0697/"><strong>PEP 697</strong></a>: Introduced the <a class="reference internal" href="../c-api/stable.html#unstable-c-api"><span class="std std-ref">Unstable C API tier</span></a>,
 intended for low-level tools like debuggers and JIT compilers.
 This API may change in each minor release of CPython without deprecation
 warnings.
@@ -1756,7 +1788,7 @@ Its contents are marked by the <code class="docutils literal notranslate"><span 
 <li><p><code class="docutils literal notranslate"><span class="pre">PyUnstable_Code_New()</span></code> (renamed from <code class="docutils literal notranslate"><span class="pre">PyCode_New</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">PyUnstable_Code_NewWithPosOnlyArgs()</span></code> (renamed from <code class="docutils literal notranslate"><span class="pre">PyCode_NewWithPosOnlyArgs</span></code>)</p></li>
 </ul>
-<p>Extra storage for code objects (<span class="target" id="index-38"></span><a class="pep reference external" href="https://peps.python.org/pep-0523/"><strong>PEP 523</strong></a>):</p>
+<p>Extra storage for code objects (<span class="target" id="index-39"></span><a class="pep reference external" href="https://peps.python.org/pep-0523/"><strong>PEP 523</strong></a>):</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">PyUnstable_Eval_RequestCodeExtraIndex()</span></code> (renamed from <code class="docutils literal notranslate"><span class="pre">_PyEval_RequestCodeExtraIndex</span></code>)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">PyUnstable_Code_GetExtra()</span></code> (renamed from <code class="docutils literal notranslate"><span class="pre">_PyCode_GetExtra</span></code>)</p></li>
@@ -1766,7 +1798,7 @@ Its contents are marked by the <code class="docutils literal notranslate"><span 
 API changes.</p>
 <p>(Contributed by Petr Viktorin in <a class="reference external" href="https://github.com/python/cpython/issues/101101">gh-101101</a>.)</p>
 </li>
-<li><p><span class="target" id="index-39"></span><a class="pep reference external" href="https://peps.python.org/pep-0697/"><strong>PEP 697</strong></a>: Added API for extending types whose instance memory layout is
+<li><p><span class="target" id="index-40"></span><a class="pep reference external" href="https://peps.python.org/pep-0697/"><strong>PEP 697</strong></a>: Added API for extending types whose instance memory layout is
 opaque:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="../c-api/type.html#c.PyType_Spec.basicsize" title="PyType_Spec.basicsize"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyType_Spec.basicsize</span></code></a> can be zero or negative to specify
@@ -1858,7 +1890,7 @@ the <a class="reference internal" href="../library/exceptions.html#BaseException
 <li><p>Add <a class="reference internal" href="../c-api/exceptions.html#c.PyErr_DisplayException" title="PyErr_DisplayException"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_DisplayException()</span></code></a>, which takes an exception instance,
 to replace the legacy-api <code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_Display()</span></code>. (Contributed by
 Irit Katriel in <a class="reference external" href="https://github.com/python/cpython/issues/102755">gh-102755</a>).</p></li>
-<li><p><span class="target" id="index-40"></span><a class="pep reference external" href="https://peps.python.org/pep-0683/"><strong>PEP 683</strong></a>: Introduced Immortal Objects to Python which allows objects
+<li><p><span class="target" id="index-41"></span><a class="pep reference external" href="https://peps.python.org/pep-0683/"><strong>PEP 683</strong></a>: Introduced Immortal Objects to Python which allows objects
 to bypass reference counts and introduced changes to the C-API:</p>
 <ul class="simple">
 <li><dl class="simple">
@@ -1891,6 +1923,11 @@ correctly track reference counts and allocated blocks</p>
 </ul>
 <p>(Contributed by Eddie Elizondo in <a class="reference external" href="https://github.com/python/cpython/issues/84436">gh-84436</a>.)</p>
 </li>
+<li><p><span class="target" id="index-42"></span><a class="pep reference external" href="https://peps.python.org/pep-0684/"><strong>PEP 684</strong></a>: Added the new <a class="reference internal" href="../c-api/init.html#c.Py_NewInterpreterFromConfig" title="Py_NewInterpreterFromConfig"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_NewInterpreterFromConfig()</span></code></a>
+function and <a class="reference internal" href="../c-api/init.html#c.PyInterpreterConfig" title="PyInterpreterConfig"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyInterpreterConfig</span></code></a>, which may be used
+to create sub-interpreters with their own GILs.
+(See <a class="reference internal" href="#whatsnew312-pep684"><span class="std std-ref">PEP 684: A Per-Interpreter GIL</span></a> for more info.)
+(Contributed by Eric Snow in <a class="reference external" href="https://github.com/python/cpython/issues/104110">gh-104110</a>.)</p></li>
 <li><p>In the limited C API version 3.12, <a class="reference internal" href="../c-api/refcounting.html#c.Py_INCREF" title="Py_INCREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_INCREF()</span></code></a> and
 <a class="reference internal" href="../c-api/refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> functions are now implemented as opaque function calls to
 hide implementation details.
@@ -2005,6 +2042,24 @@ callbacks have no way of recovering extension module state).</p>
 subinterpreter that they don't support (or haven't yet been loaded in). See
 <a class="reference external" href="https://github.com/python/cpython/issues/104668">gh-104668</a> for more info.</p>
 </li>
+<li><p><a class="reference internal" href="../c-api/long.html#c.PyLongObject" title="PyLongObject"><code class="xref c c-struct docutils literal notranslate"><span class="pre">PyLongObject</span></code></a> has had its internals changed for better performance.
+Although the internals of <a class="reference internal" href="../c-api/long.html#c.PyLongObject" title="PyLongObject"><code class="xref c c-struct docutils literal notranslate"><span class="pre">PyLongObject</span></code></a> are private, they are used
+by some extension modules.
+The internal fields should no longer be accessed directly, instead the API
+functions beginning <code class="docutils literal notranslate"><span class="pre">PyLong_...</span></code> should be used instead.
+Two new <em>unstable</em> API functions are provided for efficient access to the
+value of <a class="reference internal" href="../c-api/long.html#c.PyLongObject" title="PyLongObject"><code class="xref c c-struct docutils literal notranslate"><span class="pre">PyLongObject</span></code></a>s which fit into a single machine word:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../c-api/long.html#c.PyUnstable_Long_IsCompact" title="PyUnstable_Long_IsCompact"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnstable_Long_IsCompact()</span></code></a></p></li>
+<li><p><a class="reference internal" href="../c-api/long.html#c.PyUnstable_Long_CompactValue" title="PyUnstable_Long_CompactValue"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnstable_Long_CompactValue()</span></code></a></p></li>
+</ul>
+</li>
+<li><p>Custom allocators, set via <a class="reference internal" href="../c-api/memory.html#c.PyMem_SetAllocator" title="PyMem_SetAllocator"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMem_SetAllocator()</span></code></a>, are now
+required to be thread-safe, regardless of memory domain.  Allocators
+that don't have their own state, including &quot;hooks&quot;, are not affected.
+If your custom allocator is not already thread-safe and you need
+guidance then please create a new GitHub issue
+and CC <code class="docutils literal notranslate"><span class="pre">&#64;ericsnowcurrently</span></code>.</p></li>
 </ul>
 </section>
 <section id="id4">
@@ -2091,7 +2146,7 @@ Call the metaclass instead.</p></li>
 API. The <code class="docutils literal notranslate"><span class="pre">token.h</span></code> header file was only designed to be used by Python
 internals.
 (Contributed by Victor Stinner in <a class="reference external" href="https://github.com/python/cpython/issues/92651">gh-92651</a>.)</p></li>
-<li><p>Legacy Unicode APIs have been removed. See <span class="target" id="index-41"></span><a class="pep reference external" href="https://peps.python.org/pep-0623/"><strong>PEP 623</strong></a> for detail.</p>
+<li><p>Legacy Unicode APIs have been removed. See <span class="target" id="index-43"></span><a class="pep reference external" href="https://peps.python.org/pep-0623/"><strong>PEP 623</strong></a> for detail.</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><code class="xref c c-macro docutils literal notranslate"><span class="pre">PyUnicode_WCHAR_KIND</span></code></p></li>
@@ -2135,6 +2190,7 @@ from <a class="reference internal" href="../library/ctypes.html#module-ctypes" t
 <li><a class="reference internal" href="#pep-701-syntactic-formalization-of-f-strings">PEP 701: Syntactic formalization of f-strings</a></li>
 <li><a class="reference internal" href="#pep-709-comprehension-inlining">PEP 709: Comprehension inlining</a></li>
 <li><a class="reference internal" href="#pep-688-making-the-buffer-protocol-accessible-in-python">PEP 688: Making the buffer protocol accessible in Python</a></li>
+<li><a class="reference internal" href="#pep-684-a-per-interpreter-gil">PEP 684: A Per-Interpreter GIL</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#new-features-related-to-type-hints">New Features Related to Type Hints</a><ul>
@@ -2300,7 +2356,7 @@ from <a class="reference internal" href="../library/ctypes.html#module-ctypes" t
 <br />
     <br />
 
-    最後更新於 7月 31, 2023。
+    最後更新於 8月 01, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
