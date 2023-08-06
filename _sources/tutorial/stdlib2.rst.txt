@@ -59,7 +59,7 @@ formatting numbers with group separators::
    'English_United States.1252'
    >>> conv = locale.localeconv()          # get a mapping of conventions
    >>> x = 1234567.8
-   >>> locale.format_string("%d", x, grouping=True)
+   >>> locale.format("%d", x, grouping=True)
    '1,234,567'
    >>> locale.format_string("%s%.*f", (conv['currency_symbol'],
    ...                      conv['frac_digits'], x), grouping=True)
@@ -279,7 +279,7 @@ applications include caching objects that are expensive to create::
    Traceback (most recent call last):
      File "<stdin>", line 1, in <module>
        d['primary']                # entry was automatically removed
-     File "C:/python312/lib/weakref.py", line 46, in __getitem__
+     File "C:/python311/lib/weakref.py", line 46, in __getitem__
        o = self.data[key]()
    KeyError: 'primary'
 
@@ -394,7 +394,7 @@ point::
 
    >>> sum([Decimal('0.1')]*10) == Decimal('1.0')
    True
-   >>> 0.1 + 0.1 + 0.1 + 0.1 + 0.1 + 0.1 + 0.1 + 0.1 + 0.1 + 0.1 == 1.0
+   >>> sum([0.1]*10) == 1.0
    False
 
 The :mod:`decimal` module provides arithmetic with as much precision as needed::

@@ -59,8 +59,14 @@ an event loop:
    instead of using these lower level functions to manually create and close an
    event loop.
 
-   .. deprecated:: 3.12
-      Deprecation warning is emitted if there is no current event loop.
+   .. note::
+      In Python versions 3.10.0--3.10.8 and 3.11.0 this function
+      (and other functions which use it implicitly) emitted a
+      :exc:`DeprecationWarning` if there was no running event loop, even if
+      the current loop was set on the policy.
+      In Python versions 3.10.9, 3.11.1 and 3.12 they emit a
+      :exc:`DeprecationWarning` if there is no running event loop and no
+      current loop is set.
       In some future Python release this will become an error.
 
 .. function:: set_event_loop(loop)
@@ -183,22 +189,13 @@ Running and stopping the loop
 
    .. versionadded:: 3.6
 
-.. coroutinemethod:: loop.shutdown_default_executor(timeout=None)
+.. coroutinemethod:: loop.shutdown_default_executor()
 
    Schedule the closure of the default executor and wait for it to join all of
    the threads in the :class:`~concurrent.futures.ThreadPoolExecutor`.
    Once this method has been called,
    using the default executor with :meth:`loop.run_in_executor`
    will raise a :exc:`RuntimeError`.
-
-   The *timeout* parameter specifies the amount of time
-   (in :class:`float` seconds) the executor will be given to finish joining.
-   With the default, ``None``,
-   the executor is allowed an unlimited amount of time.
-
-   If the *timeout* is reached, a :exc:`RuntimeWarning` is emitted
-   and the default executor is terminated
-   without waiting for its threads to finish joining.
 
    .. note::
 
@@ -207,8 +204,6 @@ Running and stopping the loop
 
    .. versionadded:: 3.9
 
-   .. versionchanged:: 3.12
-      Added the *timeout* parameter.
 
 Scheduling callbacks
 ^^^^^^^^^^^^^^^^^^^^
@@ -397,8 +392,7 @@ Opening network connections
                           local_addr=None, server_hostname=None, \
                           ssl_handshake_timeout=None, \
                           ssl_shutdown_timeout=None, \
-                          happy_eyeballs_delay=None, interleave=None, \
-                          all_errors=False)
+                          happy_eyeballs_delay=None, interleave=None)
 
    Open a streaming transport connection to a given
    address specified by *host* and *port*.
@@ -495,14 +489,6 @@ Opening network connections
      to complete before aborting the connection. ``30.0`` seconds if ``None``
      (default).
 
-   * *all_errors* determines what exceptions are raised when a connection cannot
-     be created. By default, only a single ``Exception`` is raised: the first
-     exception if there is only one or all errors have same message, or a single
-     ``OSError`` with the error messages combined. When ``all_errors`` is ``True``,
-     an ``ExceptionGroup`` will be raised containing all exceptions (even if there
-     is only one).
-
-
    .. versionchanged:: 3.5
 
       Added support for SSL/TLS in :class:`ProactorEventLoop`.
@@ -534,9 +520,6 @@ Opening network connections
    .. versionchanged:: 3.11
 
       Added the *ssl_shutdown_timeout* parameter.
-
-   .. versionchanged:: 3.12
-      *all_errors* was added.
 
    .. seealso::
 
@@ -1320,15 +1303,6 @@ Allows customizing how exceptions are handled in the event loop.
    (see :meth:`call_exception_handler` documentation for details
    about context).
 
-   If the handler is called on behalf of a :class:`~asyncio.Task` or
-   :class:`~asyncio.Handle`, it is run in the
-   :class:`contextvars.Context` of that task or callback handle.
-
-   .. versionchanged:: 3.12
-
-      The handler may be called in the :class:`~contextvars.Context`
-      of the task or handle where the exception originated.
-
 .. method:: loop.get_exception_handler()
 
    Return the current exception handler, or ``None`` if no custom
@@ -1441,7 +1415,9 @@ async/await code consider using the high-level
 
    * *stdin* can be any of these:
 
-     * a file-like object
+     * a file-like object representing a pipe to be connected to the
+       subprocess's standard input stream using
+       :meth:`~loop.connect_write_pipe`
      * the :const:`subprocess.PIPE` constant (default) which will create a new
        pipe and connect it,
      * the value ``None`` which will make the subprocess inherit the file
@@ -1451,7 +1427,9 @@ async/await code consider using the high-level
 
    * *stdout* can be any of these:
 
-     * a file-like object
+     * a file-like object representing a pipe to be connected to the
+       subprocess's standard output stream using
+       :meth:`~loop.connect_write_pipe`
      * the :const:`subprocess.PIPE` constant (default) which will create a new
        pipe and connect it,
      * the value ``None`` which will make the subprocess inherit the file
@@ -1461,7 +1439,9 @@ async/await code consider using the high-level
 
    * *stderr* can be any of these:
 
-     * a file-like object
+     * a file-like object representing a pipe to be connected to the
+       subprocess's standard error stream using
+       :meth:`~loop.connect_write_pipe`
      * the :const:`subprocess.PIPE` constant (default) which will create a new
        pipe and connect it,
      * the value ``None`` which will make the subprocess inherit the file
@@ -1479,11 +1459,6 @@ async/await code consider using the high-level
      The ``asyncio`` subprocess API does not support decoding the streams
      as text. :func:`bytes.decode` can be used to convert the bytes returned
      from the stream to text.
-
-   If a file-like object passed as *stdin*, *stdout* or *stderr* represents a
-   pipe, then the other side of this pipe should be registered with
-   :meth:`~loop.connect_write_pipe` or :meth:`~loop.connect_read_pipe` for use
-   with the event loop.
 
    See the constructor of the :class:`subprocess.Popen` class
    for documentation on other arguments.
@@ -1530,13 +1505,6 @@ Callback Handles
 
    A callback wrapper object returned by :meth:`loop.call_soon`,
    :meth:`loop.call_soon_threadsafe`.
-
-   .. method:: get_context()
-
-      Return the :class:`contextvars.Context` object
-      associated with the handle.
-
-      .. versionadded:: 3.12
 
    .. method:: cancel()
 
