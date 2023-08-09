@@ -224,47 +224,17 @@
 <p>使用長度作為訊息的前綴（例如，使用 5 個數字字元表示）會變得更複雜，因為（信不信由你）你可能無法在一次 <code class="docutils literal notranslate"><span class="pre">recv</span></code> 中獲得所有 5 個字元。在一般使用下，可能不會有這個狀況，但在高負載的網路下，除非使用兩個 <code class="docutils literal notranslate"><span class="pre">recv</span></code> （第一個用於確定長度，第二個用於取得訊息的資料部分），否則你的程式碼很快就會出現錯誤。這令人非常頭痛。同樣的情況也會讓你發現 <code class="docutils literal notranslate"><span class="pre">send</span></code> 並不總能在一次傳輸中完全清除所有內容。儘管已經閱讀了這篇文章，但最終還是無法解決！</p>
 <p>為了節省篇幅、培養你的技能（並保持我的競爭優勢），這些改進方法留給讀者自行練習。現在讓我們開始進行清理工作。</p>
 <section id="binary-data">
-<h3>Binary Data<a class="headerlink" href="#binary-data" title="本標頭的永久連結">¶</a></h3>
-<p>It is perfectly possible to send binary data over a socket. The major problem is
-that not all machines use the same formats for binary data. For example,
-<a class="reference external" href="https://en.wikipedia.org/wiki/Endianness#Networking">network byte order</a>
-is big-endian, with the most significant byte first,
-so a 16 bit integer with the value <code class="docutils literal notranslate"><span class="pre">1</span></code> would be the two hex bytes <code class="docutils literal notranslate"><span class="pre">00</span> <span class="pre">01</span></code>.
-However, most common processors (x86/AMD64, ARM, RISC-V), are little-endian,
-with the least significant byte first - that same <code class="docutils literal notranslate"><span class="pre">1</span></code> would be <code class="docutils literal notranslate"><span class="pre">01</span> <span class="pre">00</span></code>.</p>
-<p>Socket libraries have calls for converting 16 and 32 bit integers - <code class="docutils literal notranslate"><span class="pre">ntohl,</span>
-<span class="pre">htonl,</span> <span class="pre">ntohs,</span> <span class="pre">htons</span></code> where &quot;n&quot; means <em>network</em> and &quot;h&quot; means <em>host</em>, &quot;s&quot; means
-<em>short</em> and &quot;l&quot; means <em>long</em>. Where network order is host order, these do
-nothing, but where the machine is byte-reversed, these swap the bytes around
-appropriately.</p>
-<p>In these days of 64-bit machines, the ASCII representation of binary data is
-frequently smaller than the binary representation. That's because a surprising
-amount of the time, most integers have the value 0, or maybe 1.
-The string <code class="docutils literal notranslate"><span class="pre">&quot;0&quot;</span></code> would be two bytes, while a full 64-bit integer would be 8.
-Of course, this doesn't fit well with fixed-length messages.
-Decisions, decisions.</p>
+<h3>二進位資料<a class="headerlink" href="#binary-data" title="本標頭的永久連結">¶</a></h3>
+<p>使用 socket 傳輸二進位資料完全是可行的。最主要的問題在於不同機器使用不同的二進位資料格式。例如，<a class="reference external" href="https://en.wikipedia.org/wiki/Endianness#Networking">網路二進位順序</a> 採用的是「大端序 big-endian」，所以一個值為 <code class="docutils literal notranslate"><span class="pre">1</span></code> 的 16 位元整數會表示成兩個 16 進位的位元組 <code class="docutils literal notranslate"><span class="pre">00</span> <span class="pre">01</span></code>。然而大多數常見的處理器 (x86/AMD64，ARM，RISC-V) 採用的是「小端序 little-endian」，所以相同的 <code class="docutils literal notranslate"><span class="pre">1</span></code> 會被表示成 <code class="docutils literal notranslate"><span class="pre">01</span> <span class="pre">00</span></code>。（譯者注：將一個多位數的低位放在較小的位址處，高位放在較大的位址處，則稱小端序；反之則稱大端序。）</p>
+<p>Socket 函式庫提供了用於轉換 16 位元和 32 位元整數的函式 - <code class="docutils literal notranslate"><span class="pre">ntohl,</span> <span class="pre">htonl,</span> <span class="pre">ntohs,</span> <span class="pre">htons</span></code>，其中 &quot;n&quot; 表示 <em>network</em>，&quot;h&quot; 表示 <em>host</em>，&quot;s&quot; 表示 <em>short</em>，&quot;l&quot; 表示 <em>long</em>。當網路的位元組順序和主機位元組順序相同時，這些函式不會做任何操作，但當主機的位元組順序相反時，這些函式會適當的交換位元組順序。</p>
+<p>在現今的 64 位元機器中，二進位資料的 ASCII 表示通常會比二進位表示要小，這是因為在很多情況下，大多數整數的值為 0 或者 1。例如，字串形式的 <code class="docutils literal notranslate"><span class="pre">&quot;0&quot;</span></code> 是兩個位元組，而完整的 64 位元整數則是 8 個位元組。當然，這對固定長度的訊息來說不太適合，需要自行決定。</p>
 </section>
 </section>
 <section id="disconnecting">
-<h2>Disconnecting<a class="headerlink" href="#disconnecting" title="本標頭的永久連結">¶</a></h2>
-<p>Strictly speaking, you're supposed to use <code class="docutils literal notranslate"><span class="pre">shutdown</span></code> on a socket before you
-<code class="docutils literal notranslate"><span class="pre">close</span></code> it.  The <code class="docutils literal notranslate"><span class="pre">shutdown</span></code> is an advisory to the socket at the other end.
-Depending on the argument you pass it, it can mean &quot;I'm not going to send
-anymore, but I'll still listen&quot;, or &quot;I'm not listening, good riddance!&quot;.  Most
-socket libraries, however, are so used to programmers neglecting to use this
-piece of etiquette that normally a <code class="docutils literal notranslate"><span class="pre">close</span></code> is the same as <code class="docutils literal notranslate"><span class="pre">shutdown();</span>
-<span class="pre">close()</span></code>.  So in most situations, an explicit <code class="docutils literal notranslate"><span class="pre">shutdown</span></code> is not needed.</p>
-<p>One way to use <code class="docutils literal notranslate"><span class="pre">shutdown</span></code> effectively is in an HTTP-like exchange. The client
-sends a request and then does a <code class="docutils literal notranslate"><span class="pre">shutdown(1)</span></code>. This tells the server &quot;This
-client is done sending, but can still receive.&quot;  The server can detect &quot;EOF&quot; by
-a receive of 0 bytes. It can assume it has the complete request.  The server
-sends a reply. If the <code class="docutils literal notranslate"><span class="pre">send</span></code> completes successfully then, indeed, the client
-was still receiving.</p>
-<p>Python takes the automatic shutdown a step further, and says that when a socket
-is garbage collected, it will automatically do a <code class="docutils literal notranslate"><span class="pre">close</span></code> if it's needed. But
-relying on this is a very bad habit. If your socket just disappears without
-doing a <code class="docutils literal notranslate"><span class="pre">close</span></code>, the socket at the other end may hang indefinitely, thinking
-you're just being slow. <em>Please</em> <code class="docutils literal notranslate"><span class="pre">close</span></code> your sockets when you're done.</p>
+<h2>結束連線<a class="headerlink" href="#disconnecting" title="本標頭的永久連結">¶</a></h2>
+<p>嚴格來說，在關閉 socket 前，你應該使用 <code class="docutils literal notranslate"><span class="pre">shutdown</span></code> 函式。<code class="docutils literal notranslate"><span class="pre">shutdown</span></code> 函式是發送給 socket 另一端的一個提醒。根據你傳遞的引數，它可以表示「我不會再發送任何訊息了，但我仍然會持續監聽」，或者是「我不會再繼續監聽了，真讚！」。然而，大多數的 socket 函式庫或程式設計師都習慣忽略這種禮節，因為通常情況下 <code class="docutils literal notranslate"><span class="pre">close</span></code> 跟 <code class="docutils literal notranslate"><span class="pre">shutdown();</span> <span class="pre">close()</span></code> 是一樣的。所以在大多數情況下，不需要再特地使用 <code class="docutils literal notranslate"><span class="pre">shutdown</span></code> 了。</p>
+<p>有效使用 <code class="docutils literal notranslate"><span class="pre">shutdown</span></code> 的一種方式是在類似 HTTP 的交換中，用戶端發送請求後，然後使用 <code class="docutils literal notranslate"><span class="pre">shutdown(1)</span></code>。這告訴伺服器「這個用戶端已經發送完成，但仍可以接收」。伺服器可以通過接收「零位元組」來檢測 &quot;EOF&quot;。這樣它就可以確定已經接收到完整的請求。伺服器發送回覆，如果 <code class="docutils literal notranslate"><span class="pre">send</span></code> 成功完成，那麼用戶端確實在持續接收。</p>
+<p>Python 更進一步地採取自動關閉的步驟，並且當 socket 被垃圾回收機制回收時，如果需要的話，他會自動執行 <code class="docutils literal notranslate"><span class="pre">close</span></code>。但依賴這個機制是一個非常不好的習慣，如果你的 socket 在沒有 <code class="docutils literal notranslate"><span class="pre">close</span></code> 的情況下消失了，那麼另一端的 socket 可能會認為你只是慢了一步，而無期限的等待。<em>請務必</em> 在使用完畢後使用 <code class="docutils literal notranslate"><span class="pre">close</span></code> 關閉你的 sockets。</p>
 <section id="when-sockets-die">
 <h3>When Sockets Die<a class="headerlink" href="#when-sockets-die" title="本標頭的永久連結">¶</a></h3>
 <p>Probably the worst thing about using blocking sockets is what happens when the
@@ -394,10 +364,10 @@ very, very well) with my sockets.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#using-a-socket">使用一個 Socket</a><ul>
-<li><a class="reference internal" href="#binary-data">Binary Data</a></li>
+<li><a class="reference internal" href="#binary-data">二進位資料</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#disconnecting">Disconnecting</a><ul>
+<li><a class="reference internal" href="#disconnecting">結束連線</a><ul>
 <li><a class="reference internal" href="#when-sockets-die">When Sockets Die</a></li>
 </ul>
 </li>
@@ -447,10 +417,10 @@ very, very well) with my sockets.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#using-a-socket">使用一個 Socket</a><ul>
-<li><a class="reference internal" href="#binary-data">Binary Data</a></li>
+<li><a class="reference internal" href="#binary-data">二進位資料</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#disconnecting">Disconnecting</a><ul>
+<li><a class="reference internal" href="#disconnecting">結束連線</a><ul>
 <li><a class="reference internal" href="#when-sockets-die">When Sockets Die</a></li>
 </ul>
 </li>
@@ -558,7 +528,7 @@ very, very well) with my sockets.</p>
 <br />
     <br />
 
-    最後更新於 8月 08, 2023。
+    最後更新於 8月 09, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 

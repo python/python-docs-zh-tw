@@ -172,7 +172,11 @@
 <dt id="term-binary-file">binary file（二進制檔案）<a class="headerlink" href="#term-binary-file" title="本術語的永久連結">¶</a></dt><dd><p>一個能夠讀取和寫入 <a class="reference internal" href="#term-bytes-like-object"><span class="xref std std-term">bytes-like objects</span></a>（類位元組串物件）的 <a class="reference internal" href="#term-file-object"><span class="xref std std-term">file object</span></a>（檔案物件）。二進制檔案的例子有：以二進制模式（<code class="docutils literal notranslate"><span class="pre">'rb'</span></code>、<code class="docutils literal notranslate"><span class="pre">'wb'</span></code> 或 <code class="docutils literal notranslate"><span class="pre">'rb+'</span></code>）開啟的檔案、<code class="xref py py-data docutils literal notranslate"><span class="pre">sys.stdin.buffer</span></code>、<code class="xref py py-data docutils literal notranslate"><span class="pre">sys.stdout.buffer</span></code>，以及 <a class="reference internal" href="library/io.html#io.BytesIO" title="io.BytesIO"><code class="xref py py-class docutils literal notranslate"><span class="pre">io.BytesIO</span></code></a> 和 <a class="reference internal" href="library/gzip.html#gzip.GzipFile" title="gzip.GzipFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">gzip.GzipFile</span></code></a> 實例。</p>
 <p>另請參閱 <a class="reference internal" href="#term-text-file"><span class="xref std std-term">text file</span></a>（文字檔案），它是一個能夠讀取和寫入 <a class="reference internal" href="library/stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> 物件的檔案物件。</p>
 </dd>
-<dt id="term-borrowed-reference">borrowed reference（借用參照）<a class="headerlink" href="#term-borrowed-reference" title="本術語的永久連結">¶</a></dt><dd><p>在 Python 的 C API 中，借用參照是一個對物件的參照。它不會修改該物件的參照計數 (reference count)。如果該物件被銷毀，它會成為一個迷途指標 (dangling pointer)。例如，一次垃圾回收 (garbage collection) 可以移除對物件的最後一個 <a class="reference internal" href="#term-strong-reference"><span class="xref std std-term">strong reference</span></a>（強參照），而將該物件銷毀。</p>
+<dt id="term-borrowed-reference">borrowed reference（借用參照）<a class="headerlink" href="#term-borrowed-reference" title="本術語的永久連結">¶</a></dt><dd><p>In Python's C API, a borrowed reference is a reference to an object,
+where the code using the object does not own the reference.
+It becomes a dangling
+pointer if the object is destroyed. For example, a garbage collection can
+remove the last <a class="reference internal" href="#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to the object and so destroy it.</p>
 <p>對 <a class="reference internal" href="#term-borrowed-reference"><span class="xref std std-term">borrowed reference</span></a> 呼叫 <a class="reference internal" href="c-api/refcounting.html#c.Py_INCREF" title="Py_INCREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_INCREF()</span></code></a> 以將它原地 (in-place) 轉換為 <a class="reference internal" href="#term-strong-reference"><span class="xref std std-term">strong reference</span></a> 是被建議的做法，除非該物件不能在最後一次使用借用參照之前被銷毀。<a class="reference internal" href="c-api/refcounting.html#c.Py_NewRef" title="Py_NewRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_NewRef()</span></code></a> 函式可用於建立一個新的 <a class="reference internal" href="#term-strong-reference"><span class="xref std std-term">strong reference</span></a>。</p>
 </dd>
 <dt id="term-bytes-like-object">bytes-like object（類位元組串物件）<a class="headerlink" href="#term-bytes-like-object" title="本術語的永久連結">¶</a></dt><dd><p>一個支援<a class="reference internal" href="c-api/buffer.html#bufferobjects"><span class="std std-ref">緩衝協定 (Buffer Protocol)</span></a>且能夠匯出 C-<a class="reference internal" href="#term-contiguous"><span class="xref std std-term">contiguous</span></a> 緩衝區的物件。這包括所有的 <a class="reference internal" href="library/stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>、<a class="reference internal" href="library/stdtypes.html#bytearray" title="bytearray"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code></a> 和 <a class="reference internal" href="library/array.html#array.array" title="array.array"><code class="xref py py-class docutils literal notranslate"><span class="pre">array.array</span></code></a> 物件，以及許多常見的 <a class="reference internal" href="library/stdtypes.html#memoryview" title="memoryview"><code class="xref py py-class docutils literal notranslate"><span class="pre">memoryview</span></code></a> 物件。類位元組串物件可用於處理二進制資料的各種運算；這些運算包括壓縮、儲存至二進制檔案和透過 socket（插座）發送。</p>
@@ -496,7 +500,14 @@
 </pre></div>
 </div>
 </dd>
-<dt id="term-reference-count">reference count（參照計數）<a class="headerlink" href="#term-reference-count" title="本術語的永久連結">¶</a></dt><dd><p>對於一個物件的參照次數。當一個物件的參照計數下降到零時，它會被解除配置 (deallocated)。參照計數通常在 Python 程式碼中看不到，但它卻是 <a class="reference internal" href="#term-CPython"><span class="xref std std-term">CPython</span></a> 實作的一個關鍵元素。程式設計師可以呼叫 <a class="reference internal" href="library/sys.html#sys.getrefcount" title="sys.getrefcount"><code class="xref py py-func docutils literal notranslate"><span class="pre">getrefcount()</span></code></a> 函式來回傳一個特定物件的參照計數。</p>
+<dt id="term-reference-count">reference count（參照計數）<a class="headerlink" href="#term-reference-count" title="本術語的永久連結">¶</a></dt><dd><p>The number of references to an object.  When the reference count of an
+object drops to zero, it is deallocated.  Some objects are
+&quot;immortal&quot; and have reference counts that are never modified, and
+therefore the objects are never deallocated.  Reference counting is
+generally not visible to Python code, but it is a key element of the
+<a class="reference internal" href="#term-CPython"><span class="xref std std-term">CPython</span></a> implementation.  Programmers can call the
+<a class="reference internal" href="library/sys.html#sys.getrefcount" title="sys.getrefcount"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.getrefcount()</span></code></a> function to return the
+reference count for a particular object.</p>
 </dd>
 <dt id="term-regular-package">regular package（正規套件）<a class="headerlink" href="#term-regular-package" title="本術語的永久連結">¶</a></dt><dd><p>一個傳統的 <a class="reference internal" href="#term-package"><span class="xref std std-term">package</span></a>（套件），例如一個包含 <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> 檔案的目錄。</p>
 <p>另請參閱 <a class="reference internal" href="#term-namespace-package"><span class="xref std std-term">namespace package</span></a>（命名空間套件）。</p>
@@ -516,7 +527,11 @@
 </dd>
 <dt id="term-statement">statement（陳述式）<a class="headerlink" href="#term-statement" title="本術語的永久連結">¶</a></dt><dd><p>陳述式是一個套組（suite，一個程式碼「區塊」）中的一部分。陳述式可以是一個 <a class="reference internal" href="#term-expression"><span class="xref std std-term">expression</span></a>（運算式），或是含有關鍵字（例如 <a class="reference internal" href="reference/compound_stmts.html#if"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">if</span></code></a>、<a class="reference internal" href="reference/compound_stmts.html#while"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">while</span></code></a> 或 <a class="reference internal" href="reference/compound_stmts.html#for"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">for</span></code></a>）的多種結構之一。</p>
 </dd>
-<dt id="term-strong-reference">strong reference（強參照）<a class="headerlink" href="#term-strong-reference" title="本術語的永久連結">¶</a></dt><dd><p>在 Python 的 C API 中，強參照是一個對物件的參照，在它被建立時會增加該物件的參照計數 (reference count)，在它被刪除時則會減少該物件的參照計數。</p>
+<dt id="term-strong-reference">strong reference（強參照）<a class="headerlink" href="#term-strong-reference" title="本術語的永久連結">¶</a></dt><dd><p>In Python's C API, a strong reference is a reference to an object
+which is owned by the code holding the reference.  The strong
+reference is taken by calling <a class="reference internal" href="c-api/refcounting.html#c.Py_INCREF" title="Py_INCREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_INCREF()</span></code></a> when the
+reference is created and released with <a class="reference internal" href="c-api/refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a>
+when the reference is deleted.</p>
 <p><a class="reference internal" href="c-api/refcounting.html#c.Py_NewRef" title="Py_NewRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_NewRef()</span></code></a> 函式可用於建立一個對物件的強參照。通常，在退出強參照的作用域之前，必須在該強參照上呼叫 <a class="reference internal" href="c-api/refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 函式，以避免洩漏一個參照。</p>
 <p>另請參閱 <a class="reference internal" href="#term-borrowed-reference"><span class="xref std std-term">borrowed reference</span></a>（借用參照）。</p>
 </dd>
@@ -739,7 +754,7 @@
 <br />
     <br />
 
-    最後更新於 8月 08, 2023。
+    最後更新於 8月 09, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 

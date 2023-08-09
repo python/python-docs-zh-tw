@@ -1343,7 +1343,8 @@ before clearing any member fields.</p>
 </pre></div>
 </div>
 <p>Finally, if the type is heap allocated (<a class="reference internal" href="#c.Py_TPFLAGS_HEAPTYPE" title="Py_TPFLAGS_HEAPTYPE"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_TPFLAGS_HEAPTYPE</span></code></a>), the
-deallocator should decrement the reference count for its type object after
+deallocator should release the owned reference to its type object
+(via <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a>)  after
 calling the type deallocator. In order to avoid dangling pointers, the
 recommended way to achieve this is:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">foo_dealloc</span><span class="p">(</span><span class="n">foo_object</span><span class="w"> </span><span class="o">*</span><span class="n">self</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -2073,9 +2074,10 @@ members to <code class="docutils literal notranslate"><span class="pre">NULL</sp
 </pre></div>
 </div>
 <p>The <a class="reference internal" href="refcounting.html#c.Py_CLEAR" title="Py_CLEAR"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_CLEAR()</span></code></a> macro should be used, because clearing references is
-delicate:  the reference to the contained object must not be decremented until
+delicate:  the reference to the contained object must not be released
+(via <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a>) until
 after the pointer to the contained object is set to <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.  This is because
-decrementing the reference count may cause the contained object to become trash,
+releasing the reference may cause the contained object to become trash,
 triggering a chain of reclamation activity that may include invoking arbitrary
 Python code (due to finalizers, or weakref callbacks, associated with the
 contained object). If it's possible for such code to reference <em>self</em> again,
@@ -2183,7 +2185,7 @@ result of a comparison.
 VAL_A and VAL_B must be orderable by C comparison operators (for example,
 they may be C ints or floats). The third argument specifies the requested
 operation, as for <a class="reference internal" href="object.html#c.PyObject_RichCompare" title="PyObject_RichCompare"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_RichCompare()</span></code></a>.</p>
-<p>The return value's reference count is properly incremented.</p>
+<p>The returned value is a new <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a>.</p>
 <p>On error, sets an exception and returns <code class="docutils literal notranslate"><span class="pre">NULL</span></code> from the function.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.7 版新加入.</span></p>
@@ -3796,7 +3798,7 @@ to create instances (e.g. uses a separate factory func) using
 <br />
     <br />
 
-    最後更新於 8月 08, 2023。
+    最後更新於 8月 09, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
