@@ -67,7 +67,7 @@ $(VENV)/bin/activate:
 
 
 $(VENV)/bin/sphinx-build: $(VENV)/bin/activate
-	. $(VENV)/bin/activate; python3 -m pip install sphinx python-docs-theme
+	. $(VENV)/bin/activate; python3 -m pip install "sphinx<7.2.0" python-docs-theme
 
 
 $(VENV)/bin/blurb: $(VENV)/bin/activate
@@ -76,7 +76,7 @@ $(VENV)/bin/blurb: $(VENV)/bin/activate
 
 .PHONY: upgrade_venv
 upgrade_venv: $(VENV)/bin/activate ## Upgrade the venv that compiles the doc
-	. $(VENV)/bin/activate; python3 -m pip install --upgrade sphinx python-docs-theme blurb
+	. $(VENV)/bin/activate; python3 -m pip install --upgrade "sphinx<7.2.0" python-docs-theme blurb
 
 
 .PHONY: progress
