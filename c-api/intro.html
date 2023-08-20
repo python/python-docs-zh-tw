@@ -304,75 +304,14 @@
 <p>所有 Python 物件（甚至是 Python 整數）都有一個型別 (<em class="dfn">type</em>) 和一個參照計數 (<em class="dfn">reference count</em>)。一個物件的型別決定了它是什麼種類的物件（例如一個整數、一個 list 或一個使用者定義的函式；還有更多型別，請見<a class="reference internal" href="../reference/datamodel.html#types"><span class="std std-ref">標準型別階層</span></a>）。對於每個眾所周知的型別，都有一個巨集來檢查物件是否屬於該型別；例如，若（且唯若）*a* 指向的物件是 Python list 時，<code class="docutils literal notranslate"><span class="pre">PyList_Check(a)</span></code> 為真。</p>
 <section id="reference-counts">
 <span id="api-refcounts"></span><h3>參照計數<a class="headerlink" href="#reference-counts" title="Link to this heading">¶</a></h3>
-<p>The reference count is important because today's computers have a  finite
-(and often severely limited) memory size; it counts how many different
-places there are that have a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to an object.
-Such a place could be another object, or a global (or static) C variable,
-or a local variable in some C function.
-When the last <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to an object is released
-(i.e. its reference count becomes zero), the object is deallocated.
-If it contains references to other objects, those references are released.
-Those other objects may be deallocated in turn, if there are no more
-references to them, and so on.  (There's an obvious problem  with
-objects that reference each other here; for now, the solution
-is &quot;don't do that.&quot;)</p>
-<p id="index-4">Reference counts are always manipulated explicitly.  The normal way is
-to use the macro <a class="reference internal" href="refcounting.html#c.Py_INCREF" title="Py_INCREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_INCREF()</span></code></a> to take a new reference to an
-object (i.e. increment its reference count by one),
-and <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> to release that reference (i.e. decrement the
-reference count by one).  The <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> macro
-is considerably more complex than the incref one, since it must check whether
-the reference count becomes zero and then cause the object's deallocator to be
-called.  The deallocator is a function pointer contained in the object's type
-structure.  The type-specific deallocator takes care of releasing references
-for other objects contained in the object if this is a compound
-object type, such as a list, as well as performing any additional finalization
-that's needed.  There's no chance that the reference count can overflow; at
-least as many bits are used to hold the reference count as there are distinct
-memory locations in virtual memory (assuming <code class="docutils literal notranslate"><span class="pre">sizeof(Py_ssize_t)</span> <span class="pre">&gt;=</span> <span class="pre">sizeof(void*)</span></code>).
-Thus, the reference count increment is a simple operation.</p>
-<p>It is not necessary to hold a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> (i.e. increment
-the reference count) for every local variable that contains a pointer
-to an object.  In theory, the  object's
-reference count goes up by one when the variable is made to  point to it and it
-goes down by one when the variable goes out of  scope.  However, these two
-cancel each other out, so at the end the  reference count hasn't changed.  The
-only real reason to use the  reference count is to prevent the object from being
-deallocated as  long as our variable is pointing to it.  If we know that there
-is at  least one other reference to the object that lives at least as long as
-our variable, there is no need to take a new <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a>
-(i.e. increment the reference count) temporarily.
-An important situation where this arises is in objects  that are passed as
-arguments to C functions in an extension module  that are called from Python;
-the call mechanism guarantees to hold a  reference to every argument for the
-duration of the call.</p>
-<p>However, a common pitfall is to extract an object from a list and hold on to it
-for a while without taking a new reference.  Some other operation might
-conceivably remove the object from the list, releasing that reference,
-and possibly deallocating it. The real danger is that innocent-looking
-operations may invoke arbitrary Python code which could do this; there is a code
-path which allows control to flow back to the user from a <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a>, so
-almost any operation is potentially dangerous.</p>
-<p>A safe approach is to always use the generic operations (functions  whose name
-begins with <code class="docutils literal notranslate"><span class="pre">PyObject_</span></code>, <code class="docutils literal notranslate"><span class="pre">PyNumber_</span></code>, <code class="docutils literal notranslate"><span class="pre">PySequence_</span></code> or <code class="docutils literal notranslate"><span class="pre">PyMapping_</span></code>).
-These operations always create a new <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a>
-(i.e. increment the reference count) of the object they return.
-This leaves the caller with the responsibility to call <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> when
-they are done with the result; this soon becomes second nature.</p>
+<p>參照計數很重要，因為現今的電腦記憶體大小是有限的（而且通常是非常有限的）；它計算有多少個不同的地方用有了一個物件的<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>。這樣的地方可以是另一個物件，或者全域（或靜態）C 變數，或者某個 C 函式中的本地變數。當一個物件的最後一個<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>被釋放時（即其的參照計數變為零），該物件將被解除配置 (deallocated)。如果它包含對其他物件的參照，則它們的參照會被釋放。如果這樣的釋放使得再也沒有任何對於它們的參照，則可以依次為那些其他物件解除配置，依此類推。 （此處相互參照物件的存在是個明顯的問題；目前，解決方案是「就不要那樣做」。）</p>
+<p id="index-4">參照計數總是被明確地操作。正常的方法是使用巨集 <a class="reference internal" href="refcounting.html#c.Py_INCREF" title="Py_INCREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_INCREF()</span></code></a> 來取得對於物件的參照（即參照計數加一），並使用巨集 <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 來釋放參照（即將參照計數減一）。<a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 巨集比 incref 巨集複雜得多，因為它必須檢查參照計數是否變為零，然後呼叫物件的釋放器 (deallocator)。釋放器是包含在物件型別結構中的函式指標。特定型別的釋放器，在如果是一個複合物件型別（例如 list）時負責釋放物件中包含的其他物件的參照，並執行任何需要的額外完結步驟。參照計數不可能溢出；至少與虛擬記憶體中用來保存參照計數的不同記憶體位置數量一樣多的位元會被使用（假設 <code class="docutils literal notranslate"><span class="pre">sizeof(Py_ssize_t)</span> <span class="pre">&gt;=</span> <span class="pre">sizeof(void*)</span></code>）。因此參照計數增加是一個簡單的操作。</p>
+<p>沒有必要為每個包含物件指標的本地變數物件都持有一個<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>（即增加參照計數）。理論上，當變數指向它時，物件的參照計數會增加 1，而當變數離開作用域時就會減少 1。然而這兩者會相互抵消，所以最後參照計數沒有改變。使用參照計數的唯一真正原因是防止物件還有變數指向它時被解除配置。如果我們知道至少有一個物件的其他參照生存了至少與我們的變數一樣久，就不需要臨時增加建立新的<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>（即增加參照計數）。出現這種情況的一個重要情況是在從 Python 呼叫的擴充模組中作為引數傳遞給 C 函式的物件；呼叫機制保證在呼叫期間保持對每個參數的參照。</p>
+<p>然而，一個常見的陷阱是從一個 list 中提取一個物件並保留它一段時間而不取得其參照。某些其他操作可能會從列表中刪除該物件，減少其參照計數並可能取消分配它。真正的危險是看似無害的操作可能會呼叫可以執行此操作的任意 Python 程式碼；有一個程式碼路徑允許控制權從 <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 回歸使用者，因此幾乎任何操作都有潛在危險。</p>
+<p>一種安全的方法是都使用通用 (generics) 操作（名稱以 <code class="docutils literal notranslate"><span class="pre">PyObject_</span></code>、<code class="docutils literal notranslate"><span class="pre">PyNumber_</span></code>、<code class="docutils literal notranslate"><span class="pre">PySequence_</span></code> 或 <code class="docutils literal notranslate"><span class="pre">PyMapping_</span></code> 開頭的函式）。這些操作總是建立新的對於它們回傳物件的<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>（即增加其參照計數）。這讓呼叫者有責任在處理完結果後呼叫 <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a>；這就成為第二本質。</p>
 <section id="reference-count-details">
 <span id="api-refcountdetails"></span><h4>參照計數詳細資訊<a class="headerlink" href="#reference-count-details" title="Link to this heading">¶</a></h4>
-<p>The reference count behavior of functions in the Python/C API is best  explained
-in terms of <em>ownership of references</em>.  Ownership pertains to references, never
-to objects (objects are not owned: they are always shared).  &quot;Owning a
-reference&quot; means being responsible for calling Py_DECREF on it when the
-reference is no longer needed.  Ownership can also be transferred, meaning that
-the code that receives ownership of the reference then becomes responsible for
-eventually releasing it by calling <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> or <a class="reference internal" href="refcounting.html#c.Py_XDECREF" title="Py_XDECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_XDECREF()</span></code></a>
-when it's no longer needed---or passing on this responsibility (usually to its
-caller). When a function passes ownership of a reference on to its caller, the
-caller is said to receive a <em>new</em> reference.  When no ownership is transferred,
-the caller is said to <em>borrow</em> the reference. Nothing needs to be done for a
-<a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">borrowed reference</span></a>.</p>
+<p>Python/C API 中函式的參照計數行為最好用<em>參照的所有權</em>來解釋。所有權附屬於參照而非物件（物件並非被擁有，它們總是共享的）。「擁有參照」意味著當不再需要該參照時，負責在其上呼叫 Py_DECREF。所有權也可以轉移，這意味著接收參照所有權的程式碼最終會負責在不需要參照時透過呼叫 <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 或 <a class="reference internal" href="refcounting.html#c.Py_XDECREF" title="Py_XDECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_XDECREF()</span></code></a> 釋放參照 --- 或者將這個責任再傳遞出去（通常是給它的呼叫者）。當一個函式將參照的所有權傳遞給它的呼叫者時，呼叫者被稱為接收到一個<em>新</em>參照。當沒有所有權轉移時，呼叫者被稱為<em>借用</em>參照。如果是<a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">借用參照</span></a>就不需要做任何事情。</p>
 <p>相反地，當呼叫的函式傳入物件的參照時，有兩種可能性：函式有<em>竊取 (steal)</em> 物件的參照，或者沒有。 <em>竊取參照</em>意味著當你將參照傳遞給函式時，該函式假定它現在擁有該參照，並且你不再對它負責。</p>
 <p id="index-5">很少有函式會竊取參照；兩個值得注意的例外是 <a class="reference internal" href="list.html#c.PyList_SetItem" title="PyList_SetItem"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyList_SetItem()</span></code></a> 和 <a class="reference internal" href="tuple.html#c.PyTuple_SetItem" title="PyTuple_SetItem"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyTuple_SetItem()</span></code></a>，它們竊取了對項目的參照（但不是對項目所在的 tuple 或 list 的參照！）。因為有著使用新建立的物件來增加 (populate) tuple 或 list 的習慣，這些函式旨在竊取參照；例如，建立 tuple <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">2,</span> <span class="pre">&quot;three&quot;)</span></code> 的程式碼可以如下所示（先暫時忘記錯誤處理；更好的編寫方式如下所示）：</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">t</span><span class="p">;</span>
@@ -393,12 +332,7 @@ the caller is said to <em>borrow</em> the reference. Nothing needs to be done fo
 <span class="n">list</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Py_BuildValue</span><span class="p">(</span><span class="s">&quot;[iis]&quot;</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;three&quot;</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>It is much more common to use <a class="reference internal" href="object.html#c.PyObject_SetItem" title="PyObject_SetItem"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_SetItem()</span></code></a> and friends with items
-whose references you are only borrowing, like arguments that were passed in to
-the function you are writing.  In that case, their behaviour regarding references
-is much saner, since you don't have to take a new reference just so you
-can give that reference away (&quot;have it be stolen&quot;).  For example, this function
-sets all items of a list (actually, any mutable sequence) to a given item:</p>
+<p>更常見的是以那些借用參照的項目來使用 <a class="reference internal" href="object.html#c.PyObject_SetItem" title="PyObject_SetItem"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_SetItem()</span></code></a> 及其系列函式，比如傳遞給你正在編寫的函式的引數。在那種情況下，他們關於參照的行為會比較穩健，因為你不取得新的一個參照就可以放棄參照（「讓它被竊取」）。例如，此函式將 list（實際上是任何可變序列）的所有項目設定於給定項目：</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span>
 <span class="nf">set_all</span><span class="p">(</span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">target</span><span class="p">,</span><span class="w"> </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">item</span><span class="p">)</span>
 <span class="p">{</span>
