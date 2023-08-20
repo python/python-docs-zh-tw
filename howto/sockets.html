@@ -170,7 +170,7 @@
 <p>如果你需要在一台機器上的兩個行程間進行快速的行程間通訊 (IPC)，你應該考慮使用管道 (pipes) 或共享記憶體 (shared memory)。如果你確定要使用 AF_INET sockets，請將「伺服器端」socket 綁定到 <code class="docutils literal notranslate"><span class="pre">'localhost'</span></code>。在大多數平台上，這樣將會繞過幾個網路程式碼層，並且速度會更快一些。</p>
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
-<p><a class="reference internal" href="../library/multiprocessing.html#module-multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">multiprocessing</span></code></a> 將跨平台的行程間通訊整合到更高層的 API 中。</p>
+<p><a class="reference internal" href="../library/multiprocessing.html#module-multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">multiprocessing</span></code></a> 將跨平台行程間通訊整合到更高層的 API 中。</p>
 </div>
 </section>
 </section>
@@ -236,42 +236,17 @@
 <p>有效使用 <code class="docutils literal notranslate"><span class="pre">shutdown</span></code> 的一種方式是在類似 HTTP 的交換中，用戶端發送請求後，然後使用 <code class="docutils literal notranslate"><span class="pre">shutdown(1)</span></code>。這告訴伺服器「這個用戶端已經發送完成，但仍可以接收」。伺服器可以通過接收「零位元組」來檢測 &quot;EOF&quot;。這樣它就可以確定已經接收到完整的請求。伺服器發送回覆，如果 <code class="docutils literal notranslate"><span class="pre">send</span></code> 成功完成，那麼用戶端確實在持續接收。</p>
 <p>Python 更進一步地採取自動關閉的步驟，並且當 socket 被垃圾回收機制回收時，如果需要的話，他會自動執行 <code class="docutils literal notranslate"><span class="pre">close</span></code>。但依賴這個機制是一個非常不好的習慣，如果你的 socket 在沒有 <code class="docutils literal notranslate"><span class="pre">close</span></code> 的情況下消失了，那麼另一端的 socket 可能會認為你只是慢了一步，而無期限的等待。<em>請務必</em> 在使用完畢後使用 <code class="docutils literal notranslate"><span class="pre">close</span></code> 關閉你的 sockets。</p>
 <section id="when-sockets-die">
-<h3>When Sockets Die<a class="headerlink" href="#when-sockets-die" title="Link to this heading">¶</a></h3>
-<p>Probably the worst thing about using blocking sockets is what happens when the
-other side comes down hard (without doing a <code class="docutils literal notranslate"><span class="pre">close</span></code>). Your socket is likely to
-hang. TCP is a reliable protocol, and it will wait a long, long time
-before giving up on a connection. If you're using threads, the entire thread is
-essentially dead. There's not much you can do about it. As long as you aren't
-doing something dumb, like holding a lock while doing a blocking read, the
-thread isn't really consuming much in the way of resources. Do <em>not</em> try to kill
-the thread - part of the reason that threads are more efficient than processes
-is that they avoid the overhead associated with the automatic recycling of
-resources. In other words, if you do manage to kill the thread, your whole
-process is likely to be screwed up.</p>
+<h3>Sockets 何時銷毀<a class="headerlink" href="#when-sockets-die" title="Link to this heading">¶</a></h3>
+<p>使用阻塞式 socket 最糟糕的地方可能是在另一端突然強制關閉（未執行 <code class="docutils literal notranslate"><span class="pre">close</span></code>）的情況下會發生什麼？你的 socket 很可能會處於阻塞狀態。TCP 是一種可靠的協議，它在放棄連線之前會等待很長很長的時間。如果你正在使用執行緒，整個執行緒基本上已經無法使用。在這方面，你無法做太多事情。只要你不做一些愚蠢的事情，比如在執行阻塞式讀取時持有一個鎖，那麼執行緒並不會消耗太多資源。<em>不要</em>試圖終止執行緒 - 執行緒比行程更有效的部分原因是它們避免了與自動回收資源相關的開銷。換句話說，如果你確實設法終止了執行緒，整個行程可能會出現問題。</p>
 </section>
 </section>
 <section id="non-blocking-sockets">
-<h2>Non-blocking Sockets<a class="headerlink" href="#non-blocking-sockets" title="Link to this heading">¶</a></h2>
-<p>If you've understood the preceding, you already know most of what you need to
-know about the mechanics of using sockets. You'll still use the same calls, in
-much the same ways. It's just that, if you do it right, your app will be almost
-inside-out.</p>
-<p>In Python, you use <code class="docutils literal notranslate"><span class="pre">socket.setblocking(False)</span></code> to make it non-blocking. In C, it's
-more complex, (for one thing, you'll need to choose between the BSD flavor
-<code class="docutils literal notranslate"><span class="pre">O_NONBLOCK</span></code> and the almost indistinguishable POSIX flavor <code class="docutils literal notranslate"><span class="pre">O_NDELAY</span></code>, which
-is completely different from <code class="docutils literal notranslate"><span class="pre">TCP_NODELAY</span></code>), but it's the exact same idea. You
-do this after creating the socket, but before using it. (Actually, if you're
-nuts, you can switch back and forth.)</p>
-<p>The major mechanical difference is that <code class="docutils literal notranslate"><span class="pre">send</span></code>, <code class="docutils literal notranslate"><span class="pre">recv</span></code>, <code class="docutils literal notranslate"><span class="pre">connect</span></code> and
-<code class="docutils literal notranslate"><span class="pre">accept</span></code> can return without having done anything. You have (of course) a
-number of choices. You can check return code and error codes and generally drive
-yourself crazy. If you don't believe me, try it sometime. Your app will grow
-large, buggy and suck CPU. So let's skip the brain-dead solutions and do it
-right.</p>
-<p>Use <code class="docutils literal notranslate"><span class="pre">select</span></code>.</p>
-<p>In C, coding <code class="docutils literal notranslate"><span class="pre">select</span></code> is fairly complex. In Python, it's a piece of cake, but
-it's close enough to the C version that if you understand <code class="docutils literal notranslate"><span class="pre">select</span></code> in Python,
-you'll have little trouble with it in C:</p>
+<h2>非阻塞的 Sockets<a class="headerlink" href="#non-blocking-sockets" title="Link to this heading">¶</a></h2>
+<p>如果你已經理解了前面的內容，你已經知道了大部分關於使用 sockets 的機制的所需知識，你仍然會以非常相似的方式使用相同的函式。就這樣而已，如果你做的對，你的程式就會是近乎完美的。</p>
+<p>在 Python 中可以使用 <code class="docutils literal notranslate"><span class="pre">socket.setblocking(False)</span></code> 來設定為非阻塞。在 C 的作法更為複雜（例如，你需要在 BSD 風格的 <code class="docutils literal notranslate"><span class="pre">O_NONBLOCK</span></code> 和幾乎沒有區別的 POSIX 風格的 <code class="docutils literal notranslate"><span class="pre">O_NDELAY</span></code> 之間做出選擇，這與 <code class="docutils literal notranslate"><span class="pre">TCP_NODELAY</span></code> 完全不同），但基本思想是一樣的，你要在建立 socket 後但在使用它之前執行此操作。（實際上，如果你願意的話，你甚至可以來回切換。）</p>
+<p>主要的機制差異在於 <code class="docutils literal notranslate"><span class="pre">send</span></code>、<code class="docutils literal notranslate"><span class="pre">recv</span></code>、<code class="docutils literal notranslate"><span class="pre">connect</span></code> 和 <code class="docutils literal notranslate"><span class="pre">accept</span></code> 可能在沒有執行任何操作的情況下就回傳了。你當然有多種選擇。你可以檢查回傳值和錯誤代碼，但這些操作通常會讓自己抓狂。如果你不相信我，不妨試試看。你的應用程式會變得臃腫、錯誤百出，並且占用 CPU。所以，讓我們跳過無腦的解決方案，使用正確的方式。</p>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">select</span></code>。</p>
+<p>在 C 中，編寫 <code class="docutils literal notranslate"><span class="pre">select</span></code> 是非常複雜的，但在 Python 中，這很簡單，並與 C 的版本非常類似，如果你理解了 Python 中的 <code class="docutils literal notranslate"><span class="pre">select</span></code>，在 C 中處理它時也不會有太大的困難：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">ready_to_read</span><span class="p">,</span> <span class="n">ready_to_write</span><span class="p">,</span> <span class="n">in_error</span> <span class="o">=</span> \
                <span class="n">select</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
                   <span class="n">potential_readers</span><span class="p">,</span>
@@ -280,36 +255,12 @@ you'll have little trouble with it in C:</p>
                   <span class="n">timeout</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>You pass <code class="docutils literal notranslate"><span class="pre">select</span></code> three lists: the first contains all sockets that you might
-want to try reading; the second all the sockets you might want to try writing
-to, and the last (normally left empty) those that you want to check for errors.
-You should note that a socket can go into more than one list. The <code class="docutils literal notranslate"><span class="pre">select</span></code>
-call is blocking, but you can give it a timeout. This is generally a sensible
-thing to do - give it a nice long timeout (say a minute) unless you have good
-reason to do otherwise.</p>
-<p>In return, you will get three lists. They contain the sockets that are actually
-readable, writable and in error. Each of these lists is a subset (possibly
-empty) of the corresponding list you passed in.</p>
-<p>If a socket is in the output readable list, you can be
-as-close-to-certain-as-we-ever-get-in-this-business that a <code class="docutils literal notranslate"><span class="pre">recv</span></code> on that
-socket will return <em>something</em>. Same idea for the writable list. You'll be able
-to send <em>something</em>. Maybe not all you want to, but <em>something</em> is better than
-nothing.  (Actually, any reasonably healthy socket will return as writable - it
-just means outbound network buffer space is available.)</p>
-<p>If you have a &quot;server&quot; socket, put it in the potential_readers list. If it comes
-out in the readable list, your <code class="docutils literal notranslate"><span class="pre">accept</span></code> will (almost certainly) work. If you
-have created a new socket to <code class="docutils literal notranslate"><span class="pre">connect</span></code> to someone else, put it in the
-potential_writers list. If it shows up in the writable list, you have a decent
-chance that it has connected.</p>
-<p>Actually, <code class="docutils literal notranslate"><span class="pre">select</span></code> can be handy even with blocking sockets. It's one way of
-determining whether you will block - the socket returns as readable when there's
-something in the buffers.  However, this still doesn't help with the problem of
-determining whether the other end is done, or just busy with something else.</p>
-<p><strong>Portability alert</strong>: On Unix, <code class="docutils literal notranslate"><span class="pre">select</span></code> works both with the sockets and
-files. Don't try this on Windows. On Windows, <code class="docutils literal notranslate"><span class="pre">select</span></code> works with sockets
-only. Also note that in C, many of the more advanced socket options are done
-differently on Windows. In fact, on Windows I usually use threads (which work
-very, very well) with my sockets.</p>
+<p>你傳遞給 <code class="docutils literal notranslate"><span class="pre">select</span></code> 三個列表：第一個列表包含你可能想要嘗試讀取的所有 sockets；第二個包含所有你可能想要嘗試寫入的 sockets，最後一個（通常為空）包含你想要檢查錯誤的 sockets。你應該注意，一個 socket 可以同時存在於多個列表中。<code class="docutils literal notranslate"><span class="pre">select</span></code> 呼叫是阻塞的，但你可以設置超時。通常這是一個明智的做法 - 除非有充分的理由，否則給它一個很長的超時（比如一分鐘）。</p>
+<p>作為回傳，你將獲得三個列表。它們包含實際上可讀取、可寫入和出錯的 sockets。這些列表中的每一個都是你傳入的相應列表的子集（可能為空）。</p>
+<p>如果一個 socket 在輸出的可讀列表中，你可以幾乎確定，在這個業務中我們能夠得到的最接近確定的事情是，對該 socket 的 <code class="docutils literal notranslate"><span class="pre">recv</span></code> 呼叫將會回傳一些<em>內容</em>。對於可寫列表，也是同樣的想法。你將能夠發送一些 <em>內容</em>。也許不是全部，但<em>一些內容</em>總比什麼都沒有好。（實際上，任何比較正常的 socket 都會以可寫的方式回傳 - 這只是意味者「外送網路 (outbound network)」的緩衝空間是可用的。）</p>
+<p>如果你有一個「伺服器端」socket，請將其放在 potential_readers 列表中，如果它在可讀列表中出現，你的 <code class="docutils literal notranslate"><span class="pre">accept</span></code> 呼叫（幾乎可以確定）會成功。如果你建立了一個新的 socket 去 <code class="docutils literal notranslate"><span class="pre">connect</span></code> 到其他地方，請將它放在 potential_writers 列表中，如果它在可寫列表中出現，那麼他有可能已經連接上了。</p>
+<p>實際上，即使是使用阻塞式 socket 的情況下，<code class="docutils literal notranslate"><span class="pre">select</span></code> 也很方便。這是一種判斷是否會被阻塞的方法之一 - 當緩衝區中有某些內容時， socket 會回傳為可讀。然而，這仍然無法解決判斷另一端是否完成，或者只是忙於其他事情的問題。</p>
+<p><strong>可移植性警告</strong>：在 Unix 上，<code class="docutils literal notranslate"><span class="pre">select</span></code> 同時適用於 sockets 和文件。但請不要在 Windows 上嘗試這麼做，在 Windows 上，<code class="docutils literal notranslate"><span class="pre">select</span></code> 只適用於 sockets。同時，請注意，在 C 語言中，許多更進階的 socket 選項在 Windows 上有不同的實現方式。實際上，在 Windows 上，我通常會使用執行緒（這非常，非常有效）與我的 sockets 一起使用。</p>
 </section>
 </section>
 
@@ -368,10 +319,10 @@ very, very well) with my sockets.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#disconnecting">結束連線</a><ul>
-<li><a class="reference internal" href="#when-sockets-die">When Sockets Die</a></li>
+<li><a class="reference internal" href="#when-sockets-die">Sockets 何時銷毀</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#non-blocking-sockets">Non-blocking Sockets</a></li>
+<li><a class="reference internal" href="#non-blocking-sockets">非阻塞的 Sockets</a></li>
 </ul>
 </li>
 </ul>
@@ -421,10 +372,10 @@ very, very well) with my sockets.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#disconnecting">結束連線</a><ul>
-<li><a class="reference internal" href="#when-sockets-die">When Sockets Die</a></li>
+<li><a class="reference internal" href="#when-sockets-die">Sockets 何時銷毀</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#non-blocking-sockets">Non-blocking Sockets</a></li>
+<li><a class="reference internal" href="#non-blocking-sockets">非阻塞的 Sockets</a></li>
 </ul>
 </li>
 </ul>
@@ -528,7 +479,7 @@ very, very well) with my sockets.</p>
 <br />
     <br />
 
-    最後更新於 8月 19, 2023。
+    最後更新於 8月 20, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
