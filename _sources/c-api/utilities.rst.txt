@@ -19,4 +19,3 @@ and parsing function arguments and constructing Python values from C values.
    conversion.rst
    reflection.rst
    codec.rst
-   perfmaps.rst

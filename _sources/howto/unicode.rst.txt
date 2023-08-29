@@ -449,7 +449,7 @@ When run, this outputs:
 
 .. code-block:: shell-session
 
-    $ python compare-strs.py
+    $ python3 compare-strs.py
     length of first string= 1
     length of second string= 2
     True

@@ -274,7 +274,7 @@ Indices may also be negative numbers, to start counting from the right::
 Note that since -0 is the same as 0, negative indices start from -1.
 
 In addition to indexing, *slicing* is also supported.  While indexing is used
-to obtain individual characters, *slicing* allows you to obtain a substring::
+to obtain individual characters, *slicing* allows you to obtain substring::
 
    >>> word[0:2]  # characters from position 0 (included) to 2 (excluded)
    'Py'

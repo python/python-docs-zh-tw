@@ -351,7 +351,6 @@ The fine print:
 
      >>> def f(x):
      ...     r'''Backslashes in a raw docstring: m\n'''
-     ...
      >>> print(f.__doc__)
      Backslashes in a raw docstring: m\n
 
@@ -361,7 +360,6 @@ The fine print:
 
      >>> def f(x):
      ...     '''Backslashes in a raw docstring: m\\n'''
-     ...
      >>> print(f.__doc__)
      Backslashes in a raw docstring: m\n
 
@@ -1057,7 +1055,7 @@ from text files and modules with doctests:
    from a text file using :func:`DocFileSuite`.
 
 
-.. function:: DocTestSuite(module=None, globs=None, extraglobs=None, test_finder=None, setUp=None, tearDown=None, optionflags=0, checker=None)
+.. function:: DocTestSuite(module=None, globs=None, extraglobs=None, test_finder=None, setUp=None, tearDown=None, checker=None)
 
    Convert doctest tests for a module to a :class:`unittest.TestSuite`.
 
