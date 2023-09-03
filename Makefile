@@ -53,6 +53,26 @@ all: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build an 
 	for file in *.po */*.po; do ln -f $$file $(LC_MESSAGES)/$$file; done
 	. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D locale_dirs=locales -D language=$(LANGUAGE) -D gettext_compact=0' $(MODE)
 
+.PHONY: build
+build/%: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build an html local version
+	@if [ ! -f "$*.po" ] ; then \
+		echo "\x1B[1;31m""ERROR: $*.po not exist""\x1B[m"; exit 1; \
+		exit 1; \
+	fi
+	@mkdir -p $(LC_MESSAGES)
+	@$(eval dir=`echo $* | xargs -n1 dirname`) ## Get dir
+# If the build target is in under directory
+# We should make direcotry in $(LC_MESSAGES) and link the file.
+	@if [ $(dir) != "." ]; then \
+		echo "mkdir -p $(LC_MESSAGES)/$(dir)"; \
+		mkdir -p $(LC_MESSAGES)/$(dir); \
+		echo "ln -f ./$*.po $(LC_MESSAGES)/$*.po"; \
+		ln -f ./$*.po $(LC_MESSAGES)/$*.po; \
+	fi
+# Build
+	@echo "----"
+	@. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D language=$(LANGUAGE) -D locale_dirs=locales -D gettext_compact=0' SOURCES='$*.rst' html
+
 help:
 	@python3 -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
