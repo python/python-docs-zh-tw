@@ -1057,26 +1057,22 @@ which incur interpreter overhead.</p>
     <span class="c1"># first_true([a,b], x, f) --&gt; a if f(a) else b if f(b) else x</span>
     <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">iterable</span><span class="p">),</span> <span class="n">default</span><span class="p">)</span>
 
-<span class="k">def</span> <span class="nf">iter_index</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">iter_index</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="s2">&quot;Return indices where a value occurs in a sequence or iterable.&quot;</span>
     <span class="c1"># iter_index(&#39;AABCADEAF&#39;, &#39;A&#39;) --&gt; 0 1 4 7</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">seq_index</span> <span class="o">=</span> <span class="n">iterable</span><span class="o">.</span><span class="n">index</span>
-    <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+    <span class="n">seq_index</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">seq_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="c1"># Slow path for general iterables</span>
-        <span class="n">it</span> <span class="o">=</span> <span class="n">islice</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="n">i</span> <span class="o">=</span> <span class="n">start</span> <span class="o">-</span> <span class="mi">1</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="k">yield</span> <span class="p">(</span><span class="n">i</span> <span class="o">:=</span> <span class="n">i</span> <span class="o">+</span> <span class="n">operator</span><span class="o">.</span><span class="n">indexOf</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="k">pass</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="n">islice</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">element</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">start</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">element</span> <span class="ow">is</span> <span class="n">value</span> <span class="ow">or</span> <span class="n">element</span> <span class="o">==</span> <span class="n">value</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">i</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Fast path for sequences</span>
         <span class="n">i</span> <span class="o">=</span> <span class="n">start</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="k">yield</span> <span class="p">(</span><span class="n">i</span> <span class="o">:=</span> <span class="n">seq_index</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">i</span> <span class="o">:=</span> <span class="n">seq_index</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">stop</span><span class="p">))</span>
         <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
             <span class="k">pass</span>
 
@@ -1569,7 +1565,7 @@ which incur interpreter overhead.</p>
 <br />
     <br />
 
-    最後更新於 9月 02, 2023。
+    最後更新於 9月 04, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
