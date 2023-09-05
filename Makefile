@@ -56,7 +56,7 @@ all: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build an 
 .PHONY: build
 build/%: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build an html local version
 	@if [ ! -f "$*.po" ] ; then \
-		echo "\x1B[1;31m""ERROR: $*.po not exist""\x1B[m"; exit 1; \
+		echo "\x1B[1;31m""ERROR: $*.po not exist""\x1B[m"; \
 		exit 1; \
 	fi
 	@mkdir -p $(LC_MESSAGES)
