@@ -1069,6 +1069,7 @@ which incur interpreter overhead.</p>
                 <span class="k">yield</span> <span class="n">i</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="c1"># Fast path for sequences</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span> <span class="k">if</span> <span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stop</span>
         <span class="n">i</span> <span class="o">=</span> <span class="n">start</span> <span class="o">-</span> <span class="mi">1</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
@@ -1219,13 +1220,16 @@ which incur interpreter overhead.</p>
 <span class="k">def</span> <span class="nf">sieve</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
     <span class="s2">&quot;Primes less than n.&quot;</span>
     <span class="c1"># sieve(30) --&gt; 2 3 5 7 11 13 17 19 23 29</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="mi">2</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="mi">3</span>
     <span class="n">data</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
-    <span class="n">data</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
     <span class="n">limit</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">isqrt</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
-    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">compress</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">limit</span><span class="p">),</span> <span class="n">data</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">iter_index</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">limit</span><span class="p">):</span>
+        <span class="k">yield from</span> <span class="n">iter_index</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">p</span><span class="o">*</span><span class="n">p</span><span class="p">)</span>
         <span class="n">data</span><span class="p">[</span><span class="n">p</span><span class="o">*</span><span class="n">p</span> <span class="p">:</span> <span class="n">n</span> <span class="p">:</span> <span class="n">p</span><span class="o">+</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="o">+</span><span class="n">p</span><span class="p">)))</span>
-    <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-    <span class="k">return</span> <span class="n">iter_index</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">2</span> <span class="k">else</span> <span class="nb">iter</span><span class="p">([])</span>
+        <span class="n">start</span> <span class="o">=</span> <span class="n">p</span><span class="o">*</span><span class="n">p</span>
+    <span class="k">yield from</span> <span class="n">iter_index</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">factor</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
     <span class="s2">&quot;Prime factors of n.&quot;</span>
@@ -1565,7 +1569,7 @@ which incur interpreter overhead.</p>
 <br />
     <br />
 
-    最後更新於 9月 10, 2023。
+    最後更新於 9月 13, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
