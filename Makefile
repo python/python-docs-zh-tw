@@ -54,24 +54,33 @@ all: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build an 
 	. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D locale_dirs=locales -D language=$(LANGUAGE) -D gettext_compact=0' $(MODE)
 
 .PHONY: build
-build/%: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build an html local version
-	@if [ ! -f "$*.po" ] ; then \
-		echo "\x1B[1;31m""ERROR: $*.po not exist""\x1B[m"; \
+build: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build an html local version
+	@$(eval target=$(filter-out $@,$(MAKECMDGOALS)))
+	@if [ -z $(target) ]; then \
+		echo "\x1B[1;31m""Please provide a file argument.""\x1B[m"; \
+		exit 1; \
+	fi
+	@if [ "$(suffix $(target))" != ".po" ]; then \
+		echo "\x1B[1;31m""Incorrect file extension. Only '.po' files are allowed.""\x1B[m"; \
+		exit 1; \
+	fi
+	@if [[ ! -f "$(target)" ]] ; then \
+		echo "\x1B[1;31m""ERROR: $(target) not exist.""\x1B[m"; \
 		exit 1; \
 	fi
 	@mkdir -p $(LC_MESSAGES)
-	@$(eval dir=`echo $* | xargs -n1 dirname`) ## Get dir
+	@$(eval dir=`echo $(target) | xargs -n1 dirname`) ## Get dir
 # If the build target is in under directory
 # We should make direcotry in $(LC_MESSAGES) and link the file.
 	@if [ $(dir) != "." ]; then \
 		echo "mkdir -p $(LC_MESSAGES)/$(dir)"; \
 		mkdir -p $(LC_MESSAGES)/$(dir); \
-		echo "ln -f ./$*.po $(LC_MESSAGES)/$*.po"; \
-		ln -f ./$*.po $(LC_MESSAGES)/$*.po; \
+		echo "ln -f ./$(target) $(LC_MESSAGES)/$(target)"; \
+		ln -f ./$(target) $(LC_MESSAGES)/$(target); \
 	fi
 # Build
 	@echo "----"
-	@. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D language=$(LANGUAGE) -D locale_dirs=locales -D gettext_compact=0' SOURCES='$*.rst' html
+	@. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D language=$(LANGUAGE) -D locale_dirs=locales -D gettext_compact=0' SOURCES='$(target).rst' html
 
 help:
 	@python3 -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
@@ -150,3 +159,7 @@ fuzzy: ## Find fuzzy strings
 .PHONY: rm_cpython
 rm_cpython: ## Remove cloned cpython repo
 	rm -rf $(CPYTHON_CLONE)
+
+# This allows us to accept extra arguments (by doing nothing when we get a job that doesn't match, rather than throwing an error)
+%:
+	@:
