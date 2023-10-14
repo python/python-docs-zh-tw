@@ -105,10 +105,7 @@ endif
 	        mkdir -p "$$(dirname "$$PO")";\
 	        if [ -f "$$PO" ];\
 	        then\
-	            case "$$POT" in\
-	            *whatsnew*) msgmerge --lang=$(LANGUAGE) --backup=off --force-po --no-fuzzy-matching -U "$$PO" "$$POT" ;;\
-	            *)          msgmerge --lang=$(LANGUAGE) --backup=off --force-po -U "$$PO" "$$POT" ;;\
-	            esac\
+	            msgmerge --lang=$(LANGUAGE) --backup=off --force-po -U "$$PO" "$$POT";\
 	        else\
 	            msgcat --lang=$(LANGUAGE) -o "$$PO" "$$POT";\
 	        fi\
