@@ -89,6 +89,11 @@ the PSF for inclusion in the documentation.
   brew install gettext
 
   brew link gettext --force
+- 安裝 pre-commit 自動在 commit 時檢查 ``.po`` 檔格式。
+.. code-block:: bash
+
+  pip install pre-commit
+  pre-commit install
 
 在進行任何動作以前，你必須在 GitHub 上 fork 此專案（按下右上角的 ``Fork``
 按鈕），這樣會把整個專案複製一份到你的 GitHub 帳號底下，你可以對這個 fork
