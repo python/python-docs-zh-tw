@@ -266,6 +266,14 @@ any <a class="reference internal" href="#module-dis" title="dis: Disassembler fo
 bytecode to specialize it for different runtime conditions. The
 adaptive bytecode can be shown by passing <code class="docutils literal notranslate"><span class="pre">adaptive=True</span></code>.</p>
 </div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>The argument of a jump is the offset of the target instruction relative
+to the instruction that appears immediately after the jump instruction's
+<a class="reference internal" href="#opcode-CACHE"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">CACHE</span></code></a> entries.</p>
+<p>As a consequence, the presence of the <a class="reference internal" href="#opcode-CACHE"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">CACHE</span></code></a> instructions is
+transparent for forward jumps but needs to be taken into account when
+reasoning about backward jumps.</p>
+</div>
 </div>
 <p>Example: Given the function <code class="xref py py-func docutils literal notranslate"><span class="pre">myfunc()</span></code>:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">myfunc</span><span class="p">(</span><span class="n">alist</span><span class="p">):</span>
@@ -689,6 +697,16 @@ generate line tracing events.</p>
 <dd><p>Removes the top two values from the stack.
 Equivalent to <code class="docutils literal notranslate"><span class="pre">POP_TOP</span></code>; <code class="docutils literal notranslate"><span class="pre">POP_TOP</span></code>.
 Used to clean up at the end of loops, hence the name.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.12 版新加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="std opcode">
+<dt class="sig sig-object std" id="opcode-END_SEND">
+<span class="sig-name descname"><span class="pre">END_SEND</span></span><a class="headerlink" href="#opcode-END_SEND" title="Link to this definition">¶</a></dt>
+<dd><p>Implements <code class="docutils literal notranslate"><span class="pre">del</span> <span class="pre">STACK[-2]</span></code>.
+Used to clean up when a generator exits.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.12 版新加入.</span></p>
 </div>
@@ -1432,14 +1450,18 @@ pushed to the stack before the attribute or unbound method respectively.</p>
 <dl class="std opcode">
 <dt class="sig sig-object std" id="opcode-LOAD_SUPER_ATTR">
 <span class="sig-name descname"><span class="pre">LOAD_SUPER_ATTR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">namei</span></em><span class="sig-paren">)</span><a class="headerlink" href="#opcode-LOAD_SUPER_ATTR" title="Link to this definition">¶</a></dt>
-<dd><p>This opcode implements <a class="reference internal" href="functions.html#super" title="super"><code class="xref py py-func docutils literal notranslate"><span class="pre">super()</span></code></a> (e.g. <code class="docutils literal notranslate"><span class="pre">super().method()</span></code> and
-<code class="docutils literal notranslate"><span class="pre">super().attr</span></code>). It works the same as <a class="reference internal" href="#opcode-LOAD_ATTR"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_ATTR</span></code></a>, except that
-<code class="docutils literal notranslate"><span class="pre">namei</span></code> is shifted left by 2 bits instead of 1, and instead of expecting a
-single receiver on the stack, it expects three objects (from top of stack
-down): <code class="docutils literal notranslate"><span class="pre">self</span></code> (the first argument to the current method), <code class="docutils literal notranslate"><span class="pre">cls</span></code> (the
-class within which the current method was defined), and the global <code class="docutils literal notranslate"><span class="pre">super</span></code>.</p>
+<dd><p>This opcode implements <a class="reference internal" href="functions.html#super" title="super"><code class="xref py py-func docutils literal notranslate"><span class="pre">super()</span></code></a>, both in its zero-argument and
+two-argument forms (e.g. <code class="docutils literal notranslate"><span class="pre">super().method()</span></code>, <code class="docutils literal notranslate"><span class="pre">super().attr</span></code> and
+<code class="docutils literal notranslate"><span class="pre">super(cls,</span> <span class="pre">self).method()</span></code>, <code class="docutils literal notranslate"><span class="pre">super(cls,</span> <span class="pre">self).attr</span></code>).</p>
+<p>It pops three values from the stack (from top of stack down):
+- <code class="docutils literal notranslate"><span class="pre">self</span></code>: the first argument to the current method
+-  <code class="docutils literal notranslate"><span class="pre">cls</span></code>: the class within which the current method was defined
+-  the global <code class="docutils literal notranslate"><span class="pre">super</span></code></p>
+<p>With respect to its argument, it works similarly to <a class="reference internal" href="#opcode-LOAD_ATTR"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_ATTR</span></code></a>,
+except that <code class="docutils literal notranslate"><span class="pre">namei</span></code> is shifted left by 2 bits instead of 1.</p>
 <p>The low bit of <code class="docutils literal notranslate"><span class="pre">namei</span></code> signals to attempt a method load, as with
-<a class="reference internal" href="#opcode-LOAD_ATTR"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_ATTR</span></code></a>.</p>
+<a class="reference internal" href="#opcode-LOAD_ATTR"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_ATTR</span></code></a>, which results in pushing <code class="docutils literal notranslate"><span class="pre">None</span></code> and the loaded method.
+When it is unset a single value is pushed to the stack.</p>
 <p>The second-low bit of <code class="docutils literal notranslate"><span class="pre">namei</span></code>, if set, means that this was a two-argument
 call to <a class="reference internal" href="functions.html#super" title="super"><code class="xref py py-func docutils literal notranslate"><span class="pre">super()</span></code></a> (unset means zero-argument).</p>
 <div class="versionadded">
@@ -1927,9 +1949,9 @@ Clear the current frame and return the newly created generator.</p>
 <span class="sig-name descname"><span class="pre">SEND</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">delta</span></em><span class="sig-paren">)</span><a class="headerlink" href="#opcode-SEND" title="Link to this definition">¶</a></dt>
 <dd><p>Equivalent to <code class="docutils literal notranslate"><span class="pre">STACK[-1]</span> <span class="pre">=</span> <span class="pre">STACK[-2].send(STACK[-1])</span></code>. Used in <code class="docutils literal notranslate"><span class="pre">yield</span> <span class="pre">from</span></code>
 and <code class="docutils literal notranslate"><span class="pre">await</span></code> statements.</p>
-<p>If the call raises <a class="reference internal" href="exceptions.html#StopIteration" title="StopIteration"><code class="xref py py-exc docutils literal notranslate"><span class="pre">StopIteration</span></code></a>, pop both items, push the
-exception's <code class="docutils literal notranslate"><span class="pre">value</span></code> attribute, and increment the bytecode counter by
-<em>delta</em>.</p>
+<p>If the call raises <a class="reference internal" href="exceptions.html#StopIteration" title="StopIteration"><code class="xref py py-exc docutils literal notranslate"><span class="pre">StopIteration</span></code></a>, pop the top value from the stack,
+push the exception's <code class="docutils literal notranslate"><span class="pre">value</span></code> attribute, and increment the bytecode counter
+by <em>delta</em>.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.11 版新加入.</span></p>
 </div>
@@ -1959,7 +1981,7 @@ they use their arg.</p>
 <span class="sig-name descname"><span class="pre">CALL_INTRINSIC_1</span></span><a class="headerlink" href="#opcode-CALL_INTRINSIC_1" title="Link to this definition">¶</a></dt>
 <dd><p>Calls an intrinsic function with one argument. Passes <code class="docutils literal notranslate"><span class="pre">STACK[-1]</span></code> as the
 argument and sets <code class="docutils literal notranslate"><span class="pre">STACK[-1]</span></code> to the result. Used to implement
-functionality that is necessary but not performance critical.</p>
+functionality that is not performance critical.</p>
 <p>The operand determines which intrinsic function is called:</p>
 <table class="docutils align-default">
 <thead>
@@ -2026,9 +2048,14 @@ type parameters, and value.</p></td>
 <dl class="std opcode">
 <dt class="sig sig-object std" id="opcode-CALL_INTRINSIC_2">
 <span class="sig-name descname"><span class="pre">CALL_INTRINSIC_2</span></span><a class="headerlink" href="#opcode-CALL_INTRINSIC_2" title="Link to this definition">¶</a></dt>
-<dd><p>Calls an intrinsic function with two arguments. Passes <code class="docutils literal notranslate"><span class="pre">STACK[-2]</span></code>, <code class="docutils literal notranslate"><span class="pre">STACK[-1]</span></code> as the
-arguments and sets <code class="docutils literal notranslate"><span class="pre">STACK[-1]</span></code> to the result. Used to implement functionality that is
-necessary but not performance critical.</p>
+<dd><p>Calls an intrinsic function with two arguments. Used to implement functionality
+that is not performance critical:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">arg2</span> <span class="o">=</span> <span class="n">STACK</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+<span class="n">arg1</span> <span class="o">=</span> <span class="n">STACK</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">intrinsic2</span><span class="p">(</span><span class="n">arg1</span><span class="p">,</span> <span class="n">arg2</span><span class="p">)</span>
+<span class="n">STACK</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>The operand determines which intrinsic function is called:</p>
 <table class="docutils align-default">
 <thead>
@@ -2129,8 +2156,9 @@ with a flag set in the arg.</p>
 <p>These collections are provided for automatic introspection of bytecode
 instructions:</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.12 版的變更: </span>The collections now contain pseudo instructions as well. These are
-opcodes with values <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">MIN_PSEUDO_OPCODE</span></code>.</p>
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>The collections now contain pseudo instructions and instrumented
+instructions as well. These are opcodes with values <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">MIN_PSEUDO_OPCODE</span></code>
+and <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">MIN_INSTRUMENTED_OPCODE</span></code>.</p>
 </div>
 <dl class="py data">
 <dt class="sig sig-object py" id="dis.opname">
@@ -2393,7 +2421,7 @@ scopes or names in outer scopes that are referenced from this scope.  It does
 <br />
     <br />
 
-    最後更新於 10月 14, 2023。
+    最後更新於 10月 22, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
