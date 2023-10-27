@@ -244,6 +244,7 @@
 <li><a class="reference internal" href="#how-to-use-the-connection-context-manager">How to use the connection context manager</a></li>
 <li><a class="reference internal" href="#how-to-work-with-sqlite-uris">How to work with SQLite URIs</a></li>
 <li><a class="reference internal" href="#how-to-create-and-use-row-factories">How to create and use row factories</a></li>
+<li><a class="reference internal" href="#how-to-handle-non-utf-8-text-encodings">How to handle non-UTF-8 text encodings</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#explanation">解釋</a><ul>
@@ -1395,6 +1396,10 @@ Similar to the <code class="docutils literal notranslate"><span class="pre">.dum
 <span class="n">con</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><a class="reference internal" href="#sqlite3-howto-encoding"><span class="std std-ref">How to handle non-UTF-8 text encodings</span></a></p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1447,6 +1452,10 @@ to back up remaining pages.</p></li>
 </div>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.7 版新加入.</span></p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><a class="reference internal" href="#sqlite3-howto-encoding"><span class="std std-ref">How to handle non-UTF-8 text encodings</span></a></p>
 </div>
 </dd></dl>
 
@@ -1689,38 +1698,8 @@ meaning each row is returned as a <a class="reference internal" href="stdtypes.h
 <dd><p>A <a class="reference internal" href="../glossary.html#term-callable"><span class="xref std std-term">callable</span></a> that accepts a <a class="reference internal" href="stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a> parameter
 and returns a text representation of it.
 The callable is invoked for SQLite values with the <code class="docutils literal notranslate"><span class="pre">TEXT</span></code> data type.
-By default, this attribute is set to <a class="reference internal" href="stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>.
-If you want to return <code class="docutils literal notranslate"><span class="pre">bytes</span></code> instead, set <em>text_factory</em> to <code class="docutils literal notranslate"><span class="pre">bytes</span></code>.</p>
-<p>範例：</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">con</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="s2">&quot;:memory:&quot;</span><span class="p">)</span>
-<span class="n">cur</span> <span class="o">=</span> <span class="n">con</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
-
-<span class="n">AUSTRIA</span> <span class="o">=</span> <span class="s2">&quot;Österreich&quot;</span>
-
-<span class="c1"># by default, rows are returned as str</span>
-<span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT ?&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">AUSTRIA</span><span class="p">,))</span>
-<span class="n">row</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
-<span class="k">assert</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">AUSTRIA</span>
-
-<span class="c1"># but we can make sqlite3 always return bytestrings ...</span>
-<span class="n">con</span><span class="o">.</span><span class="n">text_factory</span> <span class="o">=</span> <span class="nb">bytes</span>
-<span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT ?&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">AUSTRIA</span><span class="p">,))</span>
-<span class="n">row</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
-<span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">is</span> <span class="nb">bytes</span>
-<span class="c1"># the bytestrings will be encoded in UTF-8, unless you stored garbage in the</span>
-<span class="c1"># database ...</span>
-<span class="k">assert</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">AUSTRIA</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
-
-<span class="c1"># we can also implement a custom text_factory ...</span>
-<span class="c1"># here we implement one that appends &quot;foo&quot; to all strings</span>
-<span class="n">con</span><span class="o">.</span><span class="n">text_factory</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;foo&quot;</span>
-<span class="n">cur</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT ?&quot;</span><span class="p">,</span> <span class="p">(</span><span class="s2">&quot;bar&quot;</span><span class="p">,))</span>
-<span class="n">row</span> <span class="o">=</span> <span class="n">cur</span><span class="o">.</span><span class="n">fetchone</span><span class="p">()</span>
-<span class="k">assert</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;barfoo&quot;</span>
-
-<span class="n">con</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-</pre></div>
-</div>
+By default, this attribute is set to <a class="reference internal" href="stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>.</p>
+<p>See <a class="reference internal" href="#sqlite3-howto-encoding"><span class="std std-ref">How to handle non-UTF-8 text encodings</span></a> for more details.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2755,6 +2734,39 @@ that returns each row as a <a class="reference internal" href="stdtypes.html#dic
 <a class="reference internal" href="dataclasses.html#dataclasses.dataclass" title="dataclasses.dataclass"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataclass</span></code></a>, or any other custom class,
 instead of a <a class="reference internal" href="collections.html#collections.namedtuple" title="collections.namedtuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">namedtuple</span></code></a>.</p>
 </section>
+<section id="how-to-handle-non-utf-8-text-encodings">
+<span id="sqlite3-howto-encoding"></span><h3>How to handle non-UTF-8 text encodings<a class="headerlink" href="#how-to-handle-non-utf-8-text-encodings" title="Link to this heading">¶</a></h3>
+<p>By default, <code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code> uses <a class="reference internal" href="stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> to adapt SQLite values
+with the <code class="docutils literal notranslate"><span class="pre">TEXT</span></code> data type.
+This works well for UTF-8 encoded text, but it might fail for other encodings
+and invalid UTF-8.
+You can use a custom <a class="reference internal" href="#sqlite3.Connection.text_factory" title="sqlite3.Connection.text_factory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">text_factory</span></code></a> to handle such cases.</p>
+<p>Because of SQLite's <a class="reference external" href="https://www.sqlite.org/flextypegood.html">flexible typing</a>, it is not uncommon to encounter table
+columns with the <code class="docutils literal notranslate"><span class="pre">TEXT</span></code> data type containing non-UTF-8 encodings,
+or even arbitrary data.
+To demonstrate, let's assume we have a database with ISO-8859-2 (Latin-2)
+encoded text, for example a table of Czech-English dictionary entries.
+Assuming we now have a <a class="reference internal" href="#sqlite3.Connection" title="sqlite3.Connection"><code class="xref py py-class docutils literal notranslate"><span class="pre">Connection</span></code></a> instance <code class="xref py py-data docutils literal notranslate"><span class="pre">con</span></code>
+connected to this database,
+we can decode the Latin-2 encoded text using this <a class="reference internal" href="#sqlite3.Connection.text_factory" title="sqlite3.Connection.text_factory"><code class="xref py py-attr docutils literal notranslate"><span class="pre">text_factory</span></code></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">con</span><span class="o">.</span><span class="n">text_factory</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;latin2&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For invalid UTF-8 or arbitrary data in stored in <code class="docutils literal notranslate"><span class="pre">TEXT</span></code> table columns,
+you can use the following technique, borrowed from the <a class="reference internal" href="../howto/unicode.html#unicode-howto"><span class="std std-ref">Unicode HOWTO</span></a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">con</span><span class="o">.</span><span class="n">text_factory</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">data</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;surrogateescape&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code> module API does not support strings
+containing surrogates.</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><a class="reference internal" href="../howto/unicode.html#unicode-howto"><span class="std std-ref">Unicode HOWTO</span></a></p>
+</div>
+</section>
 </section>
 <section id="explanation">
 <span id="sqlite3-explanation"></span><h2>解釋<a class="headerlink" href="#explanation" title="Link to this heading">¶</a></h2>
@@ -3014,6 +3026,7 @@ statements.  This is no longer the case.</p>
 <li><a class="reference internal" href="#how-to-use-the-connection-context-manager">How to use the connection context manager</a></li>
 <li><a class="reference internal" href="#how-to-work-with-sqlite-uris">How to work with SQLite URIs</a></li>
 <li><a class="reference internal" href="#how-to-create-and-use-row-factories">How to create and use row factories</a></li>
+<li><a class="reference internal" href="#how-to-handle-non-utf-8-text-encodings">How to handle non-UTF-8 text encodings</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#explanation">解釋</a><ul>
@@ -3128,7 +3141,7 @@ statements.  This is no longer the case.</p>
 <br />
     <br />
 
-    最後更新於 10月 22, 2023。
+    最後更新於 10月 27, 2023。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
