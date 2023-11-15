@@ -1,7 +1,6 @@
 import polib
 import os
 import datetime
-import argparse
 import requests
 
 
@@ -25,8 +24,7 @@ def entry_check(pofile):
 def get_github_issue():
     NUMBER_OF_ISSUES = 100
 
-    url = f"https://api.github.com/repos/python/python-docs-zh-tw/issues?per_page={
-        NUMBER_OF_ISSUES}"
+    url = f"https://api.github.com/repos/python/python-docs-zh-tw/issues?per_page={NUMBER_OF_ISSUES}"
     headers = {
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28"
@@ -64,7 +62,7 @@ def get_github_issue():
 
 def format_line_file(filename, result):
     tmp = f"  - {filename}"
-    tmp = f"{tmp}{"-" * (40-len(tmp))}{result}\r"
+    tmp = f"{tmp}{'-' * (40-len(tmp))}{result}\r"
     return tmp
 
 
@@ -108,6 +106,6 @@ if __name__ == "__main__":
             writeliner.append(format_line_file(filename, result))
 
     file = open(
-        f"mark_file/dist/mark_file_{datetime.datetime.today().strftime("%Y%m%d_%H%M%S")}.md", "w")
+        f"mark_file/dist/mark_file_{datetime.datetime.today().strftime('%Y%m%d_%H%M%S')}.md", "w")
     file.writelines(writeliner)
     file.close()
