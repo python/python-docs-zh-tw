@@ -103,7 +103,14 @@
 <li><a class="reference internal" href="#heap-types">Heap Types</a><ul>
 <li><a class="reference internal" href="#changing-static-types-to-heap-types">Changing Static Types to Heap Types</a></li>
 <li><a class="reference internal" href="#defining-heap-types">Defining Heap Types</a></li>
-<li><a class="reference internal" href="#garbage-collection-protocol">Garbage-Collection Protocol</a></li>
+<li><a class="reference internal" href="#garbage-collection-protocol">Garbage-Collection Protocol</a><ul>
+<li><a class="reference internal" href="#tp-traverse-in-python-3-8-and-lower"><code class="docutils literal notranslate"><span class="pre">tp_traverse</span></code> in Python 3.8 and lower</a></li>
+<li><a class="reference internal" href="#delegating-tp-traverse">Delegating <code class="docutils literal notranslate"><span class="pre">tp_traverse</span></code></a></li>
+<li><a class="reference internal" href="#defining-tp-dealloc">Defining <code class="docutils literal notranslate"><span class="pre">tp_dealloc</span></code></a></li>
+<li><a class="reference internal" href="#not-overriding-tp-free">Not overriding <code class="docutils literal notranslate"><span class="pre">tp_free</span></code></a></li>
+<li><a class="reference internal" href="#avoiding-pyobject-new">Avoiding <code class="docutils literal notranslate"><span class="pre">PyObject_New</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-state-access-from-classes">Module State Access from Classes</a></li>
 <li><a class="reference internal" href="#module-state-access-from-regular-methods">Module State Access from Regular Methods</a></li>
 <li><a class="reference internal" href="#module-state-access-from-slot-methods-getters-and-setters">Module State Access from Slot Methods, Getters and Setters</a></li>
@@ -497,11 +504,39 @@ That is, heap types should:</p>
 <li><p>Define a traverse function using <code class="docutils literal notranslate"><span class="pre">Py_tp_traverse</span></code>, which
 visits the type (e.g. using <span class="c-expr sig sig-inline c"><a class="reference internal" href="../c-api/gcsupport.html#c.Py_VISIT" title="Py_VISIT"><span class="n">Py_VISIT</span></a><span class="p">(</span><a class="reference internal" href="../c-api/structures.html#c.Py_TYPE" title="Py_TYPE"><span class="n">Py_TYPE</span></a><span class="p">(</span><span class="n">self</span><span class="p">)</span><span class="p">)</span></span>).</p></li>
 </ul>
-<p>Please refer to the <a class="reference internal" href="../c-api/typeobj.html#type-structs"><span class="std std-ref">the documentation</span></a> of
+<p>Please refer to the the documentation of
 <a class="reference internal" href="../c-api/typeobj.html#c.Py_TPFLAGS_HAVE_GC" title="Py_TPFLAGS_HAVE_GC"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_TPFLAGS_HAVE_GC</span></code></a> and <a class="reference internal" href="../c-api/typeobj.html#c.PyTypeObject.tp_traverse" title="PyTypeObject.tp_traverse"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code></a>
 for additional considerations.</p>
-<p>If your traverse function delegates to the <code class="docutils literal notranslate"><span class="pre">tp_traverse</span></code> of its base class
-(or another type), ensure that <code class="docutils literal notranslate"><span class="pre">Py_TYPE(self)</span></code> is visited only once.
+<p>The API for defining heap types grew organically, leaving it
+somewhat awkward to use in its current state.
+The following sections will guide you through common issues.</p>
+<section id="tp-traverse-in-python-3-8-and-lower">
+<h4><code class="docutils literal notranslate"><span class="pre">tp_traverse</span></code> in Python 3.8 and lower<a class="headerlink" href="#tp-traverse-in-python-3-8-and-lower" title="Link to this heading">¶</a></h4>
+<p>The requirement to visit the type from <code class="docutils literal notranslate"><span class="pre">tp_traverse</span></code> was added in Python 3.9.
+If you support Python 3.8 and lower, the traverse function must <em>not</em>
+visit the type, so it must be more complicated:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">my_traverse</span><span class="p">(</span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">visitproc</span><span class="w"> </span><span class="n">visit</span><span class="p">,</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Py_Version</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mh">0x03090000</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">Py_VISIT</span><span class="p">(</span><span class="n">Py_TYPE</span><span class="p">(</span><span class="n">self</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Unfortunately, <a class="reference internal" href="../c-api/apiabiversion.html#c.Py_Version" title="Py_Version"><code class="xref c c-data docutils literal notranslate"><span class="pre">Py_Version</span></code></a> was only added in Python 3.11.
+As a replacement, use:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../c-api/apiabiversion.html#c.PY_VERSION_HEX" title="PY_VERSION_HEX"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PY_VERSION_HEX</span></code></a>, if not using the stable ABI, or</p></li>
+<li><p><a class="reference internal" href="../library/sys.html#sys.version_info" title="sys.version_info"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.version_info</span></code></a> (via <a class="reference internal" href="../c-api/sys.html#c.PySys_GetObject" title="PySys_GetObject"><code class="xref c c-func docutils literal notranslate"><span class="pre">PySys_GetObject()</span></code></a> and
+<a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTuple" title="PyArg_ParseTuple"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code></a>).</p></li>
+</ul>
+</section>
+<section id="delegating-tp-traverse">
+<h4>Delegating <code class="docutils literal notranslate"><span class="pre">tp_traverse</span></code><a class="headerlink" href="#delegating-tp-traverse" title="Link to this heading">¶</a></h4>
+<p>If your traverse function delegates to the <a class="reference internal" href="../c-api/typeobj.html#c.PyTypeObject.tp_traverse" title="PyTypeObject.tp_traverse"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code></a>
+of its base class (or another type), ensure that <code class="docutils literal notranslate"><span class="pre">Py_TYPE(self)</span></code> is visited
+only once.
 Note that only heap type are expected to visit the type in <code class="docutils literal notranslate"><span class="pre">tp_traverse</span></code>.</p>
 <p>For example, if your traverse function includes:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">base</span><span class="o">-&gt;</span><span class="n">tp_traverse</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">visit</span><span class="p">,</span><span class="w"> </span><span class="n">arg</span><span class="p">)</span>
@@ -511,12 +546,68 @@ Note that only heap type are expected to visit the type in <code class="docutils
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">base</span><span class="o">-&gt;</span><span class="n">tp_flags</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">Py_TPFLAGS_HEAPTYPE</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="c1">// a heap type&#39;s tp_traverse already visited Py_TYPE(self)</span>
 <span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">Py_VISIT</span><span class="p">(</span><span class="n">Py_TYPE</span><span class="p">(</span><span class="n">self</span><span class="p">));</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Py_Version</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mh">0x03090000</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">Py_VISIT</span><span class="p">(</span><span class="n">Py_TYPE</span><span class="p">(</span><span class="n">self</span><span class="p">));</span>
+<span class="w">    </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>It is not necessary to handle the type's reference count in <code class="docutils literal notranslate"><span class="pre">tp_new</span></code>
-and <code class="docutils literal notranslate"><span class="pre">tp_clear</span></code>.</p>
+<p>It is not necessary to handle the type's reference count in
+<a class="reference internal" href="../c-api/typeobj.html#c.PyTypeObject.tp_new" title="PyTypeObject.tp_new"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_new</span></code></a> and <a class="reference internal" href="../c-api/typeobj.html#c.PyTypeObject.tp_clear" title="PyTypeObject.tp_clear"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_clear</span></code></a>.</p>
+</section>
+<section id="defining-tp-dealloc">
+<h4>Defining <code class="docutils literal notranslate"><span class="pre">tp_dealloc</span></code><a class="headerlink" href="#defining-tp-dealloc" title="Link to this heading">¶</a></h4>
+<p>If your type has a custom <a class="reference internal" href="../c-api/typeobj.html#c.PyTypeObject.tp_dealloc" title="PyTypeObject.tp_dealloc"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_dealloc</span></code></a> function,
+it needs to:</p>
+<ul class="simple">
+<li><p>call <a class="reference internal" href="../c-api/gcsupport.html#c.PyObject_GC_UnTrack" title="PyObject_GC_UnTrack"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_GC_UnTrack()</span></code></a> before any fields are invalidated, and</p></li>
+<li><p>decrement the reference count of the type.</p></li>
+</ul>
+<p>To keep the type valid while <code class="docutils literal notranslate"><span class="pre">tp_free</span></code> is called, the type's refcount needs
+to be decremented <em>after</em> the instance is deallocated. For example:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">my_dealloc</span><span class="p">(</span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">self</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">PyObject_GC_UnTrack</span><span class="p">(</span><span class="n">self</span><span class="p">);</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="w">    </span><span class="n">PyTypeObject</span><span class="w"> </span><span class="o">*</span><span class="n">type</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Py_TYPE</span><span class="p">(</span><span class="n">self</span><span class="p">);</span>
+<span class="w">    </span><span class="n">type</span><span class="o">-&gt;</span><span class="n">tp_free</span><span class="p">(</span><span class="n">self</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Py_DECREF</span><span class="p">(</span><span class="n">type</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The default <code class="docutils literal notranslate"><span class="pre">tp_dealloc</span></code> function does this, so
+if your type does <em>not</em> override
+<code class="docutils literal notranslate"><span class="pre">tp_dealloc</span></code> you don't need to add it.</p>
+</section>
+<section id="not-overriding-tp-free">
+<h4>Not overriding <code class="docutils literal notranslate"><span class="pre">tp_free</span></code><a class="headerlink" href="#not-overriding-tp-free" title="Link to this heading">¶</a></h4>
+<p>The <a class="reference internal" href="../c-api/typeobj.html#c.PyTypeObject.tp_free" title="PyTypeObject.tp_free"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_free</span></code></a> slot of a heap type must be set to
+<a class="reference internal" href="../c-api/gcsupport.html#c.PyObject_GC_Del" title="PyObject_GC_Del"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_GC_Del()</span></code></a>.
+This is the default; do not override it.</p>
+</section>
+<section id="avoiding-pyobject-new">
+<h4>Avoiding <code class="docutils literal notranslate"><span class="pre">PyObject_New</span></code><a class="headerlink" href="#avoiding-pyobject-new" title="Link to this heading">¶</a></h4>
+<p>GC-tracked objects need to be allocated using GC-aware functions.</p>
+<p>If you use use <a class="reference internal" href="../c-api/allocation.html#c.PyObject_New" title="PyObject_New"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_New()</span></code></a> or <a class="reference internal" href="../c-api/allocation.html#c.PyObject_NewVar" title="PyObject_NewVar"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_NewVar()</span></code></a>:</p>
+<ul>
+<li><p>Get and call type's <a class="reference internal" href="../c-api/typeobj.html#c.PyTypeObject.tp_alloc" title="PyTypeObject.tp_alloc"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_alloc</span></code></a> slot, if possible.
+That is, replace <code class="docutils literal notranslate"><span class="pre">TYPE</span> <span class="pre">*o</span> <span class="pre">=</span> <span class="pre">PyObject_New(TYPE,</span> <span class="pre">typeobj)</span></code> with:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">TYPE</span><span class="w"> </span><span class="o">*</span><span class="n">o</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">typeobj</span><span class="o">-&gt;</span><span class="n">tp_alloc</span><span class="p">(</span><span class="n">typeobj</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Replace <code class="docutils literal notranslate"><span class="pre">o</span> <span class="pre">=</span> <span class="pre">PyObject_NewVar(TYPE,</span> <span class="pre">typeobj,</span> <span class="pre">size)</span></code> with the same,
+but use size instead of the 0.</p>
+</li>
+<li><p>If the above is not possible (e.g. inside a custom <code class="docutils literal notranslate"><span class="pre">tp_alloc</span></code>),
+call <a class="reference internal" href="../c-api/gcsupport.html#c.PyObject_GC_New" title="PyObject_GC_New"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_GC_New()</span></code></a> or <a class="reference internal" href="../c-api/gcsupport.html#c.PyObject_GC_NewVar" title="PyObject_GC_NewVar"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_GC_NewVar()</span></code></a>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">TYPE</span><span class="w"> </span><span class="o">*</span><span class="n">o</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyObject_GC_New</span><span class="p">(</span><span class="n">TYPE</span><span class="p">,</span><span class="w"> </span><span class="n">typeobj</span><span class="p">);</span>
+
+<span class="n">TYPE</span><span class="w"> </span><span class="o">*</span><span class="n">o</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyObject_GC_NewVar</span><span class="p">(</span><span class="n">TYPE</span><span class="p">,</span><span class="w"> </span><span class="n">typeobj</span><span class="p">,</span><span class="w"> </span><span class="n">size</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
 </section>
 <section id="module-state-access-from-classes">
 <h3>Module State Access from Classes<a class="headerlink" href="#module-state-access-from-classes" title="Link to this heading">¶</a></h3>
@@ -698,7 +789,14 @@ that is, creating a type that works exactly like a given static type.</p>
 <li><a class="reference internal" href="#heap-types">Heap Types</a><ul>
 <li><a class="reference internal" href="#changing-static-types-to-heap-types">Changing Static Types to Heap Types</a></li>
 <li><a class="reference internal" href="#defining-heap-types">Defining Heap Types</a></li>
-<li><a class="reference internal" href="#garbage-collection-protocol">Garbage-Collection Protocol</a></li>
+<li><a class="reference internal" href="#garbage-collection-protocol">Garbage-Collection Protocol</a><ul>
+<li><a class="reference internal" href="#tp-traverse-in-python-3-8-and-lower"><code class="docutils literal notranslate"><span class="pre">tp_traverse</span></code> in Python 3.8 and lower</a></li>
+<li><a class="reference internal" href="#delegating-tp-traverse">Delegating <code class="docutils literal notranslate"><span class="pre">tp_traverse</span></code></a></li>
+<li><a class="reference internal" href="#defining-tp-dealloc">Defining <code class="docutils literal notranslate"><span class="pre">tp_dealloc</span></code></a></li>
+<li><a class="reference internal" href="#not-overriding-tp-free">Not overriding <code class="docutils literal notranslate"><span class="pre">tp_free</span></code></a></li>
+<li><a class="reference internal" href="#avoiding-pyobject-new">Avoiding <code class="docutils literal notranslate"><span class="pre">PyObject_New</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-state-access-from-classes">Module State Access from Classes</a></li>
 <li><a class="reference internal" href="#module-state-access-from-regular-methods">Module State Access from Regular Methods</a></li>
 <li><a class="reference internal" href="#module-state-access-from-slot-methods-getters-and-setters">Module State Access from Slot Methods, Getters and Setters</a></li>
@@ -813,7 +911,7 @@ that is, creating a type that works exactly like a given static type.</p>
 <br />
     <br />
 
-    最後更新於 11月 12, 2023。
+    最後更新於 Nov 22, 2023 (11:37 UTC)。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
