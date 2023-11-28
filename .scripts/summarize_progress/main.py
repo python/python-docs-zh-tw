@@ -1,3 +1,4 @@
+import re
 import polib
 import glob
 import datetime
@@ -36,7 +37,7 @@ def get_open_issues_count() -> int:
 def get_github_issues() -> list:
     NUMBER_OF_ISSUES = get_open_issues_count()
 
-    url = f"https://api.github.com/repos/python/python-docs-zh-tw/issues?per_page={NUMBER_OF_ISSUES}"
+    url = f"https://api.github.com/search/issues?q=repo:python/python-docs-zh-tw+type:issue+state:open&per_page={NUMBER_OF_ISSUES}"
     headers = {
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
@@ -45,7 +46,7 @@ def get_github_issues() -> list:
     result = r.json()
 
     result_list = []
-    for issue in result:
+    for issue in result["items"]:
         title_segments = issue["title"].split()
 
         if len(title_segments) < 2:
@@ -57,11 +58,14 @@ def get_github_issues() -> list:
 
         filename = title_segments[1].strip("`")
 
-        filename_segments = filename.split("/")
-        if len(filename_segments) < 2:
-            continue
-        if filename_segments[1][-3:] != ".po":
+        if re.fullmatch("[a-zA-z-]+/[a-zA-Z0-9._-]+.po", filename):
+            filename_segments = filename.split("/")
+            # print(filename_segments)
+        elif re.fullmatch("[a-zA-z-]+/[a-zA-Z0-9._-]+", filename):
+            filename_segments = filename.split("/")
             filename_segments[1] += ".po"
+        else:
+            continue
 
         result_list.append([filename_segments, issue["assignee"]["login"]])
 
