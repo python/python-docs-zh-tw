@@ -4,7 +4,7 @@ import datetime
 import requests
 
 
-def entry_check(pofile):
+def entry_check(pofile) -> str:
     lines_tranlated = len(pofile.translated_entries())
     lines_untranlated = len(pofile.untranslated_entries())
 
@@ -33,7 +33,7 @@ def get_open_issues_count() -> int:
     return result["total_count"]
 
 
-def get_github_issues():
+def get_github_issues() -> list:
     NUMBER_OF_ISSUES = get_open_issues_count()
 
     url = f"https://api.github.com/repos/python/python-docs-zh-tw/issues?per_page={NUMBER_OF_ISSUES}"
@@ -68,11 +68,11 @@ def get_github_issues():
     return result_list
 
 
-def format_line_file(filename, result):
+def format_line_file(filename, result) -> str:
     return f"  - {filename.ljust(37, '-')}{result}\r\n"
 
 
-def format_line_directory(dirname):
+def format_line_directory(dirname) -> str:
     tmp = f"- {dirname}/\r"
     return tmp
 
