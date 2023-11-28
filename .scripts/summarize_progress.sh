@@ -8,6 +8,5 @@ source utils/install_poetry.sh
 poetry lock
 poetry install
 poetry run bash -c "
-    python mark_file/main.py
-
+    python summarize_progress/main.py
 "

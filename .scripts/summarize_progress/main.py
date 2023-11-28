@@ -15,7 +15,7 @@ def entry_check(pofile):
     else:
         lines_all = lines_tranlated + lines_untranlated
         progress = lines_tranlated / lines_all
-        progress = round(progress*100, 2)
+        progress = round(progress * 100, 2)
         result = f"Ongoing, {str(progress)} %"
 
     return result
@@ -27,14 +27,14 @@ def get_github_issue():
     url = f"https://api.github.com/repos/python/python-docs-zh-tw/issues?per_page={NUMBER_OF_ISSUES}"
     headers = {
         "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28"
+        "X-GitHub-Api-Version": "2022-11-28",
     }
     r = requests.get(url=url, headers=headers)
     result = r.json()
 
     result_list = []
     for issue in result:
-        title = issue['title'].split(" ")
+        title_segments = issue["title"].split()
 
         if len(title) < 2:
             continue
@@ -43,17 +43,13 @@ def get_github_issue():
         if issue["assignee"] is None:
             continue
 
-        filename = title[1]
-        if filename[0] == "`":
-            filename = filename[1:]
-        if filename[-1] == "`":
-            filename = filename[:-1]
+        filename = title[1].strip("`")
 
-        filename = filename.split("/")
-        if len(filename) < 2:
+        filename_segments = filename.split("/")
+        if len(filename_segments) < 2:
             continue
-        if filename[1][-3:] != ".po":
-            filename[1] += ".po"
+        if filename_segments[1][-3:] != ".po":
+            filename_segments[1] += ".po"
 
         result_list.append([filename, issue["assignee"]["login"]])
 
@@ -61,9 +57,7 @@ def get_github_issue():
 
 
 def format_line_file(filename, result):
-    tmp = f"  - {filename}"
-    tmp = f"{tmp}{'-' * (40-len(tmp))}{result}\r"
-    return tmp
+    return f"  - {filename.ljust(37, '-')}{result}\r\n"
 
 
 def format_line_directory(dirname):
@@ -72,17 +66,28 @@ def format_line_directory(dirname):
 
 
 if __name__ == "__main__":
-
     issue_list = get_github_issue()
 
-    directories = ["c-api", "distributing", "extending", "faq", "howto", "includes",
-                   "installing", "library", "reference", "tutorial", "using", "whatsnew"]
+    directories = [
+        "c-api",
+        "distributing",
+        "extending",
+        "faq",
+        "howto",
+        "includes",
+        "installing",
+        "library",
+        "reference",
+        "tutorial",
+        "using",
+        "whatsnew",
+    ]
 
     summary = {}
 
     for dir_name in directories:
         summary[dir_name] = {}
-        for root, dirs, files in os.walk(f"../{dir_name}"):
+        for root, _, files in os.walk(f"../{dir_name}"):
             for file in files:
                 if file.endswith(".po"):
                     filepath = os.path.join(root, file)
@@ -90,12 +95,9 @@ if __name__ == "__main__":
                     result = entry_check(po)
                     summary[dir_name][file] = result
 
-    for issue in issue_list:
-        title = issue[0]
-        assignee = issue[1]
-
+    for (category, filename), assignee in issue_list:
         try:
-            summary[title[0]][title[1]] += f", 💻 {assignee}"
+            summary[category][filename] += f", 💻 {assignee}"
         except KeyError:
             pass
 
@@ -105,7 +107,9 @@ if __name__ == "__main__":
         for filename, result in filedict.items():
             writeliner.append(format_line_file(filename, result))
 
-    file = open(
-        f"mark_file/dist/mark_file_{datetime.datetime.today().strftime('%Y%m%d_%H%M%S')}.md", "w")
-    file.writelines(writeliner)
-    file.close()
+    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    with open(
+        f"summarize_progress/dist/summarize_progress_{timestamp}.md",
+        "w",
+    ) as file:
+        file.writelines(writeliner)
