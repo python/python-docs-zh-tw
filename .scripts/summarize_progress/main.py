@@ -1,5 +1,6 @@
 import polib
 import os
+import glob
 import datetime
 import requests
 
@@ -15,14 +16,26 @@ def entry_check(pofile):
     else:
         lines_all = lines_tranlated + lines_untranlated
         progress = lines_tranlated / lines_all
-        progress = round(progress * 100, 2)
-        result = f"Ongoing, {str(progress)} %"
+        progress_percentage = round(progress * 100, 2)
+        result = f"Ongoing, {str(progress_percentage)} %"
 
     return result
 
 
-def get_github_issue():
-    NUMBER_OF_ISSUES = 100
+def get_open_issues_count() -> int:
+    url = f"https://api.github.com/search/issues?q=repo:python/python-docs-zh-tw+type:issue+state:open"
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    r = requests.get(url=url, headers=headers)
+    result = r.json()
+
+    return result["total_count"]
+
+
+def get_github_issues():
+    NUMBER_OF_ISSUES = get_open_issues_count()
 
     url = f"https://api.github.com/repos/python/python-docs-zh-tw/issues?per_page={NUMBER_OF_ISSUES}"
     headers = {
@@ -36,14 +49,14 @@ def get_github_issue():
     for issue in result:
         title_segments = issue["title"].split()
 
-        if len(title) < 2:
+        if len(title_segments) < 2:
             continue
-        if title[0] != "翻譯" and title[0].lower() != "translate":
+        if title_segments[0] != "翻譯" and title_segments[0].lower() != "translate":
             continue
         if issue["assignee"] is None:
             continue
 
-        filename = title[1].strip("`")
+        filename = title_segments[1].strip("`")
 
         filename_segments = filename.split("/")
         if len(filename_segments) < 2:
@@ -51,7 +64,7 @@ def get_github_issue():
         if filename_segments[1][-3:] != ".po":
             filename_segments[1] += ".po"
 
-        result_list.append([filename, issue["assignee"]["login"]])
+        result_list.append([filename_segments, issue["assignee"]["login"]])
 
     return result_list
 
@@ -66,7 +79,7 @@ def format_line_directory(dirname):
 
 
 if __name__ == "__main__":
-    issue_list = get_github_issue()
+    issue_list = get_github_issues()
 
     directories = [
         "c-api",
@@ -85,15 +98,22 @@ if __name__ == "__main__":
 
     summary = {}
 
-    for dir_name in directories:
-        summary[dir_name] = {}
-        for root, _, files in os.walk(f"../{dir_name}"):
-            for file in files:
-                if file.endswith(".po"):
-                    filepath = os.path.join(root, file)
-                    po = polib.pofile(filepath)
-                    result = entry_check(po)
-                    summary[dir_name][file] = result
+    file_list = glob.glob("./../**/*.po", recursive=True)
+    file_list.sort()
+
+    for filepath in file_list:
+        if len(filepath.split("/")) == 4:  # in-dir files
+            _, _, dirname, filename = filepath.split("/")
+        else:  # root dir files
+            _, _, filename = filepath.split("/")
+            dirname = "/"
+
+        if dirname not in summary:
+            summary[dirname] = {}
+
+        po = polib.pofile(filepath)
+        result = entry_check(po)
+        summary[dirname][filename] = result
 
     for (category, filename), assignee in issue_list:
         try:
