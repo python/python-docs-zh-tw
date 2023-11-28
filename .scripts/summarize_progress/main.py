@@ -1,5 +1,4 @@
 import polib
-import os
 import glob
 import datetime
 import requests
