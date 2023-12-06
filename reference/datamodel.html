@@ -129,7 +129,26 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#frame-objects">3.2.13.2. Frame objects</a><ul>
+<li><a class="reference internal" href="#special-read-only-attributes">3.2.13.2.1. Special read-only attributes</a><ul>
+<li><a class="reference internal" href="#frame.f_back"><code class="docutils literal notranslate"><span class="pre">frame.f_back</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_code"><code class="docutils literal notranslate"><span class="pre">frame.f_code</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_locals"><code class="docutils literal notranslate"><span class="pre">frame.f_locals</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_globals"><code class="docutils literal notranslate"><span class="pre">frame.f_globals</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_builtins"><code class="docutils literal notranslate"><span class="pre">frame.f_builtins</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_lasti"><code class="docutils literal notranslate"><span class="pre">frame.f_lasti</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#special-writable-attributes">3.2.13.2.2. 特殊可寫屬性</a><ul>
+<li><a class="reference internal" href="#frame.f_trace"><code class="docutils literal notranslate"><span class="pre">frame.f_trace</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_trace_lines"><code class="docutils literal notranslate"><span class="pre">frame.f_trace_lines</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_trace_opcodes"><code class="docutils literal notranslate"><span class="pre">frame.f_trace_opcodes</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_lineno"><code class="docutils literal notranslate"><span class="pre">frame.f_lineno</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#frame-object-methods">3.2.13.2.3. Frame object methods</a><ul>
 <li><a class="reference internal" href="#frame.clear"><code class="docutils literal notranslate"><span class="pre">frame.clear()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#traceback-objects">3.2.13.3. Traceback objects</a></li>
@@ -173,6 +192,7 @@
 <li><a class="reference internal" href="#object.__get__"><code class="docutils literal notranslate"><span class="pre">object.__get__()</span></code></a></li>
 <li><a class="reference internal" href="#object.__set__"><code class="docutils literal notranslate"><span class="pre">object.__set__()</span></code></a></li>
 <li><a class="reference internal" href="#object.__delete__"><code class="docutils literal notranslate"><span class="pre">object.__delete__()</span></code></a></li>
+<li><a class="reference internal" href="#object.__objclass__"><code class="docutils literal notranslate"><span class="pre">object.__objclass__</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#invoking-descriptors">3.3.2.3. Invoking Descriptors</a></li>
@@ -1178,41 +1198,133 @@ environment variable can be used.</p>
 <span id="id5"></span><h4><span class="section-number">3.2.13.2. </span>Frame objects<a class="headerlink" href="#frame-objects" title="Link to this heading">¶</a></h4>
 <p id="index-61">Frame objects represent execution frames.  They may occur in traceback objects
 (see below), and are also passed to registered trace functions.</p>
-<p id="index-62">Special read-only attributes: <code class="xref py py-attr docutils literal notranslate"><span class="pre">f_back</span></code> is to the previous stack frame
-(towards the caller), or <code class="docutils literal notranslate"><span class="pre">None</span></code> if this is the bottom stack frame;
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">f_code</span></code> is the code object being executed in this frame; <code class="xref py py-attr docutils literal notranslate"><span class="pre">f_locals</span></code>
-is the dictionary used to look up local variables; <code class="xref py py-attr docutils literal notranslate"><span class="pre">f_globals</span></code> is used for
-global variables; <code class="xref py py-attr docutils literal notranslate"><span class="pre">f_builtins</span></code> is used for built-in (intrinsic) names;
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">f_lasti</span></code> gives the precise instruction (this is an index into the
-bytecode string of the code object).</p>
-<p>存取 <code class="docutils literal notranslate"><span class="pre">f_code</span></code> 會引發一個附帶引數 <code class="docutils literal notranslate"><span class="pre">obj</span></code> 與 <code class="docutils literal notranslate"><span class="pre">&quot;f_code&quot;</span></code> 的<a class="reference internal" href="../library/sys.html#auditing"><span class="std std-ref">稽核事件</span></a> <code class="docutils literal notranslate"><span class="pre">object.__getattr__</span></code>。</p>
-<p id="index-63">Special writable attributes: <code class="xref py py-attr docutils literal notranslate"><span class="pre">f_trace</span></code>, if not <code class="docutils literal notranslate"><span class="pre">None</span></code>, is a function
-called for various events during code execution (this is used by the debugger).
-Normally an event is triggered for each new source line - this can be
-disabled by setting <code class="xref py py-attr docutils literal notranslate"><span class="pre">f_trace_lines</span></code> to <a class="reference internal" href="../library/constants.html#False" title="False"><code class="xref py py-const docutils literal notranslate"><span class="pre">False</span></code></a>.</p>
-<p>Implementations <em>may</em> allow per-opcode events to be requested by setting
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">f_trace_opcodes</span></code> to <a class="reference internal" href="../library/constants.html#True" title="True"><code class="xref py py-const docutils literal notranslate"><span class="pre">True</span></code></a>. Note that this may lead to
+<section id="special-read-only-attributes">
+<span id="index-62"></span><h5><span class="section-number">3.2.13.2.1. </span>Special read-only attributes<a class="headerlink" href="#special-read-only-attributes" title="Link to this heading">¶</a></h5>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><dl class="py attribute">
+<dt class="sig sig-object py" id="frame.f_back">
+<span class="sig-prename descclassname"><span class="pre">frame.</span></span><span class="sig-name descname"><span class="pre">f_back</span></span><a class="headerlink" href="#frame.f_back" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</td>
+<td><p>Points to the previous stack frame (towards the caller),
+or <code class="docutils literal notranslate"><span class="pre">None</span></code> if this is the bottom stack frame</p></td>
+</tr>
+<tr class="row-even"><td><dl class="py attribute">
+<dt class="sig sig-object py" id="frame.f_code">
+<span class="sig-prename descclassname"><span class="pre">frame.</span></span><span class="sig-name descname"><span class="pre">f_code</span></span><a class="headerlink" href="#frame.f_code" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</td>
+<td><p>在這個 frame 中執行的<a class="reference internal" href="#code-objects"><span class="std std-ref">程式碼物件 (code object)</span></a>。存取這個屬性會引發一個附帶引數 <code class="docutils literal notranslate"><span class="pre">obj</span></code> 與 <code class="docutils literal notranslate"><span class="pre">&quot;f_code&quot;</span></code> 的<a class="reference internal" href="../library/sys.html#auditing"><span class="std std-ref">稽核事件</span></a> <code class="docutils literal notranslate"><span class="pre">object.__getattr__</span></code>。</p></td>
+</tr>
+<tr class="row-odd"><td><dl class="py attribute">
+<dt class="sig sig-object py" id="frame.f_locals">
+<span class="sig-prename descclassname"><span class="pre">frame.</span></span><span class="sig-name descname"><span class="pre">f_locals</span></span><a class="headerlink" href="#frame.f_locals" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</td>
+<td><p>The dictionary used by the frame to look up
+<a class="reference internal" href="executionmodel.html#naming"><span class="std std-ref">local variables</span></a></p></td>
+</tr>
+<tr class="row-even"><td><dl class="py attribute">
+<dt class="sig sig-object py" id="frame.f_globals">
+<span class="sig-prename descclassname"><span class="pre">frame.</span></span><span class="sig-name descname"><span class="pre">f_globals</span></span><a class="headerlink" href="#frame.f_globals" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</td>
+<td><p>The dictionary used by the frame to look up
+<a class="reference internal" href="executionmodel.html#naming"><span class="std std-ref">global variables</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><dl class="py attribute">
+<dt class="sig sig-object py" id="frame.f_builtins">
+<span class="sig-prename descclassname"><span class="pre">frame.</span></span><span class="sig-name descname"><span class="pre">f_builtins</span></span><a class="headerlink" href="#frame.f_builtins" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</td>
+<td><p>The dictionary used by the frame to look up
+<a class="reference internal" href="executionmodel.html#naming"><span class="std std-ref">built-in (intrinsic) names</span></a></p></td>
+</tr>
+<tr class="row-even"><td><dl class="py attribute">
+<dt class="sig sig-object py" id="frame.f_lasti">
+<span class="sig-prename descclassname"><span class="pre">frame.</span></span><span class="sig-name descname"><span class="pre">f_lasti</span></span><a class="headerlink" href="#frame.f_lasti" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</td>
+<td><p>The &quot;precise instruction&quot; of the frame object
+(this is an index into the <a class="reference internal" href="../glossary.html#term-bytecode"><span class="xref std std-term">bytecode</span></a> string of the
+<a class="reference internal" href="#code-objects"><span class="std std-ref">code object</span></a>)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="special-writable-attributes">
+<span id="index-63"></span><h5><span class="section-number">3.2.13.2.2. </span>特殊可寫屬性<a class="headerlink" href="#special-writable-attributes" title="Link to this heading">¶</a></h5>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><dl class="py attribute">
+<dt class="sig sig-object py" id="frame.f_trace">
+<span class="sig-prename descclassname"><span class="pre">frame.</span></span><span class="sig-name descname"><span class="pre">f_trace</span></span><a class="headerlink" href="#frame.f_trace" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</td>
+<td><p>If not <code class="docutils literal notranslate"><span class="pre">None</span></code>, this is a function called for various events during
+code execution (this is used by debuggers). Normally an event is
+triggered for each new source line (see <a class="reference internal" href="#frame.f_trace_lines" title="frame.f_trace_lines"><code class="xref py py-attr docutils literal notranslate"><span class="pre">f_trace_lines</span></code></a>).</p></td>
+</tr>
+<tr class="row-even"><td><dl class="py attribute">
+<dt class="sig sig-object py" id="frame.f_trace_lines">
+<span class="sig-prename descclassname"><span class="pre">frame.</span></span><span class="sig-name descname"><span class="pre">f_trace_lines</span></span><a class="headerlink" href="#frame.f_trace_lines" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</td>
+<td><p>Set this attribute to <a class="reference internal" href="../library/constants.html#False" title="False"><code class="xref py py-const docutils literal notranslate"><span class="pre">False</span></code></a> to disable triggering a tracing
+event for each source line.</p></td>
+</tr>
+<tr class="row-odd"><td><dl class="py attribute">
+<dt class="sig sig-object py" id="frame.f_trace_opcodes">
+<span class="sig-prename descclassname"><span class="pre">frame.</span></span><span class="sig-name descname"><span class="pre">f_trace_opcodes</span></span><a class="headerlink" href="#frame.f_trace_opcodes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</td>
+<td><p>Set this attribute to <a class="reference internal" href="../library/constants.html#True" title="True"><code class="xref py py-const docutils literal notranslate"><span class="pre">True</span></code></a> to allow per-opcode events to be
+requested. Note that this may lead to
 undefined interpreter behaviour if exceptions raised by the trace
-function escape to the function being traced.</p>
-<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">f_lineno</span></code> is the current line number of the frame --- writing to this
+function escape to the function being traced.</p></td>
+</tr>
+<tr class="row-even"><td><dl class="py attribute">
+<dt class="sig sig-object py" id="frame.f_lineno">
+<span class="sig-prename descclassname"><span class="pre">frame.</span></span><span class="sig-name descname"><span class="pre">f_lineno</span></span><a class="headerlink" href="#frame.f_lineno" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</td>
+<td><p>The current line number of the frame -- writing to this
 from within a trace function jumps to the given line (only for the bottom-most
 frame).  A debugger can implement a Jump command (aka Set Next Statement)
-by writing to f_lineno.</p>
+by writing to this attribute.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="frame-object-methods">
+<h5><span class="section-number">3.2.13.2.3. </span>Frame object methods<a class="headerlink" href="#frame-object-methods" title="Link to this heading">¶</a></h5>
 <p>Frame objects support one method:</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="frame.clear">
 <span class="sig-prename descclassname"><span class="pre">frame.</span></span><span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#frame.clear" title="Link to this definition">¶</a></dt>
-<dd><p>This method clears all references to local variables held by the
-frame.  Also, if the frame belonged to a generator, the generator
+<dd><p>This method clears all references to <a class="reference internal" href="executionmodel.html#naming"><span class="std std-ref">local variables</span></a> held by the
+frame.  Also, if the frame belonged to a <a class="reference internal" href="../glossary.html#term-generator"><span class="xref std std-term">generator</span></a>, the generator
 is finalized.  This helps break reference cycles involving frame
-objects (for example when catching an exception and storing its
-traceback for later use).</p>
+objects (for example when catching an <a class="reference internal" href="../library/exceptions.html#bltin-exceptions"><span class="std std-ref">exception</span></a>
+and storing its <a class="reference internal" href="#traceback-objects"><span class="std std-ref">traceback</span></a> for later use).</p>
 <p><a class="reference internal" href="../library/exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> is raised if the frame is currently executing.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.4 版新加入.</span></p>
 </div>
 </dd></dl>
 
+</section>
 </section>
 <section id="traceback-objects">
 <span id="id6"></span><h4><span class="section-number">3.2.13.3. </span>Traceback objects<a class="headerlink" href="#traceback-objects" title="Link to this heading">¶</a></h4>
@@ -1765,12 +1877,19 @@ more details.</p>
 <dd><p>Called to delete the attribute on an instance <em>instance</em> of the owner class.</p>
 </dd></dl>
 
-<p>The attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">__objclass__</span></code> is interpreted by the <a class="reference internal" href="../library/inspect.html#module-inspect" title="inspect: Extract information and source code from live objects."><code class="xref py py-mod docutils literal notranslate"><span class="pre">inspect</span></code></a> module
+<p>Instances of descriptors may also have the <code class="xref py py-attr docutils literal notranslate"><span class="pre">__objclass__</span></code> attribute
+present:</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="object.__objclass__">
+<span class="sig-prename descclassname"><span class="pre">object.</span></span><span class="sig-name descname"><span class="pre">__objclass__</span></span><a class="headerlink" href="#object.__objclass__" title="Link to this definition">¶</a></dt>
+<dd><p>The attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">__objclass__</span></code> is interpreted by the <a class="reference internal" href="../library/inspect.html#module-inspect" title="inspect: Extract information and source code from live objects."><code class="xref py py-mod docutils literal notranslate"><span class="pre">inspect</span></code></a> module
 as specifying the class where this object was defined (setting this
 appropriately can assist in runtime introspection of dynamic class attributes).
 For callables, it may indicate that an instance of the given type (or a
 subclass) is expected or required as the first positional argument (for example,
 CPython sets this attribute for unbound methods that are implemented in C).</p>
+</dd></dl>
+
 </section>
 <section id="invoking-descriptors">
 <span id="descriptor-invocation"></span><h4><span class="section-number">3.3.2.3. </span>Invoking Descriptors<a class="headerlink" href="#invoking-descriptors" title="Link to this heading">¶</a></h4>
@@ -1815,7 +1934,8 @@ the descriptor defines <code class="xref py py-meth docutils literal notranslate
 descriptor; if it defines neither, it is a non-data descriptor.  Normally, data
 descriptors define both <code class="xref py py-meth docutils literal notranslate"><span class="pre">__get__()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">__set__()</span></code>, while non-data
 descriptors have just the <code class="xref py py-meth docutils literal notranslate"><span class="pre">__get__()</span></code> method.  Data descriptors with
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">__get__()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">__set__()</span></code> (and/or <code class="xref py py-meth docutils literal notranslate"><span class="pre">__delete__()</span></code>) defined always override a redefinition in an
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">__get__()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">__set__()</span></code> (and/or <code class="xref py py-meth docutils literal notranslate"><span class="pre">__delete__()</span></code>) defined
+always override a redefinition in an
 instance dictionary.  In contrast, non-data descriptors can be overridden by
 instances.</p>
 <p>Python methods (including those decorated with
@@ -2326,7 +2446,8 @@ range of items.  It is also recommended that mappings provide the methods
 objects.  The <a class="reference internal" href="../library/collections.abc.html#module-collections.abc" title="collections.abc: Abstract base classes for containers"><code class="xref py py-mod docutils literal notranslate"><span class="pre">collections.abc</span></code></a> module provides a
 <a class="reference internal" href="../library/collections.abc.html#collections.abc.MutableMapping" title="collections.abc.MutableMapping"><code class="xref py py-class docutils literal notranslate"><span class="pre">MutableMapping</span></code></a>
 <a class="reference internal" href="../glossary.html#term-abstract-base-class"><span class="xref std std-term">abstract base class</span></a> to help create those methods from a base set of
-<a class="reference internal" href="#object.__getitem__" title="object.__getitem__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__getitem__()</span></code></a>, <a class="reference internal" href="#object.__setitem__" title="object.__setitem__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__setitem__()</span></code></a>, <a class="reference internal" href="#object.__delitem__" title="object.__delitem__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__delitem__()</span></code></a>, and <code class="xref py py-meth docutils literal notranslate"><span class="pre">keys()</span></code>.
+<a class="reference internal" href="#object.__getitem__" title="object.__getitem__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__getitem__()</span></code></a>, <a class="reference internal" href="#object.__setitem__" title="object.__setitem__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__setitem__()</span></code></a>,
+<a class="reference internal" href="#object.__delitem__" title="object.__delitem__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__delitem__()</span></code></a>, and <code class="xref py py-meth docutils literal notranslate"><span class="pre">keys()</span></code>.
 Mutable sequences should provide methods <code class="xref py py-meth docutils literal notranslate"><span class="pre">append()</span></code>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">count()</span></code>,
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">index()</span></code>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">extend()</span></code>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">insert()</span></code>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">pop()</span></code>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">remove()</span></code>,
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">reverse()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">sort()</span></code>, like Python standard <a class="reference internal" href="../library/stdtypes.html#list" title="list"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>
@@ -2909,7 +3030,7 @@ specific to the implementation of the asynchronous execution framework
 A coroutine's execution can be controlled by calling <a class="reference internal" href="#object.__await__" title="object.__await__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__await__()</span></code></a> and
 iterating over the result.  When the coroutine has finished executing and
 returns, the iterator raises <a class="reference internal" href="../library/exceptions.html#StopIteration" title="StopIteration"><code class="xref py py-exc docutils literal notranslate"><span class="pre">StopIteration</span></code></a>, and the exception's
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">value</span></code> attribute holds the return value.  If the
+<a class="reference internal" href="../library/exceptions.html#StopIteration.value" title="StopIteration.value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">value</span></code></a> attribute holds the return value.  If the
 coroutine raises an exception, it is propagated by the iterator.  Coroutines
 should not directly raise unhandled <a class="reference internal" href="../library/exceptions.html#StopIteration" title="StopIteration"><code class="xref py py-exc docutils literal notranslate"><span class="pre">StopIteration</span></code></a> exceptions.</p>
 <p>Coroutines also have the methods listed below, which are analogous to
@@ -3130,7 +3251,26 @@ supported, which is why the reflected method is not called.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#frame-objects">3.2.13.2. Frame objects</a><ul>
+<li><a class="reference internal" href="#special-read-only-attributes">3.2.13.2.1. Special read-only attributes</a><ul>
+<li><a class="reference internal" href="#frame.f_back"><code class="docutils literal notranslate"><span class="pre">frame.f_back</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_code"><code class="docutils literal notranslate"><span class="pre">frame.f_code</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_locals"><code class="docutils literal notranslate"><span class="pre">frame.f_locals</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_globals"><code class="docutils literal notranslate"><span class="pre">frame.f_globals</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_builtins"><code class="docutils literal notranslate"><span class="pre">frame.f_builtins</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_lasti"><code class="docutils literal notranslate"><span class="pre">frame.f_lasti</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#special-writable-attributes">3.2.13.2.2. 特殊可寫屬性</a><ul>
+<li><a class="reference internal" href="#frame.f_trace"><code class="docutils literal notranslate"><span class="pre">frame.f_trace</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_trace_lines"><code class="docutils literal notranslate"><span class="pre">frame.f_trace_lines</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_trace_opcodes"><code class="docutils literal notranslate"><span class="pre">frame.f_trace_opcodes</span></code></a></li>
+<li><a class="reference internal" href="#frame.f_lineno"><code class="docutils literal notranslate"><span class="pre">frame.f_lineno</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#frame-object-methods">3.2.13.2.3. Frame object methods</a><ul>
 <li><a class="reference internal" href="#frame.clear"><code class="docutils literal notranslate"><span class="pre">frame.clear()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#traceback-objects">3.2.13.3. Traceback objects</a></li>
@@ -3174,6 +3314,7 @@ supported, which is why the reflected method is not called.</p>
 <li><a class="reference internal" href="#object.__get__"><code class="docutils literal notranslate"><span class="pre">object.__get__()</span></code></a></li>
 <li><a class="reference internal" href="#object.__set__"><code class="docutils literal notranslate"><span class="pre">object.__set__()</span></code></a></li>
 <li><a class="reference internal" href="#object.__delete__"><code class="docutils literal notranslate"><span class="pre">object.__delete__()</span></code></a></li>
+<li><a class="reference internal" href="#object.__objclass__"><code class="docutils literal notranslate"><span class="pre">object.__objclass__</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#invoking-descriptors">3.3.2.3. Invoking Descriptors</a></li>
@@ -3424,7 +3565,7 @@ supported, which is why the reflected method is not called.</p>
 <br />
     <br />
 
-    最後更新於 Dec 04, 2023 (13:57 UTC)。
+    最後更新於 Dec 06, 2023 (06:15 UTC)。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
