@@ -322,8 +322,8 @@ rST 語法注意事項
 術語表 Glossary
 ===============
 
-為了讓翻譯保持統一，我們整理了一份 `術語列表 
-<https://github.com/python/python-docs-zh-tw/wiki/%E8%A1%93%E8%AA%9E%E5%88%97%E8%A1%A8>`_ \
+為了讓翻譯保持統一，我們整理了一份 \
+`術語列表 <https://github.com/python/python-docs-zh-tw/wiki/%E8%A1%93%E8%AA%9E%E5%88%97%E8%A1%A8>`_ \
 如果翻譯過程中你覺得需要術語列表有所缺漏，請至 `Discussion \
 <https://github.com/python/python-docs-zh-tw/discussions>`_ 開啟新的討論補充術語。\
 新增的術語，將會於每次 Sprint 中共同討論是否合併進術語列表。
