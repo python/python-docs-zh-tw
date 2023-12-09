@@ -123,7 +123,7 @@ the PSF for inclusion in the documentation.
 .. _GitHub Flow: https://guides.github.com/introduction/flow/
 
 首先，`新增一個 issue <https://github.com/python/python-docs-zh-tw/issues>`_\
-，如：「翻譯 tutorial/introduction.po」，讓大家知道你正在翻譯這個檔案。可以使用 `make todo` 列出尚待翻譯的檔案。
+，如：「翻譯 tutorial/introduction.po」，讓大家知道你正在翻譯這個檔案。可以使用 ``make todo`` 列出尚待翻譯的檔案。
 
 接著在 terminal 裡按照以下步驟：
 
