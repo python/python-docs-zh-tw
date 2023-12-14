@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Python 3.12\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-08-22 00:03+0000\n"
+"POT-Creation-Date: 2023-11-17 00:03+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -444,54 +444,163 @@ msgstr ""
 
 #: ../../howto/isolating-extensions.rst:342
 msgid ""
-"Please refer to the :ref:`the documentation <type-structs>` of :c:macro:"
-"`Py_TPFLAGS_HAVE_GC` and :c:member:`~PyTypeObject.tp_traverse` for "
-"additional considerations."
+"Please refer to the the documentation of :c:macro:`Py_TPFLAGS_HAVE_GC` and :"
+"c:member:`~PyTypeObject.tp_traverse` for additional considerations."
 msgstr ""
 
 #: ../../howto/isolating-extensions.rst:346
 msgid ""
-"If your traverse function delegates to the ``tp_traverse`` of its base class "
-"(or another type), ensure that ``Py_TYPE(self)`` is visited only once. Note "
-"that only heap type are expected to visit the type in ``tp_traverse``."
+"The API for defining heap types grew organically, leaving it somewhat "
+"awkward to use in its current state. The following sections will guide you "
+"through common issues."
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:350
-msgid "For example, if your traverse function includes::"
+#: ../../howto/isolating-extensions.rst:352
+msgid "``tp_traverse`` in Python 3.8 and lower"
 msgstr ""
 
 #: ../../howto/isolating-extensions.rst:354
-msgid "...and ``base`` may be a static type, then it should also include::"
-msgstr ""
-
-#: ../../howto/isolating-extensions.rst:362
 msgid ""
-"It is not necessary to handle the type's reference count in ``tp_new`` and "
-"``tp_clear``."
+"The requirement to visit the type from ``tp_traverse`` was added in Python "
+"3.9. If you support Python 3.8 and lower, the traverse function must *not* "
+"visit the type, so it must be more complicated::"
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:367
-msgid "Module State Access from Classes"
+#: ../../howto/isolating-extensions.rst:366
+msgid ""
+"Unfortunately, :c:data:`Py_Version` was only added in Python 3.11. As a "
+"replacement, use:"
 msgstr ""
 
 #: ../../howto/isolating-extensions.rst:369
+msgid ":c:macro:`PY_VERSION_HEX`, if not using the stable ABI, or"
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:370
+msgid ""
+":py:data:`sys.version_info` (via :c:func:`PySys_GetObject` and :c:func:"
+"`PyArg_ParseTuple`)."
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:375
+msgid "Delegating ``tp_traverse``"
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:377
+msgid ""
+"If your traverse function delegates to the :c:member:`~PyTypeObject."
+"tp_traverse` of its base class (or another type), ensure that "
+"``Py_TYPE(self)`` is visited only once. Note that only heap type are "
+"expected to visit the type in ``tp_traverse``."
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:382
+msgid "For example, if your traverse function includes::"
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:386
+msgid "...and ``base`` may be a static type, then it should also include::"
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:396
+msgid ""
+"It is not necessary to handle the type's reference count in :c:member:"
+"`~PyTypeObject.tp_new` and :c:member:`~PyTypeObject.tp_clear`."
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:401
+msgid "Defining ``tp_dealloc``"
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:403
+msgid ""
+"If your type has a custom :c:member:`~PyTypeObject.tp_dealloc` function, it "
+"needs to:"
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:406
+msgid ""
+"call :c:func:`PyObject_GC_UnTrack` before any fields are invalidated, and"
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:407
+msgid "decrement the reference count of the type."
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:409
+msgid ""
+"To keep the type valid while ``tp_free`` is called, the type's refcount "
+"needs to be decremented *after* the instance is deallocated. For example::"
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:421
+msgid ""
+"The default ``tp_dealloc`` function does this, so if your type does *not* "
+"override ``tp_dealloc`` you don't need to add it."
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:427
+msgid "Not overriding ``tp_free``"
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:429
+msgid ""
+"The :c:member:`~PyTypeObject.tp_free` slot of a heap type must be set to :c:"
+"func:`PyObject_GC_Del`. This is the default; do not override it."
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:435
+msgid "Avoiding ``PyObject_New``"
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:437
+msgid "GC-tracked objects need to be allocated using GC-aware functions."
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:439
+msgid "If you use use :c:func:`PyObject_New` or :c:func:`PyObject_NewVar`:"
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:441
+msgid ""
+"Get and call type's :c:member:`~PyTypeObject.tp_alloc` slot, if possible. "
+"That is, replace ``TYPE *o = PyObject_New(TYPE, typeobj)`` with::"
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:446
+msgid ""
+"Replace ``o = PyObject_NewVar(TYPE, typeobj, size)`` with the same, but use "
+"size instead of the 0."
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:449
+msgid ""
+"If the above is not possible (e.g. inside a custom ``tp_alloc``), call :c:"
+"func:`PyObject_GC_New` or :c:func:`PyObject_GC_NewVar`::"
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:458
+msgid "Module State Access from Classes"
+msgstr ""
+
+#: ../../howto/isolating-extensions.rst:460
 msgid ""
 "If you have a type object defined with :c:func:`PyType_FromModuleAndSpec`, "
 "you can call :c:func:`PyType_GetModule` to get the associated module, and "
 "then :c:func:`PyModule_GetState` to get the module's state."
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:373
+#: ../../howto/isolating-extensions.rst:464
 msgid ""
 "To save a some tedious error-handling boilerplate code, you can combine "
 "these two steps with :c:func:`PyType_GetModuleState`, resulting in::"
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:383
+#: ../../howto/isolating-extensions.rst:474
 msgid "Module State Access from Regular Methods"
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:385
+#: ../../howto/isolating-extensions.rst:476
 msgid ""
 "Accessing the module-level state from methods of a class is somewhat more "
 "complicated, but is possible thanks to API introduced in Python 3.9. To get "
@@ -499,27 +608,27 @@ msgid ""
 "module state from it."
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:390
+#: ../../howto/isolating-extensions.rst:481
 msgid ""
 "The largest roadblock is getting *the class a method was defined in*, or "
 "that method's \"defining class\" for short. The defining class can have a "
 "reference to the module it is part of."
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:394
+#: ../../howto/isolating-extensions.rst:485
 msgid ""
 "Do not confuse the defining class with :c:expr:`Py_TYPE(self)`. If the "
 "method is called on a *subclass* of your type, ``Py_TYPE(self)`` will refer "
 "to that subclass, which may be defined in different module than yours."
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:399
+#: ../../howto/isolating-extensions.rst:490
 msgid ""
 "The following Python code can illustrate the concept. ``Base."
 "get_defining_class`` returns ``Base`` even if ``type(self) == Sub``:"
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:415
+#: ../../howto/isolating-extensions.rst:506
 msgid ""
 "For a method to get its \"defining class\", it must use the :ref:"
 "`METH_METHOD | METH_FASTCALL | METH_KEYWORDS <METH_METHOD-METH_FASTCALL-"
@@ -527,25 +636,25 @@ msgid ""
 "corresponding :c:type:`PyCMethod` signature::"
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:427
+#: ../../howto/isolating-extensions.rst:518
 msgid ""
 "Once you have the defining class, call :c:func:`PyType_GetModuleState` to "
 "get the state of its associated module."
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:430
+#: ../../howto/isolating-extensions.rst:521
 msgid "For example::"
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:458
+#: ../../howto/isolating-extensions.rst:549
 msgid "Module State Access from Slot Methods, Getters and Setters"
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:462
+#: ../../howto/isolating-extensions.rst:553
 msgid "This is new in Python 3.11."
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:470
+#: ../../howto/isolating-extensions.rst:561
 msgid ""
 "Slot methods—the fast C equivalents for special methods, such as :c:member:"
 "`~PyNumberMethods.nb_add` for :py:attr:`~object.__add__` or :c:member:"
@@ -555,21 +664,21 @@ msgid ""
 "`PyGetSetDef`."
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:477
+#: ../../howto/isolating-extensions.rst:568
 msgid ""
 "To access the module state in these cases, use the :c:func:"
 "`PyType_GetModuleByDef` function, and pass in the module definition. Once "
 "you have the module, call :c:func:`PyModule_GetState` to get the state::"
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:488
+#: ../../howto/isolating-extensions.rst:579
 msgid ""
 ":c:func:`!PyType_GetModuleByDef` works by searching the :term:`method "
 "resolution order` (i.e. all superclasses) for the first superclass that has "
 "a corresponding module."
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:494
+#: ../../howto/isolating-extensions.rst:585
 msgid ""
 "In very exotic cases (inheritance chains spanning multiple modules created "
 "from the same definition), :c:func:`!PyType_GetModuleByDef` might not return "
@@ -577,18 +686,18 @@ msgid ""
 "module with the same definition, ensuring a compatible C memory layout."
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:502
+#: ../../howto/isolating-extensions.rst:593
 msgid "Lifetime of the Module State"
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:504
+#: ../../howto/isolating-extensions.rst:595
 msgid ""
 "When a module object is garbage-collected, its module state is freed. For "
 "each pointer to (a part of) the module state, you must hold a reference to "
 "the module object."
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:508
+#: ../../howto/isolating-extensions.rst:599
 msgid ""
 "Usually this is not an issue, because types created with :c:func:"
 "`PyType_FromModuleAndSpec`, and their instances, hold a reference to the "
@@ -597,26 +706,26 @@ msgid ""
 "libraries."
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:517
+#: ../../howto/isolating-extensions.rst:608
 msgid "Open Issues"
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:519
+#: ../../howto/isolating-extensions.rst:610
 msgid "Several issues around per-module state and heap types are still open."
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:521
+#: ../../howto/isolating-extensions.rst:612
 msgid ""
 "Discussions about improving the situation are best held on the `capi-sig "
 "mailing list <https://mail.python.org/mailman3/lists/capi-sig.python.org/"
 ">`__."
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:526
+#: ../../howto/isolating-extensions.rst:617
 msgid "Per-Class Scope"
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:528
+#: ../../howto/isolating-extensions.rst:619
 msgid ""
 "It is currently (as of Python 3.11) not possible to attach state to "
 "individual *types* without relying on CPython implementation details (which "
@@ -624,11 +733,11 @@ msgid ""
 "per-class scope)."
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:535
+#: ../../howto/isolating-extensions.rst:626
 msgid "Lossless Conversion to Heap Types"
 msgstr ""
 
-#: ../../howto/isolating-extensions.rst:537
+#: ../../howto/isolating-extensions.rst:628
 msgid ""
 "The heap type API was not designed for \"lossless\" conversion from static "
 "types; that is, creating a type that works exactly like a given static type."
