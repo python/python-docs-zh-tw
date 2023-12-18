@@ -77,7 +77,7 @@ def get_github_issues() -> list:
         match = re.search("(?P<dirname>[^\s`][a-zA-z-]+)/(?P<filename>[a-zA-Z0-9._-]+(.po)?)", title)
         if not match:
             continue
-        
+
         dirname, filename = match.group('dirname', 'filename')
         if not filename.endswith('.po'):
             filename += '.po'
@@ -98,7 +98,7 @@ if __name__ == "__main__":
     issue_list = get_github_issues()
 
     '''
-    Search all the po file in the directory, 
+    Search all the po file in the directory,
     and record the translation progress of each files.
     '''
     BASE_DIR = Path("../")
