@@ -99,7 +99,7 @@ the PSF for inclusion in the documentation.
 按鈕），這樣會把整個專案複製一份到你的 GitHub 帳號底下，你可以對這個 fork
 進行修改。
 
-第一次貢獻以前（還沒有 clone 過)
+第一次貢獻以前（還沒有 clone 過）
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 請在 terminal 裡依照以下步驟：
