@@ -282,7 +282,12 @@
 <p><strong>原始碼：</strong><a class="reference external" href="https://github.com/python/cpython/tree/3.12/Lib/re/">Lib/re/</a></p>
 <hr class="docutils" />
 <p>此模組提供類似於 Perl 中正規表示式的配對操作。</p>
-<p>被搜尋的模式 (pattern) 與字串可以是 Unicode 字串 (<a class="reference internal" href="stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>)，也可以是 8-bit 字串 (<a class="reference internal" href="stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>)。然而，Unicode 字串和 8-bit 字串不能混用：也就是，你不能用 byte 模式配對 Unicode 字串，反之亦然；同樣地，替換時，用來替換的字串必須與模式和搜尋字串是相同的型別 (type)。</p>
+<p>Both patterns and strings to be searched can be Unicode strings (<a class="reference internal" href="stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>)
+as well as 8-bit strings (<a class="reference internal" href="stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>).
+However, Unicode strings and 8-bit strings cannot be mixed:
+that is, you cannot match a Unicode string with a bytes pattern or
+vice-versa; similarly, when asking for a substitution, the replacement
+string must be of the same type as both the pattern and the search string.</p>
 <p>正規表示式使用反斜線字元 (<code class="docutils literal notranslate"><span class="pre">'\'</span></code>) 表示特別的形式，或是使用特殊字元而不調用它們的特殊意義。這與 Python 在字串文本 (literal) 中，為了一樣的目的使用同一個字元的目的相衝突；舉例來說，為了配對一個反斜線文字，一個人可能需要寫 <code class="docutils literal notranslate"><span class="pre">'\\\\'</span></code> 當作模式字串，因為正規表示式必須是 <code class="docutils literal notranslate"><span class="pre">\\</span></code>，而且每個反斜線在一個普通的 Python 字串文本中必須表示為 <code class="docutils literal notranslate"><span class="pre">\\</span></code>。另外，請注意在 Python 的字串文本中使用反斜線的任何無效跳脫序列目前會產生一個 <a class="reference internal" href="exceptions.html#SyntaxWarning" title="SyntaxWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">SyntaxWarning</span></code></a>，而在未來這會變成一個 <a class="reference internal" href="exceptions.html#SyntaxError" title="SyntaxError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">SyntaxError</span></code></a>。儘管它對正規表示式是一個有效的跳脫序列，這種行為也會發生。</p>
 <p>解決方法是對正規表示式模式使用 Python 的原始字串符號；反斜線在一個以 <code class="docutils literal notranslate"><span class="pre">'r'</span></code> 為前綴的字串文本中不會被用任何特別的方式處理。所以 <code class="docutils literal notranslate"><span class="pre">r&quot;\n&quot;</span></code> 是一個兩個字元的字串，包含 <code class="docutils literal notranslate"><span class="pre">'\'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'n'</span></code>，同時 <code class="docutils literal notranslate"><span class="pre">&quot;\n&quot;</span></code> 是一個單個字元的字串，包含一個換行符號。通常模式在 Python 程式中會使用這個原始字串符號表示。</p>
 <p>請務必注意到大部分的正規表示式操作是可以在模組層級的函式和 <a class="reference internal" href="#re-objects"><span class="std std-ref">compiled regular expressions</span></a> 中的方法使用的。這些函式是個捷徑且讓你不需要先編譯一個正規表示式物件，但是會缺少一些微調參數。</p>
@@ -458,8 +463,7 @@ them by a <code class="docutils literal notranslate"><span class="pre">'-'</span
 </ul>
 <ul class="simple" id="index-12">
 <li><p>Character classes such as <code class="docutils literal notranslate"><span class="pre">\w</span></code> or <code class="docutils literal notranslate"><span class="pre">\S</span></code> (defined below) are also accepted
-inside a set, although the characters they match depends on whether
-<a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> or <a class="reference internal" href="#re.LOCALE" title="re.LOCALE"><code class="xref py py-const docutils literal notranslate"><span class="pre">LOCALE</span></code></a> mode is in force.</p></li>
+inside a set, although the characters they match depend on the <a class="reference internal" href="#flags">flags</a> used.</p></li>
 </ul>
 <ul class="simple" id="index-13">
 <li><p>Characters that are not within a range can be matched by <em class="dfn">complementing</em>
@@ -515,18 +519,24 @@ and further syntax of the construct is. Extensions usually do not create a new
 group; <code class="docutils literal notranslate"><span class="pre">(?P&lt;name&gt;...)</span></code> is the only exception to this rule. Following are the
 currently supported extensions.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">(?aiLmsux)</span></code></dt><dd><p>(One or more letters from the set <code class="docutils literal notranslate"><span class="pre">'a'</span></code>, <code class="docutils literal notranslate"><span class="pre">'i'</span></code>, <code class="docutils literal notranslate"><span class="pre">'L'</span></code>, <code class="docutils literal notranslate"><span class="pre">'m'</span></code>,
-<code class="docutils literal notranslate"><span class="pre">'s'</span></code>, <code class="docutils literal notranslate"><span class="pre">'u'</span></code>, <code class="docutils literal notranslate"><span class="pre">'x'</span></code>.)  The group matches the empty string; the
-letters set the corresponding flags: <a class="reference internal" href="#re.A" title="re.A"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.A</span></code></a> (ASCII-only matching),
-<a class="reference internal" href="#re.I" title="re.I"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.I</span></code></a> (ignore case), <a class="reference internal" href="#re.L" title="re.L"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.L</span></code></a> (locale dependent),
-<a class="reference internal" href="#re.M" title="re.M"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.M</span></code></a> (multi-line), <a class="reference internal" href="#re.S" title="re.S"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.S</span></code></a> (dot matches all),
-<a class="reference internal" href="#re.U" title="re.U"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.U</span></code></a> (Unicode matching), and <a class="reference internal" href="#re.X" title="re.X"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.X</span></code></a> (verbose),
-for the entire regular expression.
-(The flags are described in <a class="reference internal" href="#contents-of-module-re"><span class="std std-ref">模組內容</span></a>.)
+<dt><code class="docutils literal notranslate"><span class="pre">(?aiLmsux)</span></code></dt><dd><p>(One or more letters from the set
+<code class="docutils literal notranslate"><span class="pre">'a'</span></code>, <code class="docutils literal notranslate"><span class="pre">'i'</span></code>, <code class="docutils literal notranslate"><span class="pre">'L'</span></code>, <code class="docutils literal notranslate"><span class="pre">'m'</span></code>, <code class="docutils literal notranslate"><span class="pre">'s'</span></code>, <code class="docutils literal notranslate"><span class="pre">'u'</span></code>, <code class="docutils literal notranslate"><span class="pre">'x'</span></code>.)
+The group matches the empty string;
+the letters set the corresponding flags for the entire regular expression:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#re.A" title="re.A"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.A</span></code></a> (ASCII-only matching)</p></li>
+<li><p><a class="reference internal" href="#re.I" title="re.I"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.I</span></code></a> (ignore case)</p></li>
+<li><p><a class="reference internal" href="#re.L" title="re.L"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.L</span></code></a> (locale dependent)</p></li>
+<li><p><a class="reference internal" href="#re.M" title="re.M"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.M</span></code></a> (multi-line)</p></li>
+<li><p><a class="reference internal" href="#re.S" title="re.S"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.S</span></code></a> (dot matches all)</p></li>
+<li><p><a class="reference internal" href="#re.U" title="re.U"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.U</span></code></a> (Unicode matching)</p></li>
+<li><p><a class="reference internal" href="#re.X" title="re.X"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.X</span></code></a> (verbose)</p></li>
+</ul>
+<p>(The flags are described in <a class="reference internal" href="#contents-of-module-re"><span class="std std-ref">模組內容</span></a>.)
 This is useful if you wish to include the flags as part of the
 regular expression, instead of passing a <em>flag</em> argument to the
-<a class="reference internal" href="#re.compile" title="re.compile"><code class="xref py py-func docutils literal notranslate"><span class="pre">re.compile()</span></code></a> function.  Flags should be used first in the
-expression string.</p>
+<a class="reference internal" href="#re.compile" title="re.compile"><code class="xref py py-func docutils literal notranslate"><span class="pre">re.compile()</span></code></a> function.
+Flags should be used first in the expression string.</p>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.11 版的變更: </span>This construction can only be used at the start of the expression.</p>
 </div>
@@ -538,21 +548,27 @@ expression is inside the parentheses, but the substring matched by the group
 <em>cannot</em> be retrieved after performing a match or referenced later in the
 pattern.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">(?aiLmsux-imsx:...)</span></code></dt><dd><p>(Zero or more letters from the set <code class="docutils literal notranslate"><span class="pre">'a'</span></code>, <code class="docutils literal notranslate"><span class="pre">'i'</span></code>, <code class="docutils literal notranslate"><span class="pre">'L'</span></code>, <code class="docutils literal notranslate"><span class="pre">'m'</span></code>,
-<code class="docutils literal notranslate"><span class="pre">'s'</span></code>, <code class="docutils literal notranslate"><span class="pre">'u'</span></code>, <code class="docutils literal notranslate"><span class="pre">'x'</span></code>, optionally followed by <code class="docutils literal notranslate"><span class="pre">'-'</span></code> followed by
+<dt><code class="docutils literal notranslate"><span class="pre">(?aiLmsux-imsx:...)</span></code></dt><dd><p>(Zero or more letters from the set
+<code class="docutils literal notranslate"><span class="pre">'a'</span></code>, <code class="docutils literal notranslate"><span class="pre">'i'</span></code>, <code class="docutils literal notranslate"><span class="pre">'L'</span></code>, <code class="docutils literal notranslate"><span class="pre">'m'</span></code>, <code class="docutils literal notranslate"><span class="pre">'s'</span></code>, <code class="docutils literal notranslate"><span class="pre">'u'</span></code>, <code class="docutils literal notranslate"><span class="pre">'x'</span></code>,
+optionally followed by <code class="docutils literal notranslate"><span class="pre">'-'</span></code> followed by
 one or more letters from the <code class="docutils literal notranslate"><span class="pre">'i'</span></code>, <code class="docutils literal notranslate"><span class="pre">'m'</span></code>, <code class="docutils literal notranslate"><span class="pre">'s'</span></code>, <code class="docutils literal notranslate"><span class="pre">'x'</span></code>.)
-The letters set or remove the corresponding flags:
-<a class="reference internal" href="#re.A" title="re.A"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.A</span></code></a> (ASCII-only matching), <a class="reference internal" href="#re.I" title="re.I"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.I</span></code></a> (ignore case),
-<a class="reference internal" href="#re.L" title="re.L"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.L</span></code></a> (locale dependent), <a class="reference internal" href="#re.M" title="re.M"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.M</span></code></a> (multi-line),
-<a class="reference internal" href="#re.S" title="re.S"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.S</span></code></a> (dot matches all), <a class="reference internal" href="#re.U" title="re.U"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.U</span></code></a> (Unicode matching),
-and <a class="reference internal" href="#re.X" title="re.X"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.X</span></code></a> (verbose), for the part of the expression.
-(The flags are described in <a class="reference internal" href="#contents-of-module-re"><span class="std std-ref">模組內容</span></a>.)</p>
+The letters set or remove the corresponding flags for the part of the expression:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#re.A" title="re.A"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.A</span></code></a> (ASCII-only matching)</p></li>
+<li><p><a class="reference internal" href="#re.I" title="re.I"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.I</span></code></a> (ignore case)</p></li>
+<li><p><a class="reference internal" href="#re.L" title="re.L"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.L</span></code></a> (locale dependent)</p></li>
+<li><p><a class="reference internal" href="#re.M" title="re.M"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.M</span></code></a> (multi-line)</p></li>
+<li><p><a class="reference internal" href="#re.S" title="re.S"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.S</span></code></a> (dot matches all)</p></li>
+<li><p><a class="reference internal" href="#re.U" title="re.U"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.U</span></code></a> (Unicode matching)</p></li>
+<li><p><a class="reference internal" href="#re.X" title="re.X"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.X</span></code></a> (verbose)</p></li>
+</ul>
+<p>(The flags are described in <a class="reference internal" href="#contents-of-module-re"><span class="std std-ref">模組內容</span></a>.)</p>
 <p>The letters <code class="docutils literal notranslate"><span class="pre">'a'</span></code>, <code class="docutils literal notranslate"><span class="pre">'L'</span></code> and <code class="docutils literal notranslate"><span class="pre">'u'</span></code> are mutually exclusive when used
 as inline flags, so they can't be combined or follow <code class="docutils literal notranslate"><span class="pre">'-'</span></code>.  Instead,
 when one of them appears in an inline group, it overrides the matching mode
 in the enclosing group.  In Unicode patterns <code class="docutils literal notranslate"><span class="pre">(?a:...)</span></code> switches to
 ASCII-only matching, and <code class="docutils literal notranslate"><span class="pre">(?u:...)</span></code> switches to Unicode matching
-(default).  In byte pattern <code class="docutils literal notranslate"><span class="pre">(?L:...)</span></code> switches to locale depending
+(default).  In bytes patterns <code class="docutils literal notranslate"><span class="pre">(?L:...)</span></code> switches to locale dependent
 matching, and <code class="docutils literal notranslate"><span class="pre">(?a:...)</span></code> switches to ASCII-only matching (default).
 This override is only in effect for the narrow inline group, and the
 original matching mode is restored outside of the group.</p>
@@ -718,53 +734,63 @@ characters.</p>
 </dl>
 <dl id="index-28">
 <dt><code class="docutils literal notranslate"><span class="pre">\b</span></code></dt><dd><p>Matches the empty string, but only at the beginning or end of a word.
-A word is defined as a sequence of word characters.  Note that formally,
-<code class="docutils literal notranslate"><span class="pre">\b</span></code> is defined as the boundary between a <code class="docutils literal notranslate"><span class="pre">\w</span></code> and a <code class="docutils literal notranslate"><span class="pre">\W</span></code> character
-(or vice versa), or between <code class="docutils literal notranslate"><span class="pre">\w</span></code> and the beginning/end of the string.
-This means that <code class="docutils literal notranslate"><span class="pre">r'\bfoo\b'</span></code> matches <code class="docutils literal notranslate"><span class="pre">'foo'</span></code>, <code class="docutils literal notranslate"><span class="pre">'foo.'</span></code>, <code class="docutils literal notranslate"><span class="pre">'(foo)'</span></code>,
-<code class="docutils literal notranslate"><span class="pre">'bar</span> <span class="pre">foo</span> <span class="pre">baz'</span></code> but not <code class="docutils literal notranslate"><span class="pre">'foobar'</span></code> or <code class="docutils literal notranslate"><span class="pre">'foo3'</span></code>.</p>
-<p>By default Unicode alphanumerics are the ones used in Unicode patterns, but
-this can be changed by using the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag.  Word boundaries are
-determined by the current locale if the <a class="reference internal" href="#re.LOCALE" title="re.LOCALE"><code class="xref py py-const docutils literal notranslate"><span class="pre">LOCALE</span></code></a> flag is used.
-Inside a character range, <code class="docutils literal notranslate"><span class="pre">\b</span></code> represents the backspace character, for
-compatibility with Python's string literals.</p>
+A word is defined as a sequence of word characters.
+Note that formally, <code class="docutils literal notranslate"><span class="pre">\b</span></code> is defined as the boundary
+between a <code class="docutils literal notranslate"><span class="pre">\w</span></code> and a <code class="docutils literal notranslate"><span class="pre">\W</span></code> character (or vice versa),
+or between <code class="docutils literal notranslate"><span class="pre">\w</span></code> and the beginning or end of the string.
+This means that <code class="docutils literal notranslate"><span class="pre">r'\bat\b'</span></code> matches <code class="docutils literal notranslate"><span class="pre">'at'</span></code>, <code class="docutils literal notranslate"><span class="pre">'at.'</span></code>, <code class="docutils literal notranslate"><span class="pre">'(at)'</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">'as</span> <span class="pre">at</span> <span class="pre">ay'</span></code> but not <code class="docutils literal notranslate"><span class="pre">'attempt'</span></code> or <code class="docutils literal notranslate"><span class="pre">'atlas'</span></code>.</p>
+<p>The default word characters in Unicode (str) patterns
+are Unicode alphanumerics and the underscore,
+but this can be changed by using the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag.
+Word boundaries are determined by the current locale
+if the <a class="reference internal" href="#re.LOCALE" title="re.LOCALE"><code class="xref py py-const docutils literal notranslate"><span class="pre">LOCALE</span></code></a> flag is used.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Inside a character range, <code class="docutils literal notranslate"><span class="pre">\b</span></code> represents the backspace character,
+for compatibility with Python's string literals.</p>
+</div>
 </dd>
 </dl>
 <dl class="simple" id="index-29">
-<dt><code class="docutils literal notranslate"><span class="pre">\B</span></code></dt><dd><p>Matches the empty string, but only when it is <em>not</em> at the beginning or end
-of a word.  This means that <code class="docutils literal notranslate"><span class="pre">r'py\B'</span></code> matches <code class="docutils literal notranslate"><span class="pre">'python'</span></code>, <code class="docutils literal notranslate"><span class="pre">'py3'</span></code>,
-<code class="docutils literal notranslate"><span class="pre">'py2'</span></code>, but not <code class="docutils literal notranslate"><span class="pre">'py'</span></code>, <code class="docutils literal notranslate"><span class="pre">'py.'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'py!'</span></code>.
-<code class="docutils literal notranslate"><span class="pre">\B</span></code> is just the opposite of <code class="docutils literal notranslate"><span class="pre">\b</span></code>, so word characters in Unicode
-patterns are Unicode alphanumerics or the underscore, although this can
-be changed by using the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag.  Word boundaries are
-determined by the current locale if the <a class="reference internal" href="#re.LOCALE" title="re.LOCALE"><code class="xref py py-const docutils literal notranslate"><span class="pre">LOCALE</span></code></a> flag is used.</p>
+<dt><code class="docutils literal notranslate"><span class="pre">\B</span></code></dt><dd><p>Matches the empty string,
+but only when it is <em>not</em> at the beginning or end of a word.
+This means that <code class="docutils literal notranslate"><span class="pre">r'at\B'</span></code> matches <code class="docutils literal notranslate"><span class="pre">'athens'</span></code>, <code class="docutils literal notranslate"><span class="pre">'atom'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">'attorney'</span></code>, but not <code class="docutils literal notranslate"><span class="pre">'at'</span></code>, <code class="docutils literal notranslate"><span class="pre">'at.'</span></code>, or <code class="docutils literal notranslate"><span class="pre">'at!'</span></code>.
+<code class="docutils literal notranslate"><span class="pre">\B</span></code> is the opposite of <code class="docutils literal notranslate"><span class="pre">\b</span></code>,
+so word characters in Unicode (str) patterns
+are Unicode alphanumerics or the underscore,
+although this can be changed by using the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag.
+Word boundaries are determined by the current locale
+if the <a class="reference internal" href="#re.LOCALE" title="re.LOCALE"><code class="xref py py-const docutils literal notranslate"><span class="pre">LOCALE</span></code></a> flag is used.</p>
 </dd>
 </dl>
-<dl class="simple" id="index-30">
-<dt><code class="docutils literal notranslate"><span class="pre">\d</span></code></dt><dd><dl class="simple">
-<dt>For Unicode (str) patterns:</dt><dd><p>Matches any Unicode decimal digit (that is, any character in
-Unicode character category [Nd]).  This includes <code class="docutils literal notranslate"><span class="pre">[0-9]</span></code>, and
-also many other digit characters.  If the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag is
-used only <code class="docutils literal notranslate"><span class="pre">[0-9]</span></code> is matched.</p>
+<dl id="index-30">
+<dt><code class="docutils literal notranslate"><span class="pre">\d</span></code></dt><dd><dl>
+<dt>For Unicode (str) patterns:</dt><dd><p>Matches any Unicode decimal digit
+(that is, any character in Unicode character category <a class="reference external" href="https://www.unicode.org/versions/Unicode15.0.0/ch04.pdf#G134153">[Nd]</a>).
+This includes <code class="docutils literal notranslate"><span class="pre">[0-9]</span></code>, and also many other digit characters.</p>
+<p>Matches <code class="docutils literal notranslate"><span class="pre">[0-9]</span></code> if the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag is used.</p>
 </dd>
-<dt>For 8-bit (bytes) patterns:</dt><dd><p>Matches any decimal digit; this is equivalent to <code class="docutils literal notranslate"><span class="pre">[0-9]</span></code>.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<dl class="simple" id="index-31">
-<dt><code class="docutils literal notranslate"><span class="pre">\D</span></code></dt><dd><p>Matches any character which is not a decimal digit. This is
-the opposite of <code class="docutils literal notranslate"><span class="pre">\d</span></code>. If the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag is used this
-becomes the equivalent of <code class="docutils literal notranslate"><span class="pre">[^0-9]</span></code>.</p>
+<dt>For 8-bit (bytes) patterns:</dt><dd><p>Matches any decimal digit in the ASCII character set;
+this is equivalent to <code class="docutils literal notranslate"><span class="pre">[0-9]</span></code>.</p>
 </dd>
 </dl>
-<dl class="simple" id="index-32">
-<dt><code class="docutils literal notranslate"><span class="pre">\s</span></code></dt><dd><dl class="simple">
+</dd>
+</dl>
+<dl id="index-31">
+<dt><code class="docutils literal notranslate"><span class="pre">\D</span></code></dt><dd><p>Matches any character which is not a decimal digit.
+This is the opposite of <code class="docutils literal notranslate"><span class="pre">\d</span></code>.</p>
+<p>Matches <code class="docutils literal notranslate"><span class="pre">[^0-9]</span></code> if the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag is used.</p>
+</dd>
+</dl>
+<dl id="index-32">
+<dt><code class="docutils literal notranslate"><span class="pre">\s</span></code></dt><dd><dl>
 <dt>For Unicode (str) patterns:</dt><dd><p>Matches Unicode whitespace characters (which includes
 <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">\t\n\r\f\v]</span></code>, and also many other characters, for example the
 non-breaking spaces mandated by typography rules in many
-languages). If the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag is used, only
-<code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">\t\n\r\f\v]</span></code> is matched.</p>
+languages).</p>
+<p>Matches <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">\t\n\r\f\v]</span></code> if the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag is used.</p>
 </dd>
 <dt>For 8-bit (bytes) patterns:</dt><dd><p>Matches characters considered whitespace in the ASCII character set;
 this is equivalent to <code class="docutils literal notranslate"><span class="pre">[</span> <span class="pre">\t\n\r\f\v]</span></code>.</p>
@@ -772,31 +798,36 @@ this is equivalent to <code class="docutils literal notranslate"><span class="pr
 </dl>
 </dd>
 </dl>
-<dl class="simple" id="index-33">
+<dl id="index-33">
 <dt><code class="docutils literal notranslate"><span class="pre">\S</span></code></dt><dd><p>Matches any character which is not a whitespace character. This is
-the opposite of <code class="docutils literal notranslate"><span class="pre">\s</span></code>. If the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag is used this
-becomes the equivalent of <code class="docutils literal notranslate"><span class="pre">[^</span> <span class="pre">\t\n\r\f\v]</span></code>.</p>
+the opposite of <code class="docutils literal notranslate"><span class="pre">\s</span></code>.</p>
+<p>Matches <code class="docutils literal notranslate"><span class="pre">[^</span> <span class="pre">\t\n\r\f\v]</span></code> if the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag is used.</p>
 </dd>
 </dl>
-<dl class="simple" id="index-34">
-<dt><code class="docutils literal notranslate"><span class="pre">\w</span></code></dt><dd><dl class="simple">
-<dt>For Unicode (str) patterns:</dt><dd><p>Matches Unicode word characters; this includes alphanumeric characters (as defined by <a class="reference internal" href="stdtypes.html#str.isalnum" title="str.isalnum"><code class="xref py py-meth docutils literal notranslate"><span class="pre">str.isalnum()</span></code></a>)
-as well as the underscore (<code class="docutils literal notranslate"><span class="pre">_</span></code>).
-If the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag is used, only <code class="docutils literal notranslate"><span class="pre">[a-zA-Z0-9_]</span></code> is matched.</p>
+<dl id="index-34">
+<dt><code class="docutils literal notranslate"><span class="pre">\w</span></code></dt><dd><dl>
+<dt>For Unicode (str) patterns:</dt><dd><p>Matches Unicode word characters;
+this includes all Unicode alphanumeric characters
+(as defined by <a class="reference internal" href="stdtypes.html#str.isalnum" title="str.isalnum"><code class="xref py py-meth docutils literal notranslate"><span class="pre">str.isalnum()</span></code></a>),
+as well as the underscore (<code class="docutils literal notranslate"><span class="pre">_</span></code>).</p>
+<p>Matches <code class="docutils literal notranslate"><span class="pre">[a-zA-Z0-9_]</span></code> if the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag is used.</p>
 </dd>
 <dt>For 8-bit (bytes) patterns:</dt><dd><p>Matches characters considered alphanumeric in the ASCII character set;
-this is equivalent to <code class="docutils literal notranslate"><span class="pre">[a-zA-Z0-9_]</span></code>.  If the <a class="reference internal" href="#re.LOCALE" title="re.LOCALE"><code class="xref py py-const docutils literal notranslate"><span class="pre">LOCALE</span></code></a> flag is
-used, matches characters considered alphanumeric in the current locale
-and the underscore.</p>
+this is equivalent to <code class="docutils literal notranslate"><span class="pre">[a-zA-Z0-9_]</span></code>.
+If the <a class="reference internal" href="#re.LOCALE" title="re.LOCALE"><code class="xref py py-const docutils literal notranslate"><span class="pre">LOCALE</span></code></a> flag is used,
+matches characters considered alphanumeric in the current locale and the underscore.</p>
 </dd>
 </dl>
 </dd>
 </dl>
-<dl class="simple" id="index-35">
-<dt><code class="docutils literal notranslate"><span class="pre">\W</span></code></dt><dd><p>Matches any character which is not a word character. This is
-the opposite of <code class="docutils literal notranslate"><span class="pre">\w</span></code>. If the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag is used this
-becomes the equivalent of <code class="docutils literal notranslate"><span class="pre">[^a-zA-Z0-9_]</span></code>.  If the <a class="reference internal" href="#re.LOCALE" title="re.LOCALE"><code class="xref py py-const docutils literal notranslate"><span class="pre">LOCALE</span></code></a> flag is
-used, matches characters which are neither alphanumeric in the current locale
+<dl id="index-35">
+<dt><code class="docutils literal notranslate"><span class="pre">\W</span></code></dt><dd><p>Matches any character which is not a word character.
+This is the opposite of <code class="docutils literal notranslate"><span class="pre">\w</span></code>.
+By default, matches non-underscore (<code class="docutils literal notranslate"><span class="pre">_</span></code>) characters
+for which <a class="reference internal" href="stdtypes.html#str.isalnum" title="str.isalnum"><code class="xref py py-meth docutils literal notranslate"><span class="pre">str.isalnum()</span></code></a> returns <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+<p>Matches <code class="docutils literal notranslate"><span class="pre">[^a-zA-Z0-9_]</span></code> if the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag is used.</p>
+<p>If the <a class="reference internal" href="#re.LOCALE" title="re.LOCALE"><code class="xref py py-const docutils literal notranslate"><span class="pre">LOCALE</span></code></a> flag is used,
+matches characters which are neither alphanumeric in the current locale
 nor the underscore.</p>
 </dd>
 </dl>
@@ -813,9 +844,11 @@ string literals are also accepted by the regular expression parser:</p>
 </div>
 <p>(Note that <code class="docutils literal notranslate"><span class="pre">\b</span></code> is used to represent word boundaries, and means &quot;backspace&quot;
 only inside character classes.)</p>
-<p><code class="docutils literal notranslate"><span class="pre">'\u'</span></code>, <code class="docutils literal notranslate"><span class="pre">'\U'</span></code>, and <code class="docutils literal notranslate"><span class="pre">'\N'</span></code> escape sequences are only recognized in Unicode
-patterns.  In bytes patterns they are errors.  Unknown escapes of ASCII
-letters are reserved for future use and treated as errors.</p>
+<p><code class="docutils literal notranslate"><span class="pre">'\u'</span></code>, <code class="docutils literal notranslate"><span class="pre">'\U'</span></code>, and <code class="docutils literal notranslate"><span class="pre">'\N'</span></code> escape sequences are
+only recognized in Unicode (str) patterns.
+In bytes patterns they are errors.
+Unknown escapes of ASCII letters are reserved
+for future use and treated as errors.</p>
 <p>Octal escapes are included in a limited form.  If the first digit is a 0, or if
 there are three octal digits, it is considered an octal escape. Otherwise, it is
 a group reference.  As for string literals, octal escapes are always at most
@@ -859,20 +892,23 @@ form.</p>
 <span class="sig-prename descclassname"><span class="pre">re.</span></span><span class="sig-name descname"><span class="pre">ASCII</span></span><a class="headerlink" href="#re.ASCII" title="Link to this definition">¶</a></dt>
 <dd><p>Make <code class="docutils literal notranslate"><span class="pre">\w</span></code>, <code class="docutils literal notranslate"><span class="pre">\W</span></code>, <code class="docutils literal notranslate"><span class="pre">\b</span></code>, <code class="docutils literal notranslate"><span class="pre">\B</span></code>, <code class="docutils literal notranslate"><span class="pre">\d</span></code>, <code class="docutils literal notranslate"><span class="pre">\D</span></code>, <code class="docutils literal notranslate"><span class="pre">\s</span></code> and <code class="docutils literal notranslate"><span class="pre">\S</span></code>
 perform ASCII-only matching instead of full Unicode matching.  This is only
-meaningful for Unicode patterns, and is ignored for byte patterns.
-Corresponds to the inline flag <code class="docutils literal notranslate"><span class="pre">(?a)</span></code>.</p>
-<p>Note that for backward compatibility, the <a class="reference internal" href="#re.U" title="re.U"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.U</span></code></a> flag still
-exists (as well as its synonym <a class="reference internal" href="#re.UNICODE" title="re.UNICODE"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.UNICODE</span></code></a> and its embedded
-counterpart <code class="docutils literal notranslate"><span class="pre">(?u)</span></code>), but these are redundant in Python 3 since
-matches are Unicode by default for strings (and Unicode matching
-isn't allowed for bytes).</p>
+meaningful for Unicode (str) patterns, and is ignored for bytes patterns.</p>
+<p>Corresponds to the inline flag <code class="docutils literal notranslate"><span class="pre">(?a)</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>The <a class="reference internal" href="#re.U" title="re.U"><code class="xref py py-const docutils literal notranslate"><span class="pre">U</span></code></a> flag still exists for backward compatibility,
+but is redundant in Python 3 since
+matches are Unicode by default for <code class="docutils literal notranslate"><span class="pre">str</span></code> patterns,
+and Unicode matching isn't allowed for bytes patterns.
+<a class="reference internal" href="#re.UNICODE" title="re.UNICODE"><code class="xref py py-const docutils literal notranslate"><span class="pre">UNICODE</span></code></a> and the inline flag <code class="docutils literal notranslate"><span class="pre">(?u)</span></code> are similarly redundant.</p>
+</div>
 </dd></dl>
 
 <dl class="py data">
 <dt class="sig sig-object py" id="re.DEBUG">
 <span class="sig-prename descclassname"><span class="pre">re.</span></span><span class="sig-name descname"><span class="pre">DEBUG</span></span><a class="headerlink" href="#re.DEBUG" title="Link to this definition">¶</a></dt>
-<dd><p>Display debug information about compiled expression.
-No corresponding inline flag.</p>
+<dd><p>Display debug information about compiled expression.</p>
+<p>No corresponding inline flag.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -880,12 +916,14 @@ No corresponding inline flag.</p>
 <span class="sig-prename descclassname"><span class="pre">re.</span></span><span class="sig-name descname"><span class="pre">I</span></span><a class="headerlink" href="#re.I" title="Link to this definition">¶</a></dt>
 <dt class="sig sig-object py" id="re.IGNORECASE">
 <span class="sig-prename descclassname"><span class="pre">re.</span></span><span class="sig-name descname"><span class="pre">IGNORECASE</span></span><a class="headerlink" href="#re.IGNORECASE" title="Link to this definition">¶</a></dt>
-<dd><p>Perform case-insensitive matching; expressions like <code class="docutils literal notranslate"><span class="pre">[A-Z]</span></code> will also
-match lowercase letters.  Full Unicode matching (such as <code class="docutils literal notranslate"><span class="pre">Ü</span></code> matching
-<code class="docutils literal notranslate"><span class="pre">ü</span></code>) also works unless the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.ASCII</span></code></a> flag is used to disable
-non-ASCII matches.  The current locale does not change the effect of this
-flag unless the <a class="reference internal" href="#re.LOCALE" title="re.LOCALE"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.LOCALE</span></code></a> flag is also used.
-Corresponds to the inline flag <code class="docutils literal notranslate"><span class="pre">(?i)</span></code>.</p>
+<dd><p>Perform case-insensitive matching;
+expressions like <code class="docutils literal notranslate"><span class="pre">[A-Z]</span></code> will also  match lowercase letters.
+Full Unicode matching (such as <code class="docutils literal notranslate"><span class="pre">Ü</span></code> matching <code class="docutils literal notranslate"><span class="pre">ü</span></code>)
+also works unless the <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> flag
+is used to disable non-ASCII matches.
+The current locale does not change the effect of this flag
+unless the <a class="reference internal" href="#re.LOCALE" title="re.LOCALE"><code class="xref py py-const docutils literal notranslate"><span class="pre">LOCALE</span></code></a> flag is also used.</p>
+<p>Corresponds to the inline flag <code class="docutils literal notranslate"><span class="pre">(?i)</span></code>.</p>
 <p>Note that when the Unicode patterns <code class="docutils literal notranslate"><span class="pre">[a-z]</span></code> or <code class="docutils literal notranslate"><span class="pre">[A-Z]</span></code> are used in
 combination with the <a class="reference internal" href="#re.IGNORECASE" title="re.IGNORECASE"><code class="xref py py-const docutils literal notranslate"><span class="pre">IGNORECASE</span></code></a> flag, they will match the 52 ASCII
 letters and 4 additional non-ASCII letters: 'İ' (U+0130, Latin capital
@@ -901,21 +939,26 @@ and 'A' to 'Z' are matched.</p>
 <dt class="sig sig-object py" id="re.LOCALE">
 <span class="sig-prename descclassname"><span class="pre">re.</span></span><span class="sig-name descname"><span class="pre">LOCALE</span></span><a class="headerlink" href="#re.LOCALE" title="Link to this definition">¶</a></dt>
 <dd><p>Make <code class="docutils literal notranslate"><span class="pre">\w</span></code>, <code class="docutils literal notranslate"><span class="pre">\W</span></code>, <code class="docutils literal notranslate"><span class="pre">\b</span></code>, <code class="docutils literal notranslate"><span class="pre">\B</span></code> and case-insensitive matching
-dependent on the current locale.  This flag can be used only with bytes
-patterns.  The use of this flag is discouraged as the locale mechanism
-is very unreliable, it only handles one &quot;culture&quot; at a time, and it only
-works with 8-bit locales.  Unicode matching is already enabled by default
-in Python 3 for Unicode (str) patterns, and it is able to handle different
-locales/languages.
-Corresponds to the inline flag <code class="docutils literal notranslate"><span class="pre">(?L)</span></code>.</p>
-<div class="versionchanged">
-<p><span class="versionmodified changed">在 3.6 版的變更: </span><a class="reference internal" href="#re.LOCALE" title="re.LOCALE"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.LOCALE</span></code></a> can be used only with bytes patterns and is
-not compatible with <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.ASCII</span></code></a>.</p>
+dependent on the current locale.
+This flag can be used only with bytes patterns.</p>
+<p>Corresponds to the inline flag <code class="docutils literal notranslate"><span class="pre">(?L)</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>This flag is discouraged; consider Unicode matching instead.
+The locale mechanism is very unreliable
+as it only handles one &quot;culture&quot; at a time
+and only works with 8-bit locales.
+Unicode matching is enabled by default for Unicode (str) patterns
+and it is able to handle different locales and languages.</p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.7 版的變更: </span>Compiled regular expression objects with the <a class="reference internal" href="#re.LOCALE" title="re.LOCALE"><code class="xref py py-const docutils literal notranslate"><span class="pre">re.LOCALE</span></code></a> flag no
-longer depend on the locale at compile time.  Only the locale at
-matching time affects the result of matching.</p>
+<p><span class="versionmodified changed">在 3.6 版的變更: </span><a class="reference internal" href="#re.LOCALE" title="re.LOCALE"><code class="xref py py-const docutils literal notranslate"><span class="pre">LOCALE</span></code></a> can be used only with bytes patterns
+and is not compatible with <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a>.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.7 版的變更: </span>Compiled regular expression objects with the <a class="reference internal" href="#re.LOCALE" title="re.LOCALE"><code class="xref py py-const docutils literal notranslate"><span class="pre">LOCALE</span></code></a> flag
+no longer depend on the locale at compile time.
+Only the locale at matching time affects the result of matching.</p>
 </div>
 </dd></dl>
 
@@ -929,8 +972,8 @@ string and at the beginning of each line (immediately following each newline);
 and the pattern character <code class="docutils literal notranslate"><span class="pre">'$'</span></code> matches at the end of the string and at the
 end of each line (immediately preceding each newline).  By default, <code class="docutils literal notranslate"><span class="pre">'^'</span></code>
 matches only at the beginning of the string, and <code class="docutils literal notranslate"><span class="pre">'$'</span></code> only at the end of the
-string and immediately before the newline (if any) at the end of the string.
-Corresponds to the inline flag <code class="docutils literal notranslate"><span class="pre">(?m)</span></code>.</p>
+string and immediately before the newline (if any) at the end of the string.</p>
+<p>Corresponds to the inline flag <code class="docutils literal notranslate"><span class="pre">(?m)</span></code>.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -955,8 +998,8 @@ value:</p>
 <dt class="sig sig-object py" id="re.DOTALL">
 <span class="sig-prename descclassname"><span class="pre">re.</span></span><span class="sig-name descname"><span class="pre">DOTALL</span></span><a class="headerlink" href="#re.DOTALL" title="Link to this definition">¶</a></dt>
 <dd><p>Make the <code class="docutils literal notranslate"><span class="pre">'.'</span></code> special character match any character at all, including a
-newline; without this flag, <code class="docutils literal notranslate"><span class="pre">'.'</span></code> will match anything <em>except</em> a newline.
-Corresponds to the inline flag <code class="docutils literal notranslate"><span class="pre">(?s)</span></code>.</p>
+newline; without this flag, <code class="docutils literal notranslate"><span class="pre">'.'</span></code> will match anything <em>except</em> a newline.</p>
+<p>Corresponds to the inline flag <code class="docutils literal notranslate"><span class="pre">(?s)</span></code>.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -964,11 +1007,11 @@ Corresponds to the inline flag <code class="docutils literal notranslate"><span 
 <span class="sig-prename descclassname"><span class="pre">re.</span></span><span class="sig-name descname"><span class="pre">U</span></span><a class="headerlink" href="#re.U" title="Link to this definition">¶</a></dt>
 <dt class="sig sig-object py" id="re.UNICODE">
 <span class="sig-prename descclassname"><span class="pre">re.</span></span><span class="sig-name descname"><span class="pre">UNICODE</span></span><a class="headerlink" href="#re.UNICODE" title="Link to this definition">¶</a></dt>
-<dd><p>In Python 2, this flag made <a class="reference internal" href="#re-special-sequences"><span class="std std-ref">special sequences</span></a>
-include Unicode characters in matches. Since Python 3, Unicode characters
-are matched by default.</p>
-<p>See <a class="reference internal" href="#re.A" title="re.A"><code class="xref py py-const docutils literal notranslate"><span class="pre">A</span></code></a> for restricting matching on ASCII characters instead.</p>
-<p>This flag is only kept for backward compatibility.</p>
+<dd><p>In Python 3, Unicode characters are matched by default
+for <code class="docutils literal notranslate"><span class="pre">str</span></code> patterns.
+This flag is therefore redundant with <strong>no effect</strong>
+and is only kept for backward compatibility.</p>
+<p>See <a class="reference internal" href="#re.ASCII" title="re.ASCII"><code class="xref py py-const docutils literal notranslate"><span class="pre">ASCII</span></code></a> to restrict matching to ASCII characters instead.</p>
 </dd></dl>
 
 <dl class="py data">
@@ -1091,7 +1134,7 @@ the end of the string:</p>
 indices within the result list.</p>
 <p>Empty matches for the pattern split the string only when not adjacent
 to a previous empty match.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b&#39;</span><span class="p">,</span> <span class="s1">&#39;Words, words, words.&#39;</span><span class="p">)</span>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\b&#39;</span><span class="p">,</span> <span class="s1">&#39;Words, words, words.&#39;</span><span class="p">)</span>
 <span class="go">[&#39;&#39;, &#39;Words&#39;, &#39;, &#39;, &#39;words&#39;, &#39;, &#39;, &#39;words&#39;, &#39;.&#39;]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">re</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;\W*&#39;</span><span class="p">,</span> <span class="s1">&#39;...words...&#39;</span><span class="p">)</span>
 <span class="go">[&#39;&#39;, &#39;&#39;, &#39;w&#39;, &#39;o&#39;, &#39;r&#39;, &#39;d&#39;, &#39;s&#39;, &#39;&#39;, &#39;&#39;]</span>
@@ -1434,7 +1477,7 @@ region like for <a class="reference internal" href="#re.search" title="re.search
 <span class="sig-prename descclassname"><span class="pre">Pattern.</span></span><span class="sig-name descname"><span class="pre">flags</span></span><a class="headerlink" href="#re.Pattern.flags" title="Link to this definition">¶</a></dt>
 <dd><p>The regex matching flags.  This is a combination of the flags given to
 <a class="reference internal" href="#re.compile" title="re.compile"><code class="xref py py-func docutils literal notranslate"><span class="pre">compile()</span></code></a>, any <code class="docutils literal notranslate"><span class="pre">(?...)</span></code> inline flags in the pattern, and implicit
-flags such as <a class="reference internal" href="#re.UNICODE" title="re.UNICODE"><code class="xref py py-data docutils literal notranslate"><span class="pre">UNICODE</span></code></a> if the pattern is a Unicode string.</p>
+flags such as <a class="reference internal" href="#re.UNICODE" title="re.UNICODE"><code class="xref py py-const docutils literal notranslate"><span class="pre">UNICODE</span></code></a> if the pattern is a Unicode string.</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1463,7 +1506,7 @@ regular expression objects are considered atomic.</p>
 </div>
 </section>
 <section id="match-objects">
-<span id="id2"></span><h2>Match Objects<a class="headerlink" href="#match-objects" title="Link to this heading">¶</a></h2>
+<span id="id3"></span><h2>Match Objects<a class="headerlink" href="#match-objects" title="Link to this heading">¶</a></h2>
 <p>Match objects always have a boolean value of <code class="docutils literal notranslate"><span class="pre">True</span></code>.
 Since <a class="reference internal" href="#re.Pattern.match" title="re.Pattern.match"><code class="xref py py-meth docutils literal notranslate"><span class="pre">match()</span></code></a> and <a class="reference internal" href="#re.Pattern.search" title="re.Pattern.search"><code class="xref py py-meth docutils literal notranslate"><span class="pre">search()</span></code></a> return <code class="docutils literal notranslate"><span class="pre">None</span></code>
 when there is no match, you can test whether there was a match with a simple
@@ -1809,7 +1852,7 @@ expressions.</p>
 </div>
 </section>
 <section id="search-vs-match">
-<span id="id3"></span><h3>search() vs. match()<a class="headerlink" href="#search-vs-match" title="Link to this heading">¶</a></h3>
+<span id="id4"></span><h3>search() vs. match()<a class="headerlink" href="#search-vs-match" title="Link to this heading">¶</a></h3>
 <p>Python offers different primitive operations based on regular expressions:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#re.match" title="re.match"><code class="xref py py-func docutils literal notranslate"><span class="pre">re.match()</span></code></a> checks for a match only at the beginning of the string</p></li>
@@ -2270,7 +2313,7 @@ great detail.</p>
 <br />
     <br />
 
-    最後更新於 Jan 08, 2024 (02:17 UTC)。
+    最後更新於 Jan 12, 2024 (16:41 UTC)。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
