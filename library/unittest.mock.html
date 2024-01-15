@@ -130,12 +130,12 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#calling">呼叫</a></li>
-<li><a class="reference internal" href="#deleting-attributes">Deleting Attributes</a></li>
-<li><a class="reference internal" href="#mock-names-and-the-name-attribute">Mock names and the name attribute</a></li>
-<li><a class="reference internal" href="#attaching-mocks-as-attributes">Attaching Mocks as Attributes</a></li>
+<li><a class="reference internal" href="#deleting-attributes">刪除屬性</a></li>
+<li><a class="reference internal" href="#mock-names-and-the-name-attribute">Mock 名稱與名稱屬性</a></li>
+<li><a class="reference internal" href="#attaching-mocks-as-attributes">如同屬性一般附加 mock</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#the-patchers">The patchers</a><ul>
+<li><a class="reference internal" href="#the-patchers">Patchers</a><ul>
 <li><a class="reference internal" href="#patch">patch</a><ul>
 <li><a class="reference internal" href="#unittest.mock.patch"><code class="docutils literal notranslate"><span class="pre">patch()</span></code></a></li>
 </ul>
@@ -1218,18 +1218,10 @@
 
 <section id="calling">
 <h3>呼叫<a class="headerlink" href="#calling" title="Link to this heading">¶</a></h3>
-<p>Mock objects are callable. The call will return the value set as the
-<a class="reference internal" href="#unittest.mock.Mock.return_value" title="unittest.mock.Mock.return_value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">return_value</span></code></a> attribute. The default return value is a new Mock
-object; it is created the first time the return value is accessed (either
-explicitly or by calling the Mock) - but it is stored and the same one
-returned each time.</p>
-<p>Calls made to the object will be recorded in the attributes
-like <a class="reference internal" href="#unittest.mock.Mock.call_args" title="unittest.mock.Mock.call_args"><code class="xref py py-attr docutils literal notranslate"><span class="pre">call_args</span></code></a> and <a class="reference internal" href="#unittest.mock.Mock.call_args_list" title="unittest.mock.Mock.call_args_list"><code class="xref py py-attr docutils literal notranslate"><span class="pre">call_args_list</span></code></a>.</p>
-<p>If <a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> is set then it will be called after the call has
-been recorded, so if <code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code> raises an exception the call is still
-recorded.</p>
-<p>The simplest way to make a mock raise an exception when called is to make
-<a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> an exception class or instance:</p>
+<p>Mock 物件可被呼叫。呼叫將回傳設定為 <a class="reference internal" href="#unittest.mock.Mock.return_value" title="unittest.mock.Mock.return_value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">return_value</span></code></a> 屬性的值。預設的回傳值是一個新的 Mock 物件；它會在第一次存取回傳值時（無論是顯式存取還是透過呼叫 Mock）被建立，但是這個回傳值會被儲存，之後每次都回傳同一個值。</p>
+<p>對物件的呼叫會被記錄在如 <a class="reference internal" href="#unittest.mock.Mock.call_args" title="unittest.mock.Mock.call_args"><code class="xref py py-attr docutils literal notranslate"><span class="pre">call_args</span></code></a> 和 <a class="reference internal" href="#unittest.mock.Mock.call_args_list" title="unittest.mock.Mock.call_args_list"><code class="xref py py-attr docutils literal notranslate"><span class="pre">call_args_list</span></code></a> 等屬性中。</p>
+<p>如果 <a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> 被設定，那麼在呼叫被記錄後它才會被呼叫，所以如果 <code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code> 引發例外，呼叫仍然會被記錄。</p>
+<p>呼叫 mock 時引發例外的最簡單方式是將 <a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> 設定為例外類別或實例：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">side_effect</span><span class="o">=</span><span class="ne">IndexError</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 <span class="gt">Traceback (most recent call last):</span>
@@ -1246,10 +1238,7 @@ recorded.</p>
 <span class="go">[call(1, 2, 3), call(&#39;two&#39;, &#39;three&#39;, &#39;four&#39;)]</span>
 </pre></div>
 </div>
-<p>If <code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code> is a function then whatever that function returns is what
-calls to the mock return. The <code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code> function is called with the
-same arguments as the mock. This allows you to vary the return value of the
-call dynamically, based on the input:</p>
+<p>如果 <code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code> 是一個函式，則該函式回傳的東西就是對 mock 的呼叫所回傳的值。<code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code> 函式會使用與 mock 相同的引數被呼叫。這讓你可以根據輸入動態地變更呼叫的回傳值：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">side_effect</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">return</span> <span class="n">value</span> <span class="o">+</span> <span class="mi">1</span>
 <span class="gp">...</span>
@@ -1262,9 +1251,7 @@ call dynamically, based on the input:</p>
 <span class="go">[call(1), call(2)]</span>
 </pre></div>
 </div>
-<p>If you want the mock to still return the default return value (a new mock), or
-any set return value, then there are two ways of doing this. Either return
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">mock.return_value</span></code> from inside <code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code>, or return <a class="reference internal" href="#unittest.mock.DEFAULT" title="unittest.mock.DEFAULT"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT</span></code></a>:</p>
+<p>如果你希望 mock 仍然回傳預設的回傳值（一個新的 mock），或者是任何已設定的回傳值，有兩種方法可以實現。從 <code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code> 內部回傳 <code class="xref py py-attr docutils literal notranslate"><span class="pre">mock.return_value</span></code>，或回傳 <a class="reference internal" href="#unittest.mock.DEFAULT" title="unittest.mock.DEFAULT"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT</span></code></a>：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">side_effect</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">return</span> <span class="n">m</span><span class="o">.</span><span class="n">return_value</span>
@@ -1281,8 +1268,7 @@ any set return value, then there are two ways of doing this. Either return
 <span class="go">3</span>
 </pre></div>
 </div>
-<p>To remove a <code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code>, and return to the default behaviour, set the
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code> to <code class="docutils literal notranslate"><span class="pre">None</span></code>:</p>
+<p>要刪除 <code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code>，並恢復預設行為，將 <code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code> 設為 <code class="docutils literal notranslate"><span class="pre">None</span></code>：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">side_effect</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">return</span> <span class="mi">3</span>
@@ -1295,9 +1281,7 @@ any set return value, then there are two ways of doing this. Either return
 <span class="go">6</span>
 </pre></div>
 </div>
-<p>The <code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code> can also be any iterable object. Repeated calls to the mock
-will return values from the iterable (until the iterable is exhausted and
-a <a class="reference internal" href="exceptions.html#StopIteration" title="StopIteration"><code class="xref py py-exc docutils literal notranslate"><span class="pre">StopIteration</span></code></a> is raised):</p>
+<p><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code> 也可以是任何可疊代的物件。對 mock 的重複呼叫將從可疊代物件中回傳值（直到疊代物件耗盡並引發 <a class="reference internal" href="exceptions.html#StopIteration" title="StopIteration"><code class="xref py py-exc docutils literal notranslate"><span class="pre">StopIteration</span></code></a> 為止）：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">side_effect</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">()</span>
 <span class="go">1</span>
@@ -1311,8 +1295,7 @@ a <a class="reference internal" href="exceptions.html#StopIteration" title="Stop
 <span class="gr">StopIteration</span>
 </pre></div>
 </div>
-<p>If any members of the iterable are exceptions they will be raised instead of
-returned:</p>
+<p>如果可疊代物件中的任何成員是例外，則它們將被引發而不是被回傳：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">iterable</span> <span class="o">=</span> <span class="p">(</span><span class="mi">33</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">,</span> <span class="mi">66</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">side_effect</span><span class="o">=</span><span class="n">iterable</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">()</span>
@@ -1327,14 +1310,10 @@ returned:</p>
 </div>
 </section>
 <section id="deleting-attributes">
-<span id="id2"></span><h3>Deleting Attributes<a class="headerlink" href="#deleting-attributes" title="Link to this heading">¶</a></h3>
-<p>Mock objects create attributes on demand. This allows them to pretend to be
-objects of any type.</p>
-<p>You may want a mock object to return <code class="docutils literal notranslate"><span class="pre">False</span></code> to a <a class="reference internal" href="functions.html#hasattr" title="hasattr"><code class="xref py py-func docutils literal notranslate"><span class="pre">hasattr()</span></code></a> call, or raise an
-<a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a> when an attribute is fetched. You can do this by providing
-an object as a <code class="xref py py-attr docutils literal notranslate"><span class="pre">spec</span></code> for a mock, but that isn't always convenient.</p>
-<p>You &quot;block&quot; attributes by deleting them. Once deleted, accessing an attribute
-will raise an <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a>.</p>
+<span id="id2"></span><h3>刪除屬性<a class="headerlink" href="#deleting-attributes" title="Link to this heading">¶</a></h3>
+<p>Mock 物件會在需要時建立屬性。這使得它們可以假裝成任何種類的物件。</p>
+<p>你可能希望一個 mock 物件在 <a class="reference internal" href="functions.html#hasattr" title="hasattr"><code class="xref py py-func docutils literal notranslate"><span class="pre">hasattr()</span></code></a> 呼叫時回傳 <code class="docutils literal notranslate"><span class="pre">False</span></code>，或者在屬性被提取時引發 <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a>。你可以通過將物件提供為 mock 的 <code class="xref py py-attr docutils literal notranslate"><span class="pre">spec</span></code> 來實現這一點，但這並不總是那麼好用。</p>
+<p>你可以通過刪除屬性來「阻擋」它們。一旦刪除，再次存取該屬性將會引發 <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a>。</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">hasattr</span><span class="p">(</span><span class="n">mock</span><span class="p">,</span> <span class="s1">&#39;m&#39;</span><span class="p">)</span>
 <span class="go">True</span>
@@ -1350,32 +1329,23 @@ will raise an <a class="reference internal" href="exceptions.html#AttributeError
 </div>
 </section>
 <section id="mock-names-and-the-name-attribute">
-<h3>Mock names and the name attribute<a class="headerlink" href="#mock-names-and-the-name-attribute" title="Link to this heading">¶</a></h3>
-<p>Since &quot;name&quot; is an argument to the <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> constructor, if you want your
-mock object to have a &quot;name&quot; attribute you can't just pass it in at creation
-time. There are two alternatives. One option is to use
-<a class="reference internal" href="#unittest.mock.Mock.configure_mock" title="unittest.mock.Mock.configure_mock"><code class="xref py py-meth docutils literal notranslate"><span class="pre">configure_mock()</span></code></a>:</p>
+<h3>Mock 名稱與名稱屬性<a class="headerlink" href="#mock-names-and-the-name-attribute" title="Link to this heading">¶</a></h3>
+<p>由於 &quot;name&quot; 是傳遞給 <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> 建構函式的引數，如果你想讓你的 mock 物件擁有 &quot;name&quot; 屬性，你不能在建立時直接傳遞它。有兩種替代方法。其中一個選擇是使用 <a class="reference internal" href="#unittest.mock.Mock.configure_mock" title="unittest.mock.Mock.configure_mock"><code class="xref py py-meth docutils literal notranslate"><span class="pre">configure_mock()</span></code></a>：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">configure_mock</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;my_name&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">name</span>
 <span class="go">&#39;my_name&#39;</span>
 </pre></div>
 </div>
-<p>A simpler option is to simply set the &quot;name&quot; attribute after mock creation:</p>
+<p>更簡單的方法是在 mock 建立後直接設定 &quot;name&quot; 屬性：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;foo&quot;</span>
 </pre></div>
 </div>
 </section>
 <section id="attaching-mocks-as-attributes">
-<h3>Attaching Mocks as Attributes<a class="headerlink" href="#attaching-mocks-as-attributes" title="Link to this heading">¶</a></h3>
-<p>When you attach a mock as an attribute of another mock (or as the return
-value) it becomes a &quot;child&quot; of that mock. Calls to the child are recorded in
-the <a class="reference internal" href="#unittest.mock.Mock.method_calls" title="unittest.mock.Mock.method_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">method_calls</span></code></a> and <a class="reference internal" href="#unittest.mock.Mock.mock_calls" title="unittest.mock.Mock.mock_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mock_calls</span></code></a> attributes of the
-parent. This is useful for configuring child mocks and then attaching them to
-the parent, or for attaching mocks to a parent that records all calls to the
-children and allows you to make assertions about the order of calls between
-mocks:</p>
+<h3>如同屬性一般附加 mock<a class="headerlink" href="#attaching-mocks-as-attributes" title="Link to this heading">¶</a></h3>
+<p>當你將一個 mock 附加為另一個 mock 的屬性（或作為回傳值），它將成為該 mock 的「子代 (child)」。對子代的呼叫將被記錄在上代的 <a class="reference internal" href="#unittest.mock.Mock.method_calls" title="unittest.mock.Mock.method_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">method_calls</span></code></a> 和 <a class="reference internal" href="#unittest.mock.Mock.mock_calls" title="unittest.mock.Mock.mock_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mock_calls</span></code></a> 屬性中。這對於配置子代並將它們附加到上代，或將 mock 附加到記錄所有對子代的呼叫的上代並允許你對 mock 間的呼叫順序進行斷言非常有用：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parent</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">child1</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">child2</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
@@ -1387,8 +1357,7 @@ mocks:</p>
 <span class="go">[call.child1(1), call.child2(2)]</span>
 </pre></div>
 </div>
-<p>The exception to this is if the mock has a name. This allows you to prevent
-the &quot;parenting&quot; if for some reason you don't want it to happen.</p>
+<p>如果 mock 有 name 引數，則上述規則會有例外。這使你可以防止「親屬關係 (parenting)」的建立，假設因為某些原因你不希望這種狀況發生。</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">not_a_child</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;not-a-child&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">attribute</span> <span class="o">=</span> <span class="n">not_a_child</span>
@@ -1398,9 +1367,7 @@ the &quot;parenting&quot; if for some reason you don't want it to happen.</p>
 <span class="go">[]</span>
 </pre></div>
 </div>
-<p>Mocks created for you by <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> are automatically given names. To
-attach mocks that have names to a parent you use the <a class="reference internal" href="#unittest.mock.Mock.attach_mock" title="unittest.mock.Mock.attach_mock"><code class="xref py py-meth docutils literal notranslate"><span class="pre">attach_mock()</span></code></a>
-method:</p>
+<p>由 <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 為你建立的 mock 會自動被賦予名稱。若要將具有名稱的 mock 附加到上代，你可以使用 <a class="reference internal" href="#unittest.mock.Mock.attach_mock" title="unittest.mock.Mock.attach_mock"><code class="xref py py-meth docutils literal notranslate"><span class="pre">attach_mock()</span></code></a> 方法：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">thing1</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">thing2</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">parent</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
@@ -1418,98 +1385,45 @@ method:</p>
 <aside class="footnote-list brackets">
 <aside class="footnote brackets" id="id3" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
-<p>The only exceptions are magic methods and attributes (those that have
-leading and trailing double underscores). Mock doesn't create these but
-instead raises an <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a>. This is because the interpreter
-will often implicitly request these methods, and gets <em>very</em> confused to
-get a new Mock object when it expects a magic method. If you need magic
-method support see <a class="reference internal" href="#magic-methods"><span class="std std-ref">magic methods</span></a>.</p>
+<p>唯一的例外是魔術方法和屬性（具有前後雙底線）。Mock 不會建立這些，而是會引發 <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a>。這是因為直譯器通常會隱式地要求這些方法，在期望得到一個魔術方法卻獲得一個新的 Mock 物件時，會讓直譯器*非常*困惑。如果你需要魔術方法的支援，請參閱<a class="reference internal" href="#magic-methods"><span class="std std-ref">魔術方法</span></a>。</p>
 </aside>
 </aside>
 </section>
 </section>
 <section id="the-patchers">
-<h2>The patchers<a class="headerlink" href="#the-patchers" title="Link to this heading">¶</a></h2>
-<p>The patch decorators are used for patching objects only within the scope of
-the function they decorate. They automatically handle the unpatching for you,
-even if exceptions are raised. All of these functions can also be used in with
-statements or as class decorators.</p>
+<h2>Patchers<a class="headerlink" href="#the-patchers" title="Link to this heading">¶</a></h2>
+<p>patch 裝飾器僅用於在裝飾的函式範圍內對物件進行 patch。它們會自動為你處理 patch 的中止，即使有異常被引發也是如此。所有這些函式也可以在 with 陳述式中使用，或者作為類別裝飾器使用。</p>
 <section id="patch">
 <h3>patch<a class="headerlink" href="#patch" title="Link to this heading">¶</a></h3>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>The key is to do the patching in the right namespace. See the section <a class="reference internal" href="#id6">where to patch</a>.</p>
+<p>關鍵是要在正確的命名空間進行 patch。請參閱 <a class="reference internal" href="#id6">where to patch</a> 一節。</p>
 </div>
 <dl class="py function">
 <dt class="sig sig-object py" id="unittest.mock.patch">
 <span class="sig-prename descclassname"><span class="pre">unittest.mock.</span></span><span class="sig-name descname"><span class="pre">patch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DEFAULT</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">create</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">autospec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_callable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#unittest.mock.patch" title="Link to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> acts as a function decorator, class decorator or a context
-manager. Inside the body of the function or with statement, the <em>target</em>
-is patched with a <em>new</em> object. When the function/with statement exits
-the patch is undone.</p>
-<p>If <em>new</em> is omitted, then the target is replaced with an
-<a class="reference internal" href="#unittest.mock.AsyncMock" title="unittest.mock.AsyncMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncMock</span></code></a> if the patched object is an async function or
-a <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> otherwise.
-If <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> is used as a decorator and <em>new</em> is
-omitted, the created mock is passed in as an extra argument to the
-decorated function. If <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> is used as a context manager the created
-mock is returned by the context manager.</p>
-<p><em>target</em> should be a string in the form <code class="docutils literal notranslate"><span class="pre">'package.module.ClassName'</span></code>. The
-<em>target</em> is imported and the specified object replaced with the <em>new</em>
-object, so the <em>target</em> must be importable from the environment you are
-calling <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> from. The target is imported when the decorated function
-is executed, not at decoration time.</p>
-<p>The <em>spec</em> and <em>spec_set</em> keyword arguments are passed to the <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a>
-if patch is creating one for you.</p>
-<p>In addition you can pass <code class="docutils literal notranslate"><span class="pre">spec=True</span></code> or <code class="docutils literal notranslate"><span class="pre">spec_set=True</span></code>, which causes
-patch to pass in the object being mocked as the spec/spec_set object.</p>
-<p><em>new_callable</em> allows you to specify a different class, or callable object,
-that will be called to create the <em>new</em> object. By default <a class="reference internal" href="#unittest.mock.AsyncMock" title="unittest.mock.AsyncMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncMock</span></code></a>
-is used for async functions and <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> for the rest.</p>
-<p>A more powerful form of <em>spec</em> is <em>autospec</em>. If you set <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code>
-then the mock will be created with a spec from the object being replaced.
-All attributes of the mock will also have the spec of the corresponding
-attribute of the object being replaced. Methods and functions being mocked
-will have their arguments checked and will raise a <a class="reference internal" href="exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a> if they are
-called with the wrong signature. For mocks
-replacing a class, their return value (the 'instance') will have the same
-spec as the class. See the <a class="reference internal" href="#unittest.mock.create_autospec" title="unittest.mock.create_autospec"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_autospec()</span></code></a> function and
-<a class="reference internal" href="#auto-speccing"><span class="std std-ref">Autospeccing</span></a>.</p>
-<p>Instead of <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code> you can pass <code class="docutils literal notranslate"><span class="pre">autospec=some_object</span></code> to use an
-arbitrary object as the spec instead of the one being replaced.</p>
-<p>By default <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> will fail to replace attributes that don't exist.
-If you pass in <code class="docutils literal notranslate"><span class="pre">create=True</span></code>, and the attribute doesn't exist, patch will
-create the attribute for you when the patched function is called, and delete
-it again after the patched function has exited. This is useful for writing
-tests against attributes that your production code creates at runtime. It is
-off by default because it can be dangerous. With it switched on you can
-write passing tests against APIs that don't actually exist!</p>
+<dd><p><a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 充當函式裝飾器、類別裝飾器或情境管理器。在函式或 with 陳述式的內部，<em>目標</em>會被 patch 成一個<em>新的</em>物件。當函式或 with 陳述式結束時，patch 就會被解除。</p>
+<p>如果 <em>new</em> 被省略，則如果被 patch 的物件是非同步函式，目標會被替換為 <a class="reference internal" href="#unittest.mock.AsyncMock" title="unittest.mock.AsyncMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncMock</span></code></a>，反之則替換為 <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a>。如果 <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 做為裝飾器使用且省略了 <em>new</em>，則所建立的 mock 會作為額外的引數傳遞給被裝飾的函式。如果 <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 作為情境管理器使用，則所建立的 mock 將由情境管理器回傳。</p>
+<p><em>target</em> 應該是以 <code class="docutils literal notranslate"><span class="pre">'package.module.ClassName'</span></code> 形式出現的字串。<em>target</em> 會被引入並用 <em>new</em> 物件替換指定的物件，因此 <em>target</em> 必須可從你呼叫 <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 的環境中引入。target 在執行被裝飾的函式時被引入，而不是在裝飾器作用時 (decoration time)。</p>
+<p><em>spec</em> 和 <em>spec_set</em> 關鍵字引數會傳遞給 <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a>，如果 patch 正在為你建立一個。</p>
+<p>此外，你還可以傳遞 <code class="docutils literal notranslate"><span class="pre">spec=True``或</span> <span class="pre">``spec_set=True</span></code>，這將導致 patch 將被 mock 的物件作為 spec/spec_set 物件傳遞。</p>
+<p><em>new_callable</em> 允許你指定一個不同的類別或可呼叫的物件，用於被呼叫並建立 <em>new</em> 物件。預設情況下，對於非同步函式使用 <a class="reference internal" href="#unittest.mock.AsyncMock" title="unittest.mock.AsyncMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncMock</span></code></a>，而對於其他情況則使用 <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a>。</p>
+<p><em>spec</em> 的一種更強大的形式是 <em>autospec</em>。如果你設定 <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code>，則該 mock 將使用被替換物件的規格來建立。該 mock 的所有屬性也將具有被替換物件的對應屬性的規格。被 mock 的方法和函式將檢查其引數，如果呼叫時引數與規格不符（被使用錯誤的簽名 (signature) 呼叫），將引發 <a class="reference internal" href="exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a>。對於替換類別的 mock，它們的回傳值（即 'instance'）將具有與類別相同的規格。請參閱 <a class="reference internal" href="#unittest.mock.create_autospec" title="unittest.mock.create_autospec"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_autospec()</span></code></a> 函式和 <a class="reference internal" href="#auto-speccing"><span class="std std-ref">Autospeccing</span></a>。</p>
+<p>你可以用 <code class="docutils literal notranslate"><span class="pre">autospec=some_object</span></code> 替代 <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code>，以使用任意物件作為規格，而不是被替換的物件。</p>
+<p>預設情況下，<a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 將無法取代不存在的屬性。如果你傳入 <code class="docutils literal notranslate"><span class="pre">create=True</span></code>，且屬性不存在，則當被 patch 的函式被呼叫時，patch 將為你建立該屬性，並在被 patch 的函式結束後再次刪除它。這對於撰寫針對你的生產程式碼在執行環境建立的屬性的測試時非常有用。此功能預設為關閉，因為這可能會相當危險。開啟這個功能後，你可以對於實際上不存在的 API 撰寫會通過的測試！</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.5 版的變更: </span>If you are patching builtins in a module then you don't
-need to pass <code class="docutils literal notranslate"><span class="pre">create=True</span></code>, it will be added by default.</p>
+<p><span class="versionmodified changed">在 3.5 版的變更: </span>如果你正在 patch 模組中的內建函式，那麼你不需要傳遞 <code class="docutils literal notranslate"><span class="pre">create=True</span></code>，它預設會被加入。</p>
 </div>
 </div>
-<p>Patch can be used as a <code class="xref py py-class docutils literal notranslate"><span class="pre">TestCase</span></code> class decorator. It works by
-decorating each test method in the class. This reduces the boilerplate
-code when your test methods share a common patchings set. <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> finds
-tests by looking for method names that start with <code class="docutils literal notranslate"><span class="pre">patch.TEST_PREFIX</span></code>.
-By default this is <code class="docutils literal notranslate"><span class="pre">'test'</span></code>, which matches the way <a class="reference internal" href="unittest.html#module-unittest" title="unittest: Unit testing framework for Python."><code class="xref py py-mod docutils literal notranslate"><span class="pre">unittest</span></code></a> finds tests.
-You can specify an alternative prefix by setting <code class="docutils literal notranslate"><span class="pre">patch.TEST_PREFIX</span></code>.</p>
-<p>Patch can be used as a context manager, with the with statement. Here the
-patching applies to the indented block after the with statement. If you
-use &quot;as&quot; then the patched object will be bound to the name after the
-&quot;as&quot;; very useful if <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> is creating a mock object for you.</p>
-<p><a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> takes arbitrary keyword arguments. These will be passed to
-<a class="reference internal" href="#unittest.mock.AsyncMock" title="unittest.mock.AsyncMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncMock</span></code></a> if the patched object is asynchronous, to
-<a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> otherwise or to <em>new_callable</em> if specified.</p>
-<p><code class="docutils literal notranslate"><span class="pre">patch.dict(...)</span></code>, <code class="docutils literal notranslate"><span class="pre">patch.multiple(...)</span></code> and <code class="docutils literal notranslate"><span class="pre">patch.object(...)</span></code> are
-available for alternate use-cases.</p>
+<p>patch 可以做為 <code class="xref py py-class docutils literal notranslate"><span class="pre">TestCase</span></code> 類別的裝飾器使用。它透過裝飾類別中的每個測試方法來運作。當你的測試方法共享一組常見的 patch 時，這會減少繁冗的代碼。<a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 通過搜尋以 <code class="docutils literal notranslate"><span class="pre">patch.TEST_PREFIX</span></code> 開頭的方法名來尋找測試。預設情況下會是 <code class="docutils literal notranslate"><span class="pre">'test'</span></code>，這與 <a class="reference internal" href="unittest.html#module-unittest" title="unittest: Unit testing framework for Python."><code class="xref py py-mod docutils literal notranslate"><span class="pre">unittest</span></code></a> 尋找測試的方式相匹配。你可以通過設定 <code class="docutils literal notranslate"><span class="pre">patch.TEST_PREFIX</span></code> 來指定別的前綴。</p>
+<p>透過 with 陳述式，Patch 可以做為情境管理器使用。 patch 適用於 with 陳述式之後的縮排區塊。 如果你使用 &quot;as&quot;，則被 patch 的物件將被綁定到 &quot;as&quot; 後面的名稱； 如果 <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 正在為你建立一個 mock 物件，這會非常有用。</p>
+<p><a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 接受任意的關鍵字引數。 如果被 patch 的物件是非同步的，這些將會被傳遞給 <a class="reference internal" href="#unittest.mock.AsyncMock" title="unittest.mock.AsyncMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncMock</span></code></a>，如果是同步的則會傳遞給 <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a>，或如果指定了 <em>new_callable</em>，則傳遞給它。</p>
+<p><code class="docutils literal notranslate"><span class="pre">patch.dict(...)</span></code>、<code class="docutils literal notranslate"><span class="pre">patch.multiple(...)</span></code> 和 <code class="docutils literal notranslate"><span class="pre">patch.object(...)</span></code> 可用於其餘的使用情境。</p>
 </dd></dl>
 
-<p><a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> as function decorator, creating the mock for you and passing it into
-the decorated function:</p>
+<p><a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 作為函式裝飾器，為你建立 mock 並將其傳遞給被裝飾的函式：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@patch</span><span class="p">(</span><span class="s1">&#39;__main__.SomeClass&#39;</span><span class="p">)</span>
 <span class="gp">... </span><span class="k">def</span> <span class="nf">function</span><span class="p">(</span><span class="n">normal_argument</span><span class="p">,</span> <span class="n">mock_class</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="n">mock_class</span> <span class="ow">is</span> <span class="n">SomeClass</span><span class="p">)</span>
@@ -1518,14 +1432,9 @@ the decorated function:</p>
 <span class="go">True</span>
 </pre></div>
 </div>
-<p>Patching a class replaces the class with a <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> <em>instance</em>. If the
-class is instantiated in the code under test then it will be the
-<a class="reference internal" href="#unittest.mock.Mock.return_value" title="unittest.mock.Mock.return_value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">return_value</span></code></a> of the mock that will be used.</p>
-<p>If the class is instantiated multiple times you could use
-<a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> to return a new mock each time. Alternatively you
-can set the <em>return_value</em> to be anything you want.</p>
-<p>To configure return values on methods of <em>instances</em> on the patched class
-you must do this on the <code class="xref py py-attr docutils literal notranslate"><span class="pre">return_value</span></code>. For example:</p>
+<p>Patch 一個類別會以 <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> <em>實例</em>取代該類別。如果該類別在被測試的程式碼中實例化，那麼它將是會被使用的 mock 的 <a class="reference internal" href="#unittest.mock.Mock.return_value" title="unittest.mock.Mock.return_value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">return_value</span></code></a>。</p>
+<p>如果該類別被實例化多次，你可以使用 <a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> 來每次回傳一個新的 mock。 或者你可以將 <em>return_value</em> 設定成你想要的任何值。</p>
+<p>若要配置被 patch 的類別的<em>實例</em>方法的回傳值，你必須在 <code class="xref py py-attr docutils literal notranslate"><span class="pre">return_value</span></code> 上進行配置。 例如：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Class</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="k">def</span> <span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="gp">... </span>        <span class="k">pass</span>
@@ -2017,8 +1926,8 @@ that proxy attribute access, like the <a class="reference external" href="https:
 <section id="mocking-magic-methods">
 <span id="magic-methods"></span><h3>Mocking Magic Methods<a class="headerlink" href="#mocking-magic-methods" title="Link to this heading">¶</a></h3>
 <p><a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> supports mocking the Python protocol methods, also known as
-&quot;magic methods&quot;. This allows mock objects to replace containers or other
-objects that implement Python protocols.</p>
+<a class="reference internal" href="../glossary.html#term-magic-method"><span class="xref std std-term">&quot;magic methods&quot;</span></a>. This allows mock objects to replace
+containers or other objects that implement Python protocols.</p>
 <p>Because magic methods are looked up differently from normal methods <a class="footnote-reference brackets" href="#id9" id="id7" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>, this
 support has been specially implemented. This means that only specific magic
 methods are supported. The supported list includes <em>almost</em> all of them. If
@@ -2111,8 +2020,8 @@ by mock, can't be set dynamically, or can cause problems:</p>
 <dt class="sig sig-object py" id="unittest.mock.MagicMock">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">unittest.mock.</span></span><span class="sig-name descname"><span class="pre">MagicMock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#unittest.mock.MagicMock" title="Link to this definition">¶</a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> is a subclass of <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> with default implementations
-of most of the magic methods. You can use <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> without having to
-configure the magic methods yourself.</p>
+of most of the <a class="reference internal" href="../glossary.html#term-magic-method"><span class="xref std std-term">magic methods</span></a>. You can use
+<code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> without having to configure the magic methods yourself.</p>
 <p>The constructor parameters have the same meaning as for <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a>.</p>
 <p>If you use the <em>spec</em> or <em>spec_set</em> arguments then <em>only</em> magic methods
 that exist in the spec will be created.</p>
@@ -2855,12 +2764,12 @@ fixing part of the mock object.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#calling">呼叫</a></li>
-<li><a class="reference internal" href="#deleting-attributes">Deleting Attributes</a></li>
-<li><a class="reference internal" href="#mock-names-and-the-name-attribute">Mock names and the name attribute</a></li>
-<li><a class="reference internal" href="#attaching-mocks-as-attributes">Attaching Mocks as Attributes</a></li>
+<li><a class="reference internal" href="#deleting-attributes">刪除屬性</a></li>
+<li><a class="reference internal" href="#mock-names-and-the-name-attribute">Mock 名稱與名稱屬性</a></li>
+<li><a class="reference internal" href="#attaching-mocks-as-attributes">如同屬性一般附加 mock</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#the-patchers">The patchers</a><ul>
+<li><a class="reference internal" href="#the-patchers">Patchers</a><ul>
 <li><a class="reference internal" href="#patch">patch</a><ul>
 <li><a class="reference internal" href="#unittest.mock.patch"><code class="docutils literal notranslate"><span class="pre">patch()</span></code></a></li>
 </ul>
@@ -3040,7 +2949,7 @@ fixing part of the mock object.</p>
 <br />
     <br />
 
-    最後更新於 Jan 12, 2024 (16:41 UTC)。
+    最後更新於 Jan 15, 2024 (23:13 UTC)。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
