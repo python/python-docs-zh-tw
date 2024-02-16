@@ -2878,6 +2878,29 @@ can take a <code class="xref std std-option docutils literal notranslate"><span 
 switch, controlling whether the binaries are built for 32-bit
 architectures (x86, PowerPC), 64-bit (x86-64 and PPC-64), or both.
 (Contributed by Ronald Oussoren.)</p></li>
+<li><p>A new function added in Python 2.6.6, <code class="xref c c-func docutils literal notranslate"><span class="pre">PySys_SetArgvEx()</span></code>, sets
+the value of <code class="docutils literal notranslate"><span class="pre">sys.argv</span></code> and can optionally update <code class="docutils literal notranslate"><span class="pre">sys.path</span></code> to
+include the directory containing the script named by <code class="docutils literal notranslate"><span class="pre">sys.argv[0]</span></code>
+depending on the value of an <em>updatepath</em> parameter.</p>
+<p>This function was added to close a security hole for applications
+that embed Python.  The old function, <code class="xref c c-func docutils literal notranslate"><span class="pre">PySys_SetArgv()</span></code>, would
+always update <code class="docutils literal notranslate"><span class="pre">sys.path</span></code>, and sometimes it would add the current
+directory.  This meant that, if you ran an application embedding
+Python in a directory controlled by someone else, attackers could
+put a Trojan-horse module in the directory (say, a file named
+<code class="file docutils literal notranslate"><span class="pre">os.py</span></code>) that your application would then import and run.</p>
+<p>If you maintain a C/C++ application that embeds Python, check
+whether you're calling <code class="xref c c-func docutils literal notranslate"><span class="pre">PySys_SetArgv()</span></code> and carefully consider
+whether the application should be using <code class="xref c c-func docutils literal notranslate"><span class="pre">PySys_SetArgvEx()</span></code>
+with <em>updatepath</em> set to false.  Note that using this function will
+break compatibility with Python versions 2.6.5 and earlier; if you
+have to continue working with earlier versions, you can leave
+the call to <code class="xref c c-func docutils literal notranslate"><span class="pre">PySys_SetArgv()</span></code> alone and call
+<code class="docutils literal notranslate"><span class="pre">PyRun_SimpleString(&quot;sys.path.pop(0)\n&quot;)</span></code> afterwards to discard
+the first <code class="docutils literal notranslate"><span class="pre">sys.path</span></code> component.</p>
+<p>Security issue reported as <a class="reference external" href="http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2008-5983">CVE-2008-5983</a>;
+discussed in <a class="reference external" href="https://github.com/python/cpython/issues/50003">gh-50003</a>, and fixed by Antoine Pitrou.</p>
+</li>
 <li><p>The BerkeleyDB module now has a C API object, available as
 <code class="docutils literal notranslate"><span class="pre">bsddb.db.api</span></code>.   This object can be used by other C extensions
 that wish to use the <code class="xref py py-mod docutils literal notranslate"><span class="pre">bsddb</span></code> module for their own purposes.
@@ -3142,6 +3165,15 @@ scoping rules, also cause warnings because such comparisons are forbidden
 entirely in 3.0.</p>
 </li>
 </ul>
+<p>For applications that embed Python:</p>
+<ul class="simple">
+<li><p>The <code class="xref c c-func docutils literal notranslate"><span class="pre">PySys_SetArgvEx()</span></code> function was added in Python 2.6.6,
+letting applications close a security hole when the existing
+<code class="xref c c-func docutils literal notranslate"><span class="pre">PySys_SetArgv()</span></code> function was used.  Check whether you're
+calling <code class="xref c c-func docutils literal notranslate"><span class="pre">PySys_SetArgv()</span></code> and carefully consider whether the
+application should be using <code class="xref c c-func docutils literal notranslate"><span class="pre">PySys_SetArgvEx()</span></code> with
+<em>updatepath</em> set to false.</p></li>
+</ul>
 </section>
 <section id="acknowledgements">
 <span id="acks"></span><h2>致謝<a class="headerlink" href="#acknowledgements" title="Link to this heading">¶</a></h2>
@@ -3318,7 +3350,7 @@ Antoine Pitrou, Brian Warner.</p>
 <br />
     <br />
 
-    最後更新於 Feb 15, 2024 (15:35 UTC)。
+    最後更新於 Feb 16, 2024 (08:52 UTC)。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 

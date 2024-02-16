@@ -168,6 +168,7 @@
 <li><a class="reference internal" href="#uu">uu</a></li>
 <li><a class="reference internal" href="#uuid">uuid</a></li>
 <li><a class="reference internal" href="#warnings">warnings</a></li>
+<li><a class="reference internal" href="#xml">xml</a></li>
 <li><a class="reference internal" href="#xml-etree">xml.etree</a></li>
 <li><a class="reference internal" href="#xmlrpc-server">xmlrpc.server</a></li>
 <li><a class="reference internal" href="#zipapp">zipapp</a></li>
@@ -215,6 +216,8 @@
 <li><a class="reference internal" href="#notable-changes-in-python-3-7-2">Notable changes in Python 3.7.2</a></li>
 <li><a class="reference internal" href="#notable-changes-in-python-3-7-6">Notable changes in Python 3.7.6</a></li>
 <li><a class="reference internal" href="#notable-changes-in-python-3-7-10">Notable changes in Python 3.7.10</a></li>
+<li><a class="reference internal" href="#notable-changes-in-python-3-7-11">Notable changes in Python 3.7.11</a></li>
+<li><a class="reference internal" href="#notable-security-feature-in-3-7-14">Notable security feature in 3.7.14</a></li>
 </ul>
 </li>
 </ul>
@@ -1406,6 +1409,10 @@ and <a class="reference internal" href="../library/ssl.html#ssl.SSLContext.maxim
 Supported protocols are indicated by several new flags, such as
 <a class="reference internal" href="../library/ssl.html#ssl.HAS_TLSv1_1" title="ssl.HAS_TLSv1_1"><code class="xref py py-data docutils literal notranslate"><span class="pre">HAS_TLSv1_1</span></code></a>.
 (Contributed by Christian Heimes in <a class="reference external" href="https://bugs.python.org/issue?&#64;action=redirect&amp;bpo=32609">bpo-32609</a>.)</p>
+<p>Added <a class="reference internal" href="../library/ssl.html#ssl.SSLContext.post_handshake_auth" title="ssl.SSLContext.post_handshake_auth"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ssl.SSLContext.post_handshake_auth</span></code></a> to enable and
+<a class="reference internal" href="../library/ssl.html#ssl.SSLSocket.verify_client_post_handshake" title="ssl.SSLSocket.verify_client_post_handshake"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ssl.SSLSocket.verify_client_post_handshake()</span></code></a> to initiate TLS 1.3
+post-handshake authentication.
+(Contributed by Christian Heimes in <a class="reference external" href="https://github.com/python/cpython/issues/78851">gh-78851</a>.)</p>
 </section>
 <section id="string">
 <h3>string<a class="headerlink" href="#string" title="Link to this heading">¶</a></h3>
@@ -1584,6 +1591,13 @@ by default (the implicit filter list is empty)</p></li>
 <p>Deprecation warnings are once again shown by default in single-file scripts and
 at the interactive prompt.  See <a class="reference internal" href="#whatsnew37-pep565"><span class="std std-ref">PEP 565: Show DeprecationWarning in __main__</span></a> for details.
 (Contributed by Nick Coghlan in <a class="reference external" href="https://bugs.python.org/issue?&#64;action=redirect&amp;bpo=31975">bpo-31975</a>.)</p>
+</section>
+<section id="xml">
+<h3>xml<a class="headerlink" href="#xml" title="Link to this heading">¶</a></h3>
+<p>As mitigation against DTD and external entity retrieval, the
+<a class="reference internal" href="../library/xml.dom.minidom.html#module-xml.dom.minidom" title="xml.dom.minidom: Minimal Document Object Model (DOM) implementation."><code class="xref py py-mod docutils literal notranslate"><span class="pre">xml.dom.minidom</span></code></a> and <a class="reference internal" href="../library/xml.sax.html#module-xml.sax" title="xml.sax: Package containing SAX2 base classes and convenience functions."><code class="xref py py-mod docutils literal notranslate"><span class="pre">xml.sax</span></code></a> modules no longer process
+external entities by default.
+(Contributed by Christian Heimes in <a class="reference external" href="https://github.com/python/cpython/issues/61441">gh-61441</a>.)</p>
 </section>
 <section id="xml-etree">
 <h3>xml.etree<a class="headerlink" href="#xml-etree" title="Link to this heading">¶</a></h3>
@@ -2371,6 +2385,32 @@ functions internally. For more details, please see their respective
 documentation.
 (Contributed by Adam Goldschmidt, Senthil Kumaran and Ken Jin in <a class="reference external" href="https://bugs.python.org/issue?&#64;action=redirect&amp;bpo=42967">bpo-42967</a>.)</p>
 </section>
+<section id="notable-changes-in-python-3-7-11">
+<h2>Notable changes in Python 3.7.11<a class="headerlink" href="#notable-changes-in-python-3-7-11" title="Link to this heading">¶</a></h2>
+<p>A security fix alters the <a class="reference internal" href="../library/ftplib.html#ftplib.FTP" title="ftplib.FTP"><code class="xref py py-class docutils literal notranslate"><span class="pre">ftplib.FTP</span></code></a> behavior to not trust the
+IPv4 address sent from the remote server when setting up a passive data
+channel.  We reuse the ftp server IP address instead.  For unusual code
+requiring the old behavior, set a <code class="docutils literal notranslate"><span class="pre">trust_server_pasv_ipv4_address</span></code>
+attribute on your FTP instance to <code class="docutils literal notranslate"><span class="pre">True</span></code>.  (See <a class="reference external" href="https://github.com/python/cpython/issues/87451">gh-87451</a>)</p>
+<p>The presence of newline or tab characters in parts of a URL allows for some
+forms of attacks. Following the WHATWG specification that updates RFC 3986,
+ASCII newline <code class="docutils literal notranslate"><span class="pre">\n</span></code>, <code class="docutils literal notranslate"><span class="pre">\r</span></code> and tab <code class="docutils literal notranslate"><span class="pre">\t</span></code> characters are stripped from the
+URL by the parser <a class="reference internal" href="../library/urllib.parse.html#module-urllib.parse" title="urllib.parse: Parse URLs into or assemble them from components."><code class="xref py py-func docutils literal notranslate"><span class="pre">urllib.parse()</span></code></a> preventing such attacks. The removal
+characters are controlled by a new module level variable
+<code class="docutils literal notranslate"><span class="pre">urllib.parse._UNSAFE_URL_BYTES_TO_REMOVE</span></code>. (See <a class="reference external" href="https://github.com/python/cpython/issues/88048">gh-88048</a>)</p>
+</section>
+<section id="notable-security-feature-in-3-7-14">
+<h2>Notable security feature in 3.7.14<a class="headerlink" href="#notable-security-feature-in-3-7-14" title="Link to this heading">¶</a></h2>
+<p>Converting between <a class="reference internal" href="../library/functions.html#int" title="int"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> and <a class="reference internal" href="../library/stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> in bases other than 2
+(binary), 4, 8 (octal), 16 (hexadecimal), or 32 such as base 10 (decimal)
+now raises a <a class="reference internal" href="../library/exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> if the number of digits in string form is
+above a limit to avoid potential denial of service attacks due to the
+algorithmic complexity. This is a mitigation for <a class="reference external" href="https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2020-10735">CVE-2020-10735</a>.
+This limit can be configured or disabled by environment variable, command
+line flag, or <a class="reference internal" href="../library/sys.html#module-sys" title="sys: Access system-specific parameters and functions."><code class="xref py py-mod docutils literal notranslate"><span class="pre">sys</span></code></a> APIs. See the <a class="reference internal" href="../library/stdtypes.html#int-max-str-digits"><span class="std std-ref">integer string conversion
+length limitation</span></a> documentation.  The default limit
+is 4300 digits in string form.</p>
+</section>
 </section>
 
 
@@ -2466,6 +2506,7 @@ documentation.
 <li><a class="reference internal" href="#uu">uu</a></li>
 <li><a class="reference internal" href="#uuid">uuid</a></li>
 <li><a class="reference internal" href="#warnings">warnings</a></li>
+<li><a class="reference internal" href="#xml">xml</a></li>
 <li><a class="reference internal" href="#xml-etree">xml.etree</a></li>
 <li><a class="reference internal" href="#xmlrpc-server">xmlrpc.server</a></li>
 <li><a class="reference internal" href="#zipapp">zipapp</a></li>
@@ -2513,6 +2554,8 @@ documentation.
 <li><a class="reference internal" href="#notable-changes-in-python-3-7-2">Notable changes in Python 3.7.2</a></li>
 <li><a class="reference internal" href="#notable-changes-in-python-3-7-6">Notable changes in Python 3.7.6</a></li>
 <li><a class="reference internal" href="#notable-changes-in-python-3-7-10">Notable changes in Python 3.7.10</a></li>
+<li><a class="reference internal" href="#notable-changes-in-python-3-7-11">Notable changes in Python 3.7.11</a></li>
+<li><a class="reference internal" href="#notable-security-feature-in-3-7-14">Notable security feature in 3.7.14</a></li>
 </ul>
 </li>
 </ul>
@@ -2617,7 +2660,7 @@ documentation.
 <br />
     <br />
 
-    最後更新於 Feb 15, 2024 (15:35 UTC)。
+    最後更新於 Feb 16, 2024 (08:52 UTC)。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
