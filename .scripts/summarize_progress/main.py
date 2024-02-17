@@ -103,7 +103,18 @@ def format_issue_link(url: str) -> str:
 
 def format_line_file(data: dict) -> str:
     global MAX_ASSIGNEE_LEN, MAX_FILENAME_LEN, MAX_PROGRESS_LEN, MAX_ISSUE_LEN
-    return f"|{data['filename'].rjust(MAX_FILENAME_LEN, ' ')}|{data['progress'].ljust(MAX_PROGRESS_LEN, ' ')}|{format_issue_link(data['issue']).ljust(MAX_ISSUE_LEN, ' ')}|{data['assignee'].ljust(MAX_ASSIGNEE_LEN, ' ')}|\r\n"
+
+    filename_split = list(data['filename'])
+    # Adding \\ to avoid Markdown rendering bold font
+    if '_' in filename_split:
+        add_index = [index for index, chac in enumerate(filename_split) if chac == "_"]
+        add_index.sort(reverse=True)
+        for index in add_index:
+            filename_split.insert(index, '\\')
+
+    filename = ''.join(filename_split)
+
+    return f"|{filename.rjust(MAX_FILENAME_LEN, ' ')}|{data['progress'].ljust(MAX_PROGRESS_LEN, ' ')}|{format_issue_link(data['issue']).ljust(MAX_ISSUE_LEN, ' ')}|{data['assignee'].ljust(MAX_ASSIGNEE_LEN, ' ')}|\r\n"
 
 
 def format_line_directory(dirname: str) -> str:
