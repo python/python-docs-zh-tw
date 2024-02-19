@@ -102,13 +102,13 @@
 <li><a class="reference internal" href="#patch-methods-start-and-stop">patch 方法：啟動與停止</a></li>
 <li><a class="reference internal" href="#patch-builtins">patch 內建函式</a></li>
 <li><a class="reference internal" href="#test-prefix">TEST_PREFIX</a></li>
-<li><a class="reference internal" href="#nesting-patch-decorators">Nesting Patch Decorators</a></li>
-<li><a class="reference internal" href="#where-to-patch">Where to patch</a></li>
-<li><a class="reference internal" href="#patching-descriptors-and-proxy-objects">Patching Descriptors and Proxy Objects</a></li>
+<li><a class="reference internal" href="#nesting-patch-decorators">巢狀使用 Patch 裝飾器</a></li>
+<li><a class="reference internal" href="#where-to-patch">該 patch 何處</a></li>
+<li><a class="reference internal" href="#patching-descriptors-and-proxy-objects">Patch 描述器與代理物件 (Proxy Objects)</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#magicmock-and-magic-method-support">MagicMock and magic method support</a><ul>
-<li><a class="reference internal" href="#mocking-magic-methods">Mocking Magic Methods</a></li>
+<li><a class="reference internal" href="#magicmock-and-magic-method-support">MagicMock 以及魔術方法支援</a><ul>
+<li><a class="reference internal" href="#mocking-magic-methods">Mock 魔術方法</a></li>
 <li><a class="reference internal" href="#magic-mock">Magic Mock</a></li>
 </ul>
 </li>
@@ -1659,8 +1659,7 @@
 </section>
 <section id="patch-builtins">
 <span id="id4"></span><h3>patch 內建函式<a class="headerlink" href="#patch-builtins" title="Link to this heading">¶</a></h3>
-<p>You can patch any builtins within a module. The following example patches
-builtin <a class="reference internal" href="functions.html#ord" title="ord"><code class="xref py py-func docutils literal notranslate"><span class="pre">ord()</span></code></a>:</p>
+<p>你可以 patch 模組內的任何內建函式。以下範例 patch 內建函式 <a class="reference internal" href="functions.html#ord" title="ord"><code class="xref py py-func docutils literal notranslate"><span class="pre">ord()</span></code></a>：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@patch</span><span class="p">(</span><span class="s1">&#39;__main__.ord&#39;</span><span class="p">)</span>
 <span class="gp">... </span><span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="n">mock_ord</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="n">mock_ord</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="mi">101</span>
@@ -1673,12 +1672,8 @@ builtin <a class="reference internal" href="functions.html#ord" title="ord"><cod
 </section>
 <section id="test-prefix">
 <span id="id5"></span><h3>TEST_PREFIX<a class="headerlink" href="#test-prefix" title="Link to this heading">¶</a></h3>
-<p>All of the patchers can be used as class decorators. When used in this way
-they wrap every test method on the class. The patchers recognise methods that
-start with <code class="docutils literal notranslate"><span class="pre">'test'</span></code> as being test methods. This is the same way that the
-<a class="reference internal" href="unittest.html#unittest.TestLoader" title="unittest.TestLoader"><code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.TestLoader</span></code></a> finds test methods by default.</p>
-<p>It is possible that you want to use a different prefix for your tests. You can
-inform the patchers of the different prefix by setting <code class="docutils literal notranslate"><span class="pre">patch.TEST_PREFIX</span></code>:</p>
+<p>所有 patcher 都可以作為類別裝飾器使用。以這種方式使用時，它們包裝了類別上的每個測試方法。Patcher 將 <code class="docutils literal notranslate"><span class="pre">'test'</span></code> 開頭的方法認定為測試方法。這與 <a class="reference internal" href="unittest.html#unittest.TestLoader" title="unittest.TestLoader"><code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.TestLoader</span></code></a> 預設尋找測試方法的方式相同。</p>
+<p>你可能會想為你的測試使用不同的前綴。你可以透過設定 <code class="docutils literal notranslate"><span class="pre">patch.TEST_PREFIX</span></code> 來告知 patcher 使用不同的前綴：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">patch</span><span class="o">.</span><span class="n">TEST_PREFIX</span> <span class="o">=</span> <span class="s1">&#39;foo&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">value</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="gp">&gt;&gt;&gt;</span>
@@ -1700,10 +1695,9 @@ inform the patchers of the different prefix by setting <code class="docutils lit
 </div>
 </section>
 <section id="nesting-patch-decorators">
-<h3>Nesting Patch Decorators<a class="headerlink" href="#nesting-patch-decorators" title="Link to this heading">¶</a></h3>
-<p>If you want to perform multiple patches then you can simply stack up the
-decorators.</p>
-<p>You can stack up multiple patch decorators using this pattern:</p>
+<h3>巢狀使用 Patch 裝飾器<a class="headerlink" href="#nesting-patch-decorators" title="Link to this heading">¶</a></h3>
+<p>如果你想執行多個 patch，那麼你可以簡單地堆疊裝飾器。</p>
+<p>你可以使用這個模式來堆疊多個 patch 裝飾器：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@patch</span><span class="o">.</span><span class="n">object</span><span class="p">(</span><span class="n">SomeClass</span><span class="p">,</span> <span class="s1">&#39;class_method&#39;</span><span class="p">)</span>
 <span class="gp">... </span><span class="nd">@patch</span><span class="o">.</span><span class="n">object</span><span class="p">(</span><span class="n">SomeClass</span><span class="p">,</span> <span class="s1">&#39;static_method&#39;</span><span class="p">)</span>
 <span class="gp">... </span><span class="k">def</span> <span class="nf">test</span><span class="p">(</span><span class="n">mock1</span><span class="p">,</span> <span class="n">mock2</span><span class="p">):</span>
@@ -1718,20 +1712,13 @@ decorators.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock2</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="s1">&#39;bar&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that the decorators are applied from the bottom upwards. This is the
-standard way that Python applies decorators. The order of the created mocks
-passed into your test function matches this order.</p>
+<p>請注意，裝飾器是從底部向上應用的。這是 Python 應用裝飾器的標準方式。被建立的 mock 傳遞到測試函式中的順序與此順序相同。</p>
 </section>
 <section id="where-to-patch">
-<span id="id6"></span><h3>Where to patch<a class="headerlink" href="#where-to-patch" title="Link to this heading">¶</a></h3>
-<p><a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> works by (temporarily) changing the object that a <em>name</em> points to with
-another one. There can be many names pointing to any individual object, so
-for patching to work you must ensure that you patch the name used by the system
-under test.</p>
-<p>The basic principle is that you patch where an object is <em>looked up</em>, which
-is not necessarily the same place as where it is defined. A couple of
-examples will help to clarify this.</p>
-<p>Imagine we have a project that we want to test with the following structure:</p>
+<span id="id6"></span><h3>該 patch 何處<a class="headerlink" href="#where-to-patch" title="Link to this heading">¶</a></h3>
+<p><a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 的工作原理是（暫時）將 <em>name</em> 指向的物件變更為另一個物件。可以有許多 name 指向任何單一物件，因此為了使 patch 起作用，你必須確保你 patch 了被測試系統使用的 name。</p>
+<p>基本原則是在物件<em>被查找</em>的位置進行 patch，該位置不一定與其被定義的位置相同。幾個範例將有助於闡明這一點。</p>
+<p>想像一下，我們想要測試一個專案，其結構如下：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">a</span><span class="o">.</span><span class="n">py</span>
     <span class="o">-&gt;</span> <span class="n">Defines</span> <span class="n">SomeClass</span>
 
@@ -1740,48 +1727,28 @@ examples will help to clarify this.</p>
     <span class="o">-&gt;</span> <span class="n">some_function</span> <span class="n">instantiates</span> <span class="n">SomeClass</span>
 </pre></div>
 </div>
-<p>Now we want to test <code class="docutils literal notranslate"><span class="pre">some_function</span></code> but we want to mock out <code class="docutils literal notranslate"><span class="pre">SomeClass</span></code> using
-<a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a>. The problem is that when we import module b, which we will have to
-do then it imports <code class="docutils literal notranslate"><span class="pre">SomeClass</span></code> from module a. If we use <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> to mock out
-<code class="docutils literal notranslate"><span class="pre">a.SomeClass</span></code> then it will have no effect on our test; module b already has a
-reference to the <em>real</em> <code class="docutils literal notranslate"><span class="pre">SomeClass</span></code> and it looks like our patching had no
-effect.</p>
-<p>The key is to patch out <code class="docutils literal notranslate"><span class="pre">SomeClass</span></code> where it is used (or where it is looked up).
-In this case <code class="docutils literal notranslate"><span class="pre">some_function</span></code> will actually look up <code class="docutils literal notranslate"><span class="pre">SomeClass</span></code> in module b,
-where we have imported it. The patching should look like:</p>
+<p>現在我們想要測試 <code class="docutils literal notranslate"><span class="pre">some_function</span></code>，但我們想使用 <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> mock <code class="docutils literal notranslate"><span class="pre">SomeClass</span></code>。問題是，當我們 import 模組 b 時（我們必須這樣做），它會從模組 a import <code class="docutils literal notranslate"><span class="pre">SomeClass</span></code>。如果我們使用 <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 來 mock <code class="docutils literal notranslate"><span class="pre">a.SomeClass</span></code>，那麼它對我們的測試就不會有任何影響；模組 b 已經有了一個<em>真實的</em> <code class="docutils literal notranslate"><span class="pre">SomeClass</span></code> 的參照 ，看起來我們的 patch 並沒有任何效果。</p>
+<p>關鍵是在使用（或查找它）的地方 patch <code class="docutils literal notranslate"><span class="pre">SomeClass</span></code>。在這個情況下，<code class="docutils literal notranslate"><span class="pre">some_function</span></code> 實際上會在我們 import 它的模組 b 中查找``SomeClass``。這裡的 patch 應該長得像這樣：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="nd">@patch</span><span class="p">(</span><span class="s1">&#39;b.SomeClass&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>However, consider the alternative scenario where instead of <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">a</span> <span class="pre">import</span>
-<span class="pre">SomeClass</span></code> module b does <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">some_function</span></code> uses <code class="docutils literal notranslate"><span class="pre">a.SomeClass</span></code>. Both
-of these import forms are common. In this case the class we want to patch is
-being looked up in the module and so we have to patch <code class="docutils literal notranslate"><span class="pre">a.SomeClass</span></code> instead:</p>
+<p>然而，考慮另一種情況，其中模組 b 並不是使用 <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">a</span> <span class="pre">import</span> <span class="pre">SomeClass</span></code>，而是 <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">a</span></code>，然後 <code class="docutils literal notranslate"><span class="pre">some_function</span></code> 使用 <code class="docutils literal notranslate"><span class="pre">a.SomeClass</span></code>。這兩種 import 形式都很常見。在這種情況下，我們想要 patch 的類別正在其模組中被查找，因此我們必須 patch <code class="docutils literal notranslate"><span class="pre">a.SomeClass</span></code>：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="nd">@patch</span><span class="p">(</span><span class="s1">&#39;a.SomeClass&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="patching-descriptors-and-proxy-objects">
-<h3>Patching Descriptors and Proxy Objects<a class="headerlink" href="#patching-descriptors-and-proxy-objects" title="Link to this heading">¶</a></h3>
-<p>Both <a class="reference internal" href="#patch">patch</a> and <a class="reference internal" href="#patch-object">patch.object</a> correctly patch and restore descriptors: class
-methods, static methods and properties. You should patch these on the <em>class</em>
-rather than an instance. They also work with <em>some</em> objects
-that proxy attribute access, like the <a class="reference external" href="https://web.archive.org/web/20200603181648/http://www.voidspace.org.uk/python/weblog/arch_d7_2010_12_04.shtml#e1198">django settings object</a>.</p>
+<h3>Patch 描述器與代理物件 (Proxy Objects)<a class="headerlink" href="#patching-descriptors-and-proxy-objects" title="Link to this heading">¶</a></h3>
+<p><a class="reference internal" href="#patch">patch</a> 和 <a class="reference internal" href="#patch-object">patch.object</a> 都正確地 patch 和還原描述器：類別方法、靜態方法以及屬性。你應該在 <em>類別</em> 而不是實例上 patch 它們。它們還可以使用代理屬性存取的<em>一些</em>物件，例如 <a class="reference external" href="https://web.archive.org/web/20200603181648/http://www.voidspace.org.uk/python/weblog/arch_d7_2010_12_04.shtml#e1198">django 設定物件</a>。</p>
 </section>
 </section>
 <section id="magicmock-and-magic-method-support">
-<h2>MagicMock and magic method support<a class="headerlink" href="#magicmock-and-magic-method-support" title="Link to this heading">¶</a></h2>
+<h2>MagicMock 以及魔術方法支援<a class="headerlink" href="#magicmock-and-magic-method-support" title="Link to this heading">¶</a></h2>
 <section id="mocking-magic-methods">
-<span id="magic-methods"></span><h3>Mocking Magic Methods<a class="headerlink" href="#mocking-magic-methods" title="Link to this heading">¶</a></h3>
-<p><a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> supports mocking the Python protocol methods, also known as
-<a class="reference internal" href="../glossary.html#term-magic-method"><span class="xref std std-term">&quot;magic methods&quot;</span></a>. This allows mock objects to replace
-containers or other objects that implement Python protocols.</p>
-<p>Because magic methods are looked up differently from normal methods <a class="footnote-reference brackets" href="#id9" id="id7" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>, this
-support has been specially implemented. This means that only specific magic
-methods are supported. The supported list includes <em>almost</em> all of them. If
-there are any missing that you need please let us know.</p>
-<p>You mock magic methods by setting the method you are interested in to a function
-or a mock instance. If you are using a function then it <em>must</em> take <code class="docutils literal notranslate"><span class="pre">self</span></code> as
-the first argument <a class="footnote-reference brackets" href="#id10" id="id8" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a>.</p>
+<span id="magic-methods"></span><h3>Mock 魔術方法<a class="headerlink" href="#mocking-magic-methods" title="Link to this heading">¶</a></h3>
+<p><a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> 支援 mock Python 協定方法，其也被稱作 <a class="reference internal" href="../glossary.html#term-magic-method"><span class="xref std std-term">&quot;魔術方法&quot;</span></a>。這允許 mock 物件替換容器或實作 Python 協定的其他物件。</p>
+<p>由於魔術方法被查找的方式與一般的方法 <a class="footnote-reference brackets" href="#id9" id="id7" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a> 不同，因此專門實作了此支援方式。這代表著僅有特定的魔術方法被此方式支援。現在已支援清單中已經<em>幾乎</em>包含了所有魔術方法。如果你需要 mock 任何魔術方法而其尚未被支援，請讓我們知道。</p>
+<p>你可以透過將你感興趣的方法設定為函式或 mock 實例來 mock 魔術方法。如果你使用函式，那麼它<em>必須</em>將 <code class="docutils literal notranslate"><span class="pre">self</span></code> 作為第一個引數 <a class="footnote-reference brackets" href="#id10" id="id8" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a>。</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">return</span> <span class="s1">&#39;fooble&#39;</span>
 <span class="gp">...</span>
@@ -1804,8 +1771,7 @@ the first argument <a class="footnote-reference brackets" href="#id10" id="id8" 
 <span class="go">[]</span>
 </pre></div>
 </div>
-<p>One use case for this is for mocking objects used as context managers in a
-<a class="reference internal" href="../reference/compound_stmts.html#with"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">with</span></code></a> statement:</p>
+<p>一個用法是在 <a class="reference internal" href="../reference/compound_stmts.html#with"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">with</span></code></a> 陳述式中 mock 作為情境管理器使用的物件：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="fm">__enter__</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="fm">__exit__</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -1816,45 +1782,34 @@ the first argument <a class="footnote-reference brackets" href="#id10" id="id8" 
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="fm">__exit__</span><span class="o">.</span><span class="n">assert_called_with</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Calls to magic methods do not appear in <a class="reference internal" href="#unittest.mock.Mock.method_calls" title="unittest.mock.Mock.method_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">method_calls</span></code></a>, but they
-are recorded in <a class="reference internal" href="#unittest.mock.Mock.mock_calls" title="unittest.mock.Mock.mock_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mock_calls</span></code></a>.</p>
+<p>對魔術方法的呼叫並不會出現在 <a class="reference internal" href="#unittest.mock.Mock.method_calls" title="unittest.mock.Mock.method_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">method_calls</span></code></a> 中，它們會被記錄在 <a class="reference internal" href="#unittest.mock.Mock.mock_calls" title="unittest.mock.Mock.mock_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mock_calls</span></code></a> 內。</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>If you use the <em>spec</em> keyword argument to create a mock then attempting to
-set a magic method that isn't in the spec will raise an <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a>.</p>
+<p>如果你使用<em>spec</em>關鍵字引數來建立一個 mock，則嘗試設定規格中未包含的魔術方法將引發一個 <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a>。</p>
 </div>
-<p>The full list of supported magic methods is:</p>
+<p>已支援的魔術方法的完整列表是：</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">__hash__</span></code>、<code class="docutils literal notranslate"><span class="pre">__sizeof__</span></code>、<code class="docutils literal notranslate"><span class="pre">__repr__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__str__</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">__dir__</span></code>、<code class="docutils literal notranslate"><span class="pre">__format__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__subclasses__</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__hash__</span></code>、<code class="docutils literal notranslate"><span class="pre">__sizeof__</span></code>、 <code class="docutils literal notranslate"><span class="pre">__repr__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__str__</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__dir__</span></code>、 <code class="docutils literal notranslate"><span class="pre">__format__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__subclasses__</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">__round__</span></code>、<code class="docutils literal notranslate"><span class="pre">__floor__</span></code>、<code class="docutils literal notranslate"><span class="pre">__trunc__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__ceil__</span></code></p></li>
-<li><p>Comparisons: <code class="docutils literal notranslate"><span class="pre">__lt__</span></code>, <code class="docutils literal notranslate"><span class="pre">__gt__</span></code>, <code class="docutils literal notranslate"><span class="pre">__le__</span></code>, <code class="docutils literal notranslate"><span class="pre">__ge__</span></code>,
-<code class="docutils literal notranslate"><span class="pre">__eq__</span></code> and <code class="docutils literal notranslate"><span class="pre">__ne__</span></code></p></li>
-<li><p>Container methods: <code class="docutils literal notranslate"><span class="pre">__getitem__</span></code>, <code class="docutils literal notranslate"><span class="pre">__setitem__</span></code>, <code class="docutils literal notranslate"><span class="pre">__delitem__</span></code>,
-<code class="docutils literal notranslate"><span class="pre">__contains__</span></code>, <code class="docutils literal notranslate"><span class="pre">__len__</span></code>, <code class="docutils literal notranslate"><span class="pre">__iter__</span></code>, <code class="docutils literal notranslate"><span class="pre">__reversed__</span></code>
-and <code class="docutils literal notranslate"><span class="pre">__missing__</span></code></p></li>
-<li><p>Context manager: <code class="docutils literal notranslate"><span class="pre">__enter__</span></code>, <code class="docutils literal notranslate"><span class="pre">__exit__</span></code>, <code class="docutils literal notranslate"><span class="pre">__aenter__</span></code> and <code class="docutils literal notranslate"><span class="pre">__aexit__</span></code></p></li>
-<li><p>Unary numeric methods: <code class="docutils literal notranslate"><span class="pre">__neg__</span></code>, <code class="docutils literal notranslate"><span class="pre">__pos__</span></code> and <code class="docutils literal notranslate"><span class="pre">__invert__</span></code></p></li>
-<li><p>The numeric methods (including right hand and in-place variants):
-<code class="docutils literal notranslate"><span class="pre">__add__</span></code>, <code class="docutils literal notranslate"><span class="pre">__sub__</span></code>, <code class="docutils literal notranslate"><span class="pre">__mul__</span></code>, <code class="docutils literal notranslate"><span class="pre">__matmul__</span></code>, <code class="docutils literal notranslate"><span class="pre">__truediv__</span></code>,
-<code class="docutils literal notranslate"><span class="pre">__floordiv__</span></code>, <code class="docutils literal notranslate"><span class="pre">__mod__</span></code>, <code class="docutils literal notranslate"><span class="pre">__divmod__</span></code>, <code class="docutils literal notranslate"><span class="pre">__lshift__</span></code>,
-<code class="docutils literal notranslate"><span class="pre">__rshift__</span></code>, <code class="docutils literal notranslate"><span class="pre">__and__</span></code>, <code class="docutils literal notranslate"><span class="pre">__xor__</span></code>, <code class="docutils literal notranslate"><span class="pre">__or__</span></code>, and <code class="docutils literal notranslate"><span class="pre">__pow__</span></code></p></li>
-<li><p>Numeric conversion methods: <code class="docutils literal notranslate"><span class="pre">__complex__</span></code>, <code class="docutils literal notranslate"><span class="pre">__int__</span></code>, <code class="docutils literal notranslate"><span class="pre">__float__</span></code>
-and <code class="docutils literal notranslate"><span class="pre">__index__</span></code></p></li>
-<li><p>Descriptor methods: <code class="docutils literal notranslate"><span class="pre">__get__</span></code>, <code class="docutils literal notranslate"><span class="pre">__set__</span></code> and <code class="docutils literal notranslate"><span class="pre">__delete__</span></code></p></li>
-<li><p>Pickling: <code class="docutils literal notranslate"><span class="pre">__reduce__</span></code>, <code class="docutils literal notranslate"><span class="pre">__reduce_ex__</span></code>, <code class="docutils literal notranslate"><span class="pre">__getinitargs__</span></code>,
-<code class="docutils literal notranslate"><span class="pre">__getnewargs__</span></code>, <code class="docutils literal notranslate"><span class="pre">__getstate__</span></code> and <code class="docutils literal notranslate"><span class="pre">__setstate__</span></code></p></li>
-<li><p>File system path representation: <code class="docutils literal notranslate"><span class="pre">__fspath__</span></code></p></li>
-<li><p>Asynchronous iteration methods: <code class="docutils literal notranslate"><span class="pre">__aiter__</span></code> and <code class="docutils literal notranslate"><span class="pre">__anext__</span></code></p></li>
+<li><p>比較方法：<code class="docutils literal notranslate"><span class="pre">__lt__</span></code>、<code class="docutils literal notranslate"><span class="pre">__gt__</span></code>、<code class="docutils literal notranslate"><span class="pre">__le__</span></code>、<code class="docutils literal notranslate"><span class="pre">__ge__</span></code>、<code class="docutils literal notranslate"><span class="pre">__eq__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__ne__</span></code></p></li>
+<li><p>容器方法：<code class="docutils literal notranslate"><span class="pre">__getitem__</span></code>、<code class="docutils literal notranslate"><span class="pre">__setitem__</span></code>、<code class="docutils literal notranslate"><span class="pre">__delitem__</span></code>、<code class="docutils literal notranslate"><span class="pre">__contains__</span></code>、<code class="docutils literal notranslate"><span class="pre">__len__</span></code>、<code class="docutils literal notranslate"><span class="pre">__iter__</span></code>、<code class="docutils literal notranslate"><span class="pre">__reversed__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__missing__</span></code></p></li>
+<li><p>情境管理器：<code class="docutils literal notranslate"><span class="pre">__enter__</span></code>、<code class="docutils literal notranslate"><span class="pre">__exit__</span></code>、<code class="docutils literal notranslate"><span class="pre">__aenter__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__aexit__</span></code></p></li>
+<li><p>一元數值方法：<code class="docutils literal notranslate"><span class="pre">__neg__</span></code>、<code class="docutils literal notranslate"><span class="pre">__pos__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__invert__</span></code></p></li>
+<li><p>數值方法（包括右側 (right hand) 和原地 (in-place) 變體）：<code class="docutils literal notranslate"><span class="pre">__add__</span></code>、<code class="docutils literal notranslate"><span class="pre">__sub__</span></code>、<code class="docutils literal notranslate"><span class="pre">__mul__</span></code>、<code class="docutils literal notranslate"><span class="pre">__matmul__</span></code>、<code class="docutils literal notranslate"><span class="pre">__truediv__</span></code>、<code class="docutils literal notranslate"><span class="pre">__floordiv__</span></code>、 `` __mod__``、<code class="docutils literal notranslate"><span class="pre">__divmod__</span></code>、<code class="docutils literal notranslate"><span class="pre">__lshift__</span></code>、<code class="docutils literal notranslate"><span class="pre">__rshift__</span></code>、<code class="docutils literal notranslate"><span class="pre">__and__</span></code>、<code class="docutils literal notranslate"><span class="pre">__xor__</span></code>、<code class="docutils literal notranslate"><span class="pre">__or__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__pow__</span></code></p></li>
+<li><p>數值轉換方法：<code class="docutils literal notranslate"><span class="pre">__complex__</span></code>、<code class="docutils literal notranslate"><span class="pre">__int__</span></code>、<code class="docutils literal notranslate"><span class="pre">__float__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__index__</span></code></p></li>
+<li><p>描述器方法：<code class="docutils literal notranslate"><span class="pre">__get__</span></code>、<code class="docutils literal notranslate"><span class="pre">__set__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__delete__</span></code></p></li>
+<li><p>Pickling：<code class="docutils literal notranslate"><span class="pre">__reduce__</span></code>、<code class="docutils literal notranslate"><span class="pre">__reduce_ex__</span></code>、<code class="docutils literal notranslate"><span class="pre">__getinitargs__</span></code>、<code class="docutils literal notranslate"><span class="pre">__getnewargs__</span></code>、<code class="docutils literal notranslate"><span class="pre">__getstate__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__setstate__</span></code></p></li>
+<li><p>檔案系統路徑表示法：<code class="docutils literal notranslate"><span class="pre">__fspath__</span></code></p></li>
+<li><p>非同步疊代方法：<code class="docutils literal notranslate"><span class="pre">__aiter__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__anext__</span></code></p></li>
 </ul>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.8 版的變更: </span>Added support for <a class="reference internal" href="os.html#os.PathLike.__fspath__" title="os.PathLike.__fspath__"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.PathLike.__fspath__()</span></code></a>.</p>
+<p><span class="versionmodified changed">在 3.8 版的變更: </span>新增對於 <a class="reference internal" href="os.html#os.PathLike.__fspath__" title="os.PathLike.__fspath__"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.PathLike.__fspath__()</span></code></a> 的支援。</p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.8 版的變更: </span>Added support for <code class="docutils literal notranslate"><span class="pre">__aenter__</span></code>, <code class="docutils literal notranslate"><span class="pre">__aexit__</span></code>, <code class="docutils literal notranslate"><span class="pre">__aiter__</span></code> and <code class="docutils literal notranslate"><span class="pre">__anext__</span></code>.</p>
+<p><span class="versionmodified changed">在 3.8 版的變更: </span>新增對於 <code class="docutils literal notranslate"><span class="pre">__aenter__</span></code>、<code class="docutils literal notranslate"><span class="pre">__aexit__</span></code>、<code class="docutils literal notranslate"><span class="pre">__aiter__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__anext__</span></code> 的支援。</p>
 </div>
-<p>The following methods exist but are <em>not</em> supported as they are either in use
-by mock, can't be set dynamically, or can cause problems:</p>
+<p>以下方法存在，但「不」被支援，因為它們在被 mock 使用時，會無法動態設定，或可能導致問題：</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">__getattr__</span></code>、<code class="docutils literal notranslate"><span class="pre">__setattr__</span></code>、<code class="docutils literal notranslate"><span class="pre">__init__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__new__</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">__prepare__</span></code>、<code class="docutils literal notranslate"><span class="pre">__instancecheck__</span></code>、<code class="docutils literal notranslate"><span class="pre">__subclasscheck__</span></code>、<code class="docutils literal notranslate"><span class="pre">__del__</span></code></p></li>
@@ -1862,29 +1817,23 @@ by mock, can't be set dynamically, or can cause problems:</p>
 </section>
 <section id="magic-mock">
 <h3>Magic Mock<a class="headerlink" href="#magic-mock" title="Link to this heading">¶</a></h3>
-<p>There are two <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> variants: <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> and <a class="reference internal" href="#unittest.mock.NonCallableMagicMock" title="unittest.mock.NonCallableMagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">NonCallableMagicMock</span></code></a>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> 有兩個變體：<a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> 和 <a class="reference internal" href="#unittest.mock.NonCallableMagicMock" title="unittest.mock.NonCallableMagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">NonCallableMagicMock</span></code></a>。</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="unittest.mock.MagicMock">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">unittest.mock.</span></span><span class="sig-name descname"><span class="pre">MagicMock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#unittest.mock.MagicMock" title="Link to this definition">¶</a></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> is a subclass of <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> with default implementations
-of most of the <a class="reference internal" href="../glossary.html#term-magic-method"><span class="xref std std-term">magic methods</span></a>. You can use
-<code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> without having to configure the magic methods yourself.</p>
-<p>The constructor parameters have the same meaning as for <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a>.</p>
-<p>If you use the <em>spec</em> or <em>spec_set</em> arguments then <em>only</em> magic methods
-that exist in the spec will be created.</p>
+<dd><p><code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> 是 <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> 的子類別，其預設具有大多數<a class="reference internal" href="../glossary.html#term-magic-method"><span class="xref std std-term">魔術方法</span></a>的實作。你可以使用 <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code>，而無需自行配置魔術方法。</p>
+<p>建構函式參數的意義與 <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> 中的參數相同。</p>
+<p>如果你使用 <em>spec</em> 或 <em>spec_set</em> 引數，那麼<em>只有</em>規格中存在的魔術方法會被建立。</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="unittest.mock.NonCallableMagicMock">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">unittest.mock.</span></span><span class="sig-name descname"><span class="pre">NonCallableMagicMock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#unittest.mock.NonCallableMagicMock" title="Link to this definition">¶</a></dt>
-<dd><p>A non-callable version of <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a>.</p>
-<p>The constructor parameters have the same meaning as for
-<a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a>, with the exception of <em>return_value</em> and
-<em>side_effect</em> which have no meaning on a non-callable mock.</p>
+<dd><p><a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> 的不可呼叫版本。</p>
+<p>建構函式參數的意義與 <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> 中的參數相同，但 <em>return_value</em> 和 <em>side_effect</em> 除外，它們對不可呼叫的 mock 來說沒有任何意義。</p>
 </dd></dl>
 
-<p>The magic methods are setup with <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> objects, so you can configure them
-and use them in the usual way:</p>
+<p>魔術方法是使用 <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> 物件設定的，因此你可以配置它們並以一般的方法來使用它們：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;fish&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="fm">__setitem__</span><span class="o">.</span><span class="n">assert_called_with</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;fish&#39;</span><span class="p">)</span>
@@ -1893,12 +1842,8 @@ and use them in the usual way:</p>
 <span class="go">&#39;result&#39;</span>
 </pre></div>
 </div>
-<p>By default many of the protocol methods are required to return objects of a
-specific type. These methods are preconfigured with a default return value, so
-that they can be used without you having to do anything if you aren't interested
-in the return value. You can still <em>set</em> the return value manually if you want
-to change the default.</p>
-<p>Methods and their defaults:</p>
+<p>預設情況下，許多協定方法都需要回傳特定種類的物件。這些方法預先配置了預設回傳值，因此如果你對回傳值不感興趣，則無需執行任何操作即可使用它們。如果你想更改預設值，你仍然可以手動<em>設定</em>回傳值。</p>
+<p>方法及其預設值：</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">__lt__</span></code>：<code class="docutils literal notranslate"><span class="pre">NotImplemented</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">__gt__</span></code>：<code class="docutils literal notranslate"><span class="pre">NotImplemented</span></code></p></li>
@@ -1914,9 +1859,9 @@ to change the default.</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">__float__</span></code>：<code class="docutils literal notranslate"><span class="pre">1.0</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">__bool__</span></code>：<code class="docutils literal notranslate"><span class="pre">True</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">__index__</span></code>：<code class="docutils literal notranslate"><span class="pre">1</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">__hash__</span></code>: default hash for the mock</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">__str__</span></code>: default str for the mock</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">__sizeof__</span></code>: default sizeof for the mock</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__hash__</span></code>：mock 的預設雜湊</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__str__</span></code>：mock 的預設字串</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__sizeof__</span></code>：mock 的預設 sizeof</p></li>
 </ul>
 <p>舉例來說：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
@@ -1930,10 +1875,7 @@ to change the default.</p>
 <span class="go">False</span>
 </pre></div>
 </div>
-<p>The two equality methods, <code class="xref py py-meth docutils literal notranslate"><span class="pre">__eq__()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">__ne__()</span></code>, are special.
-They do the default equality comparison on identity, using the
-<a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> attribute, unless you change their return value to
-return something else:</p>
+<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">__eq__()</span></code> 和 <code class="xref py py-meth docutils literal notranslate"><span class="pre">__ne__()</span></code> 這兩個相等的方法是特別的。它們使用 <a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> 屬性對識別性 (identity) 進行預設的相等比較，除非你變更它們的回傳值以回傳其他內容：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">MagicMock</span><span class="p">()</span> <span class="o">==</span> <span class="mi">3</span>
 <span class="go">False</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">MagicMock</span><span class="p">()</span> <span class="o">!=</span> <span class="mi">3</span>
@@ -1944,8 +1886,7 @@ return something else:</p>
 <span class="go">True</span>
 </pre></div>
 </div>
-<p>The return value of <code class="xref py py-meth docutils literal notranslate"><span class="pre">MagicMock.__iter__()</span></code> can be any iterable object and isn't
-required to be an iterator:</p>
+<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">MagicMock.__iter__()</span></code> 的回傳值可以是任何可疊代物件，且不需是一個疊代器：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="fm">__iter__</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">mock</span><span class="p">)</span>
@@ -1954,8 +1895,7 @@ required to be an iterator:</p>
 <span class="go">[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]</span>
 </pre></div>
 </div>
-<p>If the return value <em>is</em> an iterator, then iterating over it once will consume
-it and subsequent iterations will result in an empty list:</p>
+<p>如果回傳值<em>是</em>一個疊代器，那麼對其進行一次疊代將消耗它，並且後續疊代將產生一個空串列：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="fm">__iter__</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">([</span><span class="s1">&#39;a&#39;</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">mock</span><span class="p">)</span>
 <span class="go">[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]</span>
@@ -1963,17 +1903,15 @@ it and subsequent iterations will result in an empty list:</p>
 <span class="go">[]</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> has all of the supported magic methods configured except for some
-of the obscure and obsolete ones. You can still set these up if you want.</p>
-<p>Magic methods that are supported but not setup by default in <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> are:</p>
+<p><code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> 配置了所有支援的魔術方法，除了一些少見和過時的方法。如果你想要，你仍然可以設定這些魔術方法。</p>
+<p><code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> 中支援但預設未設置的魔術方法包含：</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">__subclasses__</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">__dir__</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">__format__</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">__get__</span></code>、<code class="docutils literal notranslate"><span class="pre">__set__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__delete__</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">__reversed__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__missing__</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">__reduce__</span></code>, <code class="docutils literal notranslate"><span class="pre">__reduce_ex__</span></code>, <code class="docutils literal notranslate"><span class="pre">__getinitargs__</span></code>, <code class="docutils literal notranslate"><span class="pre">__getnewargs__</span></code>,
-<code class="docutils literal notranslate"><span class="pre">__getstate__</span></code> and <code class="docutils literal notranslate"><span class="pre">__setstate__</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">__reduce__</span></code>、<code class="docutils literal notranslate"><span class="pre">__reduce_ex__</span></code>、<code class="docutils literal notranslate"><span class="pre">__getinitargs__</span></code>、<code class="docutils literal notranslate"><span class="pre">__getnewargs__</span></code>、<code class="docutils literal notranslate"><span class="pre">__getstate__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__setstate__</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">__getformat__</span></code></p></li>
 </ul>
 <aside class="footnote-list brackets">
@@ -2592,13 +2530,13 @@ fixing part of the mock object.</p>
 <li><a class="reference internal" href="#patch-methods-start-and-stop">patch 方法：啟動與停止</a></li>
 <li><a class="reference internal" href="#patch-builtins">patch 內建函式</a></li>
 <li><a class="reference internal" href="#test-prefix">TEST_PREFIX</a></li>
-<li><a class="reference internal" href="#nesting-patch-decorators">Nesting Patch Decorators</a></li>
-<li><a class="reference internal" href="#where-to-patch">Where to patch</a></li>
-<li><a class="reference internal" href="#patching-descriptors-and-proxy-objects">Patching Descriptors and Proxy Objects</a></li>
+<li><a class="reference internal" href="#nesting-patch-decorators">巢狀使用 Patch 裝飾器</a></li>
+<li><a class="reference internal" href="#where-to-patch">該 patch 何處</a></li>
+<li><a class="reference internal" href="#patching-descriptors-and-proxy-objects">Patch 描述器與代理物件 (Proxy Objects)</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#magicmock-and-magic-method-support">MagicMock and magic method support</a><ul>
-<li><a class="reference internal" href="#mocking-magic-methods">Mocking Magic Methods</a></li>
+<li><a class="reference internal" href="#magicmock-and-magic-method-support">MagicMock 以及魔術方法支援</a><ul>
+<li><a class="reference internal" href="#mocking-magic-methods">Mock 魔術方法</a></li>
 <li><a class="reference internal" href="#magic-mock">Magic Mock</a></li>
 </ul>
 </li>
@@ -2719,7 +2657,7 @@ fixing part of the mock object.</p>
 <br />
     <br />
 
-    最後更新於 Feb 19, 2024 (11:09 UTC)。
+    最後更新於 Feb 19, 2024 (19:54 UTC)。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
