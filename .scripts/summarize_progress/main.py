@@ -5,11 +5,6 @@ import requests
 
 from pathlib import Path
 
-MAX_FILENAME_LEN = 0
-MAX_PROGRESS_LEN = 10
-MAX_ISSUE_LEN = 10
-MAX_ASSIGNEE_LEN = 0
-
 
 def entry_check(pofile: polib.POFile) -> str:
     '''
@@ -57,7 +52,7 @@ def get_github_issues() -> list:
     1. Fetch GitHub API and get open issue list
     2. Filter the issue if it have no "Translate" in the title
     3. Filter the issue if it have no correct filepath in the title
-    
+
     Expected Output:
     [ ((dirname, filename), assignee_id, issue_url), ... ]
     '''
@@ -73,7 +68,7 @@ def get_github_issues() -> list:
 
     result_list = []
     for issue in result["items"]:
-        assignee = issue["assignee"]["login"] if issue["assignee"] is not None else ""
+        assignee = issue["assignee"]["login"] if issue["assignee"] else ""
 
         title = issue["title"]
         if "翻譯" not in title and "translate" not in title.lower():
@@ -94,27 +89,16 @@ def get_github_issues() -> list:
 
 
 def format_line_table_header() -> list:
-    global MAX_ASSIGNEE_LEN, MAX_FILENAME_LEN, MAX_PROGRESS_LEN, MAX_ISSUE_LEN
-    return [f"|{'Filename'.ljust(MAX_FILENAME_LEN, ' ')}|{'Progress'.ljust(MAX_PROGRESS_LEN,' ')}|{'Issue'.ljust(MAX_ISSUE_LEN,' ')}|{'Assignee'.ljust(MAX_ASSIGNEE_LEN,' ')}|\r\n",
-            f"|{':'.rjust(MAX_FILENAME_LEN, '-')}|{':'.ljust(MAX_PROGRESS_LEN,'-')}|{':'.ljust(MAX_ISSUE_LEN,'-')}|{':'.ljust(MAX_ASSIGNEE_LEN,'-')}|\r\n"]
+    return [f"|Filename|Progress|Issue|Assignee|\r\n",
+            f"|-------:|:-------|:----|:-------|\r\n"]
+
 
 def format_issue_link(url: str) -> str:
     return f"[{url.split('/')[-1]}]({url})" if len(url) > 0 else ''
 
-def format_line_file(data: dict) -> str:
-    global MAX_ASSIGNEE_LEN, MAX_FILENAME_LEN, MAX_PROGRESS_LEN, MAX_ISSUE_LEN
 
-    filename_split = list(data['filename'])
-    # Adding \\ to avoid Markdown rendering bold font
-    if '_' in filename_split:
-        add_index = [index for index, chac in enumerate(filename_split) if chac == "_"]
-        add_index.sort(reverse=True)
-        for index in add_index:
-            filename_split.insert(index, '\\')
-
-    filename = ''.join(filename_split)
-
-    return f"|{filename.rjust(MAX_FILENAME_LEN, ' ')}|{data['progress'].ljust(MAX_PROGRESS_LEN, ' ')}|{format_issue_link(data['issue']).ljust(MAX_ISSUE_LEN, ' ')}|{data['assignee'].ljust(MAX_ASSIGNEE_LEN, ' ')}|\r\n"
+def format_line_file(filename: str, data: dict) -> str:
+    return f"|`{filename}`|{data['progress']}|{format_issue_link(data['issue'])}|{data['assignee']}|\r\n"
 
 
 def format_line_directory(dirname: str) -> str:
@@ -136,59 +120,42 @@ if __name__ == "__main__":
         dirname = path.parent.name if path.parent.name != BASE_DIR.name else '/'
         po = polib.pofile(filepath)
 
-        MAX_FILENAME_LEN = len(filename) if len(
-            filename) > MAX_FILENAME_LEN else MAX_FILENAME_LEN
-        
-        summary.setdefault(dirname, []).append({
-            'filename': filename,
+        summary.setdefault(dirname, {})[filename] = {
             'progress': entry_check(po),
             'issue': '',
             'assignee': '',
-        })
+        }
 
     '''
     Unpack the open issue list, and add assignee after the progress
     '''
     for (category, filename), assignee, issue_url in issue_list:
         try:
-            exist_file_dict = next(
-                (target_dict for target_dict in summary[category] if target_dict['filename'] == filename), None)
-            if exist_file_dict is None:
-                continue
-
-            MAX_ASSIGNEE_LEN = len(assignee) if len(
-                assignee) > MAX_ASSIGNEE_LEN else MAX_ASSIGNEE_LEN
-            MAX_ISSUE_LEN = len(issue_url) if len(
-                issue_url) > MAX_ISSUE_LEN else MAX_ISSUE_LEN
-            
-            target_index = summary[category].index(exist_file_dict)
-            summary[category][target_index]['issue'] = issue_url
-            summary[category][target_index]['assignee'] = assignee
+            summary[category][filename]['issue'] = issue_url
+            summary[category][filename]['assignee'] = assignee
         except KeyError:
             pass
-    
+
     '''
     Adding Space for Formatting Markdown Link
     '''
-    MAX_ISSUE_LEN += 10
-    
+
     '''
     Format the lines that will write into the markdown file,
     also sort the directory name and file name.
     '''
     writeliner = []
     summary_sorted = dict(sorted(summary.items()))
-    for dirname, filelist in summary_sorted.items():
+    for dirname, filedict in summary_sorted.items():
         writeliner.append(format_line_directory(dirname))
         writeliner.extend(format_line_table_header())
 
-        
-        filelist_sorted = sorted(filelist, key=lambda item: item['filename'])
-        for filedata in filelist_sorted:
-            writeliner.append(format_line_file(filedata))
+        filedict_sorted = dict(sorted(filedict.items()))
+        for filename, filedata in filedict_sorted.items():
+            writeliner.append(format_line_file(filename, filedata))
 
     with open(
-        f"summarize_progress/dist/summarize_progress.md",
+        f"summarize_progress/result.md",
         "w",
     ) as file:
         file.writelines(writeliner)
