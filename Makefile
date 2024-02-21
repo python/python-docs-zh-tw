@@ -41,6 +41,7 @@ SPHINX_CONF := $(CPYTHON_CLONE)/Doc/conf.py
 LANGUAGE := zh_TW
 LC_MESSAGES := $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/LC_MESSAGES
 VENV := ~/.venvs/python-docs-i18n/
+VENV_FOR_SCRIPT := ~/.venvs/python-docs-zhtw-script/
 PYTHON := $(shell which python3)
 MODE := autobuild-dev-html
 BRANCH := $(or $(VERSION), $(shell git describe --contains --all HEAD))
@@ -74,6 +75,33 @@ $(VENV)/bin/sphinx-lint: $(VENV)/bin/activate
 
 $(VENV)/bin/blurb: $(VENV)/bin/activate
 	. $(VENV)/bin/activate; python3 -m pip install blurb
+
+$(VENV_FOR_SCRIPT)/bin/activate:
+	mkdir -p $(VENV_FOR_SCRIPT)
+	$(PYTHON) -m venv $(VENV_FOR_SCRIPT)
+	. $(VENV_FOR_SCRIPT)/bin/activate; python3 -m pip install -r .scripts/requirements.txt
+
+.PHONY: summarize_progress
+summarize_progress: $(VENV_FOR_SCRIPT)/bin/activate
+	cd .scripts && \
+	. $(VENV_FOR_SCRIPT)/bin/activate; \
+	python3 summarize_progress/main.py
+
+.PHONY: google_translate
+google_translate: $(VENV_FOR_SCRIPT)/bin/activate
+	if [ -z $(filter-out $@,$(MAKECMDGOALS)) ]; then \
+		echo "Please provide a file argument."; \
+		exit 1; \
+	fi
+
+	@$(eval __target=$(filter-out $@,$(MAKECMDGOALS)))
+	@$(eval __filepath=$(addprefix ../,$(__target)))
+	@$(eval __temp_po_file=tmp.po)
+
+	cd .scripts && \
+	. $(VENV_FOR_SCRIPT)/bin/activate; \
+	python3 google_translate/main.py  $(__filepath) > $(__temp_po_file) ; pomerge -t $(__filepath) -i $(__temp_po_file) -o $(__filepath); rm "$(__temp_po_file)"
+	exit 0
 
 
 .PHONY: upgrade_venv
