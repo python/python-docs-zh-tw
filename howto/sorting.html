@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>如何排序 &#8212; Python 3.12.2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Techniques &#8212; Python 3.12.2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=e8a97c27" />
@@ -85,15 +85,16 @@
   <div>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
-<li><a class="reference internal" href="#">如何排序</a><ul>
+<li><a class="reference internal" href="#">Sorting Techniques</a><ul>
 <li><a class="reference internal" href="#sorting-basics">基礎排序</a></li>
 <li><a class="reference internal" href="#key-functions">鍵函式 (key functions)</a></li>
-<li><a class="reference internal" href="#operator-module-functions">Operator 模組的函式</a></li>
+<li><a class="reference internal" href="#operator-module-functions-and-partial-function-evaluation">Operator Module Functions and Partial Function Evaluation</a></li>
 <li><a class="reference internal" href="#ascending-and-descending">升冪與降冪</a></li>
 <li><a class="reference internal" href="#sort-stability-and-complex-sorts">排序穩定性與複合排序</a></li>
 <li><a class="reference internal" href="#decorate-sort-undecorate">裝飾-排序-移除裝飾 (decorate-sort-undecorate)</a></li>
 <li><a class="reference internal" href="#comparison-functions">比較函式 (comparison functions)</a></li>
 <li><a class="reference internal" href="#odds-and-ends">雜項說明</a></li>
+<li><a class="reference internal" href="#partial-sorts">Partial Sorts</a></li>
 </ul>
 </li>
 </ul>
@@ -155,7 +156,7 @@
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 如何達成任務</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">如何排序</a></li>
+        <li class="nav-item nav-item-this"><a href="">Sorting Techniques</a></li>
                 <li class="right">
                     
 
@@ -185,14 +186,11 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="sorting-how-to">
-<span id="sortinghowto"></span><h1>如何排序<a class="headerlink" href="#sorting-how-to" title="Link to this heading">¶</a></h1>
+  <section id="sorting-techniques">
+<span id="sortinghowto"></span><h1>Sorting Techniques<a class="headerlink" href="#sorting-techniques" title="Link to this heading">¶</a></h1>
 <dl class="field-list simple">
 <dt class="field-odd">作者<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Andrew Dalke 和 Raymond Hettinger</p>
-</dd>
-<dt class="field-even">發佈版本<span class="colon">:</span></dt>
-<dd class="field-even"><p>0.1</p>
 </dd>
 </dl>
 <p>Python 的串列有一個內建的 <a class="reference internal" href="../library/stdtypes.html#list.sort" title="list.sort"><code class="xref py py-meth docutils literal notranslate"><span class="pre">list.sort()</span></code></a> 方法可以原地 (in-place) 排序該串列，也有一個內建的 <a class="reference internal" href="../library/functions.html#sorted" title="sorted"><code class="xref py py-func docutils literal notranslate"><span class="pre">sorted()</span></code></a> 函式可以排序可疊代物件 (iterable) 並建立一個新的排序好的串列。</p>
@@ -221,7 +219,7 @@
 <h2>鍵函式 (key functions)<a class="headerlink" href="#key-functions" title="Link to this heading">¶</a></h2>
 <p><a class="reference internal" href="../library/stdtypes.html#list.sort" title="list.sort"><code class="xref py py-meth docutils literal notranslate"><span class="pre">list.sort()</span></code></a> 和 <a class="reference internal" href="../library/functions.html#sorted" title="sorted"><code class="xref py py-func docutils literal notranslate"><span class="pre">sorted()</span></code></a> 都有一個參數 <em>key</em> 可以指定一個函式（或其它可呼叫物件 (callable)），這個函式會在每個串列元素做比較前被呼叫。</p>
 <p>例如這裡有一個不區分大小寫的字串比對：</p>
-<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="s2">&quot;This is a test string from Andrew&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">lower</span><span class="p">)</span>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="s2">&quot;This is a test string from Andrew&quot;</span><span class="o">.</span><span class="n">split</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">casefold</span><span class="p">)</span>
 <span class="go">[&#39;a&#39;, &#39;Andrew&#39;, &#39;from&#39;, &#39;is&#39;, &#39;string&#39;, &#39;test&#39;, &#39;This&#39;]</span>
 </pre></div>
 </div>
@@ -254,10 +252,16 @@
 <span class="go">[(&#39;dave&#39;, &#39;B&#39;, 10), (&#39;jane&#39;, &#39;B&#39;, 12), (&#39;john&#39;, &#39;A&#39;, 15)]</span>
 </pre></div>
 </div>
+<p>Objects with named attributes can be made by a regular class as shown
+above, or they can be instances of <a class="reference internal" href="../library/dataclasses.html#dataclasses.dataclass" title="dataclasses.dataclass"><code class="xref py py-class docutils literal notranslate"><span class="pre">dataclass</span></code></a> or
+a <a class="reference internal" href="../glossary.html#term-named-tuple"><span class="xref std std-term">named tuple</span></a>.</p>
 </section>
-<section id="operator-module-functions">
-<h2>Operator 模組的函式<a class="headerlink" href="#operator-module-functions" title="Link to this heading">¶</a></h2>
-<p>上述的鍵函式模式非常常見，所以 Python 提供了方便的函式讓物件存取更簡單且快速。<a class="reference internal" href="../library/operator.html#module-operator" title="operator: Functions corresponding to the standard operators."><code class="xref py py-mod docutils literal notranslate"><span class="pre">operator</span></code></a> 模組裡有 <a class="reference internal" href="../library/operator.html#operator.itemgetter" title="operator.itemgetter"><code class="xref py py-func docutils literal notranslate"><span class="pre">itemgetter()</span></code></a>、<a class="reference internal" href="../library/operator.html#operator.attrgetter" title="operator.attrgetter"><code class="xref py py-func docutils literal notranslate"><span class="pre">attrgetter()</span></code></a> 及 <a class="reference internal" href="../library/operator.html#operator.methodcaller" title="operator.methodcaller"><code class="xref py py-func docutils literal notranslate"><span class="pre">methodcaller()</span></code></a> 函式可以使用。</p>
+<section id="operator-module-functions-and-partial-function-evaluation">
+<h2>Operator Module Functions and Partial Function Evaluation<a class="headerlink" href="#operator-module-functions-and-partial-function-evaluation" title="Link to this heading">¶</a></h2>
+<p>The <a class="reference internal" href="../glossary.html#term-key-function"><span class="xref std std-term">key function</span></a> patterns shown above are very common, so Python provides
+convenience functions to make accessor functions easier and faster. The
+<a class="reference internal" href="../library/operator.html#module-operator" title="operator: Functions corresponding to the standard operators."><code class="xref py py-mod docutils literal notranslate"><span class="pre">operator</span></code></a> module has <a class="reference internal" href="../library/operator.html#operator.itemgetter" title="operator.itemgetter"><code class="xref py py-func docutils literal notranslate"><span class="pre">itemgetter()</span></code></a>,
+<a class="reference internal" href="../library/operator.html#operator.attrgetter" title="operator.attrgetter"><code class="xref py py-func docutils literal notranslate"><span class="pre">attrgetter()</span></code></a>, and a <a class="reference internal" href="../library/operator.html#operator.methodcaller" title="operator.methodcaller"><code class="xref py py-func docutils literal notranslate"><span class="pre">methodcaller()</span></code></a> function.</p>
 <p>使用這些函式讓上面的範例變得更簡單且快速：</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span><span class="p">,</span> <span class="n">attrgetter</span>
 
@@ -274,6 +278,22 @@
 
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">student_objects</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">attrgetter</span><span class="p">(</span><span class="s1">&#39;grade&#39;</span><span class="p">,</span> <span class="s1">&#39;age&#39;</span><span class="p">))</span>
 <span class="go">[(&#39;john&#39;, &#39;A&#39;, 15), (&#39;dave&#39;, &#39;B&#39;, 10), (&#39;jane&#39;, &#39;B&#39;, 12)]</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="../library/functools.html#module-functools" title="functools: Higher-order functions and operations on callable objects."><code class="xref py py-mod docutils literal notranslate"><span class="pre">functools</span></code></a> module provides another helpful tool for making
+key-functions.  The <a class="reference internal" href="../library/functools.html#functools.partial" title="functools.partial"><code class="xref py py-func docutils literal notranslate"><span class="pre">partial()</span></code></a> function can reduce the
+<a class="reference external" href="https://en.wikipedia.org/wiki/Arity">arity</a> of a multi-argument
+function making it suitable for use as a key-function.</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">partial</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">unicodedata</span> <span class="kn">import</span> <span class="n">normalize</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">names</span> <span class="o">=</span> <span class="s1">&#39;Zoë Åbjørn Núñez Élana Zeke Abe Nubia Eloise&#39;</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">partial</span><span class="p">(</span><span class="n">normalize</span><span class="p">,</span> <span class="s1">&#39;NFD&#39;</span><span class="p">))</span>
+<span class="go">[&#39;Abe&#39;, &#39;Åbjørn&#39;, &#39;Eloise&#39;, &#39;Élana&#39;, &#39;Nubia&#39;, &#39;Núñez&#39;, &#39;Zeke&#39;, &#39;Zoë&#39;]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">partial</span><span class="p">(</span><span class="n">normalize</span><span class="p">,</span> <span class="s1">&#39;NFC&#39;</span><span class="p">))</span>
+<span class="go">[&#39;Abe&#39;, &#39;Eloise&#39;, &#39;Nubia&#39;, &#39;Núñez&#39;, &#39;Zeke&#39;, &#39;Zoë&#39;, &#39;Åbjørn&#39;, &#39;Élana&#39;]</span>
 </pre></div>
 </div>
 </section>
@@ -324,7 +344,7 @@
 <li><p>最後，裝飾會被移除，並以新的順序產生一個只包含原始值的串列。</p></li>
 </ul>
 <p>例如用上面說的方式來以 <em>grade</em> 排序學生資料：</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">decorated</span> <span class="o">=</span> <span class="p">[(</span><span class="n">student</span><span class="o">.</span><span class="n">grade</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">student</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">student</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">student_objects</span><span class="p">)]</span>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">decorated</span> <span class="o">=</span> <span class="p">[(</span><span class="n">student</span><span class="o">.</span><span class="n">grade</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">student</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">student</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">student_objects</span><span class="p">)]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">decorated</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="p">[</span><span class="n">student</span> <span class="k">for</span> <span class="n">grade</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">student</span> <span class="ow">in</span> <span class="n">decorated</span><span class="p">]</span>               <span class="c1"># undecorate</span>
 <span class="go">[(&#39;john&#39;, &#39;A&#39;, 15), (&#39;jane&#39;, &#39;B&#39;, 12), (&#39;dave&#39;, &#39;B&#39;, 10)]</span>
@@ -369,7 +389,12 @@
 <span class="go">[(&#39;dave&#39;, &#39;B&#39;, 10), (&#39;jane&#39;, &#39;B&#39;, 12), (&#39;john&#39;, &#39;A&#39;, 15)]</span>
 </pre></div>
 </div>
-<p>然而，需要注意如果沒有實作 <a class="reference internal" href="../reference/datamodel.html#object.__lt__" title="object.__lt__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__lt__()</span></code></a>，則 <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> 會退而使用 <a class="reference internal" href="../reference/datamodel.html#object.__gt__" title="object.__gt__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__gt__()</span></code></a>（參見 <a class="reference internal" href="../reference/datamodel.html#object.__lt__" title="object.__lt__"><code class="xref py py-func docutils literal notranslate"><span class="pre">object.__lt__()</span></code></a>）。</p>
+<p>However, note that <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> can fall back to using <a class="reference internal" href="../reference/datamodel.html#object.__gt__" title="object.__gt__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__gt__()</span></code></a> if
+<a class="reference internal" href="../reference/datamodel.html#object.__lt__" title="object.__lt__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__lt__()</span></code></a> is not implemented (see <a class="reference internal" href="../reference/datamodel.html#object.__lt__" title="object.__lt__"><code class="xref py py-func docutils literal notranslate"><span class="pre">object.__lt__()</span></code></a>
+for details on the mechanics).  To avoid surprises, <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0008/"><strong>PEP 8</strong></a>
+recommends that all six comparison methods be implemented.
+The <a class="reference internal" href="../library/functools.html#functools.total_ordering" title="functools.total_ordering"><code class="xref py py-func docutils literal notranslate"><span class="pre">total_ordering()</span></code></a> decorator is provided to make that
+task easier.</p>
 </li>
 <li><p>鍵函式不需要直接依賴用來排序的物件。鍵函式也可以存取外部資源，例如如果學生成績儲存在字典裡，它可以用來排序一個單獨的學生姓名串列：</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">students</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dave&#39;</span><span class="p">,</span> <span class="s1">&#39;john&#39;</span><span class="p">,</span> <span class="s1">&#39;jane&#39;</span><span class="p">]</span>
@@ -379,6 +404,25 @@
 </pre></div>
 </div>
 </li>
+</ul>
+</section>
+<section id="partial-sorts">
+<h2>Partial Sorts<a class="headerlink" href="#partial-sorts" title="Link to this heading">¶</a></h2>
+<p>Some applications require only some of the data to be ordered.  The standard
+library provides several tools that do less work than a full sort:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="../library/functions.html#min" title="min"><code class="xref py py-func docutils literal notranslate"><span class="pre">min()</span></code></a> and <a class="reference internal" href="../library/functions.html#max" title="max"><code class="xref py py-func docutils literal notranslate"><span class="pre">max()</span></code></a> return the smallest and largest values,
+respectively.  These functions make a single pass over the input data and
+require almost no auxiliary memory.</p></li>
+<li><p><a class="reference internal" href="../library/heapq.html#heapq.nsmallest" title="heapq.nsmallest"><code class="xref py py-func docutils literal notranslate"><span class="pre">heapq.nsmallest()</span></code></a> and <a class="reference internal" href="../library/heapq.html#heapq.nlargest" title="heapq.nlargest"><code class="xref py py-func docutils literal notranslate"><span class="pre">heapq.nlargest()</span></code></a> return
+the <em>n</em> smallest and largest values, respectively.  These functions
+make a single pass over the data keeping only <em>n</em> elements in memory
+at a time.  For values of <em>n</em> that are small relative to the number of
+inputs, these functions make far fewer comparisons than a full sort.</p></li>
+<li><p><a class="reference internal" href="../library/heapq.html#heapq.heappush" title="heapq.heappush"><code class="xref py py-func docutils literal notranslate"><span class="pre">heapq.heappush()</span></code></a> and <a class="reference internal" href="../library/heapq.html#heapq.heappop" title="heapq.heappop"><code class="xref py py-func docutils literal notranslate"><span class="pre">heapq.heappop()</span></code></a> create and maintain a
+partially sorted arrangement of data that keeps the smallest element
+at position <code class="docutils literal notranslate"><span class="pre">0</span></code>.  These functions are suitable for implementing
+priority queues which are commonly used for task scheduling.</p></li>
 </ul>
 </section>
 </section>
@@ -393,15 +437,16 @@
   <div>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
-<li><a class="reference internal" href="#">如何排序</a><ul>
+<li><a class="reference internal" href="#">Sorting Techniques</a><ul>
 <li><a class="reference internal" href="#sorting-basics">基礎排序</a></li>
 <li><a class="reference internal" href="#key-functions">鍵函式 (key functions)</a></li>
-<li><a class="reference internal" href="#operator-module-functions">Operator 模組的函式</a></li>
+<li><a class="reference internal" href="#operator-module-functions-and-partial-function-evaluation">Operator Module Functions and Partial Function Evaluation</a></li>
 <li><a class="reference internal" href="#ascending-and-descending">升冪與降冪</a></li>
 <li><a class="reference internal" href="#sort-stability-and-complex-sorts">排序穩定性與複合排序</a></li>
 <li><a class="reference internal" href="#decorate-sort-undecorate">裝飾-排序-移除裝飾 (decorate-sort-undecorate)</a></li>
 <li><a class="reference internal" href="#comparison-functions">比較函式 (comparison functions)</a></li>
 <li><a class="reference internal" href="#odds-and-ends">雜項說明</a></li>
+<li><a class="reference internal" href="#partial-sorts">Partial Sorts</a></li>
 </ul>
 </li>
 </ul>
@@ -466,7 +511,7 @@
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 如何達成任務</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">如何排序</a></li>
+        <li class="nav-item nav-item-this"><a href="">Sorting Techniques</a></li>
                 <li class="right">
                     
 
@@ -506,7 +551,7 @@
 <br />
     <br />
 
-    最後更新於 Feb 19, 2024 (19:54 UTC)。
+    最後更新於 Feb 21, 2024 (04:20 UTC)。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
