@@ -89,18 +89,34 @@ summarize_progress: $(VENV_FOR_SCRIPT)/bin/activate
 
 .PHONY: google_translate
 google_translate: $(VENV_FOR_SCRIPT)/bin/activate
-	if [ -z $(filter-out $@,$(MAKECMDGOALS)) ]; then \
+
+	@$(eval _target=$(filter-out $@, $(MAKECMDGOALS)))
+	@if [ -z $(_target) ]; then \
 		echo "Please provide a file argument."; \
 		exit 1; \
 	fi
 
-	@$(eval __target=$(filter-out $@,$(MAKECMDGOALS)))
-	@$(eval __filepath=$(addprefix ../,$(__target)))
-	@$(eval __temp_po_file=tmp.po)
+
+	@if [ "$(suffix $(_target))" != ".po" ]; then \
+		echo "Incorrect file extension. Only '.po' files are allowed."; \
+		exit 1; \
+	else \
+		_target=$(addsuffix ,po,$(_target)); \
+	fi
+
+	@if [ ! -f "$(_target)" ]; then \
+		echo "File '$(filter-out $@, $(_target))' does not exist."; \
+		exit 1; \
+	fi
+	
+	@$(eval _tmp_po_file=tmp.po)
+	@$(eval _file_path=$(addprefix  ../, $(_target)))
 
 	cd .scripts && \
 	. $(VENV_FOR_SCRIPT)/bin/activate; \
-	python3 google_translate/main.py  $(__filepath) > $(__temp_po_file) ; pomerge -t $(__filepath) -i $(__temp_po_file) -o $(__filepath); rm "$(__temp_po_file)"
+	python3 google_translate/main.py  $(_file_path) > $(_tmp_po_file) ; \
+	pomerge -t $(_file_path) -i $(_tmp_po_file) -o $(_file_path) ; \ 
+	# rm $(_tmp_po_file)
 	exit 0
 
 
