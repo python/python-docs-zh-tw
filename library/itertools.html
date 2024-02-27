@@ -951,6 +951,12 @@ predicate is true.  Roughly equivalent to:</p>
             <span class="k">break</span>
 </pre></div>
 </div>
+<p>Note, the element that first fails the predicate condition is
+consumed from the input iterator and there is no way to access it.
+This could be an issue if an application wants to further consume the
+input iterator after takewhile has been run to exhaustion.  To work
+around this problem, consider using <a class="reference external" href="https://more-itertools.readthedocs.io/en/stable/api.html#more_itertools.before_and_after">more-iterools before_and_after()</a>
+instead.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -1258,33 +1264,6 @@ which incur interpreter overhead.</p>
             <span class="k">yield</span> <span class="n">func</span><span class="p">()</span>
     <span class="k">except</span> <span class="n">exception</span><span class="p">:</span>
         <span class="k">pass</span>
-
-<span class="k">def</span> <span class="nf">before_and_after</span><span class="p">(</span><span class="n">predicate</span><span class="p">,</span> <span class="n">it</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Variant of takewhile() that allows complete</span>
-<span class="sd">        access to the remainder of the iterator.</span>
-
-<span class="sd">        &gt;&gt;&gt; it = iter(&#39;ABCdEfGhI&#39;)</span>
-<span class="sd">        &gt;&gt;&gt; all_upper, remainder = before_and_after(str.isupper, it)</span>
-<span class="sd">        &gt;&gt;&gt; &#39;&#39;.join(all_upper)</span>
-<span class="sd">        &#39;ABC&#39;</span>
-<span class="sd">        &gt;&gt;&gt; &#39;&#39;.join(remainder)     # takewhile() would lose the &#39;d&#39;</span>
-<span class="sd">        &#39;dEfGhI&#39;</span>
-
-<span class="sd">        Note that the true iterator must be fully consumed</span>
-<span class="sd">        before the remainder iterator can generate valid results.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">it</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">it</span><span class="p">)</span>
-    <span class="n">transition</span> <span class="o">=</span> <span class="p">[]</span>
-
-    <span class="k">def</span> <span class="nf">true_iterator</span><span class="p">():</span>
-        <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">it</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">predicate</span><span class="p">(</span><span class="n">elem</span><span class="p">):</span>
-                <span class="k">yield</span> <span class="n">elem</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">transition</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
-                <span class="k">return</span>
-
-    <span class="k">return</span> <span class="n">true_iterator</span><span class="p">(),</span> <span class="n">chain</span><span class="p">(</span><span class="n">transition</span><span class="p">,</span> <span class="n">it</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The following recipes have a more mathematical flavor:</p>
@@ -1527,7 +1506,7 @@ which incur interpreter overhead.</p>
 <br />
     <br />
 
-    最後更新於 Feb 21, 2024 (04:20 UTC)。
+    最後更新於 Feb 27, 2024 (16:51 UTC)。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
