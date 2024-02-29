@@ -1,7 +1,6 @@
 import re
 import polib
 import glob
-import datetime
 import requests
 
 from pathlib import Path
@@ -23,7 +22,7 @@ def entry_check(pofile: polib.POFile) -> str:
         lines_all = lines_tranlated + lines_untranlated
         progress = lines_tranlated / lines_all
         progress_percentage = round(progress * 100, 2)
-        result = f"Ongoing, {progress_percentage} %"
+        result = f"{progress_percentage} %"
 
     return result
 
@@ -51,9 +50,11 @@ def get_github_issues() -> list:
 
     Steps:
     1. Fetch GitHub API and get open issue list
-    2. Filter the issue if it have no assignee
-    3. Filter the issue if it have no "Translate" in the title
-    4. Filter the issue if it have no correct filepath in the title
+    2. Filter the issue if it have no "Translate" in the title
+    3. Filter the issue if it have no correct filepath in the title
+
+    Expected Output:
+    [ ((dirname, filename), assignee_id, issue_url), ... ]
     '''
     NUMBER_OF_ISSUES = get_open_issues_count()
 
@@ -67,14 +68,14 @@ def get_github_issues() -> list:
 
     result_list = []
     for issue in result["items"]:
-        if issue["assignee"] is None:
-            continue
+        assignee = issue["assignee"]["login"] if issue["assignee"] else ""
 
         title = issue["title"]
         if "翻譯" not in title and "translate" not in title.lower():
             continue
 
-        match = re.search("(?P<dirname>[^\s`][a-zA-z-]+)/(?P<filename>[a-zA-Z0-9._-]+(.po)?)", title)
+        match = re.search(
+            "(?P<dirname>[^\s`][a-zA-z-]+)/(?P<filename>[a-zA-Z0-9._-]+(.po)?)", title)
         if not match:
             continue
 
@@ -82,16 +83,26 @@ def get_github_issues() -> list:
         if not filename.endswith('.po'):
             filename += '.po'
 
-        result_list.append(((dirname, filename), issue["assignee"]["login"]))
+        result_list.append(((dirname, filename), assignee, issue["html_url"]))
 
     return result_list
 
-def format_line_file(filename: str, result: str) -> str:
-    return f"  - {filename.ljust(37, '-')}{result}\r\n"
+
+def format_line_table_header() -> list:
+    return [f"|Filename|Progress|Issue|Assignee|\r\n",
+            f"|-------:|:-------|:----|:-------|\r\n"]
+
+
+def format_issue_link(url: str) -> str:
+    return f"[{url.split('/')[-1]}]({url})" if len(url) > 0 else ''
+
+
+def format_line_file(filename: str, data: dict) -> str:
+    return f"|`{filename}`|{data['progress']}|{format_issue_link(data['issue'])}|{data['assignee']}|\r\n"
 
 
 def format_line_directory(dirname: str) -> str:
-    return f"- {dirname}/\r\n"
+    return f"## {dirname}\r\n"
 
 
 if __name__ == "__main__":
@@ -108,16 +119,26 @@ if __name__ == "__main__":
         filename = path.name
         dirname = path.parent.name if path.parent.name != BASE_DIR.name else '/'
         po = polib.pofile(filepath)
-        summary.setdefault(dirname, {})[filename] = entry_check(po)
+
+        summary.setdefault(dirname, {})[filename] = {
+            'progress': entry_check(po),
+            'issue': '',
+            'assignee': '',
+        }
 
     '''
     Unpack the open issue list, and add assignee after the progress
     '''
-    for (category, filename), assignee in issue_list:
+    for (category, filename), assignee, issue_url in issue_list:
         try:
-            summary[category][filename] += f", 💻 {assignee}"
+            summary[category][filename]['issue'] = issue_url
+            summary[category][filename]['assignee'] = assignee
         except KeyError:
             pass
+
+    '''
+    Adding Space for Formatting Markdown Link
+    '''
 
     '''
     Format the lines that will write into the markdown file,
@@ -127,12 +148,14 @@ if __name__ == "__main__":
     summary_sorted = dict(sorted(summary.items()))
     for dirname, filedict in summary_sorted.items():
         writeliner.append(format_line_directory(dirname))
+        writeliner.extend(format_line_table_header())
+
         filedict_sorted = dict(sorted(filedict.items()))
-        for filename, result in filedict_sorted.items():
-            writeliner.append(format_line_file(filename, result))
+        for filename, filedata in filedict_sorted.items():
+            writeliner.append(format_line_file(filename, filedata))
 
     with open(
-        f"summarize_progress/dist/summarize_progress.md",
+        f"summarize_progress/result.md",
         "w",
     ) as file:
         file.writelines(writeliner)
