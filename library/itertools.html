@@ -1042,8 +1042,8 @@ well as with the built-in itertools such as <code class="docutils literal notran
 <code class="docutils literal notranslate"><span class="pre">reversed()</span></code>, and <code class="docutils literal notranslate"><span class="pre">enumerate()</span></code>.</p>
 <p>A secondary purpose of the recipes is to serve as an incubator.  The
 <code class="docutils literal notranslate"><span class="pre">accumulate()</span></code>, <code class="docutils literal notranslate"><span class="pre">compress()</span></code>, and <code class="docutils literal notranslate"><span class="pre">pairwise()</span></code> itertools started out as
-recipes.  Currently, the <code class="docutils literal notranslate"><span class="pre">sliding_window()</span></code> and <code class="docutils literal notranslate"><span class="pre">iter_index()</span></code> recipes
-are being tested to see whether they prove their worth.</p>
+recipes.  Currently, the <code class="docutils literal notranslate"><span class="pre">sliding_window()</span></code>, <code class="docutils literal notranslate"><span class="pre">iter_index()</span></code>, and <code class="docutils literal notranslate"><span class="pre">sieve()</span></code>
+recipes are being tested to see whether they prove their worth.</p>
 <p>Substantially all of these recipes and many, many others can be installed from
 the <a class="reference external" href="https://pypi.org/project/more-itertools/">more-itertools project</a> found
 on the Python Package Index:</p>
@@ -1051,12 +1051,11 @@ on the Python Package Index:</p>
 </pre></div>
 </div>
 <p>Many of the recipes offer the same high performance as the underlying toolset.
-Superior memory performance is kept by processing elements one at a time
-rather than bringing the whole iterable into memory all at once. Code volume is
-kept small by linking the tools together in a functional style which helps
-eliminate temporary variables.  High speed is retained by preferring
-&quot;vectorized&quot; building blocks over the use of for-loops and <a class="reference internal" href="../glossary.html#term-generator"><span class="xref std std-term">generator</span></a>s
-which incur interpreter overhead.</p>
+Superior memory performance is kept by processing elements one at a time rather
+than bringing the whole iterable into memory all at once. Code volume is kept
+small by linking the tools together in a <a class="reference external" href="https://www.cs.kent.ac.uk/people/staff/dat/miranda/whyfp90.pdf">functional style</a>.  High speed
+is retained by preferring &quot;vectorized&quot; building blocks over the use of for-loops
+and <a class="reference internal" href="../glossary.html#term-generator"><span class="xref std std-term">generators</span></a> which incur interpreter overhead.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">collections</span>
 <span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -1126,6 +1125,14 @@ which incur interpreter overhead.</p>
     <span class="s2">&quot;Returns True if all the elements are equal to each other.&quot;</span>
     <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">take</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">groupby</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">key</span><span class="p">)))</span> <span class="o">&lt;=</span> <span class="mi">1</span>
 
+<span class="k">def</span> <span class="nf">unique_justseen</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="s2">&quot;List unique elements, preserving order. Remember only the element just seen.&quot;</span>
+    <span class="c1"># unique_justseen(&#39;AAAABBBCCDAABBB&#39;) --&gt; A B C D A B</span>
+    <span class="c1"># unique_justseen(&#39;ABBcCAD&#39;, str.casefold) --&gt; A B c A D</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">groupby</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="nb">next</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">groupby</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">key</span><span class="p">)))</span>
+
 <span class="k">def</span> <span class="nf">unique_everseen</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="s2">&quot;List unique elements, preserving order. Remember all elements ever seen.&quot;</span>
     <span class="c1"># unique_everseen(&#39;AAAABBBCCDAABBB&#39;) --&gt; A B C D</span>
@@ -1142,34 +1149,6 @@ which incur interpreter overhead.</p>
                 <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
                 <span class="k">yield</span> <span class="n">element</span>
 
-<span class="k">def</span> <span class="nf">unique_justseen</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="s2">&quot;List unique elements, preserving order. Remember only the element just seen.&quot;</span>
-    <span class="c1"># unique_justseen(&#39;AAAABBBCCDAABBB&#39;) --&gt; A B C D A B</span>
-    <span class="c1"># unique_justseen(&#39;ABBcCAD&#39;, str.casefold) --&gt; A B c A D</span>
-    <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">groupby</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
-    <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="nb">next</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">groupby</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">key</span><span class="p">)))</span>
-
-<span class="k">def</span> <span class="nf">iter_index</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="s2">&quot;Return indices where a value occurs in a sequence or iterable.&quot;</span>
-    <span class="c1"># iter_index(&#39;AABCADEAF&#39;, &#39;A&#39;) --&gt; 0 1 4 7</span>
-    <span class="n">seq_index</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">seq_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># Slow path for general iterables</span>
-        <span class="n">it</span> <span class="o">=</span> <span class="n">islice</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">element</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">start</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">element</span> <span class="ow">is</span> <span class="n">value</span> <span class="ow">or</span> <span class="n">element</span> <span class="o">==</span> <span class="n">value</span><span class="p">:</span>
-                <span class="k">yield</span> <span class="n">i</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="c1"># Fast path for sequences</span>
-        <span class="n">stop</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span> <span class="k">if</span> <span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stop</span>
-        <span class="n">i</span> <span class="o">=</span> <span class="n">start</span> <span class="o">-</span> <span class="mi">1</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="k">yield</span> <span class="p">(</span><span class="n">i</span> <span class="o">:=</span> <span class="n">seq_index</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">stop</span><span class="p">))</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
-            <span class="k">pass</span>
-
 <span class="k">def</span> <span class="nf">sliding_window</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
     <span class="s2">&quot;Collect data into overlapping fixed-length chunks or blocks.&quot;</span>
     <span class="c1"># sliding_window(&#39;ABCDEFG&#39;, 4) --&gt; ABCD BCDE CDEF DEFG</span>
@@ -1184,31 +1163,25 @@ which incur interpreter overhead.</p>
     <span class="c1"># grouper(&#39;ABCDEFG&#39;, 3, fillvalue=&#39;x&#39;) --&gt; ABC DEF Gxx</span>
     <span class="c1"># grouper(&#39;ABCDEFG&#39;, 3, incomplete=&#39;strict&#39;) --&gt; ABC DEF ValueError</span>
     <span class="c1"># grouper(&#39;ABCDEFG&#39;, 3, incomplete=&#39;ignore&#39;) --&gt; ABC DEF</span>
-    <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="nb">iter</span><span class="p">(</span><span class="n">iterable</span><span class="p">)]</span> <span class="o">*</span> <span class="n">n</span>
+    <span class="n">iterators</span> <span class="o">=</span> <span class="p">[</span><span class="nb">iter</span><span class="p">(</span><span class="n">iterable</span><span class="p">)]</span> <span class="o">*</span> <span class="n">n</span>
     <span class="k">match</span> <span class="n">incomplete</span><span class="p">:</span>
         <span class="k">case</span> <span class="s1">&#39;fill&#39;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">zip_longest</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">fillvalue</span><span class="o">=</span><span class="n">fillvalue</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">zip_longest</span><span class="p">(</span><span class="o">*</span><span class="n">iterators</span><span class="p">,</span> <span class="n">fillvalue</span><span class="o">=</span><span class="n">fillvalue</span><span class="p">)</span>
         <span class="k">case</span> <span class="s1">&#39;strict&#39;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">iterators</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">case</span> <span class="s1">&#39;ignore&#39;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">iterators</span><span class="p">)</span>
         <span class="k">case</span><span class="w"> </span><span class="k">_</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Expected fill, strict, or ignore&#39;</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">roundrobin</span><span class="p">(</span><span class="o">*</span><span class="n">iterables</span><span class="p">):</span>
     <span class="s2">&quot;Visit input iterables in a cycle until each is exhausted.&quot;</span>
     <span class="c1"># roundrobin(&#39;ABC&#39;, &#39;D&#39;, &#39;EF&#39;) --&gt; A D E B F C</span>
-    <span class="c1"># Recipe credited to George Sakkis</span>
-    <span class="n">num_active</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterables</span><span class="p">)</span>
-    <span class="n">nexts</span> <span class="o">=</span> <span class="n">cycle</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">it</span><span class="p">)</span><span class="o">.</span><span class="fm">__next__</span> <span class="k">for</span> <span class="n">it</span> <span class="ow">in</span> <span class="n">iterables</span><span class="p">)</span>
-    <span class="k">while</span> <span class="n">num_active</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">for</span> <span class="nb">next</span> <span class="ow">in</span> <span class="n">nexts</span><span class="p">:</span>
-                <span class="k">yield</span> <span class="nb">next</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-            <span class="c1"># Remove the iterator we just exhausted from the cycle.</span>
-            <span class="n">num_active</span> <span class="o">-=</span> <span class="mi">1</span>
-            <span class="n">nexts</span> <span class="o">=</span> <span class="n">cycle</span><span class="p">(</span><span class="n">islice</span><span class="p">(</span><span class="n">nexts</span><span class="p">,</span> <span class="n">num_active</span><span class="p">))</span>
+    <span class="c1"># Algorithm credited to George Sakkis</span>
+    <span class="n">iterators</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">iter</span><span class="p">,</span> <span class="n">iterables</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">num_active</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">iterables</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">iterators</span> <span class="o">=</span> <span class="n">cycle</span><span class="p">(</span><span class="n">islice</span><span class="p">(</span><span class="n">iterators</span><span class="p">,</span> <span class="n">num_active</span><span class="p">))</span>
+        <span class="k">yield from</span> <span class="nb">map</span><span class="p">(</span><span class="nb">next</span><span class="p">,</span> <span class="n">iterators</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">partition</span><span class="p">(</span><span class="n">predicate</span><span class="p">,</span> <span class="n">iterable</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Partition entries into false entries and true entries.</span>
@@ -1224,6 +1197,27 @@ which incur interpreter overhead.</p>
     <span class="c1"># subslices(&#39;ABCD&#39;) --&gt; A AB ABC ABCD B BC BCD C CD D</span>
     <span class="n">slices</span> <span class="o">=</span> <span class="n">starmap</span><span class="p">(</span><span class="nb">slice</span><span class="p">,</span> <span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span>
     <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">getitem</span><span class="p">,</span> <span class="n">repeat</span><span class="p">(</span><span class="n">seq</span><span class="p">),</span> <span class="n">slices</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">iter_index</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="s2">&quot;Return indices where a value occurs in a sequence or iterable.&quot;</span>
+    <span class="c1"># iter_index(&#39;AABCADEAF&#39;, &#39;A&#39;) --&gt; 0 1 4 7</span>
+    <span class="n">seq_index</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">seq_index</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Path for general iterables</span>
+        <span class="n">it</span> <span class="o">=</span> <span class="n">islice</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">stop</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">element</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">it</span><span class="p">,</span> <span class="n">start</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">element</span> <span class="ow">is</span> <span class="n">value</span> <span class="ow">or</span> <span class="n">element</span> <span class="o">==</span> <span class="n">value</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="n">i</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Path for sequences with an index() method</span>
+        <span class="n">stop</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span> <span class="k">if</span> <span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stop</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="k">yield</span> <span class="p">(</span><span class="n">i</span> <span class="o">:=</span> <span class="n">seq_index</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">stop</span><span class="p">))</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="k">pass</span>
 
 <span class="k">def</span> <span class="nf">iter_except</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">exception</span><span class="p">,</span> <span class="n">first</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; Call a function repeatedly until an exception is raised.</span>
@@ -1246,10 +1240,10 @@ which incur interpreter overhead.</p>
     <span class="n">s</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">combinations</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
 
-<span class="k">def</span> <span class="nf">sum_of_squares</span><span class="p">(</span><span class="n">it</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">sum_of_squares</span><span class="p">(</span><span class="n">iterable</span><span class="p">):</span>
     <span class="s2">&quot;Add up the squares of the input values.&quot;</span>
     <span class="c1"># sum_of_squares([10, 20, 30]) --&gt; 1400</span>
-    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sumprod</span><span class="p">(</span><span class="o">*</span><span class="n">tee</span><span class="p">(</span><span class="n">it</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sumprod</span><span class="p">(</span><span class="o">*</span><span class="n">tee</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">reshape</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
     <span class="s2">&quot;Reshape a 2-D matrix to have a given number of columns.&quot;</span>
@@ -1302,8 +1296,8 @@ which incur interpreter overhead.</p>
 
 <span class="sd">    Computes with better numeric stability than Horner&#39;s method.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Evaluate x³ -4x² -17x + 60 at x = 2.5</span>
-    <span class="c1"># polynomial_eval([1, -4, -17, 60], x=2.5) --&gt; 8.125</span>
+    <span class="c1"># Evaluate x³ -4x² -17x + 60 at x = 5</span>
+    <span class="c1"># polynomial_eval([1, -4, -17, 60], x=5) --&gt; 0</span>
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)(</span><span class="mi">0</span><span class="p">)</span>
@@ -1479,7 +1473,7 @@ which incur interpreter overhead.</p>
 <br />
     <br />
 
-    最後更新於 Mar 13, 2024 (02:41 UTC)。
+    最後更新於 Mar 14, 2024 (17:16 UTC)。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
