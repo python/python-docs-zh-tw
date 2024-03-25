@@ -8,7 +8,7 @@
     <title>unittest.mock — mock 物件函式庫 &#8212; Python 3.12.2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
-    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=e8a97c27" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=a35cb577" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=b20cc3f5" />
     
     <script src="../_static/documentation_options.js?v=056bc313"></script>
@@ -112,18 +112,19 @@
 <li><a class="reference internal" href="#magic-mock">Magic Mock</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#helpers">Helpers</a><ul>
-<li><a class="reference internal" href="#sentinel">sentinel</a></li>
+<li><a class="reference internal" href="#helpers">輔助函式</a><ul>
+<li><a class="reference internal" href="#sentinel">sentinel（哨兵）</a></li>
 <li><a class="reference internal" href="#default">DEFAULT</a></li>
 <li><a class="reference internal" href="#call">call</a></li>
 <li><a class="reference internal" href="#create-autospec">create_autospec</a></li>
 <li><a class="reference internal" href="#any">ANY</a></li>
 <li><a class="reference internal" href="#filter-dir">FILTER_DIR</a></li>
 <li><a class="reference internal" href="#mock-open">mock_open</a></li>
-<li><a class="reference internal" href="#autospeccing">Autospeccing</a></li>
-<li><a class="reference internal" href="#sealing-mocks">Sealing mocks</a></li>
+<li><a class="reference internal" href="#autospeccing">Autospeccing（自動規格）</a></li>
+<li><a class="reference internal" href="#sealing-mocks">密封 mock</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#order-of-precedence-of-side-effect-return-value-and-wraps">Order of precedence of <code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">return_value</span></code> and <em>wraps</em></a></li>
 </ul>
 </li>
 </ul>
@@ -833,7 +834,7 @@
 <span class="gr">KeyError</span>
 </pre></div>
 </div>
-<p>在匹配對 mock 的呼叫時，使用 <em>spec</em>（或 <em>spec_set</em>）建立的可呼叫 mock 將會內省規格物件的簽名 (signature)。因此，它可以匹配實際呼叫的引數，無論它們是按位置傳遞還是按名稱傳遞：</p>
+<p>在匹配對 mock 的呼叫時，使用 <em>spec</em>（或 <em>spec_set</em>）建立的可呼叫 mock 將會內省 (introspect) 規格物件的簽名 (signature)。因此，它可以匹配實際呼叫的引數，無論它們是按位置傳遞還是按名稱傳遞： :</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span> <span class="k">pass</span>
 <span class="gp">...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
@@ -843,7 +844,7 @@
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">assert_called_with</span><span class="p">(</span><span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>這適用於 <a class="reference internal" href="#unittest.mock.Mock.assert_called_with" title="unittest.mock.Mock.assert_called_with"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_called_with()</span></code></a>、<a class="reference internal" href="#unittest.mock.Mock.assert_called_once_with" title="unittest.mock.Mock.assert_called_once_with"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_called_once_with()</span></code></a>、<a class="reference internal" href="#unittest.mock.Mock.assert_has_calls" title="unittest.mock.Mock.assert_has_calls"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_has_calls()</span></code></a> 和 <a class="reference internal" href="#unittest.mock.Mock.assert_any_call" title="unittest.mock.Mock.assert_any_call"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_any_call()</span></code></a>。在使用 <a class="reference internal" href="#auto-speccing"><span class="std std-ref">Autospeccing</span></a> 時，它還適用於 mock 物件的方法呼叫。</p>
+<p>這適用於 <a class="reference internal" href="#unittest.mock.Mock.assert_called_with" title="unittest.mock.Mock.assert_called_with"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_called_with()</span></code></a>、<a class="reference internal" href="#unittest.mock.Mock.assert_called_once_with" title="unittest.mock.Mock.assert_called_once_with"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_called_once_with()</span></code></a>、<a class="reference internal" href="#unittest.mock.Mock.assert_has_calls" title="unittest.mock.Mock.assert_has_calls"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_has_calls()</span></code></a> 和 <a class="reference internal" href="#unittest.mock.Mock.assert_any_call" title="unittest.mock.Mock.assert_any_call"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_any_call()</span></code></a>。在使用 <a class="reference internal" href="#auto-speccing"><span class="std std-ref">Autospeccing（自動規格）</span></a> 時，它還適用於 mock 物件的方法呼叫。</p>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.4 版的變更: </span>對於已經設置了規格（spec）和自動規格（autospec）的 mock 物件，新增簽名內省功能。</p>
 </div>
@@ -1321,7 +1322,7 @@
 <p><em>spec</em> 和 <em>spec_set</em> 關鍵字引數會傳遞給 <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a>，如果 patch 正在為你建立一個。</p>
 <p>此外，你還可以傳遞 <code class="docutils literal notranslate"><span class="pre">spec=True</span></code> 或 <code class="docutils literal notranslate"><span class="pre">spec_set=True</span></code>，這將導致 patch 將被 mock 的物件作為 spec/spec_set 物件傳遞。</p>
 <p><em>new_callable</em> 允許你指定一個不同的類別或可呼叫的物件，用於被呼叫並建立 <em>new</em> 物件。預設情況下，對於非同步函式使用 <a class="reference internal" href="#unittest.mock.AsyncMock" title="unittest.mock.AsyncMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncMock</span></code></a>，而對於其他情況則使用 <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a>。</p>
-<p><em>spec</em> 的一種更強大的形式是 <em>autospec</em>。如果你設定 <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code>，則該 mock 將使用被替換物件的規格來建立。該 mock 的所有屬性也將具有被替換物件的對應屬性的規格。被 mock 的方法和函式將檢查其引數，如果呼叫時引數與規格不符（被使用錯誤的簽名 (signature) 呼叫），將引發 <a class="reference internal" href="exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a>。對於替換類別的 mock，它們的回傳值（即 'instance'）將具有與類別相同的規格。請參閱 <a class="reference internal" href="#unittest.mock.create_autospec" title="unittest.mock.create_autospec"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_autospec()</span></code></a> 函式和 <a class="reference internal" href="#auto-speccing"><span class="std std-ref">Autospeccing</span></a>。</p>
+<p><em>spec</em> 的一種更強大的形式是 <em>autospec</em>。如果你設定 <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code>，則該 mock 將使用被替換物件的規格來建立。該 mock 的所有屬性也將具有被替換物件的對應屬性的規格。被 mock 的方法和函式將檢查其引數，如果呼叫時引數與規格不符（被使用錯誤的簽名 (signature) 呼叫），將引發 <a class="reference internal" href="exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a>。對於替換類別的 mock，它們的回傳值（即 'instance'）將具有與類別相同的規格。請參閱 <a class="reference internal" href="#unittest.mock.create_autospec" title="unittest.mock.create_autospec"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_autospec()</span></code></a> 函式和 <a class="reference internal" href="#auto-speccing"><span class="std std-ref">Autospeccing（自動規格）</span></a>。</p>
 <p>你可以用 <code class="docutils literal notranslate"><span class="pre">autospec=some_object</span></code> 替代 <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code>，以使用任意物件作為規格，而不是被替換的物件。</p>
 <p>預設情況下，<a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 將無法取代不存在的屬性。如果你傳入 <code class="docutils literal notranslate"><span class="pre">create=True</span></code>，且屬性不存在，則當被 patch 的函式被呼叫時，patch 將為你建立該屬性，並在被 patch 的函式結束後再次刪除它。這對於撰寫針對你的生產程式碼在執行環境建立的屬性的測試時非常有用。此功能預設為關閉，因為這可能會相當危險。開啟這個功能後，你可以對於實際上不存在的 API 撰寫會通過的測試！</p>
 <div class="admonition note">
@@ -1796,7 +1797,7 @@
 <li><p>容器方法：<code class="docutils literal notranslate"><span class="pre">__getitem__</span></code>、<code class="docutils literal notranslate"><span class="pre">__setitem__</span></code>、<code class="docutils literal notranslate"><span class="pre">__delitem__</span></code>、<code class="docutils literal notranslate"><span class="pre">__contains__</span></code>、<code class="docutils literal notranslate"><span class="pre">__len__</span></code>、<code class="docutils literal notranslate"><span class="pre">__iter__</span></code>、<code class="docutils literal notranslate"><span class="pre">__reversed__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__missing__</span></code></p></li>
 <li><p>情境管理器：<code class="docutils literal notranslate"><span class="pre">__enter__</span></code>、<code class="docutils literal notranslate"><span class="pre">__exit__</span></code>、<code class="docutils literal notranslate"><span class="pre">__aenter__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__aexit__</span></code></p></li>
 <li><p>一元數值方法：<code class="docutils literal notranslate"><span class="pre">__neg__</span></code>、<code class="docutils literal notranslate"><span class="pre">__pos__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__invert__</span></code></p></li>
-<li><p>數值方法（包括右側 (right hand) 和原地 (in-place) 變體）：<code class="docutils literal notranslate"><span class="pre">__add__</span></code>、<code class="docutils literal notranslate"><span class="pre">__sub__</span></code>、<code class="docutils literal notranslate"><span class="pre">__mul__</span></code>、<code class="docutils literal notranslate"><span class="pre">__matmul__</span></code>、<code class="docutils literal notranslate"><span class="pre">__truediv__</span></code>、<code class="docutils literal notranslate"><span class="pre">__floordiv__</span></code>、 <code class="docutils literal notranslate"><span class="pre">__mod__</span></code>、<code class="docutils literal notranslate"><span class="pre">__divmod__</span></code>、<code class="docutils literal notranslate"><span class="pre">__lshift__</span></code>、<code class="docutils literal notranslate"><span class="pre">__rshift__</span></code>、<code class="docutils literal notranslate"><span class="pre">__and__</span></code>、<code class="docutils literal notranslate"><span class="pre">__xor__</span></code>、<code class="docutils literal notranslate"><span class="pre">__or__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__pow__</span></code></p></li>
+<li><p>數值方法（包括右側 (right hand) 和原地 (in-place) 變體）：<code class="docutils literal notranslate"><span class="pre">__add__</span></code>、<code class="docutils literal notranslate"><span class="pre">__sub__</span></code>、<code class="docutils literal notranslate"><span class="pre">__mul__</span></code>、<code class="docutils literal notranslate"><span class="pre">__matmul__</span></code>、<code class="docutils literal notranslate"><span class="pre">__truediv__</span></code>、<code class="docutils literal notranslate"><span class="pre">__floordiv__</span></code>、<code class="docutils literal notranslate"><span class="pre">__mod__</span></code>、<code class="docutils literal notranslate"><span class="pre">__divmod__</span></code>、<code class="docutils literal notranslate"><span class="pre">__lshift__</span></code>、<code class="docutils literal notranslate"><span class="pre">__rshift__</span></code>、<code class="docutils literal notranslate"><span class="pre">__and__</span></code>、<code class="docutils literal notranslate"><span class="pre">__xor__</span></code>、<code class="docutils literal notranslate"><span class="pre">__or__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__pow__</span></code></p></li>
 <li><p>數值轉換方法：<code class="docutils literal notranslate"><span class="pre">__complex__</span></code>、<code class="docutils literal notranslate"><span class="pre">__int__</span></code>、<code class="docutils literal notranslate"><span class="pre">__float__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__index__</span></code></p></li>
 <li><p>描述器方法：<code class="docutils literal notranslate"><span class="pre">__get__</span></code>、<code class="docutils literal notranslate"><span class="pre">__set__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__delete__</span></code></p></li>
 <li><p>Pickling：<code class="docutils literal notranslate"><span class="pre">__reduce__</span></code>、<code class="docutils literal notranslate"><span class="pre">__reduce_ex__</span></code>、<code class="docutils literal notranslate"><span class="pre">__getinitargs__</span></code>、<code class="docutils literal notranslate"><span class="pre">__getnewargs__</span></code>、<code class="docutils literal notranslate"><span class="pre">__getstate__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__setstate__</span></code></p></li>
@@ -1917,42 +1918,31 @@
 <aside class="footnote-list brackets">
 <aside class="footnote brackets" id="id9" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id7">2</a><span class="fn-bracket">]</span></span>
-<p>Magic methods <em>should</em> be looked up on the class rather than the
-instance. Different versions of Python are inconsistent about applying this
-rule. The supported protocol methods should work with all supported versions
-of Python.</p>
+<p>魔術方法<em>應該</em>在類別而不是實例上被查找。不同版本的 Python 對於這條規則的適用並不一致。支援的協定方法應適用於所有支援的 Python 版本。</p>
 </aside>
 <aside class="footnote brackets" id="id10" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id8">3</a><span class="fn-bracket">]</span></span>
-<p>The function is basically hooked up to the class, but each <code class="docutils literal notranslate"><span class="pre">Mock</span></code>
-instance is kept isolated from the others.</p>
+<p>該函式基本上與類別掛鉤，但每個 <code class="docutils literal notranslate"><span class="pre">Mock</span></code> 實例都與其他實例保持隔離。</p>
 </aside>
 </aside>
 </section>
 </section>
 <section id="helpers">
-<h2>Helpers<a class="headerlink" href="#helpers" title="Link to this heading">¶</a></h2>
+<h2>輔助函式<a class="headerlink" href="#helpers" title="Link to this heading">¶</a></h2>
 <section id="sentinel">
-<h3>sentinel<a class="headerlink" href="#sentinel" title="Link to this heading">¶</a></h3>
+<h3>sentinel（哨兵）<a class="headerlink" href="#sentinel" title="Link to this heading">¶</a></h3>
 <dl class="py data">
 <dt class="sig sig-object py" id="unittest.mock.sentinel">
 <span class="sig-prename descclassname"><span class="pre">unittest.mock.</span></span><span class="sig-name descname"><span class="pre">sentinel</span></span><a class="headerlink" href="#unittest.mock.sentinel" title="Link to this definition">¶</a></dt>
-<dd><p>The <code class="docutils literal notranslate"><span class="pre">sentinel</span></code> object provides a convenient way of providing unique
-objects for your tests.</p>
-<p>Attributes are created on demand when you access them by name. Accessing
-the same attribute will always return the same object. The objects
-returned have a sensible repr so that test failure messages are readable.</p>
+<dd><p><code class="docutils literal notranslate"><span class="pre">哨兵</span></code>物件提供了一種為你的測試提供獨特物件的便利方式。</p>
+<p>當你使用名稱存取屬性時，屬性會根據需要被建立。存取相同的屬性將始終回傳相同的物件。回傳的物件會具有合適的 repr，讓測試失敗的訊息是可閱讀的。</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.7 版的變更: </span>The <code class="docutils literal notranslate"><span class="pre">sentinel</span></code> attributes now preserve their identity when they are
-<a class="reference internal" href="copy.html#module-copy" title="copy: Shallow and deep copy operations."><code class="xref py py-mod docutils literal notranslate"><span class="pre">copied</span></code></a> or <a class="reference internal" href="pickle.html#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickled</span></code></a>.</p>
+<p><span class="versionmodified changed">在 3.7 版的變更: </span><code class="docutils literal notranslate"><span class="pre">哨兵</span></code>屬性現在當被<a class="reference internal" href="copy.html#module-copy" title="copy: Shallow and deep copy operations."><code class="xref py py-mod docutils literal notranslate"><span class="pre">複製</span></code></a>或<a class="reference internal" href="pickle.html#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">序列化</span></code></a>時會保留其識別性。</p>
 </div>
 </dd></dl>
 
-<p>Sometimes when testing you need to test that a specific object is passed as an
-argument to another method, or returned. It can be common to create named
-sentinel objects to test this. <a class="reference internal" href="#unittest.mock.sentinel" title="unittest.mock.sentinel"><code class="xref py py-data docutils literal notranslate"><span class="pre">sentinel</span></code></a> provides a convenient way of
-creating and testing the identity of objects like this.</p>
-<p>In this example we monkey patch <code class="docutils literal notranslate"><span class="pre">method</span></code> to return <code class="docutils literal notranslate"><span class="pre">sentinel.some_object</span></code>:</p>
+<p>在測試時，有時你需要測試特定物件是否作為引數被傳遞給另一個方法或回傳。建立命名的哨兵物件來測試這一點是常見的。<a class="reference internal" href="#unittest.mock.sentinel" title="unittest.mock.sentinel"><code class="xref py py-data docutils literal notranslate"><span class="pre">sentinel</span></code></a> 提供了一種此類建立和測試物件識別性的便利方式。</p>
+<p>在這個例子中，我們 monkey patch <code class="docutils literal notranslate"><span class="pre">method</span></code> 以回傳 <code class="docutils literal notranslate"><span class="pre">sentinel.some_object</span></code>：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">real</span> <span class="o">=</span> <span class="n">ProductionClass</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">real</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;method&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">real</span><span class="o">.</span><span class="n">method</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">sentinel</span><span class="o">.</span><span class="n">some_object</span>
@@ -1968,9 +1958,7 @@ creating and testing the identity of objects like this.</p>
 <dl class="py data">
 <dt class="sig sig-object py" id="unittest.mock.DEFAULT">
 <span class="sig-prename descclassname"><span class="pre">unittest.mock.</span></span><span class="sig-name descname"><span class="pre">DEFAULT</span></span><a class="headerlink" href="#unittest.mock.DEFAULT" title="Link to this definition">¶</a></dt>
-<dd><p>The <a class="reference internal" href="#unittest.mock.DEFAULT" title="unittest.mock.DEFAULT"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT</span></code></a> object is a pre-created sentinel (actually
-<code class="docutils literal notranslate"><span class="pre">sentinel.DEFAULT</span></code>). It can be used by <a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a>
-functions to indicate that the normal return value should be used.</p>
+<dd><p><a class="reference internal" href="#unittest.mock.DEFAULT" title="unittest.mock.DEFAULT"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT</span></code></a> 物件是一個預先建立的哨兵（實際上是 <code class="docutils literal notranslate"><span class="pre">sentinel.DEFAULT</span></code>）。它可以被 <a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> 函式使用來表示正常的回傳值應該被使用。</p>
 </dd></dl>
 
 </section>
@@ -1979,10 +1967,7 @@ functions to indicate that the normal return value should be used.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="unittest.mock.call">
 <span class="sig-prename descclassname"><span class="pre">unittest.mock.</span></span><span class="sig-name descname"><span class="pre">call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#unittest.mock.call" title="Link to this definition">¶</a></dt>
-<dd><p><a class="reference internal" href="#unittest.mock.call" title="unittest.mock.call"><code class="xref py py-func docutils literal notranslate"><span class="pre">call()</span></code></a> is a helper object for making simpler assertions, for comparing with
-<a class="reference internal" href="#unittest.mock.Mock.call_args" title="unittest.mock.Mock.call_args"><code class="xref py py-attr docutils literal notranslate"><span class="pre">call_args</span></code></a>, <a class="reference internal" href="#unittest.mock.Mock.call_args_list" title="unittest.mock.Mock.call_args_list"><code class="xref py py-attr docutils literal notranslate"><span class="pre">call_args_list</span></code></a>,
-<a class="reference internal" href="#unittest.mock.Mock.mock_calls" title="unittest.mock.Mock.mock_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mock_calls</span></code></a> and <a class="reference internal" href="#unittest.mock.Mock.method_calls" title="unittest.mock.Mock.method_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">method_calls</span></code></a>. <a class="reference internal" href="#unittest.mock.call" title="unittest.mock.call"><code class="xref py py-func docutils literal notranslate"><span class="pre">call()</span></code></a> can also be
-used with <a class="reference internal" href="#unittest.mock.Mock.assert_has_calls" title="unittest.mock.Mock.assert_has_calls"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_has_calls()</span></code></a>.</p>
+<dd><p>與 <a class="reference internal" href="#unittest.mock.Mock.call_args" title="unittest.mock.Mock.call_args"><code class="xref py py-attr docutils literal notranslate"><span class="pre">call_args</span></code></a>、<a class="reference internal" href="#unittest.mock.Mock.call_args_list" title="unittest.mock.Mock.call_args_list"><code class="xref py py-attr docutils literal notranslate"><span class="pre">call_args_list</span></code></a>、<a class="reference internal" href="#unittest.mock.Mock.mock_calls" title="unittest.mock.Mock.mock_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mock_calls</span></code></a> 和 <a class="reference internal" href="#unittest.mock.Mock.method_calls" title="unittest.mock.Mock.method_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">method_calls</span></code></a> 相比，<a class="reference internal" href="#unittest.mock.call" title="unittest.mock.call"><code class="xref py py-func docutils literal notranslate"><span class="pre">call()</span></code></a> 是一個用於進行更簡單的斷言的輔助物件。<a class="reference internal" href="#unittest.mock.call" title="unittest.mock.call"><code class="xref py py-func docutils literal notranslate"><span class="pre">call()</span></code></a> 也可以與 <a class="reference internal" href="#unittest.mock.Mock.assert_has_calls" title="unittest.mock.Mock.assert_has_calls"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_has_calls()</span></code></a> 一起使用。</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="s1">&#39;bar&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">()</span>
@@ -1995,17 +1980,11 @@ used with <a class="reference internal" href="#unittest.mock.Mock.assert_has_cal
 <dl class="py method">
 <dt class="sig sig-object py" id="unittest.mock.call.call_list">
 <span class="sig-prename descclassname"><span class="pre">call.</span></span><span class="sig-name descname"><span class="pre">call_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#unittest.mock.call.call_list" title="Link to this definition">¶</a></dt>
-<dd><p>For a call object that represents multiple calls, <a class="reference internal" href="#unittest.mock.call.call_list" title="unittest.mock.call.call_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">call_list()</span></code></a>
-returns a list of all the intermediate calls as well as the
-final call.</p>
+<dd><p>對於表示多個呼叫的 call 物件，<a class="reference internal" href="#unittest.mock.call.call_list" title="unittest.mock.call.call_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">call_list()</span></code></a> 回傳所有中間呼叫以及最終呼叫的串列。</p>
 </dd></dl>
 
-<p><code class="docutils literal notranslate"><span class="pre">call_list</span></code> is particularly useful for making assertions on &quot;chained calls&quot;. A
-chained call is multiple calls on a single line of code. This results in
-multiple entries in <a class="reference internal" href="#unittest.mock.Mock.mock_calls" title="unittest.mock.Mock.mock_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mock_calls</span></code></a> on a mock. Manually constructing
-the sequence of calls can be tedious.</p>
-<p><a class="reference internal" href="#unittest.mock.call.call_list" title="unittest.mock.call.call_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">call_list()</span></code></a> can construct the sequence of calls from the same
-chained call:</p>
+<p><code class="docutils literal notranslate"><span class="pre">call_list</span></code> 在對「鍊接呼叫 (chained calls)」進行斷言時特別有用。鍊接呼叫是在單行程式碼進行的多次呼叫。這會導致 mock 上的 <a class="reference internal" href="#unittest.mock.Mock.mock_calls" title="unittest.mock.Mock.mock_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mock_calls</span></code></a> 中出現多個項目。手動建構呼叫序列會相當單調乏味。</p>
+<p><a class="reference internal" href="#unittest.mock.call.call_list" title="unittest.mock.call.call_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">call_list()</span></code></a> 可以從同一個鍊接呼叫建構呼叫序列：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">method</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">other</span><span class="p">(</span><span class="s1">&#39;bar&#39;</span><span class="p">)(</span><span class="mf">2.0</span><span class="p">)</span>
 <span class="go">&lt;MagicMock name=&#39;mock().method().other()()&#39; id=&#39;...&#39;&gt;</span>
@@ -2019,20 +1998,9 @@ chained call:</p>
 <span class="go">True</span>
 </pre></div>
 </div>
-<p id="calls-as-tuples">A <code class="docutils literal notranslate"><span class="pre">call</span></code> object is either a tuple of (positional args, keyword args) or
-(name, positional args, keyword args) depending on how it was constructed. When
-you construct them yourself this isn't particularly interesting, but the <code class="docutils literal notranslate"><span class="pre">call</span></code>
-objects that are in the <a class="reference internal" href="#unittest.mock.Mock.call_args" title="unittest.mock.Mock.call_args"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Mock.call_args</span></code></a>, <a class="reference internal" href="#unittest.mock.Mock.call_args_list" title="unittest.mock.Mock.call_args_list"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Mock.call_args_list</span></code></a> and
-<a class="reference internal" href="#unittest.mock.Mock.mock_calls" title="unittest.mock.Mock.mock_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Mock.mock_calls</span></code></a> attributes can be introspected to get at the individual
-arguments they contain.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">call</span></code> objects in <a class="reference internal" href="#unittest.mock.Mock.call_args" title="unittest.mock.Mock.call_args"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Mock.call_args</span></code></a> and <a class="reference internal" href="#unittest.mock.Mock.call_args_list" title="unittest.mock.Mock.call_args_list"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Mock.call_args_list</span></code></a>
-are two-tuples of (positional args, keyword args) whereas the <code class="docutils literal notranslate"><span class="pre">call</span></code> objects
-in <a class="reference internal" href="#unittest.mock.Mock.mock_calls" title="unittest.mock.Mock.mock_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Mock.mock_calls</span></code></a>, along with ones you construct yourself, are
-three-tuples of (name, positional args, keyword args).</p>
-<p>You can use their &quot;tupleness&quot; to pull out the individual arguments for more
-complex introspection and assertions. The positional arguments are a tuple
-(an empty tuple if there are no positional arguments) and the keyword
-arguments are a dictionary:</p>
+<p id="calls-as-tuples">取決於它的建構方式，一個 <code class="docutils literal notranslate"><span class="pre">call</span></code> 物件會是（位置引數, 關鍵字引數）的元組，或是 (名稱, 位置引數, 關鍵字引數) 的元組。當你自己建構它們時，這並不是那麼有趣，但是 <a class="reference internal" href="#unittest.mock.Mock.call_args" title="unittest.mock.Mock.call_args"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Mock.call_args</span></code></a>、<a class="reference internal" href="#unittest.mock.Mock.call_args_list" title="unittest.mock.Mock.call_args_list"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Mock.call_args_list</span></code></a> 和 <a class="reference internal" href="#unittest.mock.Mock.mock_calls" title="unittest.mock.Mock.mock_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Mock.mock_calls</span></code></a> 屬性中的 <code class="docutils literal notranslate"><span class="pre">call</span></code> 物件可以被內省以取得它們包含的各個引數。</p>
+<p><a class="reference internal" href="#unittest.mock.Mock.call_args" title="unittest.mock.Mock.call_args"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Mock.call_args</span></code></a> 和 <a class="reference internal" href="#unittest.mock.Mock.call_args_list" title="unittest.mock.Mock.call_args_list"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Mock.call_args_list</span></code></a> 中的 <code class="docutils literal notranslate"><span class="pre">call</span></code> 物件是（位置引數, 關鍵字引數）的二元組，而 <code class="xref py py-attr docutils literal notranslate"><span class="pre">Mock.mock_calls`中的</span> <span class="pre">``call`</span></code> 物件以及你自己建立的 <code class="docutils literal notranslate"><span class="pre">call</span></code> 物件是（名稱, 位置引數, 關鍵字引數）的三元組。</p>
+<p>你可以利用它們作為元組的特性來提取單個引數，以進行更複雜的內省和斷言。位置引數是一個元組（如果沒有位置引數則為空元組），關鍵字引數是一個字典：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">arg</span><span class="o">=</span><span class="s1">&#39;one&#39;</span><span class="p">,</span> <span class="n">arg2</span><span class="o">=</span><span class="s1">&#39;two&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">kall</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">call_args</span>
@@ -2067,26 +2035,16 @@ arguments are a dictionary:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="unittest.mock.create_autospec">
 <span class="sig-prename descclassname"><span class="pre">unittest.mock.</span></span><span class="sig-name descname"><span class="pre">create_autospec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">spec_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#unittest.mock.create_autospec" title="Link to this definition">¶</a></dt>
-<dd><p>Create a mock object using another object as a spec. Attributes on the
-mock will use the corresponding attribute on the <em>spec</em> object as their
-spec.</p>
-<p>Functions or methods being mocked will have their arguments checked to
-ensure that they are called with the correct signature.</p>
-<p>If <em>spec_set</em> is <code class="docutils literal notranslate"><span class="pre">True</span></code> then attempting to set attributes that don't exist
-on the spec object will raise an <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a>.</p>
-<p>If a class is used as a spec then the return value of the mock (the
-instance of the class) will have the same spec. You can use a class as the
-spec for an instance object by passing <code class="docutils literal notranslate"><span class="pre">instance=True</span></code>. The returned mock
-will only be callable if instances of the mock are callable.</p>
-<p><a class="reference internal" href="#unittest.mock.create_autospec" title="unittest.mock.create_autospec"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_autospec()</span></code></a> also takes arbitrary keyword arguments that are passed to
-the constructor of the created mock.</p>
+<dd><p>使用另一個物件作為規格建立一個 mock 物件。Mock 上的屬性將使用 <em>spec</em> 物件上的對應屬性作為其規格。</p>
+<p>被 mock 的函式或方法將檢查其引數，以確保他們被使用正確的簽名來呼叫。</p>
+<p>如果 <em>spec_set</em> 為 <code class="docutils literal notranslate"><span class="pre">True</span></code>，則嘗試設定規格物件上不存在的屬性將引發 <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a>。</p>
+<p>如果一個類別作為規格使用，則 mock（該類別的實例）的回傳值將具有相同的規格。你可以透過傳遞 <code class="docutils literal notranslate"><span class="pre">instance=True</span></code> 來使用一個類別作為一個實例物件的規格。只有當 mock 的實例是可呼叫物件時，回傳的 mock 才會是可呼叫物件。</p>
+<p><a class="reference internal" href="#unittest.mock.create_autospec" title="unittest.mock.create_autospec"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_autospec()</span></code></a> 也接受任意的關鍵字引數，這些引數會傳遞給已建立的 mock 的建構函式。</p>
 </dd></dl>
 
-<p>See <a class="reference internal" href="#auto-speccing"><span class="std std-ref">Autospeccing</span></a> for examples of how to use auto-speccing with
-<a class="reference internal" href="#unittest.mock.create_autospec" title="unittest.mock.create_autospec"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_autospec()</span></code></a> and the <em>autospec</em> argument to <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a>.</p>
+<p>請參閱 <a class="reference internal" href="#auto-speccing"><span class="std std-ref">Autospeccing（自動規格）</span></a> 以得知如何以 <a class="reference internal" href="#unittest.mock.create_autospec" title="unittest.mock.create_autospec"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_autospec()</span></code></a> 使用自動規格以及如何在 <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 中使用 <em>autospec</em> 引數的範例。</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.8 版的變更: </span><a class="reference internal" href="#unittest.mock.create_autospec" title="unittest.mock.create_autospec"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_autospec()</span></code></a> now returns an <a class="reference internal" href="#unittest.mock.AsyncMock" title="unittest.mock.AsyncMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncMock</span></code></a> if the target is
-an async function.</p>
+<p><span class="versionmodified changed">在 3.8 版的變更: </span>如果目標是一個非同步函式，<a class="reference internal" href="#unittest.mock.create_autospec" title="unittest.mock.create_autospec"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_autospec()</span></code></a> 現在會回傳一個 <a class="reference internal" href="#unittest.mock.AsyncMock" title="unittest.mock.AsyncMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncMock</span></code></a>。</p>
 </div>
 </section>
 <section id="any">
@@ -2096,21 +2054,14 @@ an async function.</p>
 <span class="sig-prename descclassname"><span class="pre">unittest.mock.</span></span><span class="sig-name descname"><span class="pre">ANY</span></span><a class="headerlink" href="#unittest.mock.ANY" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<p>Sometimes you may need to make assertions about <em>some</em> of the arguments in a
-call to mock, but either not care about some of the arguments or want to pull
-them individually out of <a class="reference internal" href="#unittest.mock.Mock.call_args" title="unittest.mock.Mock.call_args"><code class="xref py py-attr docutils literal notranslate"><span class="pre">call_args</span></code></a> and make more complex
-assertions on them.</p>
-<p>To ignore certain arguments you can pass in objects that compare equal to
-<em>everything</em>. Calls to <a class="reference internal" href="#unittest.mock.Mock.assert_called_with" title="unittest.mock.Mock.assert_called_with"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_called_with()</span></code></a> and
-<a class="reference internal" href="#unittest.mock.Mock.assert_called_once_with" title="unittest.mock.Mock.assert_called_once_with"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_called_once_with()</span></code></a> will then succeed no matter what was
-passed in.</p>
+<p>有時你可能需要對 mock 的呼叫中的<em>某些</em>引數進行斷言，但你不在意其他的某些引數，或想將它們單獨從 <a class="reference internal" href="#unittest.mock.Mock.call_args" title="unittest.mock.Mock.call_args"><code class="xref py py-attr docutils literal notranslate"><span class="pre">call_args</span></code></a> 中取出並進行更加複雜的斷言。</p>
+<p>要忽略某些引數，你可以傳入對<em>所有物件</em>來說都相等的物件。那麼無論傳入什麼內容，對 <code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_used_with()</span></code> 和 <code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_used_once_with()</span></code> 的呼叫都會成功。</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="n">bar</span><span class="o">=</span><span class="nb">object</span><span class="p">())</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="n">bar</span><span class="o">=</span><span class="n">ANY</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#unittest.mock.ANY" title="unittest.mock.ANY"><code class="xref py py-data docutils literal notranslate"><span class="pre">ANY</span></code></a> can also be used in comparisons with call lists like
-<a class="reference internal" href="#unittest.mock.Mock.mock_calls" title="unittest.mock.Mock.mock_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mock_calls</span></code></a>:</p>
+<p><a class="reference internal" href="#unittest.mock.ANY" title="unittest.mock.ANY"><code class="xref py py-data docutils literal notranslate"><span class="pre">ANY</span></code></a> 也可以用來與呼叫串列進行比較，例如 <a class="reference internal" href="#unittest.mock.Mock.mock_calls" title="unittest.mock.Mock.mock_calls"><code class="xref py py-attr docutils literal notranslate"><span class="pre">mock_calls</span></code></a>：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">m</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
@@ -2136,16 +2087,8 @@ can also be used in test assertions:</p>
 <span class="sig-prename descclassname"><span class="pre">unittest.mock.</span></span><span class="sig-name descname"><span class="pre">FILTER_DIR</span></span><a class="headerlink" href="#unittest.mock.FILTER_DIR" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<p><a class="reference internal" href="#unittest.mock.FILTER_DIR" title="unittest.mock.FILTER_DIR"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILTER_DIR</span></code></a> is a module level variable that controls the way mock objects
-respond to <a class="reference internal" href="functions.html#dir" title="dir"><code class="xref py py-func docutils literal notranslate"><span class="pre">dir()</span></code></a>. The default is <code class="docutils literal notranslate"><span class="pre">True</span></code>,
-which uses the filtering described below, to only show useful members. If you
-dislike this filtering, or need to switch it off for diagnostic purposes, then
-set <code class="docutils literal notranslate"><span class="pre">mock.FILTER_DIR</span> <span class="pre">=</span> <span class="pre">False</span></code>.</p>
-<p>With filtering on, <code class="docutils literal notranslate"><span class="pre">dir(some_mock)</span></code> shows only useful attributes and will
-include any dynamically created attributes that wouldn't normally be shown.
-If the mock was created with a <em>spec</em> (or <em>autospec</em> of course) then all the
-attributes from the original are shown, even if they haven't been accessed
-yet:</p>
+<p><a class="reference internal" href="#unittest.mock.FILTER_DIR" title="unittest.mock.FILTER_DIR"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILTER_DIR</span></code></a> 是一個模組級別的變數，用於控制 mock 物件回應 <code class="xref py py-func docutils literal notranslate"><span class="pre">dir`的方式。其預設值為</span> <span class="pre">``True`()</span></code>，它使用以下描述的過濾方式來只顯示有用的成員。如果你不喜歡這個過濾方式，或由於診斷意圖而需要將其關閉，請設定 <code class="docutils literal notranslate"><span class="pre">mock.FILTER_DIR</span> <span class="pre">=</span> <span class="pre">False</span></code>。</p>
+<p>當過濾方式開啟時，<code class="docutils literal notranslate"><span class="pre">dir(some_mock)</span></code> 僅會顯示有用的屬性，並將包括通常不會顯示的任何動態建立的屬性。如果 mock 是使用 <em>spec</em>（或 <em>autospec</em>）來建立的，那麼源頭的所有屬性都會顯示，即使它們尚未被存取：</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">dir</span><span class="p">(</span><span class="n">Mock</span><span class="p">())</span>
 <span class="go">[&#39;assert_any_call&#39;,</span>
 <span class="go"> &#39;assert_called&#39;,</span>
@@ -2165,11 +2108,7 @@ yet:</p>
 <span class="go"> ...</span>
 </pre></div>
 </div>
-<p>Many of the not-very-useful (private to <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> rather than the thing being
-mocked) underscore and double underscore prefixed attributes have been
-filtered from the result of calling <a class="reference internal" href="functions.html#dir" title="dir"><code class="xref py py-func docutils literal notranslate"><span class="pre">dir()</span></code></a> on a <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a>. If you dislike this
-behaviour you can switch it off by setting the module level switch
-<a class="reference internal" href="#unittest.mock.FILTER_DIR" title="unittest.mock.FILTER_DIR"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILTER_DIR</span></code></a>:</p>
+<p>許多不是很有用的（對 <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> 來說是私有的，而不是被 mock 的東西）底線和雙底線前綴屬性已從在 <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> 上呼叫 <a class="reference internal" href="functions.html#dir" title="dir"><code class="xref py py-func docutils literal notranslate"><span class="pre">dir()</span></code></a> 的結果中濾除。如果你不喜歡這種特性，可以透過設定模組級別開關 <a class="reference internal" href="#unittest.mock.FILTER_DIR" title="unittest.mock.FILTER_DIR"><code class="xref py py-data docutils literal notranslate"><span class="pre">FILTER_DIR</span></code></a> 來將其關閉：</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">unittest</span> <span class="kn">import</span> <span class="n">mock</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">FILTER_DIR</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">dir</span><span class="p">(</span><span class="n">mock</span><span class="o">.</span><span class="n">Mock</span><span class="p">())</span>
@@ -2183,53 +2122,34 @@ behaviour you can switch it off by setting the module level switch
 <span class="go"> ...</span>
 </pre></div>
 </div>
-<p>Alternatively you can just use <code class="docutils literal notranslate"><span class="pre">vars(my_mock)</span></code> (instance members) and
-<code class="docutils literal notranslate"><span class="pre">dir(type(my_mock))</span></code> (type members) to bypass the filtering irrespective of
-<code class="xref py py-const docutils literal notranslate"><span class="pre">mock.FILTER_DIR</span></code>.</p>
+<p>或者，你可以只使用 <code class="docutils literal notranslate"><span class="pre">vars(my_mock)</span></code>（實例成員）和 <code class="docutils literal notranslate"><span class="pre">dir(type(my_mock))</span></code>（型別成員）來略過過濾，而不考慮 <code class="xref py py-const docutils literal notranslate"><span class="pre">mock.FILTER_DIR</span></code>。</p>
 </section>
 <section id="mock-open">
 <h3>mock_open<a class="headerlink" href="#mock-open" title="Link to this heading">¶</a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="unittest.mock.mock_open">
 <span class="sig-prename descclassname"><span class="pre">unittest.mock.</span></span><span class="sig-name descname"><span class="pre">mock_open</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mock</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">read_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#unittest.mock.mock_open" title="Link to this definition">¶</a></dt>
-<dd><p>A helper function to create a mock to replace the use of <a class="reference internal" href="functions.html#open" title="open"><code class="xref py py-func docutils literal notranslate"><span class="pre">open()</span></code></a>. It works
-for <a class="reference internal" href="functions.html#open" title="open"><code class="xref py py-func docutils literal notranslate"><span class="pre">open()</span></code></a> called directly or used as a context manager.</p>
-<p>The <em>mock</em> argument is the mock object to configure. If <code class="docutils literal notranslate"><span class="pre">None</span></code> (the
-default) then a <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> will be created for you, with the API limited
-to methods or attributes available on standard file handles.</p>
-<p><em>read_data</em> is a string for the <code class="xref py py-meth docutils literal notranslate"><span class="pre">read()</span></code>,
-<a class="reference internal" href="io.html#io.IOBase.readline" title="io.IOBase.readline"><code class="xref py py-meth docutils literal notranslate"><span class="pre">readline()</span></code></a>, and <a class="reference internal" href="io.html#io.IOBase.readlines" title="io.IOBase.readlines"><code class="xref py py-meth docutils literal notranslate"><span class="pre">readlines()</span></code></a> methods
-of the file handle to return.  Calls to those methods will take data from
-<em>read_data</em> until it is depleted.  The mock of these methods is pretty
-simplistic: every time the <em>mock</em> is called, the <em>read_data</em> is rewound to
-the start.  If you need more control over the data that you are feeding to
-the tested code you will need to customize this mock for yourself.  When that
-is insufficient, one of the in-memory filesystem packages on <a class="reference external" href="https://pypi.org">PyPI</a> can offer a realistic filesystem for testing.</p>
+<dd><p>用於建立取代 <a class="reference internal" href="functions.html#open" title="open"><code class="xref py py-func docutils literal notranslate"><span class="pre">open()</span></code></a> 用途的 mock 的輔助函式。它適用於直接呼叫或用作情境管理器的 <a class="reference internal" href="functions.html#open" title="open"><code class="xref py py-func docutils literal notranslate"><span class="pre">open()</span></code></a>。</p>
+<p><em>mock</em> 引數是要配置的 mock 物件。如果其為 <code class="docutils literal notranslate"><span class="pre">None</span></code>（預設值），那麼就會為你建立一個 <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a>，其 API 限制在標準檔案處理上可用的方法或屬性。</p>
+<p><em>read_data</em> 是檔案處理方法 <code class="xref py py-meth docutils literal notranslate"><span class="pre">read()</span></code>、<a class="reference internal" href="io.html#io.IOBase.readline" title="io.IOBase.readline"><code class="xref py py-meth docutils literal notranslate"><span class="pre">readline()</span></code></a> 和 <a class="reference internal" href="io.html#io.IOBase.readlines" title="io.IOBase.readlines"><code class="xref py py-meth docutils literal notranslate"><span class="pre">readlines()</span></code></a> 的回傳字串。對這些方法的呼叫將從 <em>read_data</em> 取得資料，直到資料耗盡。對這些方法的 mock 非常單純：每次呼叫 <em>mock</em> 時，<em>read_data</em> 都會倒回到起點。如果你需要對提供給測試程式碼的資料進行更多控制，你會需要自行客製化這個 mock。如果這樣還不夠，<a class="reference external" href="https://pypi.org">PyPI</a> 上的其中一個記憶體內檔案系統 (in-memory filesystem) 套件 可以提供用於測試的真實檔案系統。</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.4 版的變更: </span>Added <a class="reference internal" href="io.html#io.IOBase.readline" title="io.IOBase.readline"><code class="xref py py-meth docutils literal notranslate"><span class="pre">readline()</span></code></a> and <a class="reference internal" href="io.html#io.IOBase.readlines" title="io.IOBase.readlines"><code class="xref py py-meth docutils literal notranslate"><span class="pre">readlines()</span></code></a> support.
-The mock of <code class="xref py py-meth docutils literal notranslate"><span class="pre">read()</span></code> changed to consume <em>read_data</em> rather
-than returning it on each call.</p>
+<p><span class="versionmodified changed">在 3.4 版的變更: </span>新增對 <a class="reference internal" href="io.html#io.IOBase.readline" title="io.IOBase.readline"><code class="xref py py-meth docutils literal notranslate"><span class="pre">readline()</span></code></a> 和 <a class="reference internal" href="io.html#io.IOBase.readlines" title="io.IOBase.readlines"><code class="xref py py-meth docutils literal notranslate"><span class="pre">readlines()</span></code></a> 的支援。<code class="xref py py-meth docutils literal notranslate"><span class="pre">read()</span></code> 的 mock 更改為消耗 <em>read_data</em> 而不是在每次呼叫時回傳它。</p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.5 版的變更: </span><em>read_data</em> is now reset on each call to the <em>mock</em>.</p>
+<p><span class="versionmodified changed">在 3.5 版的變更: </span>現在，每次呼叫 <em>mock</em> 時都會重置 <em>read_data</em>。</p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.8 版的變更: </span>Added <a class="reference internal" href="stdtypes.html#container.__iter__" title="container.__iter__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__iter__()</span></code></a> to implementation so that iteration
-(such as in for loops) correctly consumes <em>read_data</em>.</p>
+<p><span class="versionmodified changed">在 3.8 版的變更: </span>新增 <a class="reference internal" href="stdtypes.html#container.__iter__" title="container.__iter__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__iter__()</span></code></a> 到實作中，以便使疊代（例如在 for 迴圈中）正確地消耗 <em>read_data</em>。</p>
 </div>
 </dd></dl>
 
-<p>Using <a class="reference internal" href="functions.html#open" title="open"><code class="xref py py-func docutils literal notranslate"><span class="pre">open()</span></code></a> as a context manager is a great way to ensure your file handles
-are closed properly and is becoming common:</p>
+<p>使用 <a class="reference internal" href="functions.html#open" title="open"><code class="xref py py-func docutils literal notranslate"><span class="pre">open()</span></code></a> 作為情境管理器是確保檔案處理正確關閉的好方式，且這種方式正在變得普遍：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;/some/path&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;something&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The issue is that even if you mock out the call to <a class="reference internal" href="functions.html#open" title="open"><code class="xref py py-func docutils literal notranslate"><span class="pre">open()</span></code></a> it is the
-<em>returned object</em> that is used as a context manager (and has <a class="reference internal" href="../reference/datamodel.html#object.__enter__" title="object.__enter__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__enter__()</span></code></a> and
-<a class="reference internal" href="../reference/datamodel.html#object.__exit__" title="object.__exit__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__exit__()</span></code></a> called).</p>
-<p>Mocking context managers with a <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> is common enough and fiddly
-enough that a helper function is useful.</p>
+<p>問題是，即使你 mock 了對 <a class="reference internal" href="functions.html#open" title="open"><code class="xref py py-func docutils literal notranslate"><span class="pre">open()</span></code></a> 的呼叫，它也是作為情境管理器使用的<em>回傳物件</em>（且其 <a class="reference internal" href="../reference/datamodel.html#object.__enter__" title="object.__enter__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__enter__()</span></code></a> 和 <code class="xref py py-meth docutils literal notranslate"><span class="pre">__exit__()</span></code> 已被呼叫）。</p>
+<p>使用 <a class="reference internal" href="#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> mock 情境管理器相當常見並且精細，因此輔助函式就非常有用：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">m</span> <span class="o">=</span> <span class="n">mock_open</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;__main__.open&#39;</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">h</span><span class="p">:</span>
@@ -2245,7 +2165,7 @@ enough that a helper function is useful.</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">handle</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="s1">&#39;some stuff&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>And for reading files:</p>
+<p>以及讀取檔案：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;__main__.open&#39;</span><span class="p">,</span> <span class="n">mock_open</span><span class="p">(</span><span class="n">read_data</span><span class="o">=</span><span class="s1">&#39;bibble&#39;</span><span class="p">))</span> <span class="k">as</span> <span class="n">m</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">h</span><span class="p">:</span>
 <span class="gp">... </span>        <span class="n">result</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
@@ -2256,21 +2176,11 @@ enough that a helper function is useful.</p>
 </div>
 </section>
 <section id="autospeccing">
-<span id="auto-speccing"></span><h3>Autospeccing<a class="headerlink" href="#autospeccing" title="Link to this heading">¶</a></h3>
-<p>Autospeccing is based on the existing <code class="xref py py-attr docutils literal notranslate"><span class="pre">spec</span></code> feature of mock. It limits the
-api of mocks to the api of an original object (the spec), but it is recursive
-(implemented lazily) so that attributes of mocks only have the same api as
-the attributes of the spec. In addition mocked functions / methods have the
-same call signature as the original so they raise a <a class="reference internal" href="exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a> if they are
-called incorrectly.</p>
-<p>Before I explain how auto-speccing works, here's why it is needed.</p>
-<p><a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> is a very powerful and flexible object, but it suffers from two flaws
-when used to mock out objects from a system under test. One of these flaws is
-specific to the <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> api and the other is a more general problem with using
-mock objects.</p>
-<p>First the problem specific to <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a>. <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> has two assert methods that are
-extremely handy: <a class="reference internal" href="#unittest.mock.Mock.assert_called_with" title="unittest.mock.Mock.assert_called_with"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_called_with()</span></code></a> and
-<a class="reference internal" href="#unittest.mock.Mock.assert_called_once_with" title="unittest.mock.Mock.assert_called_once_with"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_called_once_with()</span></code></a>.</p>
+<span id="auto-speccing"></span><h3>Autospeccing（自動規格）<a class="headerlink" href="#autospeccing" title="Link to this heading">¶</a></h3>
+<p>自動規格以 mock 現有的 <code class="xref py py-attr docutils literal notranslate"><span class="pre">spec</span></code> 功能作為基礎。它將 mock 的 api 限制為原始物件（規格）的 api，但它是遞迴的（惰性 (lazily) 實現），因此 mock 的屬性僅具有與規格的屬性相同的 api。此外，被 mock 的函式/方法具有與原始的函式/方法相同的呼叫簽名，因此如果它們被不正確地呼叫，就會引發 <a class="reference internal" href="exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a>。</p>
+<p>在解釋自動規格如何運作之前，我們先解釋為什麼需要它。</p>
+<p><a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> 是一個非常強大且靈活的物件，但是當用於從被測試的系統中 mock out 物件時，它有兩個缺陷。其中一個缺陷是 <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> api 特有的，另一個缺陷是使用 mock 物件時出現的更普遍的問題。</p>
+<p>首先是 <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> 特有的問題。<a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> 有兩個非常方便的斷言方法：<code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_used_with()</span></code> 和 <code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_used_once_with()</span></code>。</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Thing&#39;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
@@ -2281,26 +2191,16 @@ extremely handy: <a class="reference internal" href="#unittest.mock.Mock.assert_
 <span class="gr">AssertionError</span>: <span class="n">Expected &#39;mock&#39; to be called once. Called 2 times.</span>
 </pre></div>
 </div>
-<p>Because mocks auto-create attributes on demand, and allow you to call them
-with arbitrary arguments, if you misspell one of these assert methods then
-your assertion is gone:</p>
+<p>因為 mock 會根據需要自動建立屬性，並允許你使用任意引數呼叫它們，所以如果你拼錯了其中一個斷言方法，那麼你的斷言就不見了：</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Thing&#39;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">assret_called_once_with</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>  <span class="c1"># Intentional typo!</span>
 </pre></div>
 </div>
-<p>Your tests can pass silently and incorrectly because of the typo.</p>
-<p>The second issue is more general to mocking. If you refactor some of your
-code, rename members and so on, any tests for code that is still using the
-<em>old api</em> but uses mocks instead of the real objects will still pass. This
-means your tests can all pass even though your code is broken.</p>
-<p>Note that this is another reason why you need integration tests as well as
-unit tests. Testing everything in isolation is all fine and dandy, but if you
-don't test how your units are &quot;wired together&quot; there is still lots of room
-for bugs that tests might have caught.</p>
-<p><code class="xref py py-mod docutils literal notranslate"><span class="pre">mock</span></code> already provides a feature to help with this, called speccing. If you
-use a class or instance as the <code class="xref py py-attr docutils literal notranslate"><span class="pre">spec</span></code> for a mock then you can only access
-attributes on the mock that exist on the real class:</p>
+<p>由於拼字錯誤，你的測試可能會安靜且錯誤地通過。</p>
+<p>第二個問題對於 mock 來說更為普遍。如果你重構某些程式碼、重新命名成員等等，則對任何仍然使用<em>舊 api</em> 但使用 mock 而不是真實物件的程式碼的測試仍然會通過。這意味著即使你的程式碼已經壞了，你的測試也可以全部通過。</p>
+<p>謹記這是你需要有整合測試和單元測試的另一個原因。單獨測試所有內容都很好，但如果你不測試你的單元是如何「連接在一起」的，那麼測試還是有機會發現很多錯誤。</p>
+<p><code class="xref py py-mod docutils literal notranslate"><span class="pre">mock</span></code> 已經提供了一個功能來幫助解決這個問題，其稱為 speccing。如果你使用類別或實例作為 mock 的 <code class="xref py py-attr docutils literal notranslate"><span class="pre">spec</span></code>，那麼你在 mock 上只能存取真實類別中存在的屬性：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">urllib</span> <span class="kn">import</span> <span class="n">request</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">request</span><span class="o">.</span><span class="n">Request</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">assret_called_with</span>  <span class="c1"># Intentional typo!</span>
@@ -2309,22 +2209,14 @@ attributes on the mock that exist on the real class:</p>
 <span class="gr">AttributeError</span>: <span class="n">Mock object has no attribute &#39;assret_called_with&#39;</span>
 </pre></div>
 </div>
-<p>The spec only applies to the mock itself, so we still have the same issue
-with any methods on the mock:</p>
+<p>該規格僅適用於 mock 本身，因此在 mock 上的任何方法仍然有相同的問題：</p>
 <div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">has_data</span><span class="p">()</span>
 <span class="go">&lt;mock.Mock object at 0x...&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">has_data</span><span class="o">.</span><span class="n">assret_called_with</span><span class="p">()</span>  <span class="c1"># Intentional typo!</span>
 </pre></div>
 </div>
-<p>Auto-speccing solves this problem. You can either pass <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code> to
-<a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> / <a class="reference internal" href="#unittest.mock.patch.object" title="unittest.mock.patch.object"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch.object()</span></code></a> or use the <a class="reference internal" href="#unittest.mock.create_autospec" title="unittest.mock.create_autospec"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_autospec()</span></code></a> function to create a
-mock with a spec. If you use the <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code> argument to <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> then the
-object that is being replaced will be used as the spec object. Because the
-speccing is done &quot;lazily&quot; (the spec is created as attributes on the mock are
-accessed) you can use it with very complex or deeply nested objects (like
-modules that import modules that import modules) without a big performance
-hit.</p>
-<p>Here's an example of it in use:</p>
+<p>自動規格解決了這個問題。你可以將 <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code> 傳遞給 <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> / <a class="reference internal" href="#unittest.mock.patch.object" title="unittest.mock.patch.object"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch.object()</span></code></a> 或使用 <a class="reference internal" href="#unittest.mock.create_autospec" title="unittest.mock.create_autospec"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_autospec()</span></code></a> 函式建立帶有規格的 mock。如果你對 <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 使用 <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code> 引數，則被取代的物件將作為規格物件使用。因為規格是「惰性」完成的（規格是在 mock 被存取時作為屬性被建立的），所以你可以將它與非常複雜或深度巢狀使用的物件（例如連續引用的模組）一起使用，而不會過於影響性能。</p>
+<p>這是一個正在使用的例子：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">urllib</span> <span class="kn">import</span> <span class="n">request</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">patcher</span> <span class="o">=</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;__main__.request&#39;</span><span class="p">,</span> <span class="n">autospec</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock_request</span> <span class="o">=</span> <span class="n">patcher</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
@@ -2334,25 +2226,20 @@ hit.</p>
 <span class="go">&lt;MagicMock name=&#39;request.Request&#39; spec=&#39;Request&#39; id=&#39;...&#39;&gt;</span>
 </pre></div>
 </div>
-<p>You can see that <code class="xref py py-class docutils literal notranslate"><span class="pre">request.Request</span></code> has a spec. <code class="xref py py-class docutils literal notranslate"><span class="pre">request.Request</span></code> takes two
-arguments in the constructor (one of which is <em>self</em>). Here's what happens if
-we try to call it incorrectly:</p>
+<p>你可以看到 <code class="xref py py-class docutils literal notranslate"><span class="pre">request.Request</span></code> 有一個規格。<code class="xref py py-class docutils literal notranslate"><span class="pre">request.Request</span></code> 在建構函式中接受兩個引數（其中之一是 <em>self</em>）。如果我們錯誤地呼叫它，會發生以下情況：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">req</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">Request</span><span class="p">()</span>
 <span class="gt">Traceback (most recent call last):</span>
 <span class="w"> </span><span class="c">...</span>
 <span class="gr">TypeError</span>: <span class="n">&lt;lambda&gt;() takes at least 2 arguments (1 given)</span>
 </pre></div>
 </div>
-<p>The spec also applies to instantiated classes (i.e. the return value of
-specced mocks):</p>
+<p>此規格也適用於實例化的類別（即有規格的 mock 的回傳值）：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">req</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">req</span>
 <span class="go">&lt;NonCallableMagicMock name=&#39;request.Request()&#39; spec=&#39;Request&#39; id=&#39;...&#39;&gt;</span>
 </pre></div>
 </div>
-<p><code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code> objects are not callable, so the return value of instantiating our
-mocked out <code class="xref py py-class docutils literal notranslate"><span class="pre">request.Request</span></code> is a non-callable mock. With the spec in place
-any typos in our asserts will raise the correct error:</p>
+<p><code class="xref py py-class docutils literal notranslate"><span class="pre">Request</span></code> 物件不是可呼叫物件，因此實例化我們 mock out 的 <code class="xref py py-class docutils literal notranslate"><span class="pre">request.Request</span></code> 的回傳值是不可呼叫的 mock。規格到位後，斷言中的任何拼字錯誤都會引發正確的錯誤：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">req</span><span class="o">.</span><span class="n">add_header</span><span class="p">(</span><span class="s1">&#39;spam&#39;</span><span class="p">,</span> <span class="s1">&#39;eggs&#39;</span><span class="p">)</span>
 <span class="go">&lt;MagicMock name=&#39;request.Request().add_header()&#39; id=&#39;...&#39;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">req</span><span class="o">.</span><span class="n">add_header</span><span class="o">.</span><span class="n">assret_called_with</span>  <span class="c1"># Intentional typo!</span>
@@ -2362,29 +2249,16 @@ any typos in our asserts will raise the correct error:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">req</span><span class="o">.</span><span class="n">add_header</span><span class="o">.</span><span class="n">assert_called_with</span><span class="p">(</span><span class="s1">&#39;spam&#39;</span><span class="p">,</span> <span class="s1">&#39;eggs&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>In many cases you will just be able to add <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code> to your existing
-<a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> calls and then be protected against bugs due to typos and api
-changes.</p>
-<p>As well as using <em>autospec</em> through <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> there is a
-<a class="reference internal" href="#unittest.mock.create_autospec" title="unittest.mock.create_autospec"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_autospec()</span></code></a> for creating autospecced mocks directly:</p>
+<p>在許多情況下，你只需要將 <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code> 新增至現有的 <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 呼叫中，然後就可以防止因拼字錯誤和 api 變更而導致的錯誤。</p>
+<p>除了透過 <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 使用 <em>autospec</em> 之外，還有一個 <a class="reference internal" href="#unittest.mock.create_autospec" title="unittest.mock.create_autospec"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_autospec()</span></code></a> 用於直接建立有自動規格的 mock：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">urllib</span> <span class="kn">import</span> <span class="n">request</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock_request</span> <span class="o">=</span> <span class="n">create_autospec</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock_request</span><span class="o">.</span><span class="n">Request</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">,</span> <span class="s1">&#39;bar&#39;</span><span class="p">)</span>
 <span class="go">&lt;NonCallableMagicMock name=&#39;mock.Request()&#39; spec=&#39;Request&#39; id=&#39;...&#39;&gt;</span>
 </pre></div>
 </div>
-<p>This isn't without caveats and limitations however, which is why it is not
-the default behaviour. In order to know what attributes are available on the
-spec object, autospec has to introspect (access attributes) the spec. As you
-traverse attributes on the mock a corresponding traversal of the original
-object is happening under the hood. If any of your specced objects have
-properties or descriptors that can trigger code execution then you may not be
-able to use autospec. On the other hand it is much better to design your
-objects so that introspection is safe <a class="footnote-reference brackets" href="#id12" id="id11" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a>.</p>
-<p>A more serious problem is that it is common for instance attributes to be
-created in the <a class="reference internal" href="../reference/datamodel.html#object.__init__" title="object.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__init__()</span></code></a> method and not to exist on the class at all.
-<em>autospec</em> can't know about any dynamically created attributes and restricts
-the api to visible attributes.</p>
+<p>然而，這並非完全沒有限制，這就是為什麼它不是預設的行為。為了理解規格物件上有哪些可用屬性，autospec 必須內省（存取屬性）規格。當你遍歷 mock 上的屬性時，原始物件的對應遍歷正在默默發生。如果你的規格物件具有可以觸發程式碼執行的屬性或描述器，那麼你可能無法使用 autospec。換句話說，設計你的物件讓內省是安全的 <a class="footnote-reference brackets" href="#id12" id="id11" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a> 會比較好。</p>
+<p>一個更嚴重的問題是，在 <a class="reference internal" href="../reference/datamodel.html#object.__init__" title="object.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__init__()</span></code></a> 方法中建立實例屬性是常見的，而其根本不存在於類別中。<em>autospec</em> 無法知道任何動態建立的屬性，並將 api 限制為可見的屬性。：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Something</span><span class="p">:</span>
 <span class="gp">... </span>  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="mi">33</span>
@@ -2398,21 +2272,14 @@ the api to visible attributes.</p>
 <span class="gr">AttributeError</span>: <span class="n">Mock object has no attribute &#39;a&#39;</span>
 </pre></div>
 </div>
-<p>There are a few different ways of resolving this problem. The easiest, but
-not necessarily the least annoying, way is to simply set the required
-attributes on the mock after creation. Just because <em>autospec</em> doesn't allow
-you to fetch attributes that don't exist on the spec it doesn't prevent you
-setting them:</p>
+<p>有幾種不同的方法可以解決這個問題。最簡單但可能有點煩人的方法是在建立後簡單地在 mock 上設定所需的屬性。因為雖然 <em>autospec</em> 不允許你取得規格中不存在的屬性，但是它不會阻止你設定它們：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;__main__.Something&#39;</span><span class="p">,</span> <span class="n">autospec</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="gp">... </span>  <span class="n">thing</span> <span class="o">=</span> <span class="n">Something</span><span class="p">()</span>
 <span class="gp">... </span>  <span class="n">thing</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="mi">33</span>
 <span class="gp">...</span>
 </pre></div>
 </div>
-<p>There is a more aggressive version of both <em>spec</em> and <em>autospec</em> that <em>does</em>
-prevent you setting non-existent attributes. This is useful if you want to
-ensure your code only <em>sets</em> valid attributes too, but obviously it prevents
-this particular scenario:</p>
+<p><em>spec</em> 和 <em>autospec</em> 有一個更激進的版本，它會<em>確實地</em>阻止你設定不存在的屬性。如果你想確保你的程式碼僅能<em>設定</em>有效的屬性，那麼這會很有用，但顯然它也順便阻止了這個特殊情況：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;__main__.Something&#39;</span><span class="p">,</span> <span class="n">autospec</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">spec_set</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="gp">... </span>  <span class="n">thing</span> <span class="o">=</span> <span class="n">Something</span><span class="p">()</span>
 <span class="gp">... </span>  <span class="n">thing</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="mi">33</span>
@@ -2422,22 +2289,12 @@ this particular scenario:</p>
 <span class="gr">AttributeError</span>: <span class="n">Mock object has no attribute &#39;a&#39;</span>
 </pre></div>
 </div>
-<p>Probably the best way of solving the problem is to add class attributes as
-default values for instance members initialised in <a class="reference internal" href="../reference/datamodel.html#object.__init__" title="object.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__init__()</span></code></a>.
-Note that if
-you are only setting default attributes in <code class="xref py py-meth docutils literal notranslate"><span class="pre">__init__()</span></code> then providing them via
-class attributes (shared between instances of course) is faster too. e.g.</p>
+<p>解決問題的最佳方法可能是新增類別屬性作為在 <a class="reference internal" href="../reference/datamodel.html#object.__init__" title="object.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__init__()</span></code></a> 中初始化的實例成員的預設值。請注意，如果你僅在 <code class="xref py py-meth docutils literal notranslate"><span class="pre">__init__()</span></code> 中設定預設屬性，那麼透過類別屬性（當然在實例之間共用）提供它們也會更快。例如：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">Something</span><span class="p">:</span>
     <span class="n">a</span> <span class="o">=</span> <span class="mi">33</span>
 </pre></div>
 </div>
-<p>This brings up another issue. It is relatively common to provide a default
-value of <code class="docutils literal notranslate"><span class="pre">None</span></code> for members that will later be an object of a different type.
-<code class="docutils literal notranslate"><span class="pre">None</span></code> would be useless as a spec because it wouldn't let you access <em>any</em>
-attributes or methods on it. As <code class="docutils literal notranslate"><span class="pre">None</span></code> is <em>never</em> going to be useful as a
-spec, and probably indicates a member that will normally of some other type,
-autospec doesn't use a spec for members that are set to <code class="docutils literal notranslate"><span class="pre">None</span></code>. These will
-just be ordinary mocks (well - MagicMocks):</p>
+<p>這就帶來了另一個問題。為稍後將成為不同型別的物件的成員提供預設值 <code class="docutils literal notranslate"><span class="pre">None</span></code> 是相對常見的。<code class="docutils literal notranslate"><span class="pre">None</span></code> 作為規格是無用的，因為它不允許你存取其上的<em>任何</em>屬性或方法。由於 <code class="docutils literal notranslate"><span class="pre">None</span></code> 作為規格<em>永遠不會</em>有用，並且可能表示通常屬於其他型別的成員，因此自動規格不會對設定為 <code class="docutils literal notranslate"><span class="pre">None</span></code> 的成員使用規格。這些會只是普通的 mock（通常是 MagicMocks）：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Something</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">member</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="gp">...</span>
@@ -2446,13 +2303,7 @@ just be ordinary mocks (well - MagicMocks):</p>
 <span class="go">&lt;MagicMock name=&#39;mock.member.foo.bar.baz()&#39; id=&#39;...&#39;&gt;</span>
 </pre></div>
 </div>
-<p>If modifying your production classes to add defaults isn't to your liking
-then there are more options. One of these is simply to use an instance as the
-spec rather than the class. The other is to create a subclass of the
-production class and add the defaults to the subclass without affecting the
-production class. Both of these require you to use an alternative object as
-the spec. Thankfully <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> supports this - you can simply pass the
-alternative object as the <em>autospec</em> argument:</p>
+<p>如果修改正式生產 (production) 類別以新增預設值不符合你的喜好，那麼還有更多選擇。其中之一就是簡單地使用實例作為規格而不是使用類別。另一種是建立一個正式生產類別的子類別，並將預設值新增至子類別中，而不影響正式生產類別。這兩個都需要你使用替代物件作為規格。值得慶幸的是 <a class="reference internal" href="#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 支援這一點 - 你可以簡單地將替代物件作為 <em>autospec</em> 引數傳遞：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Something</span><span class="p">:</span>
 <span class="gp">... </span>  <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="bp">self</span><span class="o">.</span><span class="n">a</span> <span class="o">=</span> <span class="mi">33</span>
@@ -2469,22 +2320,17 @@ alternative object as the <em>autospec</em> argument:</p>
 <aside class="footnote-list brackets">
 <aside class="footnote brackets" id="id12" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id11">4</a><span class="fn-bracket">]</span></span>
-<p>This only applies to classes or already instantiated objects. Calling
-a mocked class to create a mock instance <em>does not</em> create a real instance.
-It is only attribute lookups - along with calls to <a class="reference internal" href="functions.html#dir" title="dir"><code class="xref py py-func docutils literal notranslate"><span class="pre">dir()</span></code></a> - that are done.</p>
+<p>這只適用於類別或已經實例化的物件。呼叫一個被 mock 的類別來建立一個 mock 實例<em>不會</em>建立真的實例。它僅查找屬性及對 <a class="reference internal" href="functions.html#dir" title="dir"><code class="xref py py-func docutils literal notranslate"><span class="pre">dir()</span></code></a> 的呼叫。</p>
 </aside>
 </aside>
 </section>
 <section id="sealing-mocks">
-<h3>Sealing mocks<a class="headerlink" href="#sealing-mocks" title="Link to this heading">¶</a></h3>
+<h3>密封 mock<a class="headerlink" href="#sealing-mocks" title="Link to this heading">¶</a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="unittest.mock.seal">
 <span class="sig-prename descclassname"><span class="pre">unittest.mock.</span></span><span class="sig-name descname"><span class="pre">seal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mock</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#unittest.mock.seal" title="Link to this definition">¶</a></dt>
-<dd><p>Seal will disable the automatic creation of mocks when accessing an attribute of
-the mock being sealed or any of its attributes that are already mocks recursively.</p>
-<p>If a mock instance with a name or a spec is assigned to an attribute
-it won't be considered in the sealing chain. This allows one to prevent seal from
-fixing part of the mock object.</p>
+<dd><p>當存取被密封的 mock 的屬性或其任何已經遞迴 mock 的屬性時，seal 將停用 mock 的自動建立。</p>
+<p>如果將具有名稱或規格的 mock 實例指派給屬性，則不會出現在密封鏈中。這表示可藉由固定 mock 物件的一部分來防止密封。：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">submock</span><span class="o">.</span><span class="n">attribute1</span> <span class="o">=</span> <span class="mi">2</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">not_submock</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">Mock</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;sample_name&quot;</span><span class="p">)</span>
@@ -2500,6 +2346,128 @@ fixing part of the mock object.</p>
 </dd></dl>
 
 </section>
+</section>
+<section id="order-of-precedence-of-side-effect-return-value-and-wraps">
+<h2>Order of precedence of <code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">return_value</span></code> and <em>wraps</em><a class="headerlink" href="#order-of-precedence-of-side-effect-return-value-and-wraps" title="Link to this heading">¶</a></h2>
+<p>The order of their precedence is:</p>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a></p></li>
+<li><p><a class="reference internal" href="#unittest.mock.Mock.return_value" title="unittest.mock.Mock.return_value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">return_value</span></code></a></p></li>
+<li><p><em>wraps</em></p></li>
+</ol>
+<p>If all three are set, mock will return the value from <a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a>,
+ignoring <a class="reference internal" href="#unittest.mock.Mock.return_value" title="unittest.mock.Mock.return_value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">return_value</span></code></a> and the wrapped object altogether. If any
+two are set, the one with the higher precedence will return the value.
+Regardless of the order of which was set first, the order of precedence
+remains unchanged.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">unittest.mock</span> <span class="kn">import</span> <span class="n">Mock</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Order</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="nd">@staticmethod</span>
+<span class="gp">... </span>    <span class="k">def</span> <span class="nf">get_value</span><span class="p">():</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="s2">&quot;third&quot;</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">Order</span><span class="p">,</span> <span class="n">wraps</span><span class="o">=</span><span class="n">Order</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;first&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="s2">&quot;second&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
+<span class="go">&#39;first&#39;</span>
+</pre></div>
+</div>
+<p>As <code class="docutils literal notranslate"><span class="pre">None</span></code> is the default value of <a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a>, if you reassign
+its value back to <code class="docutils literal notranslate"><span class="pre">None</span></code>, the order of precedence will be checked between
+<a class="reference internal" href="#unittest.mock.Mock.return_value" title="unittest.mock.Mock.return_value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">return_value</span></code></a> and the wrapped object, ignoring
+<a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
+<span class="go">&#39;second&#39;</span>
+</pre></div>
+</div>
+<p>If the value being returned by <a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> is <a class="reference internal" href="#unittest.mock.DEFAULT" title="unittest.mock.DEFAULT"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT</span></code></a>,
+it is ignored and the order of precedence moves to the successor to obtain the
+value to return.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">unittest.mock</span> <span class="kn">import</span> <span class="n">DEFAULT</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="p">[</span><span class="n">DEFAULT</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
+<span class="go">&#39;second&#39;</span>
+</pre></div>
+</div>
+<p>When <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> wraps an object, the default value of
+<a class="reference internal" href="#unittest.mock.Mock.return_value" title="unittest.mock.Mock.return_value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">return_value</span></code></a> will be <a class="reference internal" href="#unittest.mock.DEFAULT" title="unittest.mock.DEFAULT"><code class="xref py py-data docutils literal notranslate"><span class="pre">DEFAULT</span></code></a>.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">Order</span><span class="p">,</span> <span class="n">wraps</span><span class="o">=</span><span class="n">Order</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">return_value</span>
+<span class="go">sentinel.DEFAULT</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="o">.</span><span class="n">return_value</span>
+<span class="go">sentinel.DEFAULT</span>
+</pre></div>
+</div>
+<p>The order of precedence will ignore this value and it will move to the last
+successor which is the wrapped object.</p>
+<p>As the real call is being made to the wrapped object, creating an instance of
+this mock will return the real instance of the class. The positional arguments,
+if any, required by the wrapped object must be passed.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock_instance</span> <span class="o">=</span> <span class="n">order_mock</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">isinstance</span><span class="p">(</span><span class="n">order_mock_instance</span><span class="p">,</span> <span class="n">Order</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock_instance</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
+<span class="go">&#39;third&#39;</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">DEFAULT</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
+<span class="go">&#39;third&#39;</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="s2">&quot;second&quot;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
+<span class="go">&#39;second&#39;</span>
+</pre></div>
+</div>
+<p>But if you assign <code class="docutils literal notranslate"><span class="pre">None</span></code> to it, this will not be ignored as it is an
+explicit assignment. So, the order of precedence will not move to the wrapped
+object.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>Even if you set all three at once when initializing the mock, the order of
+precedence remains the same:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">Order</span><span class="p">,</span> <span class="n">wraps</span><span class="o">=</span><span class="n">Order</span><span class="p">,</span>
+<span class="gp">... </span>                  <span class="o">**</span><span class="p">{</span><span class="s2">&quot;get_value.side_effect&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;first&quot;</span><span class="p">],</span>
+<span class="gp">... </span>                     <span class="s2">&quot;get_value.return_value&quot;</span><span class="p">:</span> <span class="s2">&quot;second&quot;</span><span class="p">}</span>
+<span class="gp">... </span>                  <span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
+<span class="go">&#39;first&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
+<span class="go">&#39;second&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">DEFAULT</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
+<span class="go">&#39;third&#39;</span>
+</pre></div>
+</div>
+<p>If <a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> is exhausted, the order of precedence will not
+cause a value to be obtained from the successors. Instead, <code class="docutils literal notranslate"><span class="pre">StopIteration</span></code>
+exception is raised.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">spec</span><span class="o">=</span><span class="n">Order</span><span class="p">,</span> <span class="n">wraps</span><span class="o">=</span><span class="n">Order</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;first side effect value&quot;</span><span class="p">,</span>
+<span class="gp">... </span>                                    <span class="s2">&quot;another side effect value&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="s2">&quot;second&quot;</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
+<span class="go">&#39;first side effect value&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
+<span class="go">&#39;another side effect value&#39;</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">order_mock</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="w"> </span><span class="c">...</span>
+<span class="gr">StopIteration</span>
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -2540,18 +2508,19 @@ fixing part of the mock object.</p>
 <li><a class="reference internal" href="#magic-mock">Magic Mock</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#helpers">Helpers</a><ul>
-<li><a class="reference internal" href="#sentinel">sentinel</a></li>
+<li><a class="reference internal" href="#helpers">輔助函式</a><ul>
+<li><a class="reference internal" href="#sentinel">sentinel（哨兵）</a></li>
 <li><a class="reference internal" href="#default">DEFAULT</a></li>
 <li><a class="reference internal" href="#call">call</a></li>
 <li><a class="reference internal" href="#create-autospec">create_autospec</a></li>
 <li><a class="reference internal" href="#any">ANY</a></li>
 <li><a class="reference internal" href="#filter-dir">FILTER_DIR</a></li>
 <li><a class="reference internal" href="#mock-open">mock_open</a></li>
-<li><a class="reference internal" href="#autospeccing">Autospeccing</a></li>
-<li><a class="reference internal" href="#sealing-mocks">Sealing mocks</a></li>
+<li><a class="reference internal" href="#autospeccing">Autospeccing（自動規格）</a></li>
+<li><a class="reference internal" href="#sealing-mocks">密封 mock</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#order-of-precedence-of-side-effect-return-value-and-wraps">Order of precedence of <code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code>, <code class="xref py py-attr docutils literal notranslate"><span class="pre">return_value</span></code> and <em>wraps</em></a></li>
 </ul>
 </li>
 </ul>
@@ -2657,7 +2626,7 @@ fixing part of the mock object.</p>
 <br />
     <br />
 
-    最後更新於 Mar 14, 2024 (17:16 UTC)。
+    最後更新於 Mar 25, 2024 (16:39 UTC)。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
