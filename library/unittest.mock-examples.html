@@ -104,15 +104,15 @@
 <li><a class="reference internal" href="#patch-decorators">Patch 裝飾器</a></li>
 <li><a class="reference internal" href="#further-examples">更多範例</a><ul>
 <li><a class="reference internal" href="#mocking-chained-calls">Mock 鍊接呼叫</a></li>
-<li><a class="reference internal" href="#partial-mocking">Partial mocking</a></li>
-<li><a class="reference internal" href="#mocking-a-generator-method">Mocking a Generator Method</a></li>
-<li><a class="reference internal" href="#applying-the-same-patch-to-every-test-method">Applying the same patch to every test method</a></li>
-<li><a class="reference internal" href="#mocking-unbound-methods">Mocking Unbound Methods</a></li>
-<li><a class="reference internal" href="#checking-multiple-calls-with-mock">Checking multiple calls with mock</a></li>
-<li><a class="reference internal" href="#coping-with-mutable-arguments">Coping with mutable arguments</a></li>
-<li><a class="reference internal" href="#nesting-patches">Nesting Patches</a></li>
-<li><a class="reference internal" href="#mocking-a-dictionary-with-magicmock">Mocking a dictionary with MagicMock</a></li>
-<li><a class="reference internal" href="#mock-subclasses-and-their-attributes">Mock subclasses and their attributes</a></li>
+<li><a class="reference internal" href="#partial-mocking">部分 mocking</a></li>
+<li><a class="reference internal" href="#mocking-a-generator-method">Mock 產生器方法</a></li>
+<li><a class="reference internal" href="#applying-the-same-patch-to-every-test-method">對每個測試方法應用相同的 patch</a></li>
+<li><a class="reference internal" href="#mocking-unbound-methods">Mock Unbound Methods （未繫結方法）</a></li>
+<li><a class="reference internal" href="#checking-multiple-calls-with-mock">使用 mock 檢查多個呼叫</a></li>
+<li><a class="reference internal" href="#coping-with-mutable-arguments">應對可變引數</a></li>
+<li><a class="reference internal" href="#nesting-patches">巢狀使用 Patch</a></li>
+<li><a class="reference internal" href="#mocking-a-dictionary-with-magicmock">使用 MagicMock 來 mock 字典</a></li>
+<li><a class="reference internal" href="#mock-subclasses-and-their-attributes">Mock 子類別及其屬性</a></li>
 <li><a class="reference internal" href="#mocking-imports-with-patch-dict">Mocking imports with patch.dict</a></li>
 <li><a class="reference internal" href="#tracking-order-of-calls-and-less-verbose-call-assertions">Tracking order of calls and less verbose call assertions</a></li>
 <li><a class="reference internal" href="#more-complex-argument-matching">More complex argument matching</a></li>
@@ -636,19 +636,10 @@
 </div>
 </section>
 <section id="partial-mocking">
-<h3>Partial mocking<a class="headerlink" href="#partial-mocking" title="Link to this heading">¶</a></h3>
-<p>In some tests I wanted to mock out a call to <a class="reference internal" href="datetime.html#datetime.date.today" title="datetime.date.today"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datetime.date.today()</span></code></a>
-to return a known date, but I didn't want to prevent the code under test from
-creating new date objects. Unfortunately <a class="reference internal" href="datetime.html#datetime.date" title="datetime.date"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.date</span></code></a> is written in C, and
-so I couldn't just monkey-patch out the static <a class="reference internal" href="datetime.html#datetime.date.today" title="datetime.date.today"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datetime.date.today()</span></code></a> method.</p>
-<p>I found a simple way of doing this that involved effectively wrapping the date
-class with a mock, but passing through calls to the constructor to the real
-class (and returning real instances).</p>
-<p>The <a class="reference internal" href="unittest.mock.html#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch</span> <span class="pre">decorator</span></code></a> is used here to
-mock out the <code class="docutils literal notranslate"><span class="pre">date</span></code> class in the module under test. The <a class="reference internal" href="unittest.mock.html#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a>
-attribute on the mock date class is then set to a lambda function that returns
-a real date. When the mock date class is called a real date will be
-constructed and returned by <code class="docutils literal notranslate"><span class="pre">side_effect</span></code>.</p>
+<h3>部分 mocking<a class="headerlink" href="#partial-mocking" title="Link to this heading">¶</a></h3>
+<p>在某些測試中，我們會想 mock 對 <a class="reference internal" href="datetime.html#datetime.date.today" title="datetime.date.today"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datetime.date.today()</span></code></a> 的呼叫以回傳一個已知日期，但我不想阻止測試中的程式碼建立新的日期物件。不幸的是 <a class="reference internal" href="datetime.html#datetime.date" title="datetime.date"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.date</span></code></a> 是用 C 語言寫的，所以們我不能 monkey patch 靜態的 <a class="reference internal" href="datetime.html#datetime.date.today" title="datetime.date.today"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datetime.date.today()</span></code></a> 方法。</p>
+<p>我們找到了一種簡單的方法來做到這一點，其用 mock 有效地包裝日期類別，但將對建構函式的呼叫傳遞給真實的類別（並返回真實的實例）。</p>
+<p>這裡使用 <a class="reference internal" href="unittest.mock.html#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch</span> <span class="pre">裝飾器</span></code></a> 來 mock 被測模組中的 <code class="docutils literal notranslate"><span class="pre">date</span></code> 類別。然後，mock 日期類別上的 <a class="reference internal" href="unittest.mock.html#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> 屬性會被設定為回傳真實日期的 lambda 函式。當 mock 日期類別被呼叫時，將透過 <code class="docutils literal notranslate"><span class="pre">side_effect</span></code> 建構並回傳真實日期。：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">date</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;mymodule.date&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">mock_date</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">mock_date</span><span class="o">.</span><span class="n">today</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">date</span><span class="p">(</span><span class="mi">2010</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
@@ -658,26 +649,16 @@ constructed and returned by <code class="docutils literal notranslate"><span cla
 <span class="gp">... </span>    <span class="k">assert</span> <span class="n">mymodule</span><span class="o">.</span><span class="n">date</span><span class="p">(</span><span class="mi">2009</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span> <span class="o">==</span> <span class="n">date</span><span class="p">(</span><span class="mi">2009</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Note that we don't patch <a class="reference internal" href="datetime.html#datetime.date" title="datetime.date"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.date</span></code></a> globally, we patch <code class="docutils literal notranslate"><span class="pre">date</span></code> in the
-module that <em>uses</em> it. See <a class="reference internal" href="unittest.mock.html#where-to-patch"><span class="std std-ref">where to patch</span></a>.</p>
-<p>When <code class="docutils literal notranslate"><span class="pre">date.today()</span></code> is called a known date is returned, but calls to the
-<code class="docutils literal notranslate"><span class="pre">date(...)</span></code> constructor still return normal dates. Without this you can find
-yourself having to calculate an expected result using exactly the same
-algorithm as the code under test, which is a classic testing anti-pattern.</p>
-<p>Calls to the date constructor are recorded in the <code class="docutils literal notranslate"><span class="pre">mock_date</span></code> attributes
-(<code class="docutils literal notranslate"><span class="pre">call_count</span></code> and friends) which may also be useful for your tests.</p>
-<p>An alternative way of dealing with mocking dates, or other builtin classes,
-is discussed in <a class="reference external" href="https://williambert.online/2011/07/how-to-unit-testing-in-django-with-mocking-and-patching/">this blog entry</a>.</p>
+<p>注意，我們沒有全域 patch <a class="reference internal" href="datetime.html#datetime.date" title="datetime.date"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.date</span></code></a>，而是在<em>使用</em>它的模組中 patch <code class="docutils literal notranslate"><span class="pre">date</span></code>。請參閱 <a class="reference internal" href="unittest.mock.html#where-to-patch"><span class="std std-ref">該 patch 何處</span></a>。</p>
+<p>當 <code class="docutils literal notranslate"><span class="pre">date.today()</span></code> 被呼叫時，一個已知日期會被回傳，但對 <code class="docutils literal notranslate"><span class="pre">date(...)</span></code> 建構函式的呼叫仍然會回傳正常日期。如果不這樣使用，你可能會發現自己必須使用與被測程式碼完全相同的演算法來計算預期結果，這是一個典型的測試的反面模式 (anti-pattern)。</p>
+<p>對日期建構函式的呼叫被記錄在 <code class="docutils literal notranslate"><span class="pre">mock_date</span></code> 屬性（<code class="docutils literal notranslate"><span class="pre">call_count</span></code> 及其相關屬性）中，這對你的測試也可能有用處。</p>
+<p>處理 mock 日期或其他內建類別的另一種方法在 <a class="reference external" href="https://williambert.online/2011/07/how-to-unit-testing-in-django-with-mocking-and-patching/">這個 blog</a> 中討論。</p>
 </section>
 <section id="mocking-a-generator-method">
-<h3>Mocking a Generator Method<a class="headerlink" href="#mocking-a-generator-method" title="Link to this heading">¶</a></h3>
-<p>A Python generator is a function or method that uses the <a class="reference internal" href="../reference/simple_stmts.html#yield"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">yield</span></code></a> statement
-to return a series of values when iterated over <a class="footnote-reference brackets" href="#id3" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
-<p>A generator method / function is called to return the generator object. It is
-the generator object that is then iterated over. The protocol method for
-iteration is <a class="reference internal" href="stdtypes.html#container.__iter__" title="container.__iter__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__iter__()</span></code></a>, so we can
-mock this using a <a class="reference internal" href="unittest.mock.html#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a>.</p>
-<p>Here's an example class with an &quot;iter&quot; method implemented as a generator:</p>
+<h3>Mock 產生器方法<a class="headerlink" href="#mocking-a-generator-method" title="Link to this heading">¶</a></h3>
+<p>Python 產生器是一個函式或方法，它使用 <a class="reference internal" href="../reference/simple_stmts.html#yield"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">yield</span></code></a> 陳述式在疊代 <a class="footnote-reference brackets" href="#id3" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> 時回傳一系列的值。</p>
+<p>產生器方法 / 函式會被呼叫以回傳產生器物件。之後此產生器會進行疊代。疊代的協定方法是 <a class="reference internal" href="stdtypes.html#container.__iter__" title="container.__iter__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__iter__()</span></code></a>，所以我們可以使用 <a class="reference internal" href="unittest.mock.html#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> 來 mock 它。</p>
+<p>下面是一個範例類別，其包含實作產生器的一個 &quot;iter&quot; 方法：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Foo</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="gp">... </span>        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]:</span>
@@ -688,9 +669,8 @@ mock this using a <a class="reference internal" href="unittest.mock.html#unittes
 <span class="go">[1, 2, 3]</span>
 </pre></div>
 </div>
-<p>How would we mock this class, and in particular its &quot;iter&quot; method?</p>
-<p>To configure the values returned from the iteration (implicit in the call to
-<a class="reference internal" href="stdtypes.html#list" title="list"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>), we need to configure the object returned by the call to <code class="docutils literal notranslate"><span class="pre">foo.iter()</span></code>.</p>
+<p>我們該如何 mock 這個類別，特別是它的 &quot;iter&quot; 方法呢？</p>
+<p>要配置從疊代回傳的值（隱含在對 <a class="reference internal" href="stdtypes.html#list" title="list"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> 的呼叫中），我們需要配置呼叫 <code class="docutils literal notranslate"><span class="pre">foo.iter()</span></code> 所回傳的物件。</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock_foo</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock_foo</span><span class="o">.</span><span class="n">iter</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">mock_foo</span><span class="o">.</span><span class="n">iter</span><span class="p">())</span>
@@ -700,20 +680,13 @@ mock this using a <a class="reference internal" href="unittest.mock.html#unittes
 <aside class="footnote-list brackets">
 <aside class="footnote brackets" id="id3" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">1</a><span class="fn-bracket">]</span></span>
-<p>There are also generator expressions and more <a class="reference external" href="http://www.dabeaz.com/coroutines/index.html">advanced uses</a> of generators, but we aren't
-concerned about them here. A very good introduction to generators and how
-powerful they are is: <a class="reference external" href="http://www.dabeaz.com/generators/">Generator Tricks for Systems Programmers</a>.</p>
+<p>還有關於產生器運算式及產生器的更多 <a class="reference external" href="http://www.dabeaz.com/coroutines/index.html">進階用法</a> ，但我們在這裡不考慮它們。一個關於產生器及其強大功能的優良說明是：<a class="reference external" href="http://www.dabeaz.com/generators/">Generator Tricks for Systems Programmers</a>。</p>
 </aside>
 </aside>
 </section>
 <section id="applying-the-same-patch-to-every-test-method">
-<h3>Applying the same patch to every test method<a class="headerlink" href="#applying-the-same-patch-to-every-test-method" title="Link to this heading">¶</a></h3>
-<p>If you want several patches in place for multiple test methods the obvious way
-is to apply the patch decorators to every method. This can feel like unnecessary
-repetition. Instead, you can use <a class="reference internal" href="unittest.mock.html#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> (in all its
-various forms) as a class decorator. This applies the patches to all test
-methods on the class. A test method is identified by methods whose names start
-with <code class="docutils literal notranslate"><span class="pre">test</span></code>:</p>
+<h3>對每個測試方法應用相同的 patch<a class="headerlink" href="#applying-the-same-patch-to-every-test-method" title="Link to this heading">¶</a></h3>
+<p>如果你希望 patch 能用在多個測試方法上，顯而易見的方式是將 patch 裝飾器應用於每個方法。這感覺是不必要的重複行為，因此你可以使用 <a class="reference internal" href="unittest.mock.html#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a>（及其他 patch 的變體）作為類別裝飾器。這會將 patch 應用在該類別的所有測試方法上。測試方法由名稱以 <code class="docutils literal notranslate"><span class="pre">test</span></code> 開頭來識別：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@patch</span><span class="p">(</span><span class="s1">&#39;mymodule.SomeClass&#39;</span><span class="p">)</span>
 <span class="gp">... </span><span class="k">class</span> <span class="nc">MyTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
 <span class="gp">...</span>
@@ -732,8 +705,7 @@ with <code class="docutils literal notranslate"><span class="pre">test</span></c
 <span class="go">&#39;something&#39;</span>
 </pre></div>
 </div>
-<p>An alternative way of managing patches is to use the <a class="reference internal" href="unittest.mock.html#start-and-stop"><span class="std std-ref">patch 方法：啟動與停止</span></a>.
-These allow you to move the patching into your <code class="docutils literal notranslate"><span class="pre">setUp</span></code> and <code class="docutils literal notranslate"><span class="pre">tearDown</span></code> methods.</p>
+<p>管理 patch 的另一種方式是使用 <a class="reference internal" href="unittest.mock.html#start-and-stop"><span class="std std-ref">patch 方法：啟動與停止</span></a>。這允許你將 patch 移到你的 <code class="docutils literal notranslate"><span class="pre">setUp</span></code> 與 <code class="docutils literal notranslate"><span class="pre">tearDown</span></code> 方法中。：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="n">patcher</span> <span class="o">=</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;mymodule.foo&#39;</span><span class="p">)</span>
@@ -748,10 +720,7 @@ These allow you to move the patching into your <code class="docutils literal not
 <span class="gp">&gt;&gt;&gt; </span><span class="n">MyTest</span><span class="p">(</span><span class="s1">&#39;test_foo&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>If you use this technique you must ensure that the patching is &quot;undone&quot; by
-calling <code class="docutils literal notranslate"><span class="pre">stop</span></code>. This can be fiddlier than you might think, because if an
-exception is raised in the setUp then tearDown is not called.
-<a class="reference internal" href="unittest.html#unittest.TestCase.addCleanup" title="unittest.TestCase.addCleanup"><code class="xref py py-meth docutils literal notranslate"><span class="pre">unittest.TestCase.addCleanup()</span></code></a> makes this easier:</p>
+<p>如果你使用這個技巧，你必須確保透過呼叫 <code class="docutils literal notranslate"><span class="pre">stop</span></code> 來 &quot;取消&quot; patch。這可能會比你想像的還要複雜一點，因為如果有例外在 <code class="docutils literal notranslate"><span class="pre">setUp</span></code> 中被引發，則 <code class="docutils literal notranslate"><span class="pre">tearDown</span></code> 就不會被呼叫。<a class="reference internal" href="unittest.html#unittest.TestCase.addCleanup" title="unittest.TestCase.addCleanup"><code class="xref py py-meth docutils literal notranslate"><span class="pre">unittest.TestCase.addCleanup()</span></code></a> 會讓這稍微簡單一點：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="gp">... </span>        <span class="n">patcher</span> <span class="o">=</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;mymodule.foo&#39;</span><span class="p">)</span>
@@ -766,25 +735,9 @@ exception is raised in the setUp then tearDown is not called.
 </div>
 </section>
 <section id="mocking-unbound-methods">
-<h3>Mocking Unbound Methods<a class="headerlink" href="#mocking-unbound-methods" title="Link to this heading">¶</a></h3>
-<p>Whilst writing tests today I needed to patch an <em>unbound method</em> (patching the
-method on the class rather than on the instance). I needed self to be passed
-in as the first argument because I want to make asserts about which objects
-were calling this particular method. The issue is that you can't patch with a
-mock for this, because if you replace an unbound method with a mock it doesn't
-become a bound method when fetched from the instance, and so it doesn't get
-self passed in. The workaround is to patch the unbound method with a real
-function instead. The <a class="reference internal" href="unittest.mock.html#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> decorator makes it so simple to
-patch out methods with a mock that having to create a real function becomes a
-nuisance.</p>
-<p>If you pass <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code> to patch then it does the patching with a
-<em>real</em> function object. This function object has the same signature as the one
-it is replacing, but delegates to a mock under the hood. You still get your
-mock auto-created in exactly the same way as before. What it means though, is
-that if you use it to patch out an unbound method on a class the mocked
-function will be turned into a bound method if it is fetched from an instance.
-It will have <code class="docutils literal notranslate"><span class="pre">self</span></code> passed in as the first argument, which is exactly what I
-wanted:</p>
+<h3>Mock Unbound Methods （未繫結方法）<a class="headerlink" href="#mocking-unbound-methods" title="Link to this heading">¶</a></h3>
+<p>在撰寫測試時，當我們需要 patch 一個<em>未繫結方法</em>（patch 類別上的方法而不是實例上的方法）。我們需要將 self 作為第一個引數傳入，因為我們想斷言哪些物件正在呼叫這個特定方法。問題是你無法為此使用 mock 進行 patch，因為就算你用一個 mock 替換未繫結方法，從實例取得它時它也不會成為一個繫結方法，因此 self 並不會被傳遞。解決方法是使用真實的函式來 patch 未繫結方法。<a class="reference internal" href="unittest.mock.html#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 裝飾器使得用 mock 來 patch out 方法是如此的簡單，以至於建立一個真正的函式相對變得很麻煩。</p>
+<p>如果你將 <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code> 傳遞給 patch，那麼它會使用<em>真的</em>函式物件來進行 patch。此函式物件與它所替換的函式物件具有相同的簽名，但實際上委託給 mock。你仍然會以與之前完全相同的方式自動建立 mock。但這意味著，如果你使用它來 patch 類別上的未繫結方法，則從實例取得的 mock 函式將轉換為繫結方法。<code class="docutils literal notranslate"><span class="pre">self</span></code> 會作為其第一個引數傳入，而這正是我們想要的：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">Foo</span><span class="p">:</span>
 <span class="gp">... </span>  <span class="k">def</span> <span class="nf">foo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">pass</span>
@@ -798,21 +751,18 @@ wanted:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock_foo</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="n">foo</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>If we don't use <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code> then the unbound method is patched out
-with a Mock instance instead, and isn't called with <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
+<p>如果我們不使用 <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code>，那麼未繫結方法將使用一個 Mock 實例 patch out，並且不被使用 <code class="docutils literal notranslate"><span class="pre">self</span></code> 進行呼叫。</p>
 </section>
 <section id="checking-multiple-calls-with-mock">
-<h3>Checking multiple calls with mock<a class="headerlink" href="#checking-multiple-calls-with-mock" title="Link to this heading">¶</a></h3>
-<p>mock has a nice API for making assertions about how your mock objects are used.</p>
+<h3>使用 mock 檢查多個呼叫<a class="headerlink" href="#checking-multiple-calls-with-mock" title="Link to this heading">¶</a></h3>
+<p>mock 有很好的 API，用於對 mock 物件的使用方式做出斷言。</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">foo_bar</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">foo_bar</span><span class="p">(</span><span class="s1">&#39;baz&#39;</span><span class="p">,</span> <span class="n">spam</span><span class="o">=</span><span class="s1">&#39;eggs&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">foo_bar</span><span class="o">.</span><span class="n">assert_called_with</span><span class="p">(</span><span class="s1">&#39;baz&#39;</span><span class="p">,</span> <span class="n">spam</span><span class="o">=</span><span class="s1">&#39;eggs&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>If your mock is only being called once you can use the
-<a class="reference internal" href="unittest.mock.html#unittest.mock.Mock.assert_called_once_with" title="unittest.mock.Mock.assert_called_once_with"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_called_once_with()</span></code></a> method that also asserts that the
-<a class="reference internal" href="unittest.mock.html#unittest.mock.Mock.call_count" title="unittest.mock.Mock.call_count"><code class="xref py py-attr docutils literal notranslate"><span class="pre">call_count</span></code></a> is one.</p>
+<p>如果你的 mock 只被呼叫一次，你可以使用 <a class="reference internal" href="unittest.mock.html#unittest.mock.Mock.assert_called_once_with" title="unittest.mock.Mock.assert_called_once_with"><code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_called_once_with()</span></code></a> 方法，其也斷言 <a class="reference internal" href="unittest.mock.html#unittest.mock.Mock.call_count" title="unittest.mock.Mock.call_count"><code class="xref py py-attr docutils literal notranslate"><span class="pre">call_count</span></code></a> 是1。</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">foo_bar</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="s1">&#39;baz&#39;</span><span class="p">,</span> <span class="n">spam</span><span class="o">=</span><span class="s1">&#39;eggs&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">foo_bar</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">foo_bar</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="s1">&#39;baz&#39;</span><span class="p">,</span> <span class="n">spam</span><span class="o">=</span><span class="s1">&#39;eggs&#39;</span><span class="p">)</span>
@@ -821,10 +771,7 @@ with a Mock instance instead, and isn't called with <code class="docutils litera
 <span class="gr">AssertionError</span>: <span class="n">Expected to be called once. Called 2 times.</span>
 </pre></div>
 </div>
-<p>Both <code class="docutils literal notranslate"><span class="pre">assert_called_with</span></code> and <code class="docutils literal notranslate"><span class="pre">assert_called_once_with</span></code> make assertions about
-the <em>most recent</em> call. If your mock is going to be called several times, and
-you want to make assertions about <em>all</em> those calls you can use
-<a class="reference internal" href="unittest.mock.html#unittest.mock.Mock.call_args_list" title="unittest.mock.Mock.call_args_list"><code class="xref py py-attr docutils literal notranslate"><span class="pre">call_args_list</span></code></a>:</p>
+<p><code class="docutils literal notranslate"><span class="pre">assert_called_with</span></code> 和 <code class="docutils literal notranslate"><span class="pre">assert_called_once_with</span></code> 都對<em>最近一次</em>的呼叫做出斷言。如果你的 mock 將被多次呼叫，並且你想要對<em>所有</em>這些呼叫進行斷言，你可以使用 <a class="reference internal" href="unittest.mock.html#unittest.mock.Mock.call_args_list" title="unittest.mock.Mock.call_args_list"><code class="xref py py-attr docutils literal notranslate"><span class="pre">call_args_list</span></code></a>：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
@@ -833,9 +780,7 @@ you want to make assertions about <em>all</em> those calls you can use
 <span class="go">[call(1, 2, 3), call(4, 5, 6), call()]</span>
 </pre></div>
 </div>
-<p>The <a class="reference internal" href="unittest.mock.html#unittest.mock.call" title="unittest.mock.call"><code class="xref py py-data docutils literal notranslate"><span class="pre">call</span></code></a> helper makes it easy to make assertions about these calls. You
-can build up a list of expected calls and compare it to <code class="docutils literal notranslate"><span class="pre">call_args_list</span></code>. This
-looks remarkably similar to the repr of the <code class="docutils literal notranslate"><span class="pre">call_args_list</span></code>:</p>
+<p><a class="reference internal" href="unittest.mock.html#unittest.mock.call" title="unittest.mock.call"><code class="xref py py-data docutils literal notranslate"><span class="pre">call</span></code></a> 輔助函式可以輕鬆地對這些呼叫做出斷言。你可以建立預期呼叫的清單並將其與 <code class="docutils literal notranslate"><span class="pre">call_args_list</span></code> 進行比較。這看起來與 <code class="docutils literal notranslate"><span class="pre">call_args_list</span></code> 的 repr 非常相似：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">expected</span> <span class="o">=</span> <span class="p">[</span><span class="n">call</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">call</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">call</span><span class="p">()]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">call_args_list</span> <span class="o">==</span> <span class="n">expected</span>
 <span class="go">True</span>
@@ -843,13 +788,9 @@ looks remarkably similar to the repr of the <code class="docutils literal notran
 </div>
 </section>
 <section id="coping-with-mutable-arguments">
-<h3>Coping with mutable arguments<a class="headerlink" href="#coping-with-mutable-arguments" title="Link to this heading">¶</a></h3>
-<p>Another situation is rare, but can bite you, is when your mock is called with
-mutable arguments. <code class="docutils literal notranslate"><span class="pre">call_args</span></code> and <code class="docutils literal notranslate"><span class="pre">call_args_list</span></code> store <em>references</em> to the
-arguments. If the arguments are mutated by the code under test then you can no
-longer make assertions about what the values were when the mock was called.</p>
-<p>Here's some example code that shows the problem. Imagine the following functions
-defined in 'mymodule':</p>
+<h3>應對可變引數<a class="headerlink" href="#coping-with-mutable-arguments" title="Link to this heading">¶</a></h3>
+<p>另一種情況很少見，但可能會困擾你，那就是當你的 mock 被使用可變引數呼叫。<code class="docutils literal notranslate"><span class="pre">call_args</span></code> 和 <code class="docutils literal notranslate"><span class="pre">call_args_list</span></code> 儲存對引數的<em>參照</em>。如果引數被測試中的程式碼改變，那麼你將無法再對 mock 被呼叫時的值進行斷言。</p>
+<p>這是一些秀出問題的程式碼範例。 想像 'mymodule' 中定義以下函式：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">frob</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
     <span class="k">pass</span>
 
@@ -859,8 +800,7 @@ defined in 'mymodule':</p>
     <span class="n">val</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>When we try to test that <code class="docutils literal notranslate"><span class="pre">grob</span></code> calls <code class="docutils literal notranslate"><span class="pre">frob</span></code> with the correct argument look
-what happens:</p>
+<p>當我們嘗試測試 <code class="docutils literal notranslate"><span class="pre">grob</span></code> 使用正確的引數呼叫 <code class="docutils literal notranslate"><span class="pre">frob</span></code> 時，看看會發生什麼：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;mymodule.frob&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">mock_frob</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="n">val</span> <span class="o">=</span> <span class="p">{</span><span class="mi">6</span><span class="p">}</span>
 <span class="gp">... </span>    <span class="n">mymodule</span><span class="o">.</span><span class="n">grob</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
@@ -874,16 +814,8 @@ what happens:</p>
 <span class="x">Called with: ((set(),), {})</span>
 </pre></div>
 </div>
-<p>One possibility would be for mock to copy the arguments you pass in. This
-could then cause problems if you do assertions that rely on object identity
-for equality.</p>
-<p>Here's one solution that uses the <a class="reference internal" href="unittest.mock.html#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a>
-functionality. If you provide a <code class="docutils literal notranslate"><span class="pre">side_effect</span></code> function for a mock then
-<code class="docutils literal notranslate"><span class="pre">side_effect</span></code> will be called with the same args as the mock. This gives us an
-opportunity to copy the arguments and store them for later assertions. In this
-example I'm using <em>another</em> mock to store the arguments so that I can use the
-mock methods for doing the assertion. Again a helper function sets this up for
-me.</p>
+<p>一種可能是讓 mock 複製你傳入的引數。如果你進行的斷言依賴於物件識別性來確定相等性，這就可能導致問題。</p>
+<p>以下是一種使用 <a class="reference internal" href="unittest.mock.html#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> 功能的解法。如果你為 mock 提供一個 <code class="docutils literal notranslate"><span class="pre">side_effect</span></code> 函式，則 <code class="docutils literal notranslate"><span class="pre">side_effect</span></code> 將被使用與 mock 相同的引數呼叫。這使我們有機會複製引數並將其儲存以供之後的斷言。在這個範例中，我們使用<em>另一個</em> mock 來儲存引數，以便我們可以使用 mock 方法來執行斷言。同樣的，有一個輔助函式為我們設定了這些。：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">unittest.mock</span> <span class="kn">import</span> <span class="n">Mock</span><span class="p">,</span> <span class="n">patch</span><span class="p">,</span> <span class="n">DEFAULT</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">copy_call_args</span><span class="p">(</span><span class="n">mock</span><span class="p">):</span>
@@ -906,14 +838,10 @@ me.</p>
 <span class="go">call({6})</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">copy_call_args</span></code> is called with the mock that will be called. It returns a new
-mock that we do the assertion on. The <code class="docutils literal notranslate"><span class="pre">side_effect</span></code> function makes a copy of
-the args and calls our <code class="docutils literal notranslate"><span class="pre">new_mock</span></code> with the copy.</p>
+<p><code class="docutils literal notranslate"><span class="pre">copy_call_args</span></code> 與將要被呼叫的 mock 一起被呼叫。它回傳一個我們會對其進行斷言的新的 mock。<code class="docutils literal notranslate"><span class="pre">side_effect</span></code> 函式建立引數們的副本，並用該副本呼叫我們的 <code class="docutils literal notranslate"><span class="pre">new_mock</span></code>。</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>If your mock is only going to be used once there is an easier way of
-checking arguments at the point they are called. You can simply do the
-checking inside a <code class="docutils literal notranslate"><span class="pre">side_effect</span></code> function.</p>
+<p>如果你的 mock 只會被使用一次，則有一種更簡單的方法可以在呼叫引數時檢查它們。你可以簡單地在 <code class="docutils literal notranslate"><span class="pre">side_effect</span></code> 函式內進行檢查。</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">side_effect</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">assert</span> <span class="n">arg</span> <span class="o">==</span> <span class="p">{</span><span class="mi">6</span><span class="p">}</span>
 <span class="gp">...</span>
@@ -926,9 +854,7 @@ checking inside a <code class="docutils literal notranslate"><span class="pre">s
 </pre></div>
 </div>
 </div>
-<p>An alternative approach is to create a subclass of <a class="reference internal" href="unittest.mock.html#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> or
-<a class="reference internal" href="unittest.mock.html#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> that copies (using <a class="reference internal" href="copy.html#copy.deepcopy" title="copy.deepcopy"><code class="xref py py-func docutils literal notranslate"><span class="pre">copy.deepcopy()</span></code></a>) the arguments.
-Here's an example implementation:</p>
+<p>另一種方法是建立 <a class="reference internal" href="unittest.mock.html#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> 或 <a class="reference internal" href="unittest.mock.html#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> 的子類別來複製（使用 <a class="reference internal" href="copy.html#copy.deepcopy" title="copy.deepcopy"><code class="xref py py-func docutils literal notranslate"><span class="pre">copy.deepcopy()</span></code></a>）引數。這是一個實作的例子：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CopyingMock</span><span class="p">(</span><span class="n">MagicMock</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -950,15 +876,11 @@ Here's an example implementation:</p>
 <span class="go">&lt;CopyingMock name=&#39;mock.foo&#39; id=&#39;...&#39;&gt;</span>
 </pre></div>
 </div>
-<p>When you subclass <code class="docutils literal notranslate"><span class="pre">Mock</span></code> or <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> all dynamically created attributes,
-and the <code class="docutils literal notranslate"><span class="pre">return_value</span></code> will use your subclass automatically. That means all
-children of a <code class="docutils literal notranslate"><span class="pre">CopyingMock</span></code> will also have the type <code class="docutils literal notranslate"><span class="pre">CopyingMock</span></code>.</p>
+<p>當你將 <code class="docutils literal notranslate"><span class="pre">Mock</span></code> 或 <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> 子類別化時，所有屬性會被動態建立，且 <code class="docutils literal notranslate"><span class="pre">return_value</span></code> 會自動使用你的子類別。這代表著 <code class="docutils literal notranslate"><span class="pre">CopyingMock</span></code> 的所有子代 (child) 也會具有``CopyingMock`` 型別。</p>
 </section>
 <section id="nesting-patches">
-<h3>Nesting Patches<a class="headerlink" href="#nesting-patches" title="Link to this heading">¶</a></h3>
-<p>Using patch as a context manager is nice, but if you do multiple patches you
-can end up with nested with statements indenting further and further to the
-right:</p>
+<h3>巢狀使用 Patch<a class="headerlink" href="#nesting-patches" title="Link to this heading">¶</a></h3>
+<p>將 patch 作為情境管理器使用很好，但是如果你使用複數個 patch，你最終可能會得到巢狀的 with 陳述式，並且越來越向右縮排：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
 <span class="gp">...</span>
 <span class="gp">... </span>    <span class="k">def</span> <span class="nf">test_foo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -974,10 +896,7 @@ right:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">assert</span> <span class="n">mymodule</span><span class="o">.</span><span class="n">Foo</span> <span class="ow">is</span> <span class="n">original</span>
 </pre></div>
 </div>
-<p>With unittest <code class="docutils literal notranslate"><span class="pre">cleanup</span></code> functions and the <a class="reference internal" href="unittest.mock.html#start-and-stop"><span class="std std-ref">patch 方法：啟動與停止</span></a> we can
-achieve the same effect without the nested indentation. A simple helper
-method, <code class="docutils literal notranslate"><span class="pre">create_patch</span></code>, puts the patch in place and returns the created mock
-for us:</p>
+<p>我們可以使用 unittest 的 <code class="docutils literal notranslate"><span class="pre">cleanup</span></code> 函式以及 <a class="reference internal" href="unittest.mock.html#start-and-stop"><span class="std std-ref">patch 方法：啟動與停止</span></a> 來達到相同的效果，而不會出現因巢狀導致的縮排。一個簡單的輔助方法 <code class="docutils literal notranslate"><span class="pre">create_patch</span></code> 會將 patch 放置到位並為我們回傳被建立的 mock：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyTest</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
 <span class="gp">...</span>
 <span class="gp">... </span>    <span class="k">def</span> <span class="nf">create_patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
@@ -1002,18 +921,11 @@ for us:</p>
 </div>
 </section>
 <section id="mocking-a-dictionary-with-magicmock">
-<h3>Mocking a dictionary with MagicMock<a class="headerlink" href="#mocking-a-dictionary-with-magicmock" title="Link to this heading">¶</a></h3>
-<p>You may want to mock a dictionary, or other container object, recording all
-access to it whilst having it still behave like a dictionary.</p>
-<p>We can do this with <a class="reference internal" href="unittest.mock.html#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a>, which will behave like a dictionary,
-and using <a class="reference internal" href="unittest.mock.html#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-data docutils literal notranslate"><span class="pre">side_effect</span></code></a> to delegate dictionary access to a real
-underlying dictionary that is under our control.</p>
-<p>When the <a class="reference internal" href="../reference/datamodel.html#object.__getitem__" title="object.__getitem__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__getitem__()</span></code></a> and <a class="reference internal" href="../reference/datamodel.html#object.__setitem__" title="object.__setitem__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__setitem__()</span></code></a> methods
-of our <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> are called
-(normal dictionary access) then <code class="docutils literal notranslate"><span class="pre">side_effect</span></code> is called with the key (and in
-the case of <code class="docutils literal notranslate"><span class="pre">__setitem__</span></code> the value too). We can also control what is returned.</p>
-<p>After the <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> has been used we can use attributes like
-<a class="reference internal" href="unittest.mock.html#unittest.mock.Mock.call_args_list" title="unittest.mock.Mock.call_args_list"><code class="xref py py-data docutils literal notranslate"><span class="pre">call_args_list</span></code></a> to assert about how the dictionary was used:</p>
+<h3>使用 MagicMock 來 mock 字典<a class="headerlink" href="#mocking-a-dictionary-with-magicmock" title="Link to this heading">¶</a></h3>
+<p>你可能會想要 mock 字典或其他容器物件，記錄對它的所有存取，同時讓它仍然像字典一樣運作。</p>
+<p>我們可以使用 <a class="reference internal" href="unittest.mock.html#unittest.mock.MagicMock" title="unittest.mock.MagicMock"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagicMock</span></code></a> 來做到這一點，它的行為會與字典一致，並使用 <a class="reference internal" href="unittest.mock.html#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-data docutils literal notranslate"><span class="pre">side_effect</span></code></a> 將字典存取委託給我們控制下的真實底層字典。</p>
+<p>當 <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> 的 <a class="reference internal" href="../reference/datamodel.html#object.__getitem__" title="object.__getitem__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__getitem__()</span></code></a> 和 <a class="reference internal" href="../reference/datamodel.html#object.__setitem__" title="object.__setitem__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__setitem__()</span></code></a> 方法被呼叫時（一般的字典存取）， <code class="docutils literal notranslate"><span class="pre">side_effect</span></code> 會被使用鍵 (key) 來呼叫 （在 <code class="docutils literal notranslate"><span class="pre">__setitem__</span></code> 的情況也會使用值 (value)）。我們也可以控制回傳的內容。</p>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> 後，我們可以使用諸如 <a class="reference internal" href="unittest.mock.html#unittest.mock.Mock.call_args_list" title="unittest.mock.Mock.call_args_list"><code class="xref py py-data docutils literal notranslate"><span class="pre">call_args_list</span></code></a> 之類的屬性來斷言字典被使用的方式：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">getitem</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
 <span class="gp">... </span>     <span class="k">return</span> <span class="n">my_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
@@ -1028,25 +940,20 @@ the case of <code class="docutils literal notranslate"><span class="pre">__setit
 </div>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>An alternative to using <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> is to use <code class="docutils literal notranslate"><span class="pre">Mock</span></code> and <em>only</em> provide
-the magic methods you specifically want:</p>
+<p>不使用 <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> 的替代方案是使用 <code class="docutils literal notranslate"><span class="pre">Mock</span></code> 並且<em>只</em>提供你特別想要的魔術方法：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="fm">__getitem__</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">side_effect</span><span class="o">=</span><span class="n">getitem</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="fm">__setitem__</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">side_effect</span><span class="o">=</span><span class="n">setitem</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>A <em>third</em> option is to use <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> but passing in <code class="docutils literal notranslate"><span class="pre">dict</span></code> as the <em>spec</em>
-(or <em>spec_set</em>) argument so that the <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> created only has
-dictionary magic methods available:</p>
+<p><em>第三個</em>選擇是使用 <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code>，但傳入 <code class="docutils literal notranslate"><span class="pre">dict</span></code> 作為 <em>spec*（或*spec_set</em>）引數，以使被建立的 <code class="docutils literal notranslate"><span class="pre">MagicMock</span></code> 僅具有字典可用的魔術方法：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">MagicMock</span><span class="p">(</span><span class="n">spec_set</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="fm">__getitem__</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="n">getitem</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="fm">__setitem__</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="n">setitem</span>
 </pre></div>
 </div>
 </div>
-<p>With these side effect functions in place, the <code class="docutils literal notranslate"><span class="pre">mock</span></code> will behave like a normal
-dictionary but recording the access. It even raises a <a class="reference internal" href="exceptions.html#KeyError" title="KeyError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyError</span></code></a> if you try
-to access a key that doesn't exist.</p>
+<p>有了這些 side effect 函式，<code class="docutils literal notranslate"><span class="pre">mock</span></code> 會像一般的字典一樣運作，但會記錄存取。如果你嘗試存取不存在的鍵，它甚至會引發一個 <a class="reference internal" href="exceptions.html#KeyError" title="KeyError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyError</span></code></a>。</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="p">[</span><span class="s1">&#39;a&#39;</span><span class="p">]</span>
 <span class="go">1</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="p">[</span><span class="s1">&#39;c&#39;</span><span class="p">]</span>
@@ -1063,8 +970,7 @@ to access a key that doesn't exist.</p>
 <span class="go">&#39;eggs&#39;</span>
 </pre></div>
 </div>
-<p>After it has been used you can make assertions about the access using the normal
-mock methods and attributes:</p>
+<p>在上述方式被使用後，你就可以使用普通的 mock 方法和屬性對存取進行斷言：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="fm">__getitem__</span><span class="o">.</span><span class="n">call_args_list</span>
 <span class="go">[call(&#39;a&#39;), call(&#39;c&#39;), call(&#39;d&#39;), call(&#39;b&#39;), call(&#39;d&#39;)]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="fm">__setitem__</span><span class="o">.</span><span class="n">call_args_list</span>
@@ -1075,7 +981,7 @@ mock methods and attributes:</p>
 </div>
 </section>
 <section id="mock-subclasses-and-their-attributes">
-<h3>Mock subclasses and their attributes<a class="headerlink" href="#mock-subclasses-and-their-attributes" title="Link to this heading">¶</a></h3>
+<h3>Mock 子類別及其屬性<a class="headerlink" href="#mock-subclasses-and-their-attributes" title="Link to this heading">¶</a></h3>
 <p>There are various reasons why you might want to subclass <a class="reference internal" href="unittest.mock.html#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a>. One
 reason might be to add helper methods. Here's a silly example:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">MyMock</span><span class="p">(</span><span class="n">MagicMock</span><span class="p">):</span>
@@ -1377,15 +1283,15 @@ that may be useful here, in the form of its equality matcher
 <li><a class="reference internal" href="#patch-decorators">Patch 裝飾器</a></li>
 <li><a class="reference internal" href="#further-examples">更多範例</a><ul>
 <li><a class="reference internal" href="#mocking-chained-calls">Mock 鍊接呼叫</a></li>
-<li><a class="reference internal" href="#partial-mocking">Partial mocking</a></li>
-<li><a class="reference internal" href="#mocking-a-generator-method">Mocking a Generator Method</a></li>
-<li><a class="reference internal" href="#applying-the-same-patch-to-every-test-method">Applying the same patch to every test method</a></li>
-<li><a class="reference internal" href="#mocking-unbound-methods">Mocking Unbound Methods</a></li>
-<li><a class="reference internal" href="#checking-multiple-calls-with-mock">Checking multiple calls with mock</a></li>
-<li><a class="reference internal" href="#coping-with-mutable-arguments">Coping with mutable arguments</a></li>
-<li><a class="reference internal" href="#nesting-patches">Nesting Patches</a></li>
-<li><a class="reference internal" href="#mocking-a-dictionary-with-magicmock">Mocking a dictionary with MagicMock</a></li>
-<li><a class="reference internal" href="#mock-subclasses-and-their-attributes">Mock subclasses and their attributes</a></li>
+<li><a class="reference internal" href="#partial-mocking">部分 mocking</a></li>
+<li><a class="reference internal" href="#mocking-a-generator-method">Mock 產生器方法</a></li>
+<li><a class="reference internal" href="#applying-the-same-patch-to-every-test-method">對每個測試方法應用相同的 patch</a></li>
+<li><a class="reference internal" href="#mocking-unbound-methods">Mock Unbound Methods （未繫結方法）</a></li>
+<li><a class="reference internal" href="#checking-multiple-calls-with-mock">使用 mock 檢查多個呼叫</a></li>
+<li><a class="reference internal" href="#coping-with-mutable-arguments">應對可變引數</a></li>
+<li><a class="reference internal" href="#nesting-patches">巢狀使用 Patch</a></li>
+<li><a class="reference internal" href="#mocking-a-dictionary-with-magicmock">使用 MagicMock 來 mock 字典</a></li>
+<li><a class="reference internal" href="#mock-subclasses-and-their-attributes">Mock 子類別及其屬性</a></li>
 <li><a class="reference internal" href="#mocking-imports-with-patch-dict">Mocking imports with patch.dict</a></li>
 <li><a class="reference internal" href="#tracking-order-of-calls-and-less-verbose-call-assertions">Tracking order of calls and less verbose call assertions</a></li>
 <li><a class="reference internal" href="#more-complex-argument-matching">More complex argument matching</a></li>
@@ -1496,7 +1402,7 @@ that may be useful here, in the form of its equality matcher
 <br />
     <br />
 
-    最後更新於 Mar 25, 2024 (16:39 UTC)。
+    最後更新於 Mar 26, 2024 (13:11 UTC)。
     <a href="/bugs.html">Found a bug</a>?
     <br />
 
