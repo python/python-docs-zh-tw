@@ -53,6 +53,35 @@ all: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build an 
 	for file in *.po */*.po; do ln -f $$file $(LC_MESSAGES)/$$file; done
 	. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D locale_dirs=locales -D language=$(LANGUAGE) -D gettext_compact=0' $(MODE)
 
+.PHONY: build
+build: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build an html local version
+	@$(eval target=$(filter-out $@,$(MAKECMDGOALS)))
+	@if [ -z $(target) ]; then \
+		echo "\x1B[1;31m""Please provide a file argument.""\x1B[m"; \
+		exit 1; \
+	fi
+	@if [ "$(suffix $(target))" != ".po" ]; then \
+		echo "\x1B[1;31m""Incorrect file extension. Only '.po' files are allowed.""\x1B[m"; \
+		exit 1; \
+	fi
+	@if [[ ! -f "$(target)" ]] ; then \
+		echo "\x1B[1;31m""ERROR: $(target) not exist.""\x1B[m"; \
+		exit 1; \
+	fi
+	@mkdir -p $(LC_MESSAGES)
+	@$(eval dir=`echo $(target) | xargs -n1 dirname`) ## Get dir
+# If the build target is in under directory
+# We should make direcotry in $(LC_MESSAGES) and link the file.
+	@if [ $(dir) != "." ]; then \
+		echo "mkdir -p $(LC_MESSAGES)/$(dir)"; \
+		mkdir -p $(LC_MESSAGES)/$(dir); \
+		echo "ln -f ./$(target) $(LC_MESSAGES)/$(target)"; \
+		ln -f ./$(target) $(LC_MESSAGES)/$(target); \
+	fi
+# Build
+	@echo "----"
+	@. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D language=$(LANGUAGE) -D locale_dirs=locales -D gettext_compact=0' SOURCES='$(basename $(target)).rst' html
+
 help:
 	@python3 -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
@@ -133,3 +162,7 @@ rm_cpython: ## Remove cloned cpython repo
 .PHONY: lint
 lint:  $(VENV)/bin/sphinx-lint  ## Run sphinx-lint
 	$(VENV)/bin/sphinx-lint --enable default-role
+
+# This allows us to accept extra arguments (by doing nothing when we get a job that doesn't match, rather than throwing an error)
+%:
+	@:
