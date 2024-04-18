@@ -12,9 +12,9 @@
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=b20cc3f5" />
     
     <script src="../_static/documentation_options.js?v=17adff09"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/translations.js?v=d9a6981e"></script>
+    <script src="../_static/translations.js?v=1fe8cbde"></script>
     
     <script src="../_static/sidebar.js"></script>
     
@@ -46,6 +46,92 @@
             <script type="text/javascript" src="../_static/menu.js"></script>
             <script type="text/javascript" src="../_static/search-focus.js"></script>
             <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+
+<meta name="readthedocs-addons-api-version" content="1">
+<script type="text/javascript">
+ function onSwitch(event) {
+     const option = event.target.selectedIndex;
+     const item = event.target.options[option];
+     window.location.href = item.dataset.url;
+ }
+
+ document.addEventListener("readthedocs-addons-data-ready", function(event) {
+   const config = event.detail.data()
+
+   // Add some mocked hardcoded versions pointing to the official
+   // documentation while migrating to Read the Docs.
+   // These are only for testing purposes.
+   // TODO: remove them when managing all the versions on Read the Docs,
+   // since all the "active, built and not hidden" versions will be shown automatically.
+   let versions = config.versions.active.concat([
+       {
+           slug: "dev (3.13)",
+           urls: {
+               documentation: "https://docs.python.org/3.13/",
+           }
+       },
+       {
+           slug: "3.12",
+           urls: {
+               documentation: "https://docs.python.org/3.12/",
+           }
+       },
+       {
+           slug: "3.11",
+           urls: {
+               documentation: "https://docs.python.org/3.11/",
+           }
+       },
+   ]);
+
+   const versionSelect = `
+   <select id="version_select">
+   ${ versions.map(
+       (version) => `
+       <option
+           value="${ version.slug }"
+           ${ config.versions.current.slug === version.slug ? 'selected="selected"' : '' }
+           data-url="${ version.urls.documentation }">
+           ${ version.slug }
+       </option>`
+   ).join("\n") }
+   </select>
+   `;
+
+   // Prepend the current language to the options on the selector
+   let languages = config.projects.translations.concat(config.projects.current);
+   languages = languages.sort((a, b) => a.language.name.localeCompare(b.language.name));
+
+   const languageSelect = `
+   <select id="language_select">
+   ${ languages.map(
+       (translation) => `
+       <option
+           value="${ translation.slug }"
+           ${ config.projects.current.slug === translation.slug ? 'selected="selected"' : '' }
+           data-url="${ translation.urls.documentation }">
+           ${ translation.language.name }
+       </option>`
+   ).join("\n") }
+   </select>
+   `;
+
+   // Query all the placeholders because there are different ones for Desktop/Mobile
+   const versionPlaceholders = document.querySelectorAll(".version_switcher_placeholder");
+   for (placeholder of versionPlaceholders) {
+       placeholder.innerHTML = versionSelect;
+       let selectElement = placeholder.querySelector("select");
+       selectElement.addEventListener("change", onSwitch);
+   }
+
+   const languagePlaceholders = document.querySelectorAll(".language_switcher_placeholder");
+   for (placeholder of languagePlaceholders) {
+       placeholder.innerHTML = languageSelect;
+       let selectElement = placeholder.querySelector("select");
+       selectElement.addEventListener("change", onSwitch);
+   }
+ });
+</script>
 
   </head>
 <body>
@@ -192,16 +278,16 @@
           <div class="body" role="main">
             
   <section id="introduction">
-<span id="api-intro"></span><h1>簡介<a class="headerlink" href="#introduction" title="Link to this heading">¶</a></h1>
+<span id="api-intro"></span><h1>簡介<a class="headerlink" href="#introduction" title="連結到這個標頭">¶</a></h1>
 <p>對於 Python 的應用程式開發介面使得 C 和 C++ 開發者能夠在各種層級存取 Python 直譯器。該 API 同樣可用於 C++，但為簡潔起見，通常將其稱為 Python/C API。使用 Python/C API 有兩個不同的原因，第一個是為特定目的來編寫<em>擴充模組</em>；這些是擴充 Python 直譯器的 C 模組，這可能是最常見的用法。第二個原因是在更大的應用程式中將 Python 作為零件使用；這種技術通常在應用程式中稱為 <em class="dfn">embedding</em>（嵌入式）Python。</p>
 <p>編寫擴充模組是一個相對容易理解的過程，其中「食譜 (cookbook)」方法很有效。有幾種工具可以在一定程度上自動化該過程，儘管人們從早期就將 Python 嵌入到其他應用程式中，但嵌入 Python 的過程並不像編寫擴充那樣簡單。</p>
 <p>不論你是嵌入還是擴充 Python，許多 API 函式都是很有用的；此外，大多數嵌入 Python 的應用程式也需要提供自定義擴充模組，因此在嘗試將 Python 嵌入實際應用程式之前熟悉編寫擴充可能是個好主意。</p>
 <section id="coding-standards">
-<h2>編寫標準<a class="headerlink" href="#coding-standards" title="Link to this heading">¶</a></h2>
+<h2>編寫標準<a class="headerlink" href="#coding-standards" title="連結到這個標頭">¶</a></h2>
 <p>如果你正在編寫要引入於 CPython 中的 C 程式碼，你<strong>必須</strong>遵循 <span class="target" id="index-37"></span><a class="pep reference external" href="https://peps.python.org/pep-0007/"><strong>PEP 7</strong></a> 中定義的指南和標準。無論你貢獻的 Python 版本如何，這些指南都適用。對於你自己的第三方擴充模組，則不必遵循這些約定，除非你希望最終將它們貢獻給 Python。</p>
 </section>
 <section id="include-files">
-<span id="api-includes"></span><h2>引入檔案 (include files)<a class="headerlink" href="#include-files" title="Link to this heading">¶</a></h2>
+<span id="api-includes"></span><h2>引入檔案 (include files)<a class="headerlink" href="#include-files" title="連結到這個標頭">¶</a></h2>
 <p>使用 Python/C API 所需的所有函式、型別和巨集的定義都透過以下這幾行來在你的程式碼中引入：</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#define PY_SSIZE_T_CLEAN</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;Python.h&gt;</span>
@@ -223,11 +309,11 @@
 <p>C++ 使用者應注意，儘管 API 完全使用 C 來定義，但標頭檔適當地將入口點聲明為 <code class="docutils literal notranslate"><span class="pre">extern</span> <span class="pre">&quot;C&quot;</span></code>。因此，無需執行任何特殊操作即可使用 C++ 中的 API。</p>
 </section>
 <section id="useful-macros">
-<h2>有用的巨集<a class="headerlink" href="#useful-macros" title="Link to this heading">¶</a></h2>
+<h2>有用的巨集<a class="headerlink" href="#useful-macros" title="連結到這個標頭">¶</a></h2>
 <p>Python 標頭檔中定義了幾個有用的巨集，大多被定義在它們有用的地方附近（例如 <a class="reference internal" href="none.html#c.Py_RETURN_NONE" title="Py_RETURN_NONE"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_RETURN_NONE</span></code></a>），其他是更通用的工具程式。以下並不一定是完整的列表。</p>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.PyMODINIT_FUNC">
-<span class="sig-name descname"><span class="n"><span class="pre">PyMODINIT_FUNC</span></span></span><a class="headerlink" href="#c.PyMODINIT_FUNC" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">PyMODINIT_FUNC</span></span></span><a class="headerlink" href="#c.PyMODINIT_FUNC" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Declare an extension module <code class="docutils literal notranslate"><span class="pre">PyInit</span></code> initialization function. The function
 return type is <span class="c-expr sig sig-inline c"><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n">PyObject</span></a><span class="p">*</span></span>. The macro declares any special linkage
 declarations required by the platform, and for C++ declares the function as
@@ -252,16 +338,16 @@ item defined in the module file. Example:</p>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_ABS">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_ABS</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_ABS" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_ABS</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_ABS" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>回傳 <code class="docutils literal notranslate"><span class="pre">x</span></code> 的絕對值。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.3 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.3.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_ALWAYS_INLINE">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_ALWAYS_INLINE</span></span></span><a class="headerlink" href="#c.Py_ALWAYS_INLINE" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_ALWAYS_INLINE</span></span></span><a class="headerlink" href="#c.Py_ALWAYS_INLINE" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>要求編譯器總是嵌入靜態行內函式 (static inline function)，編譯器可以忽略它並決定不嵌入該函式。</p>
 <p>在禁用函式嵌入的除錯模式下建置 Python 時，它可用於嵌入有性能要求的靜態行內函式。例如，MSC 在除錯模式下建置時禁用函式嵌入。</p>
 <p>盲目地使用 Py_ALWAYS_INLINE 標記靜態行內函式可能會導致更差的性能（例如程式碼大小增加）。在成本/收益分析方面，編譯器通常比開發人員更聰明。</p>
@@ -271,19 +357,19 @@ item defined in the module file. Example:</p>
 </pre></div>
 </div>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.11 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.11.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_CHARMASK">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_CHARMASK</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">c</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_CHARMASK" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_CHARMASK</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">c</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_CHARMASK" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>引數必須是 [-128, 127] 或 [0, 255] 範圍內的字元或整數。這個巨集會將 <code class="docutils literal notranslate"><span class="pre">c</span></code> 轉換為 <code class="docutils literal notranslate"><span class="pre">unsigned</span> <span class="pre">char</span></code> 並回傳。</p>
 </dd></dl>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_DEPRECATED">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_DEPRECATED</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">version</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_DEPRECATED" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_DEPRECATED</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">version</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_DEPRECATED" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>將其用於已棄用的聲明。巨集必須放在符號名稱之前。</p>
 <p>範例：</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">Py_DEPRECATED</span><span class="p">(</span><span class="mf">3.8</span><span class="p">)</span><span class="w"> </span><span class="n">PyAPI_FUNC</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="w"> </span><span class="n">Py_OldFunction</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
@@ -296,83 +382,83 @@ item defined in the module file. Example:</p>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_GETENV">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_GETENV</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">s</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_GETENV" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_GETENV</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">s</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_GETENV" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>類似於 <code class="docutils literal notranslate"><span class="pre">getenv(s)</span></code>，但如果在命令列上傳遞了 <a class="reference internal" href="../using/cmdline.html#cmdoption-E"><code class="xref std std-option docutils literal notranslate"><span class="pre">-E</span></code></a> 則回傳 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> （請見 <a class="reference internal" href="init_config.html#c.PyConfig.use_environment" title="PyConfig.use_environment"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyConfig.use_environment</span></code></a>）。</p>
 </dd></dl>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_MAX">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_MAX</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">x</span></span>, <span class="n"><span class="pre">y</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_MAX" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_MAX</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">x</span></span>, <span class="n"><span class="pre">y</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_MAX" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>回傳 <code class="docutils literal notranslate"><span class="pre">x</span></code> 和 <code class="docutils literal notranslate"><span class="pre">y</span></code> 之間的最大值。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.3 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.3.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_MEMBER_SIZE">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_MEMBER_SIZE</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">type</span></span>, <span class="n"><span class="pre">member</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_MEMBER_SIZE" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_MEMBER_SIZE</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">type</span></span>, <span class="n"><span class="pre">member</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_MEMBER_SIZE" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>以位元組為單位回傳結構 (<code class="docutils literal notranslate"><span class="pre">type</span></code>) <code class="docutils literal notranslate"><span class="pre">member</span></code> 的大小。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.6 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.6.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_MIN">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_MIN</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">x</span></span>, <span class="n"><span class="pre">y</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_MIN" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_MIN</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">x</span></span>, <span class="n"><span class="pre">y</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_MIN" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>回傳 <code class="docutils literal notranslate"><span class="pre">x</span></code> 和 <code class="docutils literal notranslate"><span class="pre">y</span></code> 之間的最小值。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.3 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.3.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_NO_INLINE">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_NO_INLINE</span></span></span><a class="headerlink" href="#c.Py_NO_INLINE" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_NO_INLINE</span></span></span><a class="headerlink" href="#c.Py_NO_INLINE" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>禁用函式的嵌入。例如，它減少了 C 堆疊的消耗：對大量嵌入程式碼的 LTO+PGO 建置很有用（請參閱 <a class="reference external" href="https://bugs.python.org/issue?&#64;action=redirect&amp;bpo=33720">bpo-33720</a>）。</p>
 <p>用法：</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">Py_NO_INLINE</span><span class="w"> </span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">random</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">4</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
 </pre></div>
 </div>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.11 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.11.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_STRINGIFY">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_STRINGIFY</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_STRINGIFY" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_STRINGIFY</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_STRINGIFY" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>將 <code class="docutils literal notranslate"><span class="pre">x</span></code> 轉換為 C 字串。例如 <code class="docutils literal notranslate"><span class="pre">Py_STRINGIFY(123)</span></code> 會回傳 <code class="docutils literal notranslate"><span class="pre">&quot;123&quot;</span></code>。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.4 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.4.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_UNREACHABLE">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_UNREACHABLE</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_UNREACHABLE" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_UNREACHABLE</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_UNREACHABLE" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>當你的設計中有無法達到的程式碼路徑時，請使用此選項。例如在 <code class="docutils literal notranslate"><span class="pre">case</span></code> 語句已涵蓋了所有可能值的 <code class="docutils literal notranslate"><span class="pre">switch</span></code> 陳述式中的 <code class="docutils literal notranslate"><span class="pre">default:</span></code> 子句。在你可能想要呼叫 <code class="docutils literal notranslate"><span class="pre">assert(0)</span></code> 或 <code class="docutils literal notranslate"><span class="pre">abort()</span></code> 的地方使用它。</p>
 <p>在發布模式 (release mode) 下，巨集幫助編譯器最佳化程式碼，並避免有關無法存取程式碼的警告。例如該巨集是在發布模式下於 GCC 使用 <code class="docutils literal notranslate"><span class="pre">__builtin_unreachable()</span></code> 來實作。</p>
 <p><code class="docutils literal notranslate"><span class="pre">Py_UNREACHABLE()</span></code> 的一個用途是，在對一個永不回傳但並未聲明為 <code class="xref c c-macro docutils literal notranslate"><span class="pre">_Py_NO_RETURN</span></code> 的函式之呼叫後使用。</p>
 <p>如果程式碼路徑是極不可能但在特殊情況下可以到達，則不得使用此巨集。例如在低記憶體條件下或系統呼叫回傳了超出預期範圍的值。在這種情況下，最好將錯誤回報給呼叫者。如果無法回報錯誤則可以使用 <a class="reference internal" href="sys.html#c.Py_FatalError" title="Py_FatalError"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_FatalError()</span></code></a>。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.7 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.7.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_UNUSED">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_UNUSED</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">arg</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_UNUSED" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_UNUSED</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">arg</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_UNUSED" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>將此用於函式定義中未使用的參數以消除編譯器警告。例如：<code class="docutils literal notranslate"><span class="pre">int</span> <span class="pre">func(int</span> <span class="pre">a,</span> <span class="pre">int</span> <span class="pre">Py_UNUSED(b))</span> <span class="pre">{</span> <span class="pre">return</span> <span class="pre">a;</span> <span class="pre">}</span></code>。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.4 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.4.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.PyDoc_STRVAR">
-<span class="sig-name descname"><span class="n"><span class="pre">PyDoc_STRVAR</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">name</span></span>, <span class="n"><span class="pre">str</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDoc_STRVAR" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">PyDoc_STRVAR</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">name</span></span>, <span class="n"><span class="pre">str</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDoc_STRVAR" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>建立一個名為 <code class="docutils literal notranslate"><span class="pre">name</span></code> 的變數，可以在文件字串中使用。如果 Python 是在沒有文件字串的情況下建置，則該值將為空。</p>
 <p>如 <span class="target" id="index-38"></span><a class="pep reference external" href="https://peps.python.org/pep-0007/"><strong>PEP 7</strong></a> 中所指明，使用 <a class="reference internal" href="#c.PyDoc_STRVAR" title="PyDoc_STRVAR"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PyDoc_STRVAR</span></code></a> 作為文件字串可以支援在沒有文件字串的情況下建置 Python。</p>
 <p>範例：</p>
@@ -389,7 +475,7 @@ item defined in the module file. Example:</p>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.PyDoc_STR">
-<span class="sig-name descname"><span class="n"><span class="pre">PyDoc_STR</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">str</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDoc_STR" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">PyDoc_STR</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">str</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDoc_STR" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>為給定的輸入字串建立一個文件字串，如果文件字串被禁用則建立空字串。</p>
 <p>如 <span class="target" id="index-39"></span><a class="pep reference external" href="https://peps.python.org/pep-0007/"><strong>PEP 7</strong></a> 中所指明，使用 <a class="reference internal" href="#c.PyDoc_STR" title="PyDoc_STR"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PyDoc_STR</span></code></a> 指定文件字串以支援在沒有文件字串下建置 Python。</p>
 <p>範例：</p>
@@ -404,18 +490,18 @@ item defined in the module file. Example:</p>
 
 </section>
 <section id="objects-types-and-reference-counts">
-<span id="api-objects"></span><h2>物件、型別和參照計數<a class="headerlink" href="#objects-types-and-reference-counts" title="Link to this heading">¶</a></h2>
+<span id="api-objects"></span><h2>物件、型別和參照計數<a class="headerlink" href="#objects-types-and-reference-counts" title="連結到這個標頭">¶</a></h2>
 <p id="index-3">大多數 Python/C API 函式都有一個或多個引數以及一個型別為 <span class="c-expr sig sig-inline c"><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n">PyObject</span></a><span class="p">*</span></span> 的回傳值，此型別是一個指標，指向一個表示任意 Python 物件的晦暗 (opaque) 資料型別。由於在大多數情況下，Python 語言以相同的方式處理所有 Python 物件型別（例如賦值、作用域規則和引數傳遞），因此它們應該由單個 C 型別來表示。幾乎所有的 Python 物件都存在於堆積 (heap) 中：你永遠不會聲明 <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyObject</span></code></a> 型別的自動變數或靜態變數，只能聲明 <span class="c-expr sig sig-inline c"><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n">PyObject</span></a><span class="p">*</span></span> 型別的指標變數。唯一的例外是型別物件；由於它們絕不能被釋放，因此它們通常是靜態 <a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyTypeObject</span></code></a> 物件。</p>
 <p>所有 Python 物件（甚至是 Python 整數）都有一個型別 (<em class="dfn">type</em>) 和一個參照計數 (<em class="dfn">reference count</em>)。一個物件的型別決定了它是什麼種類的物件（例如一個整數、一個 list 或一個使用者定義的函式；還有更多型別，請見<a class="reference internal" href="../reference/datamodel.html#types"><span class="std std-ref">標準型別階層</span></a>）。對於每個眾所周知的型別，都有一個巨集來檢查物件是否屬於該型別；例如，若（且唯若）*a* 指向的物件是 Python list 時，<code class="docutils literal notranslate"><span class="pre">PyList_Check(a)</span></code> 為真。</p>
 <section id="reference-counts">
-<span id="api-refcounts"></span><h3>參照計數<a class="headerlink" href="#reference-counts" title="Link to this heading">¶</a></h3>
+<span id="api-refcounts"></span><h3>參照計數<a class="headerlink" href="#reference-counts" title="連結到這個標頭">¶</a></h3>
 <p>參照計數很重要，因為現今的電腦記憶體大小是有限的（而且通常是非常有限的）；它計算有多少個不同的地方用有了一個物件的<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>。這樣的地方可以是另一個物件，或者全域（或靜態）C 變數，或者某個 C 函式中的本地變數。當一個物件的最後一個<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>被釋放時（即其的參照計數變為零），該物件將被解除配置 (deallocated)。如果它包含對其他物件的參照，則它們的參照會被釋放。如果這樣的釋放使得再也沒有任何對於它們的參照，則可以依次為那些其他物件解除配置，依此類推。 （此處相互參照物件的存在是個明顯的問題；目前，解決方案是「就不要那樣做」。）</p>
 <p id="index-4">參照計數總是被明確地操作。正常的方法是使用巨集 <a class="reference internal" href="refcounting.html#c.Py_INCREF" title="Py_INCREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_INCREF()</span></code></a> 來取得對於物件的參照（即參照計數加一），並使用巨集 <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 來釋放參照（即將參照計數減一）。<a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 巨集比 incref 巨集複雜得多，因為它必須檢查參照計數是否變為零，然後呼叫物件的釋放器 (deallocator)。釋放器是包含在物件型別結構中的函式指標。特定型別的釋放器，在如果是一個複合物件型別（例如 list）時負責釋放物件中包含的其他物件的參照，並執行任何需要的額外完結步驟。參照計數不可能溢出；至少與虛擬記憶體中用來保存參照計數的不同記憶體位置數量一樣多的位元會被使用（假設 <code class="docutils literal notranslate"><span class="pre">sizeof(Py_ssize_t)</span> <span class="pre">&gt;=</span> <span class="pre">sizeof(void*)</span></code>）。因此參照計數增加是一個簡單的操作。</p>
 <p>沒有必要為每個包含物件指標的本地變數物件都持有一個<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>（即增加參照計數）。理論上，當變數指向它時，物件的參照計數會增加 1，而當變數離開作用域時就會減少 1。然而這兩者會相互抵消，所以最後參照計數沒有改變。使用參照計數的唯一真正原因是防止物件還有變數指向它時被解除配置。如果我們知道至少有一個物件的其他參照生存了至少與我們的變數一樣久，就不需要臨時增加建立新的<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>（即增加參照計數）。出現這種情況的一個重要情況是在從 Python 呼叫的擴充模組中作為引數傳遞給 C 函式的物件；呼叫機制保證在呼叫期間保持對每個參數的參照。</p>
 <p>然而，一個常見的陷阱是從一個 list 中提取一個物件並保留它一段時間而不取得其參照。某些其他操作可能會從列表中刪除該物件，減少其參照計數並可能取消分配它。真正的危險是看似無害的操作可能會呼叫可以執行此操作的任意 Python 程式碼；有一個程式碼路徑允許控制權從 <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 回歸使用者，因此幾乎任何操作都有潛在危險。</p>
 <p>一種安全的方法是都使用通用 (generics) 操作（名稱以 <code class="docutils literal notranslate"><span class="pre">PyObject_</span></code>、<code class="docutils literal notranslate"><span class="pre">PyNumber_</span></code>、<code class="docutils literal notranslate"><span class="pre">PySequence_</span></code> 或 <code class="docutils literal notranslate"><span class="pre">PyMapping_</span></code> 開頭的函式）。這些操作總是建立新的對於它們回傳物件的<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>（即增加其參照計數）。這讓呼叫者有責任在處理完結果後呼叫 <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a>；這就成為第二本質。</p>
 <section id="reference-count-details">
-<span id="api-refcountdetails"></span><h4>參照計數詳細資訊<a class="headerlink" href="#reference-count-details" title="Link to this heading">¶</a></h4>
+<span id="api-refcountdetails"></span><h4>參照計數詳細資訊<a class="headerlink" href="#reference-count-details" title="連結到這個標頭">¶</a></h4>
 <p>Python/C API 中函式的參照計數行為最好用<em>參照的所有權</em>來解釋。所有權附屬於參照而非物件（物件並非被擁有，它們總是共享的）。「擁有參照」意味著當不再需要該參照時，負責在其上呼叫 Py_DECREF。所有權也可以轉移，這意味著接收參照所有權的程式碼最終會負責在不需要參照時透過呼叫 <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 或 <a class="reference internal" href="refcounting.html#c.Py_XDECREF" title="Py_XDECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_XDECREF()</span></code></a> 釋放參照 --- 或者將這個責任再傳遞出去（通常是給它的呼叫者）。當一個函式將參照的所有權傳遞給它的呼叫者時，呼叫者被稱為接收到一個<em>新</em>參照。當沒有所有權轉移時，呼叫者被稱為<em>借用</em>參照。如果是<a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">借用參照</span></a>就不需要做任何事情。</p>
 <p>相反地，當呼叫的函式傳入物件的參照時，有兩種可能性：函式有<em>竊取 (steal)</em> 物件的參照，或者沒有。 <em>竊取參照</em>意味著當你將參照傳遞給函式時，該函式假定它現在擁有該參照，並且你不再對它負責。</p>
 <p id="index-5">很少有函式會竊取參照；兩個值得注意的例外是 <a class="reference internal" href="list.html#c.PyList_SetItem" title="PyList_SetItem"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyList_SetItem()</span></code></a> 和 <a class="reference internal" href="tuple.html#c.PyTuple_SetItem" title="PyTuple_SetItem"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyTuple_SetItem()</span></code></a>，它們竊取了對項目的參照（但不是對項目所在的 tuple 或 list 的參照！）。因為有著使用新建立的物件來增加 (populate) tuple 或 list 的習慣，這些函式旨在竊取參照；例如，建立 tuple <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">2,</span> <span class="pre">&quot;three&quot;)</span></code> 的程式碼可以如下所示（先暫時忘記錯誤處理；更好的編寫方式如下所示）：</p>
@@ -518,18 +604,18 @@ item defined in the module file. Example:</p>
 </section>
 </section>
 <section id="types">
-<span id="api-types"></span><span id="index-9"></span><h3>型別<a class="headerlink" href="#types" title="Link to this heading">¶</a></h3>
+<span id="api-types"></span><span id="index-9"></span><h3>型別<a class="headerlink" href="#types" title="連結到這個標頭">¶</a></h3>
 <p>有少數幾個其他的資料型別在 Python/C API 中發揮重要作用；大多數是簡單的 C 型別，例如 <span class="c-expr sig sig-inline c"><span class="kt">int</span></span>、<span class="c-expr sig sig-inline c"><span class="kt">long</span></span>、<span class="c-expr sig sig-inline c"><span class="kt">double</span></span> 和 <span class="c-expr sig sig-inline c"><span class="kt">char</span><span class="p">*</span></span>。一些結構型別被用於描述用於列出模組所匯出的函式或新物件型別的資料屬性的靜態表，其他則用於描述複數的值。這些將與使用它們的函式一起討論。</p>
 <dl class="c type">
 <dt class="sig sig-object c" id="c.Py_ssize_t">
-<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_ssize_t</span></span></span><a class="headerlink" href="#c.Py_ssize_t" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_ssize_t</span></span></span><a class="headerlink" href="#c.Py_ssize_t" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>一個帶符號的整數型別，使得 <code class="docutils literal notranslate"><span class="pre">sizeof(Py_ssize_t)</span> <span class="pre">==</span> <span class="pre">sizeof(size_t)</span></code>。 C99 沒有直接定義這樣的東西（size_t 是無符號整數型別）。有關詳細資訊，請參閱 <span class="target" id="index-40"></span><a class="pep reference external" href="https://peps.python.org/pep-0353/"><strong>PEP 353</strong></a>。 <code class="docutils literal notranslate"><span class="pre">PY_SSIZE_T_MAX</span></code> 是 <a class="reference internal" href="#c.Py_ssize_t" title="Py_ssize_t"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_ssize_t</span></code></a> 型別的最大正值。</p>
 </dd></dl>
 
 </section>
 </section>
 <section id="exceptions">
-<span id="api-exceptions"></span><h2>例外<a class="headerlink" href="#exceptions" title="Link to this heading">¶</a></h2>
+<span id="api-exceptions"></span><h2>例外<a class="headerlink" href="#exceptions" title="連結到這個標頭">¶</a></h2>
 <p>如果需要特定的錯誤處理，Python 開發者就只需要處理例外；未處理的例外會自動傳遞給呼叫者，然後傳遞給呼叫者的呼叫者，依此類推，直到它們到達頂層直譯器，在那裡它們透過堆疊回溯 (stack trace) 回報給使用者。</p>
 <p id="index-11">然而，對於 C 開發者來說，錯誤檢查總是必須是顯式的。除非在函式的文件中另有明確聲明，否則 Python/C API 中的所有函式都可以引發例外。通常當一個函式遇到錯誤時，它會設定一個例外，丟棄它擁有的任何物件參照，並回傳一個錯誤指示器。如果沒有另外文件記錄，這個指示器要麼是 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> 不然就是 <code class="docutils literal notranslate"><span class="pre">-1</span></code>，取決於函式的回傳型別。有些函式會回傳布林值 true/false 結果，false 表示錯誤。很少有函式不回傳明確的錯誤指示器或者有不明確的回傳值，而需要使用 <a class="reference internal" href="exceptions.html#c.PyErr_Occurred" title="PyErr_Occurred"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_Occurred()</span></code></a> 明確測試錯誤。這些例外都會被明確地記錄於文件。</p>
 <p id="index-12">例外的狀態會在個別執行緒的存儲空間 (per-thread storage) 中維護（這相當於在非執行緒應用程式中使用全域存儲空間）。執行緒可以處於兩種狀態之一：發生例外或未發生例外。函式 <a class="reference internal" href="exceptions.html#c.PyErr_Occurred" title="PyErr_Occurred"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_Occurred()</span></code></a> 可用於檢查這一點：當例外發生時，它回傳對例外型別物件的借用參照，否則回傳 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>。設定例外狀態的函式有很多：<a class="reference internal" href="exceptions.html#c.PyErr_SetString" title="PyErr_SetString"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_SetString()</span></code></a> 是最常見的（儘管不是最通用的）設定例外狀態的函式，而 <a class="reference internal" href="exceptions.html#c.PyErr_Clear" title="PyErr_Clear"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_Clear()</span></code></a> 是用來清除例外狀態。</p>
@@ -593,7 +679,7 @@ item defined in the module file. Example:</p>
 <p id="index-17"><span id="index-16"></span>這個例子代表了在 C 語言中對使用 <code class="docutils literal notranslate"><span class="pre">goto</span></code> 陳述句的認同！它闡述了以 <a class="reference internal" href="exceptions.html#c.PyErr_ExceptionMatches" title="PyErr_ExceptionMatches"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_ExceptionMatches()</span></code></a> 和 <a class="reference internal" href="exceptions.html#c.PyErr_Clear" title="PyErr_Clear"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_Clear()</span></code></a> 來處理特定的例外，以及以 <a class="reference internal" href="refcounting.html#c.Py_XDECREF" title="Py_XDECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_XDECREF()</span></code></a> 來配置其所擁有且可能為 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> 的參照（注意名稱中的 <code class="docutils literal notranslate"><span class="pre">'X'</span></code>；<a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 在遇到 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> 參照時會崩潰）。重要的是，用於保存擁有的參照的變數被初始化為 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> 以使其能夠順利作用；同樣地，回傳值被初始化為 <code class="docutils literal notranslate"><span class="pre">-1</span></code>（失敗），並且僅在最後一次呼叫成功後才設定為成功。</p>
 </section>
 <section id="embedding-python">
-<span id="api-embedding"></span><h2>嵌入式Python<a class="headerlink" href="#embedding-python" title="Link to this heading">¶</a></h2>
+<span id="api-embedding"></span><h2>嵌入式Python<a class="headerlink" href="#embedding-python" title="連結到這個標頭">¶</a></h2>
 <p>只有 Python 直譯器的嵌入者（而不是擴充編寫者）需要擔心的一項重要任務是 Python 直譯器的初始化與完成階段。直譯器的大部分功能只能在直譯器初始化後使用。</p>
 <p id="index-18">基本的初始化函式是 <a class="reference internal" href="init.html#c.Py_Initialize" title="Py_Initialize"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_Initialize()</span></code></a>。這會初始化帶有載入模組的表，並建立基礎模組 <a class="reference internal" href="../library/builtins.html#module-builtins" title="builtins: The module that provides the built-in namespace."><code class="xref py py-mod docutils literal notranslate"><span class="pre">builtins</span></code></a>、<a class="reference internal" href="../library/__main__.html#module-__main__" title="__main__: The environment where top-level code is run. Covers command-line interfaces, import-time behavior, and ``__name__ == '__main__'``."><code class="xref py py-mod docutils literal notranslate"><span class="pre">__main__</span></code></a> 和 <a class="reference internal" href="../library/sys.html#module-sys" title="sys: Access system-specific parameters and functions."><code class="xref py py-mod docutils literal notranslate"><span class="pre">sys</span></code></a>。它還會初始化模組搜索路徑 (<code class="docutils literal notranslate"><span class="pre">sys.path</span></code>)。</p>
 <p><a class="reference internal" href="init.html#c.Py_Initialize" title="Py_Initialize"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_Initialize()</span></code></a> 不設定「腳本引數列表 (script argument list)」 (<code class="docutils literal notranslate"><span class="pre">sys.argv</span></code>)。如果稍後將要執行的 Python 程式碼需要此變數，則必須設定 <a class="reference internal" href="init_config.html#c.PyConfig.argv" title="PyConfig.argv"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyConfig.argv</span></code></a> 和 <a class="reference internal" href="init_config.html#c.PyConfig.parse_argv" title="PyConfig.parse_argv"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyConfig.parse_argv</span></code></a>，請見 <a class="reference internal" href="init_config.html#init-config"><span class="std std-ref">Python 初始化配置</span></a>。</p>
@@ -603,12 +689,12 @@ item defined in the module file. Example:</p>
 <p id="index-26">有時會希望能夠「取消初始化 (uninitialize)」Python。例如，應用程式可能想要重新開始（再次呼叫 <a class="reference internal" href="init.html#c.Py_Initialize" title="Py_Initialize"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_Initialize()</span></code></a>）或者應用程式簡單地完成了對 Python 的使用並想要釋放 Python 分配的記憶體。這可以透過呼叫 <a class="reference internal" href="init.html#c.Py_FinalizeEx" title="Py_FinalizeEx"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_FinalizeEx()</span></code></a> 來完成。如果 Python 當前處於初始化狀態，函式 <a class="reference internal" href="init.html#c.Py_IsInitialized" title="Py_IsInitialized"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_IsInitialized()</span></code></a> 會回傳 true。有關這些功能的更多資訊將在後面的章節中給出。請注意 <a class="reference internal" href="init.html#c.Py_FinalizeEx" title="Py_FinalizeEx"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_FinalizeEx()</span></code></a> <em>不會</em>釋放由 Python 直譯器分配的所有記憶體，例如目前無法釋放被擴充模組所分配的記憶體。</p>
 </section>
 <section id="debugging-builds">
-<span id="api-debugging"></span><h2>除錯建置<a class="headerlink" href="#debugging-builds" title="Link to this heading">¶</a></h2>
+<span id="api-debugging"></span><h2>除錯建置<a class="headerlink" href="#debugging-builds" title="連結到這個標頭">¶</a></h2>
 <p>Python 可以在建置時使用多個巨集來啟用對直譯器和擴充模組的額外檢查，這些檢查往往會在執行環境 (runtime) 增加大量開銷 (overhead)，因此預設情況下不啟用它們。</p>
 <p>Python 原始碼發佈版本中的 <code class="file docutils literal notranslate"><span class="pre">Misc/SpecialBuilds.txt</span></code> 檔案有一份包含多種除錯構置的完整列表，為支援追蹤參照計數、為記憶體分配器除錯或對主直譯器迴圈進行低階分析的建置。本節的其餘部分將僅描述最常用的建置。</p>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_DEBUG">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_DEBUG</span></span></span><a class="headerlink" href="#c.Py_DEBUG" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_DEBUG</span></span></span><a class="headerlink" href="#c.Py_DEBUG" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 <p>使用定義的 <code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_DEBUG</span></code> 巨集編譯直譯器會生成 <a class="reference internal" href="../using/configure.html#debug-build"><span class="std std-ref">Python 的除錯建置</span></a>。 <code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_DEBUG</span></code> 在 Unix 建置中要透過在 <code class="file docutils literal notranslate"><span class="pre">./configure</span></code> 命令中加入 <a class="reference internal" href="../using/configure.html#cmdoption-with-pydebug"><code class="xref std std-option docutils literal notranslate"><span class="pre">--with-pydebug</span></code></a> 來啟用。非 Python 限定的 <code class="xref c c-macro docutils literal notranslate"><span class="pre">_DEBUG</span></code> 巨集的存在也暗示了這一點。當 <code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_DEBUG</span></code> 在 Unix 建置中啟用時，編譯器最佳化會被禁用。</p>
@@ -754,13 +840,13 @@ item defined in the module file. Example:</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Apr 15, 2024 (12:58 UTC)。
+      最後更新於 Apr 18, 2024 (19:44 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
     <br />
 
-    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6 建立。
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.6 建立。
     </div>
 
   </body>

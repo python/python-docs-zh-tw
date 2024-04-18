@@ -12,9 +12,9 @@
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=b20cc3f5" />
     
     <script src="../_static/documentation_options.js?v=17adff09"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/translations.js?v=d9a6981e"></script>
+    <script src="../_static/translations.js?v=1fe8cbde"></script>
     
     <script src="../_static/sidebar.js"></script>
     
@@ -46,6 +46,92 @@
             <script type="text/javascript" src="../_static/menu.js"></script>
             <script type="text/javascript" src="../_static/search-focus.js"></script>
             <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+
+<meta name="readthedocs-addons-api-version" content="1">
+<script type="text/javascript">
+ function onSwitch(event) {
+     const option = event.target.selectedIndex;
+     const item = event.target.options[option];
+     window.location.href = item.dataset.url;
+ }
+
+ document.addEventListener("readthedocs-addons-data-ready", function(event) {
+   const config = event.detail.data()
+
+   // Add some mocked hardcoded versions pointing to the official
+   // documentation while migrating to Read the Docs.
+   // These are only for testing purposes.
+   // TODO: remove them when managing all the versions on Read the Docs,
+   // since all the "active, built and not hidden" versions will be shown automatically.
+   let versions = config.versions.active.concat([
+       {
+           slug: "dev (3.13)",
+           urls: {
+               documentation: "https://docs.python.org/3.13/",
+           }
+       },
+       {
+           slug: "3.12",
+           urls: {
+               documentation: "https://docs.python.org/3.12/",
+           }
+       },
+       {
+           slug: "3.11",
+           urls: {
+               documentation: "https://docs.python.org/3.11/",
+           }
+       },
+   ]);
+
+   const versionSelect = `
+   <select id="version_select">
+   ${ versions.map(
+       (version) => `
+       <option
+           value="${ version.slug }"
+           ${ config.versions.current.slug === version.slug ? 'selected="selected"' : '' }
+           data-url="${ version.urls.documentation }">
+           ${ version.slug }
+       </option>`
+   ).join("\n") }
+   </select>
+   `;
+
+   // Prepend the current language to the options on the selector
+   let languages = config.projects.translations.concat(config.projects.current);
+   languages = languages.sort((a, b) => a.language.name.localeCompare(b.language.name));
+
+   const languageSelect = `
+   <select id="language_select">
+   ${ languages.map(
+       (translation) => `
+       <option
+           value="${ translation.slug }"
+           ${ config.projects.current.slug === translation.slug ? 'selected="selected"' : '' }
+           data-url="${ translation.urls.documentation }">
+           ${ translation.language.name }
+       </option>`
+   ).join("\n") }
+   </select>
+   `;
+
+   // Query all the placeholders because there are different ones for Desktop/Mobile
+   const versionPlaceholders = document.querySelectorAll(".version_switcher_placeholder");
+   for (placeholder of versionPlaceholders) {
+       placeholder.innerHTML = versionSelect;
+       let selectElement = placeholder.querySelector("select");
+       selectElement.addEventListener("change", onSwitch);
+   }
+
+   const languagePlaceholders = document.querySelectorAll(".language_switcher_placeholder");
+   for (placeholder of languagePlaceholders) {
+       placeholder.innerHTML = languageSelect;
+       let selectElement = placeholder.querySelector("select");
+       selectElement.addEventListener("change", onSwitch);
+   }
+ });
+</script>
 
   </head>
 <body>
@@ -169,11 +255,11 @@
           <div class="body" role="main">
             
   <section id="reference-counting">
-<span id="countingrefs"></span><h1>參照計數<a class="headerlink" href="#reference-counting" title="Link to this heading">¶</a></h1>
+<span id="countingrefs"></span><h1>參照計數<a class="headerlink" href="#reference-counting" title="連結到這個標頭">¶</a></h1>
 <p>本節中的函式與巨集用於管理 Python 物件的參照計數。</p>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_REFCNT">
-<a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><span class="n"><span class="pre">Py_ssize_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_REFCNT</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_REFCNT" title="Link to this definition">¶</a><br /></dt>
+<a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><span class="n"><span class="pre">Py_ssize_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_REFCNT</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_REFCNT" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>取得物件 <em>o</em> 的參照計數。</p>
 <p>請注意，回傳的值可能實際上並不反映實際保存了多少對該物件的參照。例如，某些物件是「不滅的 (immortal)」，並且具有非常高的參照計數，不能反映實際的參照數量。因此，除了 0 或 1 以外，不要依賴回傳值的準確性。</p>
 <p>使用 <a class="reference internal" href="#c.Py_SET_REFCNT" title="Py_SET_REFCNT"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_SET_REFCNT()</span></code></a> 函式設定物件參照計數。</p>
@@ -187,11 +273,11 @@
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_SET_REFCNT">
-<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_SET_REFCNT</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span>, <a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><span class="n"><span class="pre">Py_ssize_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">refcnt</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_SET_REFCNT" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_SET_REFCNT</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span>, <a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><span class="n"><span class="pre">Py_ssize_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">refcnt</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_SET_REFCNT" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>設定物件 <em>o</em> 的參照計數。</p>
 <p>請注意，此函式對<a class="reference external" href="https://peps.python.org/pep-0683/">不滅的</a>物件沒有影響。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.9 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.9.</span></p>
 </div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.12 版的變更: </span>不滅的物件不會被修改。</p>
@@ -200,7 +286,7 @@
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_INCREF">
-<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_INCREF</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_INCREF" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_INCREF</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_INCREF" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>代表取得對於物件 <em>o</em> 的新<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>，即它正在使用且不應被銷毀。</p>
 <p>此函式通常用於將<a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">借用參照</span></a>原地 (in-place) 轉換為<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>。<a class="reference internal" href="#c.Py_NewRef" title="Py_NewRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_NewRef()</span></code></a> 函式可用於建立新的<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>。</p>
 <p>使用完該物件後，透過呼叫 <a class="reference internal" href="#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 來釋放它。</p>
@@ -213,14 +299,14 @@
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_XINCREF">
-<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_XINCREF</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_XINCREF" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_XINCREF</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_XINCREF" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>與 <a class="reference internal" href="#c.Py_INCREF" title="Py_INCREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_INCREF()</span></code></a> 類似，但物件 <em>o</em> 可以為 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>，在這種情況下這就不會有任何效果。</p>
 <p>另請見 <a class="reference internal" href="#c.Py_XNewRef" title="Py_XNewRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_XNewRef()</span></code></a>。</p>
 </dd></dl>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_NewRef">
-<a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">Py_NewRef</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_NewRef" title="Link to this definition">¶</a><br /></dt>
+<a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">Py_NewRef</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_NewRef" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.10 版本開始.</em><p>建立對物件的新<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>：於 <em>o</em> 呼叫 <a class="reference internal" href="#c.Py_INCREF" title="Py_INCREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_INCREF()</span></code></a> 並回傳物件 <em>o</em>。</p>
 <p>當不再需要<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>時，應對其呼叫 <a class="reference internal" href="#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 以釋放該參照。</p>
 <p>物件 <em>o</em> 不能為 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>；如果 <em>o</em> 可以為 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>，則使用 <a class="reference internal" href="#c.Py_XNewRef" title="Py_XNewRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_XNewRef()</span></code></a>。</p>
@@ -235,23 +321,23 @@
 </div>
 <p>另請參閱 <a class="reference internal" href="#c.Py_INCREF" title="Py_INCREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_INCREF()</span></code></a>。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.10 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.10.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_XNewRef">
-<a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">Py_XNewRef</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_XNewRef" title="Link to this definition">¶</a><br /></dt>
+<a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">Py_XNewRef</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_XNewRef" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.10 版本開始.</em><p>與 <a class="reference internal" href="#c.Py_NewRef" title="Py_NewRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_NewRef()</span></code></a> 類似，但物件 <em>o</em> 可以為 NULL。</p>
 <p>如果物件 <em>o</em> 為 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>，則該函式僅回傳 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.10 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.10.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_DECREF">
-<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_DECREF</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_DECREF" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_DECREF</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_DECREF" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>釋放一個對物件 <em>o</em> 的<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>，代表該參照不會再被使用。</p>
 <p>如果最後一個<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>被釋放（即物件的參照計數達到零），則觸發物件之型別的釋放函式 (deallocation function)（不得為 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>）。</p>
 <p>此函式通常用於在退出作用域之前刪除<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>。</p>
@@ -268,13 +354,13 @@
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_XDECREF">
-<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_XDECREF</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_XDECREF" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_XDECREF</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_XDECREF" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>和 <a class="reference internal" href="#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 類似，但該物件可以是 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>，在這種情況下巨集不起作用。在這裡也會出現與 <a class="reference internal" href="#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 相同的警告。</p>
 </dd></dl>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_CLEAR">
-<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_CLEAR</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_CLEAR" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_CLEAR</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_CLEAR" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>釋放對於物件 <em>o</em> 的<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>。該物件可能是 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>，在這種情況下巨集不起作用；否則，效果與 <a class="reference internal" href="#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 相同，除非引數也設定為 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>。<a class="reference internal" href="#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 的警告不適用於傳遞的物件，因為巨集在釋放其參照之前小心地使用臨時變數並將引數設定為 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>。</p>
 <p>每當要釋放垃圾回收 (garbage collection) 期間可能被遍歷到之對於物件的參照時，使用此巨集是個好主意。</p>
 <div class="versionchanged">
@@ -284,19 +370,19 @@
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_IncRef">
-<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_IncRef</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_IncRef" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_IncRef</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_IncRef" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>代表取得對於物件 <em>o</em> 的<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>。<a class="reference internal" href="#c.Py_XINCREF" title="Py_XINCREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_XINCREF()</span></code></a> 的函式版本。它可用於 Python 的 runtime 動態嵌入。</p>
 </dd></dl>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_DecRef">
-<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_DecRef</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_DecRef" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_DecRef</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_DecRef" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>釋放對物件 <em>o</em> 的<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>。<a class="reference internal" href="#c.Py_XDECREF" title="Py_XDECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_XDECREF()</span></code></a> 的函式版本。它可用於 Python 的 runtime 動態嵌入。</p>
 </dd></dl>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_SETREF">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_SETREF</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">dst</span></span>, <span class="n"><span class="pre">src</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_SETREF" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_SETREF</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">dst</span></span>, <span class="n"><span class="pre">src</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_SETREF" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>巨集安全地釋放對於物件 <em>dst</em> 的<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">強參照</span></a>並將 <em>dst</em> 設定為 <em>src</em>。</p>
 <p>與 <a class="reference internal" href="#c.Py_CLEAR" title="Py_CLEAR"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_CLEAR()</span></code></a> 的情況一樣，「明顯的」程式碼可能是致命的：</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">Py_DECREF</span><span class="p">(</span><span class="n">dst</span><span class="p">);</span>
@@ -309,7 +395,7 @@
 </div>
 <p>這會在釋放對 <em>dst</em> 舊值的參照_之前_將 <em>dst</em> 設定為 <em>src</em>，使得因 <em>dst</em> 被拆除而觸發的任何副作用 (side-effect) 之程式碼不會相信 <em>dst</em> 是指向一個有效物件。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.6 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.6.</span></p>
 </div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.12 版的變更: </span>巨集引數現在僅會被求值一次。如果引數有其他副作用，則不再重複作用。</p>
@@ -318,10 +404,10 @@
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_XSETREF">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_XSETREF</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">dst</span></span>, <span class="n"><span class="pre">src</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_XSETREF" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_XSETREF</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">dst</span></span>, <span class="n"><span class="pre">src</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_XSETREF" title="連結到這個定義">¶</a><br /></dt>
 <dd><p><a class="reference internal" href="#c.Py_SETREF" title="Py_SETREF"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_SETREF</span></code></a> 巨集的變體，請改用 <a class="reference internal" href="#c.Py_XDECREF" title="Py_XDECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_XDECREF()</span></code></a> 而非 <a class="reference internal" href="#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a>。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.6 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.6.</span></p>
 </div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.12 版的變更: </span>巨集引數現在僅會被求值一次。如果引數有其他副作用，則不再重複作用。</p>
@@ -443,13 +529,13 @@
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Apr 15, 2024 (12:58 UTC)。
+      最後更新於 Apr 18, 2024 (19:44 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
     <br />
 
-    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6 建立。
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.6 建立。
     </div>
 
   </body>

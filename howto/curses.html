@@ -12,9 +12,9 @@
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=b20cc3f5" />
     
     <script src="../_static/documentation_options.js?v=17adff09"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/translations.js?v=d9a6981e"></script>
+    <script src="../_static/translations.js?v=1fe8cbde"></script>
     
     <script src="../_static/sidebar.js"></script>
     
@@ -46,6 +46,92 @@
             <script type="text/javascript" src="../_static/menu.js"></script>
             <script type="text/javascript" src="../_static/search-focus.js"></script>
             <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+
+<meta name="readthedocs-addons-api-version" content="1">
+<script type="text/javascript">
+ function onSwitch(event) {
+     const option = event.target.selectedIndex;
+     const item = event.target.options[option];
+     window.location.href = item.dataset.url;
+ }
+
+ document.addEventListener("readthedocs-addons-data-ready", function(event) {
+   const config = event.detail.data()
+
+   // Add some mocked hardcoded versions pointing to the official
+   // documentation while migrating to Read the Docs.
+   // These are only for testing purposes.
+   // TODO: remove them when managing all the versions on Read the Docs,
+   // since all the "active, built and not hidden" versions will be shown automatically.
+   let versions = config.versions.active.concat([
+       {
+           slug: "dev (3.13)",
+           urls: {
+               documentation: "https://docs.python.org/3.13/",
+           }
+       },
+       {
+           slug: "3.12",
+           urls: {
+               documentation: "https://docs.python.org/3.12/",
+           }
+       },
+       {
+           slug: "3.11",
+           urls: {
+               documentation: "https://docs.python.org/3.11/",
+           }
+       },
+   ]);
+
+   const versionSelect = `
+   <select id="version_select">
+   ${ versions.map(
+       (version) => `
+       <option
+           value="${ version.slug }"
+           ${ config.versions.current.slug === version.slug ? 'selected="selected"' : '' }
+           data-url="${ version.urls.documentation }">
+           ${ version.slug }
+       </option>`
+   ).join("\n") }
+   </select>
+   `;
+
+   // Prepend the current language to the options on the selector
+   let languages = config.projects.translations.concat(config.projects.current);
+   languages = languages.sort((a, b) => a.language.name.localeCompare(b.language.name));
+
+   const languageSelect = `
+   <select id="language_select">
+   ${ languages.map(
+       (translation) => `
+       <option
+           value="${ translation.slug }"
+           ${ config.projects.current.slug === translation.slug ? 'selected="selected"' : '' }
+           data-url="${ translation.urls.documentation }">
+           ${ translation.language.name }
+       </option>`
+   ).join("\n") }
+   </select>
+   `;
+
+   // Query all the placeholders because there are different ones for Desktop/Mobile
+   const versionPlaceholders = document.querySelectorAll(".version_switcher_placeholder");
+   for (placeholder of versionPlaceholders) {
+       placeholder.innerHTML = versionSelect;
+       let selectElement = placeholder.querySelector("select");
+       selectElement.addEventListener("change", onSwitch);
+   }
+
+   const languagePlaceholders = document.querySelectorAll(".language_switcher_placeholder");
+   for (placeholder of languagePlaceholders) {
+       placeholder.innerHTML = languageSelect;
+       let selectElement = placeholder.querySelector("select");
+       selectElement.addEventListener("change", onSwitch);
+   }
+ });
+</script>
 
   </head>
 <body>
@@ -87,7 +173,7 @@
     <ul>
 <li><a class="reference internal" href="#">Curses Programming with Python</a><ul>
 <li><a class="reference internal" href="#what-is-curses">What is curses?</a><ul>
-<li><a class="reference internal" href="#the-python-curses-module">The Python curses module</a></li>
+<li><a class="reference internal" href="#the-python-curses-module">Python curses 模組</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#starting-and-ending-a-curses-application">Starting and ending a curses application</a></li>
@@ -96,7 +182,7 @@
 <li><a class="reference internal" href="#attributes-and-color">Attributes and Color</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#user-input">User Input</a></li>
+<li><a class="reference internal" href="#user-input">使用者輸入</a></li>
 <li><a class="reference internal" href="#for-more-information">For More Information</a></li>
 </ul>
 </li>
@@ -190,7 +276,7 @@
           <div class="body" role="main">
             
   <section id="curses-programming-with-python">
-<span id="curses-howto"></span><h1>Curses Programming with Python<a class="headerlink" href="#curses-programming-with-python" title="Link to this heading">¶</a></h1>
+<span id="curses-howto"></span><h1>Curses Programming with Python<a class="headerlink" href="#curses-programming-with-python" title="連結到這個標頭">¶</a></h1>
 <dl class="field-list simple">
 <dt class="field-odd">作者<span class="colon">:</span></dt>
 <dd class="field-odd"><p>A.M. Kuchling, Eric S. Raymond</p>
@@ -205,7 +291,7 @@
 module to control text-mode displays.</p>
 </aside>
 <section id="what-is-curses">
-<h2>What is curses?<a class="headerlink" href="#what-is-curses" title="Link to this heading">¶</a></h2>
+<h2>What is curses?<a class="headerlink" href="#what-is-curses" title="連結到這個標頭">¶</a></h2>
 <p>The curses library supplies a terminal-independent screen-painting and
 keyboard-handling facility for text-based terminals; such terminals
 include VT100s, the Linux console, and the simulated terminal provided
@@ -228,7 +314,7 @@ appearance---and the curses library will figure out what control codes
 need to be sent to the terminal to produce the right output.  curses
 doesn't provide many user-interface concepts such as buttons, checkboxes,
 or dialogs; if you need such features, consider a user interface library such as
-<a class="reference external" href="https://pypi.org/project/urwid/">Urwid</a>.</p>
+<a class="reference external" href="https://pypi.org/project/Urwid/">Urwid</a>.</p>
 <p>The curses library was originally written for BSD Unix; the later System V
 versions of Unix from AT&amp;T added many enhancements and new functions. BSD curses
 is no longer maintained, having been replaced by ncurses, which is an
@@ -239,9 +325,9 @@ code, all the functions described here will probably be available.  The older
 versions of curses carried by some proprietary Unixes may not support
 everything, though.</p>
 <p>The Windows version of Python doesn't include the <a class="reference internal" href="../library/curses.html#module-curses" title="curses: An interface to the curses library, providing portable terminal handling. (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">curses</span></code></a>
-module.  A ported version called <a class="reference external" href="https://pypi.org/project/UniCurses">UniCurses</a> is available.</p>
+module.  A ported version called <a class="reference external" href="https://pypi.org/project/UniCurses/">UniCurses</a> is available.</p>
 <section id="the-python-curses-module">
-<h3>The Python curses module<a class="headerlink" href="#the-python-curses-module" title="Link to this heading">¶</a></h3>
+<h3>Python curses 模組<a class="headerlink" href="#the-python-curses-module" title="連結到這個標頭">¶</a></h3>
 <p>The Python module is a fairly simple wrapper over the C functions provided by
 curses; if you're already familiar with curses programming in C, it's really
 easy to transfer that knowledge to Python.  The biggest difference is that the
@@ -256,7 +342,7 @@ for ncurses.  It will, however, give you the basic ideas.</p>
 </section>
 </section>
 <section id="starting-and-ending-a-curses-application">
-<h2>Starting and ending a curses application<a class="headerlink" href="#starting-and-ending-a-curses-application" title="Link to this heading">¶</a></h2>
+<h2>Starting and ending a curses application<a class="headerlink" href="#starting-and-ending-a-curses-application" title="連結到這個標頭">¶</a></h2>
 <p>Before doing anything, curses must be initialized.  This is done by
 calling the <a class="reference internal" href="../library/curses.html#curses.initscr" title="curses.initscr"><code class="xref py py-func docutils literal notranslate"><span class="pre">initscr()</span></code></a> function, which will determine the
 terminal type, send any required setup codes to the terminal, and
@@ -338,7 +424,7 @@ your terminal won't be left in a funny state on exception and you'll be
 able to read the exception's message and traceback.</p>
 </section>
 <section id="windows-and-pads">
-<h2>Windows and Pads<a class="headerlink" href="#windows-and-pads" title="Link to this heading">¶</a></h2>
+<h2>Windows and Pads<a class="headerlink" href="#windows-and-pads" title="連結到這個標頭">¶</a></h2>
 <p>Windows are the basic abstraction in curses.  A window object represents a
 rectangular area of the screen, and supports methods to display text,
 erase it, allow the user to input strings, and so forth.</p>
@@ -425,7 +511,7 @@ update the data structure, and then call <code class="xref py py-func docutils l
 the screen.</p>
 </section>
 <section id="displaying-text">
-<h2>Displaying Text<a class="headerlink" href="#displaying-text" title="Link to this heading">¶</a></h2>
+<h2>Displaying Text<a class="headerlink" href="#displaying-text" title="連結到這個標頭">¶</a></h2>
 <p>From a C programmer's point of view, curses may sometimes look like a
 twisty maze of functions, all subtly different.  For example,
 <code class="xref c c-func docutils literal notranslate"><span class="pre">addstr()</span></code> displays a string at the current cursor location in
@@ -493,7 +579,7 @@ that's a synonym for <a class="reference internal" href="../library/curses.html#
 curses library will attempt to suppress the flashing cursor, and you
 won't need to worry about leaving it in odd locations.</p>
 <section id="attributes-and-color">
-<h3>Attributes and Color<a class="headerlink" href="#attributes-and-color" title="Link to this heading">¶</a></h3>
+<h3>Attributes and Color<a class="headerlink" href="#attributes-and-color" title="連結到這個標頭">¶</a></h3>
 <p>Characters can be displayed in different ways.  Status lines in a text-based
 application are commonly shown in reverse video, or a text viewer may need to
 highlight certain words.  curses supports this by allowing you to specify an
@@ -592,11 +678,10 @@ system's man pages for more information.</p>
 </section>
 </section>
 <section id="user-input">
-<h2>User Input<a class="headerlink" href="#user-input" title="Link to this heading">¶</a></h2>
+<h2>使用者輸入<a class="headerlink" href="#user-input" title="連結到這個標頭">¶</a></h2>
 <p>The C curses library offers only very simple input mechanisms. Python's
 <a class="reference internal" href="../library/curses.html#module-curses" title="curses: An interface to the curses library, providing portable terminal handling. (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">curses</span></code></a> module adds a basic text-input widget.  (Other libraries
-such as <a class="reference external" href="https://pypi.org/project/urwid/">Urwid</a> have more extensive
-collections of widgets.)</p>
+such as <a class="reference external" href="https://pypi.org/project/Urwid/">Urwid</a> have more extensive collections of widgets.)</p>
 <p>There are two methods for getting input from a window:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="../library/curses.html#curses.window.getch" title="curses.window.getch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getch()</span></code></a> refreshes the screen and then waits for
@@ -677,7 +762,7 @@ trailing spaces.  Here's an example:</p>
 <p>See the library documentation on <a class="reference internal" href="../library/curses.html#module-curses.textpad" title="curses.textpad: Emacs-like input editing in a curses window."><code class="xref py py-mod docutils literal notranslate"><span class="pre">curses.textpad</span></code></a> for more details.</p>
 </section>
 <section id="for-more-information">
-<h2>For More Information<a class="headerlink" href="#for-more-information" title="Link to this heading">¶</a></h2>
+<h2>For More Information<a class="headerlink" href="#for-more-information" title="連結到這個標頭">¶</a></h2>
 <p>This HOWTO doesn't cover some advanced topics, such as reading the
 contents of the screen or capturing mouse events from an xterm
 instance, but the Python library page for the <a class="reference internal" href="../library/curses.html#module-curses" title="curses: An interface to the curses library, providing portable terminal handling. (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">curses</span></code></a> module is now
@@ -721,7 +806,7 @@ Urwid.</p></li>
     <ul>
 <li><a class="reference internal" href="#">Curses Programming with Python</a><ul>
 <li><a class="reference internal" href="#what-is-curses">What is curses?</a><ul>
-<li><a class="reference internal" href="#the-python-curses-module">The Python curses module</a></li>
+<li><a class="reference internal" href="#the-python-curses-module">Python curses 模組</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#starting-and-ending-a-curses-application">Starting and ending a curses application</a></li>
@@ -730,7 +815,7 @@ Urwid.</p></li>
 <li><a class="reference internal" href="#attributes-and-color">Attributes and Color</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#user-input">User Input</a></li>
+<li><a class="reference internal" href="#user-input">使用者輸入</a></li>
 <li><a class="reference internal" href="#for-more-information">For More Information</a></li>
 </ul>
 </li>
@@ -843,13 +928,13 @@ Urwid.</p></li>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Apr 15, 2024 (12:58 UTC)。
+      最後更新於 Apr 18, 2024 (19:44 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
     <br />
 
-    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6 建立。
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.6 建立。
     </div>
 
   </body>

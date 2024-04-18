@@ -12,9 +12,9 @@
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=b20cc3f5" />
     
     <script src="../_static/documentation_options.js?v=17adff09"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/translations.js?v=d9a6981e"></script>
+    <script src="../_static/translations.js?v=1fe8cbde"></script>
     
     <script src="../_static/sidebar.js"></script>
     
@@ -46,6 +46,92 @@
             <script type="text/javascript" src="../_static/menu.js"></script>
             <script type="text/javascript" src="../_static/search-focus.js"></script>
             <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+
+<meta name="readthedocs-addons-api-version" content="1">
+<script type="text/javascript">
+ function onSwitch(event) {
+     const option = event.target.selectedIndex;
+     const item = event.target.options[option];
+     window.location.href = item.dataset.url;
+ }
+
+ document.addEventListener("readthedocs-addons-data-ready", function(event) {
+   const config = event.detail.data()
+
+   // Add some mocked hardcoded versions pointing to the official
+   // documentation while migrating to Read the Docs.
+   // These are only for testing purposes.
+   // TODO: remove them when managing all the versions on Read the Docs,
+   // since all the "active, built and not hidden" versions will be shown automatically.
+   let versions = config.versions.active.concat([
+       {
+           slug: "dev (3.13)",
+           urls: {
+               documentation: "https://docs.python.org/3.13/",
+           }
+       },
+       {
+           slug: "3.12",
+           urls: {
+               documentation: "https://docs.python.org/3.12/",
+           }
+       },
+       {
+           slug: "3.11",
+           urls: {
+               documentation: "https://docs.python.org/3.11/",
+           }
+       },
+   ]);
+
+   const versionSelect = `
+   <select id="version_select">
+   ${ versions.map(
+       (version) => `
+       <option
+           value="${ version.slug }"
+           ${ config.versions.current.slug === version.slug ? 'selected="selected"' : '' }
+           data-url="${ version.urls.documentation }">
+           ${ version.slug }
+       </option>`
+   ).join("\n") }
+   </select>
+   `;
+
+   // Prepend the current language to the options on the selector
+   let languages = config.projects.translations.concat(config.projects.current);
+   languages = languages.sort((a, b) => a.language.name.localeCompare(b.language.name));
+
+   const languageSelect = `
+   <select id="language_select">
+   ${ languages.map(
+       (translation) => `
+       <option
+           value="${ translation.slug }"
+           ${ config.projects.current.slug === translation.slug ? 'selected="selected"' : '' }
+           data-url="${ translation.urls.documentation }">
+           ${ translation.language.name }
+       </option>`
+   ).join("\n") }
+   </select>
+   `;
+
+   // Query all the placeholders because there are different ones for Desktop/Mobile
+   const versionPlaceholders = document.querySelectorAll(".version_switcher_placeholder");
+   for (placeholder of versionPlaceholders) {
+       placeholder.innerHTML = versionSelect;
+       let selectElement = placeholder.querySelector("select");
+       selectElement.addEventListener("change", onSwitch);
+   }
+
+   const languagePlaceholders = document.querySelectorAll(".language_switcher_placeholder");
+   for (placeholder of languagePlaceholders) {
+       placeholder.innerHTML = languageSelect;
+       let selectElement = placeholder.querySelector("select");
+       selectElement.addEventListener("change", onSwitch);
+   }
+ });
+</script>
 
   </head>
 <body>
@@ -187,12 +273,12 @@
           <div class="body" role="main">
             
   <section id="common-object-structures">
-<span id="common-structs"></span><h1>通用物件結構<a class="headerlink" href="#common-object-structures" title="Link to this heading">¶</a></h1>
+<span id="common-structs"></span><h1>通用物件結構<a class="headerlink" href="#common-object-structures" title="連結到這個標頭">¶</a></h1>
 <p>There are a large number of structures which are used in the definition of
 object types for Python.  This section describes these structures and how they
 are used.</p>
 <section id="base-object-types-and-macros">
-<h2>Base object types and macros<a class="headerlink" href="#base-object-types-and-macros" title="Link to this heading">¶</a></h2>
+<h2>Base object types and macros<a class="headerlink" href="#base-object-types-and-macros" title="連結到這個標頭">¶</a></h2>
 <p>All Python objects ultimately share a small number of fields at the beginning
 of the object's representation in memory.  These are represented by the
 <a class="reference internal" href="#c.PyObject" title="PyObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyObject</span></code></a> and <a class="reference internal" href="#c.PyVarObject" title="PyVarObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyVarObject</span></code></a> types, which are defined, in turn,
@@ -201,7 +287,7 @@ the definition of all other Python objects.  Additional macros can be found
 under <a class="reference internal" href="refcounting.html#countingrefs"><span class="std std-ref">reference counting</span></a>.</p>
 <dl class="c type">
 <dt class="sig sig-object c" id="c.PyObject">
-<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyObject</span></span></span><a class="headerlink" href="#c.PyObject" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyObject</span></span></span><a class="headerlink" href="#c.PyObject" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">受限 API 的一部分</span></a>. （只有部分成員是穩定 ABI 的一部分。）</em><p>All object types are extensions of this type.  This is a type which
 contains the information Python needs to treat a pointer to an object as an
 object.  In a normal &quot;release&quot; build, it contains only the object's
@@ -214,7 +300,7 @@ members must be done by using the macros <a class="reference internal" href="ref
 
 <dl class="c type">
 <dt class="sig sig-object c" id="c.PyVarObject">
-<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyVarObject</span></span></span><a class="headerlink" href="#c.PyVarObject" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyVarObject</span></span></span><a class="headerlink" href="#c.PyVarObject" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">受限 API 的一部分</span></a>. （只有部分成員是穩定 ABI 的一部分。）</em><p>This is an extension of <a class="reference internal" href="#c.PyObject" title="PyObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyObject</span></code></a> that adds the <a class="reference internal" href="typeobj.html#c.PyVarObject.ob_size" title="PyVarObject.ob_size"><code class="xref c c-member docutils literal notranslate"><span class="pre">ob_size</span></code></a>
 field.  This is only used for objects that have some notion of <em>length</em>.
 This type does not often appear in the Python/C API.
@@ -224,7 +310,7 @@ Access to the members must be done by using the macros
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.PyObject_HEAD">
-<span class="sig-name descname"><span class="n"><span class="pre">PyObject_HEAD</span></span></span><a class="headerlink" href="#c.PyObject_HEAD" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">PyObject_HEAD</span></span></span><a class="headerlink" href="#c.PyObject_HEAD" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>This is a macro used when declaring new types which represent objects
 without a varying length.  The PyObject_HEAD macro expands to:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyObject</span><span class="w"> </span><span class="n">ob_base</span><span class="p">;</span>
@@ -235,7 +321,7 @@ without a varying length.  The PyObject_HEAD macro expands to:</p>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.PyObject_VAR_HEAD">
-<span class="sig-name descname"><span class="n"><span class="pre">PyObject_VAR_HEAD</span></span></span><a class="headerlink" href="#c.PyObject_VAR_HEAD" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">PyObject_VAR_HEAD</span></span></span><a class="headerlink" href="#c.PyObject_VAR_HEAD" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>This is a macro used when declaring new types which represent objects
 with a length that varies from instance to instance.
 The PyObject_VAR_HEAD macro expands to:</p>
@@ -247,46 +333,46 @@ The PyObject_VAR_HEAD macro expands to:</p>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_Is">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_Is</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">x</span></span>, <a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">y</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_Is" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_Is</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">x</span></span>, <a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">y</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_Is" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.10 版本開始.</em><p>Test if the <em>x</em> object is the <em>y</em> object, the same as <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">is</span> <span class="pre">y</span></code> in Python.</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.10 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.10.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_IsNone">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_IsNone</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_IsNone" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_IsNone</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_IsNone" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.10 版本開始.</em><p>Test if an object is the <code class="docutils literal notranslate"><span class="pre">None</span></code> singleton,
 the same as <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">is</span> <span class="pre">None</span></code> in Python.</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.10 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.10.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_IsTrue">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_IsTrue</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_IsTrue" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_IsTrue</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_IsTrue" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.10 版本開始.</em><p>Test if an object is the <code class="docutils literal notranslate"><span class="pre">True</span></code> singleton,
 the same as <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">is</span> <span class="pre">True</span></code> in Python.</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.10 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.10.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_IsFalse">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_IsFalse</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_IsFalse" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_IsFalse</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_IsFalse" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.10 版本開始.</em><p>Test if an object is the <code class="docutils literal notranslate"><span class="pre">False</span></code> singleton,
 the same as <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">is</span> <span class="pre">False</span></code> in Python.</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.10 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.10.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_TYPE">
-<a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><span class="n"><span class="pre">PyTypeObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">Py_TYPE</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_TYPE" title="Link to this definition">¶</a><br /></dt>
+<a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><span class="n"><span class="pre">PyTypeObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">Py_TYPE</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_TYPE" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Get the type of the Python object <em>o</em>.</p>
 <p>Return a <a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">borrowed reference</span></a>.</p>
 <p>Use the <a class="reference internal" href="#c.Py_SET_TYPE" title="Py_SET_TYPE"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_SET_TYPE()</span></code></a> function to set an object type.</p>
@@ -298,26 +384,26 @@ The parameter type is no longer <span class="c-expr sig sig-inline c"><span clas
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_IS_TYPE">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_IS_TYPE</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span>, <a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><span class="n"><span class="pre">PyTypeObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">type</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_IS_TYPE" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_IS_TYPE</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span>, <a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><span class="n"><span class="pre">PyTypeObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">type</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_IS_TYPE" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Return non-zero if the object <em>o</em> type is <em>type</em>. Return zero otherwise.
 Equivalent to: <code class="docutils literal notranslate"><span class="pre">Py_TYPE(o)</span> <span class="pre">==</span> <span class="pre">type</span></code>.</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.9 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.9.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_SET_TYPE">
-<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_SET_TYPE</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span>, <a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><span class="n"><span class="pre">PyTypeObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">type</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_SET_TYPE" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_SET_TYPE</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span>, <a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><span class="n"><span class="pre">PyTypeObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">type</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_SET_TYPE" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>將物件 <em>o</em> 的型別設為 <em>type</em>。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.9 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.9.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_SIZE">
-<a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><span class="n"><span class="pre">Py_ssize_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_SIZE</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyVarObject" title="PyVarObject"><span class="n"><span class="pre">PyVarObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_SIZE" title="Link to this definition">¶</a><br /></dt>
+<a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><span class="n"><span class="pre">Py_ssize_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_SIZE</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyVarObject" title="PyVarObject"><span class="n"><span class="pre">PyVarObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_SIZE" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>取得 Python 物件 <em>o</em> 的大小。</p>
 <p>Use the <a class="reference internal" href="#c.Py_SET_SIZE" title="Py_SET_SIZE"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_SET_SIZE()</span></code></a> function to set an object size.</p>
 <div class="versionchanged">
@@ -328,16 +414,16 @@ The parameter type is no longer <span class="c-expr sig sig-inline c"><span clas
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.Py_SET_SIZE">
-<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_SET_SIZE</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyVarObject" title="PyVarObject"><span class="n"><span class="pre">PyVarObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span>, <a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><span class="n"><span class="pre">Py_ssize_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_SET_SIZE" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_SET_SIZE</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyVarObject" title="PyVarObject"><span class="n"><span class="pre">PyVarObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span>, <a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><span class="n"><span class="pre">Py_ssize_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_SET_SIZE" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>將物件 <em>o</em> 的大小設為 <em>size</em>。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.9 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.9.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.PyObject_HEAD_INIT">
-<span class="sig-name descname"><span class="n"><span class="pre">PyObject_HEAD_INIT</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">type</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyObject_HEAD_INIT" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">PyObject_HEAD_INIT</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">type</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyObject_HEAD_INIT" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>This is a macro which expands to initialization values for a new
 <a class="reference internal" href="#c.PyObject" title="PyObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyObject</span></code></a> type.  This macro expands to:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">_PyObject_EXTRA_INIT</span>
@@ -348,7 +434,7 @@ The parameter type is no longer <span class="c-expr sig sig-inline c"><span clas
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.PyVarObject_HEAD_INIT">
-<span class="sig-name descname"><span class="n"><span class="pre">PyVarObject_HEAD_INIT</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">type</span></span>, <span class="n"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyVarObject_HEAD_INIT" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">PyVarObject_HEAD_INIT</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">type</span></span>, <span class="n"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyVarObject_HEAD_INIT" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>This is a macro which expands to initialization values for a new
 <a class="reference internal" href="#c.PyVarObject" title="PyVarObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyVarObject</span></code></a> type, including the <a class="reference internal" href="typeobj.html#c.PyVarObject.ob_size" title="PyVarObject.ob_size"><code class="xref c c-member docutils literal notranslate"><span class="pre">ob_size</span></code></a> field.
 This macro expands to:</p>
@@ -360,10 +446,10 @@ This macro expands to:</p>
 
 </section>
 <section id="implementing-functions-and-methods">
-<h2>實作函式與方法<a class="headerlink" href="#implementing-functions-and-methods" title="Link to this heading">¶</a></h2>
+<h2>實作函式與方法<a class="headerlink" href="#implementing-functions-and-methods" title="連結到這個標頭">¶</a></h2>
 <dl class="c type">
 <dt class="sig sig-object c" id="c.PyCFunction">
-<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyCFunction</span></span></span><a class="headerlink" href="#c.PyCFunction" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyCFunction</span></span></span><a class="headerlink" href="#c.PyCFunction" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Type of the functions used to implement most Python callables in C.
 Functions of this type take two <span class="c-expr sig sig-inline c"><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n">PyObject</span></a><span class="p">*</span></span> parameters and return
 one such value.  If the return value is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, an exception shall have
@@ -379,7 +465,7 @@ reference.</p>
 
 <dl class="c type">
 <dt class="sig sig-object c" id="c.PyCFunctionWithKeywords">
-<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyCFunctionWithKeywords</span></span></span><a class="headerlink" href="#c.PyCFunctionWithKeywords" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyCFunctionWithKeywords</span></span></span><a class="headerlink" href="#c.PyCFunctionWithKeywords" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Type of the functions used to implement Python callables in C
 with signature <a class="reference internal" href="#meth-varargs-meth-keywords"><span class="std std-ref">METH_VARARGS | METH_KEYWORDS</span></a>.
 The function signature is:</p>
@@ -392,7 +478,7 @@ The function signature is:</p>
 
 <dl class="c type">
 <dt class="sig sig-object c" id="c._PyCFunctionFast">
-<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">_PyCFunctionFast</span></span></span><a class="headerlink" href="#c._PyCFunctionFast" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">_PyCFunctionFast</span></span></span><a class="headerlink" href="#c._PyCFunctionFast" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Type of the functions used to implement Python callables in C
 with signature <a class="reference internal" href="#c.METH_FASTCALL" title="METH_FASTCALL"><code class="xref c c-macro docutils literal notranslate"><span class="pre">METH_FASTCALL</span></code></a>.
 The function signature is:</p>
@@ -405,7 +491,7 @@ The function signature is:</p>
 
 <dl class="c type">
 <dt class="sig sig-object c" id="c._PyCFunctionFastWithKeywords">
-<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">_PyCFunctionFastWithKeywords</span></span></span><a class="headerlink" href="#c._PyCFunctionFastWithKeywords" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">_PyCFunctionFastWithKeywords</span></span></span><a class="headerlink" href="#c._PyCFunctionFastWithKeywords" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Type of the functions used to implement Python callables in C
 with signature <a class="reference internal" href="#meth-fastcall-meth-keywords"><span class="std std-ref">METH_FASTCALL | METH_KEYWORDS</span></a>.
 The function signature is:</p>
@@ -419,7 +505,7 @@ The function signature is:</p>
 
 <dl class="c type">
 <dt class="sig sig-object c" id="c.PyCMethod">
-<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyCMethod</span></span></span><a class="headerlink" href="#c.PyCMethod" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyCMethod</span></span></span><a class="headerlink" href="#c.PyCMethod" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Type of the functions used to implement Python callables in C
 with signature <a class="reference internal" href="#meth-method-meth-fastcall-meth-keywords"><span class="std std-ref">METH_METHOD | METH_FASTCALL | METH_KEYWORDS</span></a>.
 The function signature is:</p>
@@ -431,36 +517,36 @@ The function signature is:</p>
 </pre></div>
 </div>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.9 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.9.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c type">
 <dt class="sig sig-object c" id="c.PyMethodDef">
-<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyMethodDef</span></span></span><a class="headerlink" href="#c.PyMethodDef" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyMethodDef</span></span></span><a class="headerlink" href="#c.PyMethodDef" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> （包含所有成員）.</em><p>Structure used to describe a method of an extension type.  This structure has
 four fields:</p>
 <dl class="c member">
 <dt class="sig sig-object c" id="c.PyMethodDef.ml_name">
-<span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">ml_name</span></span></span><a class="headerlink" href="#c.PyMethodDef.ml_name" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">ml_name</span></span></span><a class="headerlink" href="#c.PyMethodDef.ml_name" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Name of the method.</p>
 </dd></dl>
 
 <dl class="c member">
 <dt class="sig sig-object c" id="c.PyMethodDef.ml_meth">
-<a class="reference internal" href="#c.PyCFunction" title="PyCFunction"><span class="n"><span class="pre">PyCFunction</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ml_meth</span></span></span><a class="headerlink" href="#c.PyMethodDef.ml_meth" title="Link to this definition">¶</a><br /></dt>
+<a class="reference internal" href="#c.PyCFunction" title="PyCFunction"><span class="n"><span class="pre">PyCFunction</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ml_meth</span></span></span><a class="headerlink" href="#c.PyMethodDef.ml_meth" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Pointer to the C implementation.</p>
 </dd></dl>
 
 <dl class="c member">
 <dt class="sig sig-object c" id="c.PyMethodDef.ml_flags">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ml_flags</span></span></span><a class="headerlink" href="#c.PyMethodDef.ml_flags" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ml_flags</span></span></span><a class="headerlink" href="#c.PyMethodDef.ml_flags" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Flags bits indicating how the call should be constructed.</p>
 </dd></dl>
 
 <dl class="c member">
 <dt class="sig sig-object c" id="c.PyMethodDef.ml_doc">
-<span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">ml_doc</span></span></span><a class="headerlink" href="#c.PyMethodDef.ml_doc" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">ml_doc</span></span></span><a class="headerlink" href="#c.PyMethodDef.ml_doc" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Points to the contents of the docstring.</p>
 </dd></dl>
 
@@ -480,7 +566,7 @@ convention.</p>
 <p>There are these calling conventions:</p>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.METH_VARARGS">
-<span class="sig-name descname"><span class="n"><span class="pre">METH_VARARGS</span></span></span><a class="headerlink" href="#c.METH_VARARGS" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">METH_VARARGS</span></span></span><a class="headerlink" href="#c.METH_VARARGS" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>This is the typical calling convention, where the methods have the type
 <a class="reference internal" href="#c.PyCFunction" title="PyCFunction"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyCFunction</span></code></a>. The function expects two <span class="c-expr sig sig-inline c"><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n">PyObject</span></a><span class="p">*</span></span> values.
 The first one is the <em>self</em> object for methods; for module functions, it is
@@ -491,7 +577,7 @@ using <a class="reference internal" href="arg.html#c.PyArg_ParseTuple" title="Py
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.METH_KEYWORDS">
-<span class="sig-name descname"><span class="n"><span class="pre">METH_KEYWORDS</span></span></span><a class="headerlink" href="#c.METH_KEYWORDS" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">METH_KEYWORDS</span></span></span><a class="headerlink" href="#c.METH_KEYWORDS" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Can only be used in certain combinations with other flags:
 <a class="reference internal" href="#meth-varargs-meth-keywords"><span class="std std-ref">METH_VARARGS | METH_KEYWORDS</span></a>,
 <a class="reference internal" href="#meth-fastcall-meth-keywords"><span class="std std-ref">METH_FASTCALL | METH_KEYWORDS</span></a> and
@@ -508,14 +594,14 @@ using <a class="reference internal" href="arg.html#c.PyArg_ParseTupleAndKeywords
 </dl>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.METH_FASTCALL">
-<span class="sig-name descname"><span class="n"><span class="pre">METH_FASTCALL</span></span></span><a class="headerlink" href="#c.METH_FASTCALL" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">METH_FASTCALL</span></span></span><a class="headerlink" href="#c.METH_FASTCALL" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Fast calling convention supporting only positional arguments.
 The methods have the type <a class="reference internal" href="#c._PyCFunctionFast" title="_PyCFunctionFast"><code class="xref c c-type docutils literal notranslate"><span class="pre">_PyCFunctionFast</span></code></a>.
 The first parameter is <em>self</em>, the second parameter is a C array
 of <span class="c-expr sig sig-inline c"><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n">PyObject</span></a><span class="p">*</span></span> values indicating the arguments and the third
 parameter is the number of arguments (the length of the array).</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.7 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.7.</span></p>
 </div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.10 版的變更: </span><code class="docutils literal notranslate"><span class="pre">METH_FASTCALL</span></code> is now part of the <a class="reference internal" href="stable.html#stable-abi"><span class="std std-ref">stable ABI</span></a>.</p>
@@ -533,13 +619,13 @@ which is a tuple representing the names of the keyword arguments
 or possibly <code class="docutils literal notranslate"><span class="pre">NULL</span></code> if there are no keywords.  The values of the keyword
 arguments are stored in the <em>args</em> array, after the positional arguments.</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.7 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.7.</span></p>
 </div>
 </dd>
 </dl>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.METH_METHOD">
-<span class="sig-name descname"><span class="n"><span class="pre">METH_METHOD</span></span></span><a class="headerlink" href="#c.METH_METHOD" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">METH_METHOD</span></span></span><a class="headerlink" href="#c.METH_METHOD" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Can only be used in the combination with other flags:
 <a class="reference internal" href="#meth-method-meth-fastcall-meth-keywords"><span class="std std-ref">METH_METHOD | METH_FASTCALL | METH_KEYWORDS</span></a>.</p>
 </dd></dl>
@@ -553,13 +639,13 @@ The defining class might be a superclass of <code class="docutils literal notran
 <code class="docutils literal notranslate"><span class="pre">METH_FASTCALL</span> <span class="pre">|</span> <span class="pre">METH_KEYWORDS</span></code> with <code class="docutils literal notranslate"><span class="pre">defining_class</span></code> argument added after
 <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.9 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.9.</span></p>
 </div>
 </dd>
 </dl>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.METH_NOARGS">
-<span class="sig-name descname"><span class="n"><span class="pre">METH_NOARGS</span></span></span><a class="headerlink" href="#c.METH_NOARGS" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">METH_NOARGS</span></span></span><a class="headerlink" href="#c.METH_NOARGS" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Methods without parameters don't need to check whether arguments are given if
 they are listed with the <a class="reference internal" href="#c.METH_NOARGS" title="METH_NOARGS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">METH_NOARGS</span></code></a> flag.  They need to be of type
 <a class="reference internal" href="#c.PyCFunction" title="PyCFunction"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyCFunction</span></code></a>.  The first parameter is typically named <em>self</em> and will
@@ -571,7 +657,7 @@ parameter will be <code class="docutils literal notranslate"><span class="pre">N
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.METH_O">
-<span class="sig-name descname"><span class="n"><span class="pre">METH_O</span></span></span><a class="headerlink" href="#c.METH_O" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">METH_O</span></span></span><a class="headerlink" href="#c.METH_O" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Methods with a single object argument can be listed with the <a class="reference internal" href="#c.METH_O" title="METH_O"><code class="xref c c-macro docutils literal notranslate"><span class="pre">METH_O</span></code></a>
 flag, instead of invoking <a class="reference internal" href="arg.html#c.PyArg_ParseTuple" title="PyArg_ParseTuple"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code></a> with a <code class="docutils literal notranslate"><span class="pre">&quot;O&quot;</span></code> argument.
 They have the type <a class="reference internal" href="#c.PyCFunction" title="PyCFunction"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyCFunction</span></code></a>, with the <em>self</em> parameter, and a
@@ -584,7 +670,7 @@ defined for modules.  At most one of these flags may be set for any given
 method.</p>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.METH_CLASS">
-<span class="sig-name descname"><span class="n"><span class="pre">METH_CLASS</span></span></span><a class="headerlink" href="#c.METH_CLASS" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">METH_CLASS</span></span></span><a class="headerlink" href="#c.METH_CLASS" title="連結到這個定義">¶</a><br /></dt>
 <dd><p id="index-0">The method will be passed the type object as the first parameter rather
 than an instance of the type.  This is used to create <em>class methods</em>,
 similar to what is created when using the <a class="reference internal" href="../library/functions.html#classmethod" title="classmethod"><code class="xref py py-func docutils literal notranslate"><span class="pre">classmethod()</span></code></a> built-in
@@ -593,7 +679,7 @@ function.</p>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.METH_STATIC">
-<span class="sig-name descname"><span class="n"><span class="pre">METH_STATIC</span></span></span><a class="headerlink" href="#c.METH_STATIC" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">METH_STATIC</span></span></span><a class="headerlink" href="#c.METH_STATIC" title="連結到這個定義">¶</a><br /></dt>
 <dd><p id="index-1">The method will be passed <code class="docutils literal notranslate"><span class="pre">NULL</span></code> as the first parameter rather than an
 instance of the type.  This is used to create <em>static methods</em>, similar to
 what is created when using the <a class="reference internal" href="../library/functions.html#staticmethod" title="staticmethod"><code class="xref py py-func docutils literal notranslate"><span class="pre">staticmethod()</span></code></a> built-in function.</p>
@@ -603,7 +689,7 @@ what is created when using the <a class="reference internal" href="../library/fu
 definition with the same method name.</p>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.METH_COEXIST">
-<span class="sig-name descname"><span class="n"><span class="pre">METH_COEXIST</span></span></span><a class="headerlink" href="#c.METH_COEXIST" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">METH_COEXIST</span></span></span><a class="headerlink" href="#c.METH_COEXIST" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>The method will be loaded in place of existing definitions.  Without
 <em>METH_COEXIST</em>, the default is to skip repeated definitions.  Since slot
 wrappers are loaded before the method table, the existence of a
@@ -617,8 +703,8 @@ than wrapper object calls.</p>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.PyCMethod_New">
-<a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyCMethod_New</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyMethodDef" title="PyMethodDef"><span class="n"><span class="pre">PyMethodDef</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ml</span></span>, <a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">self</span></span>, <a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">module</span></span>, <a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><span class="n"><span class="pre">PyTypeObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">cls</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyCMethod_New" title="Link to this definition">¶</a><br /></dt>
-<dd><em class="refcount">回傳值：新的參照。</em><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.9 版本開始.</em><p>Turn <em>ml</em> into a Python <a class="reference internal" href="../glossary.html#term-callable"><span class="xref std std-term">callable</span></a> object.
+<a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyCMethod_New</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyMethodDef" title="PyMethodDef"><span class="n"><span class="pre">PyMethodDef</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ml</span></span>, <a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">self</span></span>, <a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">module</span></span>, <a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><span class="n"><span class="pre">PyTypeObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">cls</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyCMethod_New" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="refcount return_new_ref">回傳值：新的參照。</em><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.9 版本開始.</em><p>Turn <em>ml</em> into a Python <a class="reference internal" href="../glossary.html#term-callable"><span class="xref std std-term">callable</span></a> object.
 The caller must ensure that <em>ml</em> outlives the <a class="reference internal" href="../glossary.html#term-callable"><span class="xref std std-term">callable</span></a>.
 Typically, <em>ml</em> is defined as a static variable.</p>
 <p>The <em>self</em> parameter will be passed as the <em>self</em> argument
@@ -637,28 +723,28 @@ If unavailable, it can be set to <a class="reference internal" href="../library/
 argument to the C function.
 Must be set if <a class="reference internal" href="#c.METH_METHOD" title="METH_METHOD"><code class="xref c c-macro docutils literal notranslate"><span class="pre">METH_METHOD</span></code></a> is set on <code class="docutils literal notranslate"><span class="pre">ml-&gt;ml_flags</span></code>.</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.9 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.9.</span></p>
 </div>
 </dd></dl>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.PyCFunction_NewEx">
-<a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyCFunction_NewEx</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyMethodDef" title="PyMethodDef"><span class="n"><span class="pre">PyMethodDef</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ml</span></span>, <a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">self</span></span>, <a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">module</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyCFunction_NewEx" title="Link to this definition">¶</a><br /></dt>
-<dd><em class="refcount">回傳值：新的參照。</em><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>等價於 <code class="docutils literal notranslate"><span class="pre">PyCMethod_New(ml,</span> <span class="pre">self,</span> <span class="pre">module,</span> <span class="pre">NULL)</span></code>。</p>
+<a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyCFunction_NewEx</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyMethodDef" title="PyMethodDef"><span class="n"><span class="pre">PyMethodDef</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ml</span></span>, <a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">self</span></span>, <a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">module</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyCFunction_NewEx" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="refcount return_new_ref">回傳值：新的參照。</em><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>等價於 <code class="docutils literal notranslate"><span class="pre">PyCMethod_New(ml,</span> <span class="pre">self,</span> <span class="pre">module,</span> <span class="pre">NULL)</span></code>。</p>
 </dd></dl>
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.PyCFunction_New">
-<a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyCFunction_New</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyMethodDef" title="PyMethodDef"><span class="n"><span class="pre">PyMethodDef</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ml</span></span>, <a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">self</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyCFunction_New" title="Link to this definition">¶</a><br /></dt>
-<dd><em class="refcount">回傳值：新的參照。</em><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.4 版本開始.</em><p>等價於 <code class="docutils literal notranslate"><span class="pre">PyCMethod_New(ml,</span> <span class="pre">self,</span> <span class="pre">NULL,</span> <span class="pre">NULL)</span></code>。</p>
+<a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyCFunction_New</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyMethodDef" title="PyMethodDef"><span class="n"><span class="pre">PyMethodDef</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ml</span></span>, <a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">self</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyCFunction_New" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="refcount return_new_ref">回傳值：新的參照。</em><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.4 版本開始.</em><p>等價於 <code class="docutils literal notranslate"><span class="pre">PyCMethod_New(ml,</span> <span class="pre">self,</span> <span class="pre">NULL,</span> <span class="pre">NULL)</span></code>。</p>
 </dd></dl>
 
 </section>
 <section id="accessing-attributes-of-extension-types">
-<h2>Accessing attributes of extension types<a class="headerlink" href="#accessing-attributes-of-extension-types" title="Link to this heading">¶</a></h2>
+<h2>Accessing attributes of extension types<a class="headerlink" href="#accessing-attributes-of-extension-types" title="連結到這個標頭">¶</a></h2>
 <dl class="c type">
 <dt class="sig sig-object c" id="c.PyMemberDef">
-<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyMemberDef</span></span></span><a class="headerlink" href="#c.PyMemberDef" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyMemberDef</span></span></span><a class="headerlink" href="#c.PyMemberDef" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> （包含所有成員）.</em><p>Structure which describes an attribute of a type which corresponds to a C
 struct member.
 When defining a class, put a NULL-terminated array of these
@@ -666,7 +752,7 @@ structures in the <a class="reference internal" href="typeobj.html#c.PyTypeObjec
 <p>Its fields are, in order:</p>
 <dl class="c member">
 <dt class="sig sig-object c" id="c.PyMemberDef.name">
-<span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">name</span></span></span><a class="headerlink" href="#c.PyMemberDef.name" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">name</span></span></span><a class="headerlink" href="#c.PyMemberDef.name" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Name of the member.
 A NULL value marks the end of a <code class="docutils literal notranslate"><span class="pre">PyMemberDef[]</span></code> array.</p>
 <p>The string should be static, no copy is made of it.</p>
@@ -674,26 +760,26 @@ A NULL value marks the end of a <code class="docutils literal notranslate"><span
 
 <dl class="c member">
 <dt class="sig sig-object c" id="c.PyMemberDef.type">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">type</span></span></span><a class="headerlink" href="#c.PyMemberDef.type" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">type</span></span></span><a class="headerlink" href="#c.PyMemberDef.type" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>The type of the member in the C struct.
 See <a class="reference internal" href="#pymemberdef-types"><span class="std std-ref">Member types</span></a> for the possible values.</p>
 </dd></dl>
 
 <dl class="c member">
 <dt class="sig sig-object c" id="c.PyMemberDef.offset">
-<a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><span class="n"><span class="pre">Py_ssize_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">offset</span></span></span><a class="headerlink" href="#c.PyMemberDef.offset" title="Link to this definition">¶</a><br /></dt>
+<a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><span class="n"><span class="pre">Py_ssize_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">offset</span></span></span><a class="headerlink" href="#c.PyMemberDef.offset" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>The offset in bytes that the member is located on the type’s object struct.</p>
 </dd></dl>
 
 <dl class="c member">
 <dt class="sig sig-object c" id="c.PyMemberDef.flags">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">flags</span></span></span><a class="headerlink" href="#c.PyMemberDef.flags" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">flags</span></span></span><a class="headerlink" href="#c.PyMemberDef.flags" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Zero or more of the <a class="reference internal" href="#pymemberdef-flags"><span class="std std-ref">Member flags</span></a>, combined using bitwise OR.</p>
 </dd></dl>
 
 <dl class="c member">
 <dt class="sig sig-object c" id="c.PyMemberDef.doc">
-<span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">doc</span></span></span><a class="headerlink" href="#c.PyMemberDef.doc" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">doc</span></span></span><a class="headerlink" href="#c.PyMemberDef.doc" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>The docstring, or NULL.
 The string should be static, no copy is made of it.
 Typically, it is defined using <a class="reference internal" href="intro.html#c.PyDoc_STR" title="PyDoc_STR"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PyDoc_STR</span></code></a>.</p>
@@ -731,7 +817,7 @@ Previously, it required including <code class="docutils literal notranslate"><sp
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.PyMember_GetOne">
-<a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyMember_GetOne</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">obj_addr</span></span>, <span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.PyMemberDef" title="PyMemberDef"><span class="n"><span class="pre">PyMemberDef</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">m</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyMember_GetOne" title="Link to this definition">¶</a><br /></dt>
+<a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyMember_GetOne</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">obj_addr</span></span>, <span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.PyMemberDef" title="PyMemberDef"><span class="n"><span class="pre">PyMemberDef</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">m</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyMember_GetOne" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Get an attribute belonging to the object at address <em>obj_addr</em>.  The
 attribute is described by <code class="docutils literal notranslate"><span class="pre">PyMemberDef</span></code> <em>m</em>.  Returns <code class="docutils literal notranslate"><span class="pre">NULL</span></code>
 on error.</p>
@@ -743,7 +829,7 @@ Previously, it required including <code class="docutils literal notranslate"><sp
 
 <dl class="c function">
 <dt class="sig sig-object c" id="c.PyMember_SetOne">
-<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyMember_SetOne</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">obj_addr</span></span>, <span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.PyMemberDef" title="PyMemberDef"><span class="n"><span class="pre">PyMemberDef</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">m</span></span>, <a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyMember_SetOne" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyMember_SetOne</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">obj_addr</span></span>, <span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.PyMemberDef" title="PyMemberDef"><span class="n"><span class="pre">PyMemberDef</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">m</span></span>, <a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyMember_SetOne" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Set an attribute belonging to the object at address <em>obj_addr</em> to object <em>o</em>.
 The attribute to set is described by <code class="docutils literal notranslate"><span class="pre">PyMemberDef</span></code> <em>m</em>.  Returns <code class="docutils literal notranslate"><span class="pre">0</span></code>
 if successful and a negative value on failure.</p>
@@ -754,24 +840,24 @@ Previously, it required including <code class="docutils literal notranslate"><sp
 </dd></dl>
 
 <section id="member-flags">
-<span id="pymemberdef-flags"></span><h3>Member flags<a class="headerlink" href="#member-flags" title="Link to this heading">¶</a></h3>
+<span id="pymemberdef-flags"></span><h3>Member flags<a class="headerlink" href="#member-flags" title="連結到這個標頭">¶</a></h3>
 <p>The following flags can be used with <a class="reference internal" href="#c.PyMemberDef.flags" title="PyMemberDef.flags"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyMemberDef.flags</span></code></a>:</p>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_READONLY">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_READONLY</span></span></span><a class="headerlink" href="#c.Py_READONLY" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_READONLY</span></span></span><a class="headerlink" href="#c.Py_READONLY" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>不可寫入。</p>
 </dd></dl>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_AUDIT_READ">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_AUDIT_READ</span></span></span><a class="headerlink" href="#c.Py_AUDIT_READ" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_AUDIT_READ</span></span></span><a class="headerlink" href="#c.Py_AUDIT_READ" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Emit an <code class="docutils literal notranslate"><span class="pre">object.__getattr__</span></code> <a class="reference internal" href="../library/audit_events.html#audit-events"><span class="std std-ref">audit event</span></a>
 before reading.</p>
 </dd></dl>
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_RELATIVE_OFFSET">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_RELATIVE_OFFSET</span></span></span><a class="headerlink" href="#c.Py_RELATIVE_OFFSET" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_RELATIVE_OFFSET</span></span></span><a class="headerlink" href="#c.Py_RELATIVE_OFFSET" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Indicates that the <a class="reference internal" href="#c.PyMemberDef.offset" title="PyMemberDef.offset"><code class="xref c c-member docutils literal notranslate"><span class="pre">offset</span></code></a> of this <code class="docutils literal notranslate"><span class="pre">PyMemberDef</span></code>
 entry indicates an offset from the subclass-specific data, rather than
 from <code class="docutils literal notranslate"><span class="pre">PyObject</span></code>.</p>
@@ -801,7 +887,7 @@ The header is still available and it provides the old names.</p>
 </div>
 </section>
 <section id="member-types">
-<span id="pymemberdef-types"></span><h3>Member types<a class="headerlink" href="#member-types" title="Link to this heading">¶</a></h3>
+<span id="pymemberdef-types"></span><h3>Member types<a class="headerlink" href="#member-types" title="連結到這個標頭">¶</a></h3>
 <p><a class="reference internal" href="#c.PyMemberDef.type" title="PyMemberDef.type"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyMemberDef.type</span></code></a> can be one of the following macros corresponding
 to various C types.
 When the member is accessed in Python, it will be converted to the
@@ -821,7 +907,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 <tbody>
 <tr class="row-even"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_BYTE">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_BYTE</span></span></span><a class="headerlink" href="#c.Py_T_BYTE" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_BYTE</span></span></span><a class="headerlink" href="#c.Py_T_BYTE" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -830,7 +916,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-odd"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_SHORT">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_SHORT</span></span></span><a class="headerlink" href="#c.Py_T_SHORT" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_SHORT</span></span></span><a class="headerlink" href="#c.Py_T_SHORT" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -839,7 +925,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-even"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_INT">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_INT</span></span></span><a class="headerlink" href="#c.Py_T_INT" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_INT</span></span></span><a class="headerlink" href="#c.Py_T_INT" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -848,7 +934,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-odd"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_LONG">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_LONG</span></span></span><a class="headerlink" href="#c.Py_T_LONG" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_LONG</span></span></span><a class="headerlink" href="#c.Py_T_LONG" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -857,7 +943,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-even"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_LONGLONG">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_LONGLONG</span></span></span><a class="headerlink" href="#c.Py_T_LONGLONG" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_LONGLONG</span></span></span><a class="headerlink" href="#c.Py_T_LONGLONG" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -866,7 +952,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-odd"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_UBYTE">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_UBYTE</span></span></span><a class="headerlink" href="#c.Py_T_UBYTE" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_UBYTE</span></span></span><a class="headerlink" href="#c.Py_T_UBYTE" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -875,7 +961,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-even"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_UINT">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_UINT</span></span></span><a class="headerlink" href="#c.Py_T_UINT" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_UINT</span></span></span><a class="headerlink" href="#c.Py_T_UINT" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -884,7 +970,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-odd"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_USHORT">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_USHORT</span></span></span><a class="headerlink" href="#c.Py_T_USHORT" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_USHORT</span></span></span><a class="headerlink" href="#c.Py_T_USHORT" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -893,7 +979,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-even"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_ULONG">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_ULONG</span></span></span><a class="headerlink" href="#c.Py_T_ULONG" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_ULONG</span></span></span><a class="headerlink" href="#c.Py_T_ULONG" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -902,7 +988,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-odd"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_ULONGLONG">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_ULONGLONG</span></span></span><a class="headerlink" href="#c.Py_T_ULONGLONG" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_ULONGLONG</span></span></span><a class="headerlink" href="#c.Py_T_ULONGLONG" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -911,7 +997,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-even"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_PYSSIZET">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_PYSSIZET</span></span></span><a class="headerlink" href="#c.Py_T_PYSSIZET" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_PYSSIZET</span></span></span><a class="headerlink" href="#c.Py_T_PYSSIZET" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -920,7 +1006,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-odd"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_FLOAT">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_FLOAT</span></span></span><a class="headerlink" href="#c.Py_T_FLOAT" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_FLOAT</span></span></span><a class="headerlink" href="#c.Py_T_FLOAT" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -929,7 +1015,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-even"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_DOUBLE">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_DOUBLE</span></span></span><a class="headerlink" href="#c.Py_T_DOUBLE" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_DOUBLE</span></span></span><a class="headerlink" href="#c.Py_T_DOUBLE" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -938,7 +1024,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-odd"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_BOOL">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_BOOL</span></span></span><a class="headerlink" href="#c.Py_T_BOOL" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_BOOL</span></span></span><a class="headerlink" href="#c.Py_T_BOOL" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -947,7 +1033,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-even"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_STRING">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_STRING</span></span></span><a class="headerlink" href="#c.Py_T_STRING" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_STRING</span></span></span><a class="headerlink" href="#c.Py_T_STRING" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -956,7 +1042,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-odd"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_STRING_INPLACE">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_STRING_INPLACE</span></span></span><a class="headerlink" href="#c.Py_T_STRING_INPLACE" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_STRING_INPLACE</span></span></span><a class="headerlink" href="#c.Py_T_STRING_INPLACE" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -965,7 +1051,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-even"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_CHAR">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_CHAR</span></span></span><a class="headerlink" href="#c.Py_T_CHAR" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_CHAR</span></span></span><a class="headerlink" href="#c.Py_T_CHAR" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -974,7 +1060,7 @@ using e.g. <a class="reference internal" href="../reference/simple_stmts.html#de
 </tr>
 <tr class="row-odd"><td><dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_T_OBJECT_EX">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_T_OBJECT_EX</span></span></span><a class="headerlink" href="#c.Py_T_OBJECT_EX" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_T_OBJECT_EX</span></span></span><a class="headerlink" href="#c.Py_T_OBJECT_EX" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 </td>
@@ -994,14 +1080,14 @@ in the structure.</p>
 Reading a <code class="docutils literal notranslate"><span class="pre">NULL</span></code> pointer raises <a class="reference internal" href="../library/exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a>.</p>
 </div></blockquote>
 <div class="versionadded" id="index-4">
-<p><span class="versionmodified added">在 3.12 版新加入: </span>In previous versions, the macros were only available with
+<p><span class="versionmodified added">Added in version 3.12: </span>In previous versions, the macros were only available with
 <code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">&quot;structmember.h&quot;</span></code> and were named without the <code class="docutils literal notranslate"><span class="pre">Py_</span></code> prefix
 (e.g. as <code class="docutils literal notranslate"><span class="pre">T_INT</span></code>).
 The header is still available and contains the old names, along with
 the following deprecated types:</p>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.T_OBJECT">
-<span class="sig-name descname"><span class="n"><span class="pre">T_OBJECT</span></span></span><a class="headerlink" href="#c.T_OBJECT" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">T_OBJECT</span></span></span><a class="headerlink" href="#c.T_OBJECT" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Like <code class="docutils literal notranslate"><span class="pre">Py_T_OBJECT_EX</span></code>, but <code class="docutils literal notranslate"><span class="pre">NULL</span></code> is converted to <code class="docutils literal notranslate"><span class="pre">None</span></code>.
 This results in surprising behavior in Python: deleting the attribute
 effectively sets it to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
@@ -1009,47 +1095,47 @@ effectively sets it to <code class="docutils literal notranslate"><span class="p
 
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.T_NONE">
-<span class="sig-name descname"><span class="n"><span class="pre">T_NONE</span></span></span><a class="headerlink" href="#c.T_NONE" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">T_NONE</span></span></span><a class="headerlink" href="#c.T_NONE" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Always <code class="docutils literal notranslate"><span class="pre">None</span></code>. Must be used with <a class="reference internal" href="#c.Py_READONLY" title="Py_READONLY"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_READONLY</span></code></a>.</p>
 </dd></dl>
 
 </div>
 </section>
 <section id="defining-getters-and-setters">
-<h3>Defining Getters and Setters<a class="headerlink" href="#defining-getters-and-setters" title="Link to this heading">¶</a></h3>
+<h3>Defining Getters and Setters<a class="headerlink" href="#defining-getters-and-setters" title="連結到這個標頭">¶</a></h3>
 <dl class="c type">
 <dt class="sig sig-object c" id="c.PyGetSetDef">
-<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyGetSetDef</span></span></span><a class="headerlink" href="#c.PyGetSetDef" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyGetSetDef</span></span></span><a class="headerlink" href="#c.PyGetSetDef" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> （包含所有成員）.</em><p>Structure to define property-like access for a type. See also description of
 the <a class="reference internal" href="typeobj.html#c.PyTypeObject.tp_getset" title="PyTypeObject.tp_getset"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyTypeObject.tp_getset</span></code></a> slot.</p>
 <dl class="c member">
 <dt class="sig sig-object c" id="c.PyGetSetDef.name">
-<span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">name</span></span></span><a class="headerlink" href="#c.PyGetSetDef.name" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">name</span></span></span><a class="headerlink" href="#c.PyGetSetDef.name" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>屬性名稱</p>
 </dd></dl>
 
 <dl class="c member">
 <dt class="sig sig-object c" id="c.PyGetSetDef.get">
-<a class="reference internal" href="#c.getter" title="getter"><span class="n"><span class="pre">getter</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get</span></span></span><a class="headerlink" href="#c.PyGetSetDef.get" title="Link to this definition">¶</a><br /></dt>
+<a class="reference internal" href="#c.getter" title="getter"><span class="n"><span class="pre">getter</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get</span></span></span><a class="headerlink" href="#c.PyGetSetDef.get" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>C function to get the attribute.</p>
 </dd></dl>
 
 <dl class="c member">
 <dt class="sig sig-object c" id="c.PyGetSetDef.set">
-<a class="reference internal" href="#c.setter" title="setter"><span class="n"><span class="pre">setter</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set</span></span></span><a class="headerlink" href="#c.PyGetSetDef.set" title="Link to this definition">¶</a><br /></dt>
+<a class="reference internal" href="#c.setter" title="setter"><span class="n"><span class="pre">setter</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set</span></span></span><a class="headerlink" href="#c.PyGetSetDef.set" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Optional C function to set or delete the attribute.
 If <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, the attribute is read-only.</p>
 </dd></dl>
 
 <dl class="c member">
 <dt class="sig sig-object c" id="c.PyGetSetDef.doc">
-<span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">doc</span></span></span><a class="headerlink" href="#c.PyGetSetDef.doc" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">doc</span></span></span><a class="headerlink" href="#c.PyGetSetDef.doc" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>可選的文件字串</p>
 </dd></dl>
 
 <dl class="c member">
 <dt class="sig sig-object c" id="c.PyGetSetDef.closure">
-<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">closure</span></span></span><a class="headerlink" href="#c.PyGetSetDef.closure" title="Link to this definition">¶</a><br /></dt>
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">closure</span></span></span><a class="headerlink" href="#c.PyGetSetDef.closure" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Optional user data pointer, providing additional data for getter and setter.</p>
 </dd></dl>
 
@@ -1057,7 +1143,7 @@ If <code class="docutils literal notranslate"><span class="pre">NULL</span></cod
 
 <dl class="c type">
 <dt class="sig sig-object c" id="c.getter">
-<span class="k"><span class="pre">typedef</span></span><span class="w"> </span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">getter</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#c.getter" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">typedef</span></span><span class="w"> </span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">getter</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#c.getter" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>The <code class="docutils literal notranslate"><span class="pre">get</span></code> function takes one <span class="c-expr sig sig-inline c"><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n">PyObject</span></a><span class="p">*</span></span> parameter (the
 instance) and a user data pointer (the associated <code class="docutils literal notranslate"><span class="pre">closure</span></code>):</p>
 <p>It should return a new reference on success or <code class="docutils literal notranslate"><span class="pre">NULL</span></code> with a set exception
@@ -1066,7 +1152,7 @@ on failure.</p>
 
 <dl class="c type">
 <dt class="sig sig-object c" id="c.setter">
-<span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">setter</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#c.setter" title="Link to this definition">¶</a><br /></dt>
+<span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">setter</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#c.setter" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p><code class="docutils literal notranslate"><span class="pre">set</span></code> functions take two <span class="c-expr sig sig-inline c"><a class="reference internal" href="#c.PyObject" title="PyObject"><span class="n">PyObject</span></a><span class="p">*</span></span> parameters (the instance and
 the value to be set) and a user data pointer (the associated <code class="docutils literal notranslate"><span class="pre">closure</span></code>):</p>
 <p>In case the attribute should be deleted the second parameter is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.
@@ -1208,13 +1294,13 @@ Should return <code class="docutils literal notranslate"><span class="pre">0</sp
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Apr 15, 2024 (12:58 UTC)。
+      最後更新於 Apr 18, 2024 (19:44 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
     <br />
 
-    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6 建立。
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.6 建立。
     </div>
 
   </body>

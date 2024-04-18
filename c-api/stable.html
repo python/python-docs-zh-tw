@@ -12,9 +12,9 @@
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=b20cc3f5" />
     
     <script src="../_static/documentation_options.js?v=17adff09"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/translations.js?v=d9a6981e"></script>
+    <script src="../_static/translations.js?v=1fe8cbde"></script>
     
     <script src="../_static/sidebar.js"></script>
     
@@ -46,6 +46,92 @@
             <script type="text/javascript" src="../_static/menu.js"></script>
             <script type="text/javascript" src="../_static/search-focus.js"></script>
             <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+
+<meta name="readthedocs-addons-api-version" content="1">
+<script type="text/javascript">
+ function onSwitch(event) {
+     const option = event.target.selectedIndex;
+     const item = event.target.options[option];
+     window.location.href = item.dataset.url;
+ }
+
+ document.addEventListener("readthedocs-addons-data-ready", function(event) {
+   const config = event.detail.data()
+
+   // Add some mocked hardcoded versions pointing to the official
+   // documentation while migrating to Read the Docs.
+   // These are only for testing purposes.
+   // TODO: remove them when managing all the versions on Read the Docs,
+   // since all the "active, built and not hidden" versions will be shown automatically.
+   let versions = config.versions.active.concat([
+       {
+           slug: "dev (3.13)",
+           urls: {
+               documentation: "https://docs.python.org/3.13/",
+           }
+       },
+       {
+           slug: "3.12",
+           urls: {
+               documentation: "https://docs.python.org/3.12/",
+           }
+       },
+       {
+           slug: "3.11",
+           urls: {
+               documentation: "https://docs.python.org/3.11/",
+           }
+       },
+   ]);
+
+   const versionSelect = `
+   <select id="version_select">
+   ${ versions.map(
+       (version) => `
+       <option
+           value="${ version.slug }"
+           ${ config.versions.current.slug === version.slug ? 'selected="selected"' : '' }
+           data-url="${ version.urls.documentation }">
+           ${ version.slug }
+       </option>`
+   ).join("\n") }
+   </select>
+   `;
+
+   // Prepend the current language to the options on the selector
+   let languages = config.projects.translations.concat(config.projects.current);
+   languages = languages.sort((a, b) => a.language.name.localeCompare(b.language.name));
+
+   const languageSelect = `
+   <select id="language_select">
+   ${ languages.map(
+       (translation) => `
+       <option
+           value="${ translation.slug }"
+           ${ config.projects.current.slug === translation.slug ? 'selected="selected"' : '' }
+           data-url="${ translation.urls.documentation }">
+           ${ translation.language.name }
+       </option>`
+   ).join("\n") }
+   </select>
+   `;
+
+   // Query all the placeholders because there are different ones for Desktop/Mobile
+   const versionPlaceholders = document.querySelectorAll(".version_switcher_placeholder");
+   for (placeholder of versionPlaceholders) {
+       placeholder.innerHTML = versionSelect;
+       let selectElement = placeholder.querySelector("select");
+       selectElement.addEventListener("change", onSwitch);
+   }
+
+   const languagePlaceholders = document.querySelectorAll(".language_switcher_placeholder");
+   for (placeholder of languagePlaceholders) {
+       placeholder.innerHTML = languageSelect;
+       let selectElement = placeholder.querySelector("select");
+       selectElement.addEventListener("change", onSwitch);
+   }
+ });
+</script>
 
   </head>
 <body>
@@ -188,7 +274,7 @@
           <div class="body" role="main">
             
   <section id="c-api-stability">
-<span id="stable"></span><h1>C API 穩定性<a class="headerlink" href="#c-api-stability" title="Link to this heading">¶</a></h1>
+<span id="stable"></span><h1>C API 穩定性<a class="headerlink" href="#c-api-stability" title="連結到這個標頭">¶</a></h1>
 <p>除非有另外記錄於文件，Python 的 C API 被包含在向後相容性策略 <span class="target" id="index-3"></span><a class="pep reference external" href="https://peps.python.org/pep-0387/"><strong>PEP 387</strong></a> 中。大多數改動都是相容於原始碼的（通常只會增加新的 API）。更改現有 API 或刪除 API 僅在棄用期後或修復嚴重問題時進行。</p>
 <p>CPython 的應用程式二進位介面 (Application Binary Interface, ABI) 在次要版本中是向前和向後相容的（如果它們以相同的方式編譯；請參閱下面的<a class="reference internal" href="#stable-abi-platform"><span class="std std-ref">平台注意事項</span></a>）。因此，為 Python 3.10.0 編譯的程式碼將能夠在 3.10.8 上運行，反之亦然，但 3.9.x 和 3.11.x 就需要分別編譯。</p>
 <p>C API 有兩層級，有不同的穩定性期望：</p>
@@ -199,20 +285,20 @@
 <p>下面將更詳細地討論這些內容。</p>
 <p>帶有底線前綴的名稱是私有 API (private API)，像是 <code class="docutils literal notranslate"><span class="pre">_Py_InternalState</span></code>，即使在補丁版本 (patch release) 中也可能被更改，不會另行通知。如果你需要使用這個 API，可以聯繫 <a class="reference external" href="https://discuss.python.org/c/core-dev/c-api/30">CPython 開發者</a> 並針對你的使用方法來討論是否新增公開的 API。</p>
 <section id="unstable-c-api">
-<span id="id1"></span><h2>不穩定的 C API<a class="headerlink" href="#unstable-c-api" title="Link to this heading">¶</a></h2>
+<span id="id1"></span><h2>不穩定的 C API<a class="headerlink" href="#unstable-c-api" title="連結到這個標頭">¶</a></h2>
 <p id="index-1">任何以 <code class="docutils literal notranslate"><span class="pre">PyUnstable</span></code> 前綴命名的 API 都會公開 CPython 實作細節，並可能在每個次要版本中進行更改（例如從 3.9 到 3.10），而不會出現任何棄用警告。但是它不會在錯誤修復發布版本中發生變化（例如從 3.10.0 到 3.10.1）。</p>
 <p>它通常用於專門的低階工具，例如偵錯器。</p>
 <p>使用此 API 的專案應該要遵循 CPython 開發細節，並花費額外的力氣來針對這些變動來做調整。</p>
 </section>
 <section id="stable-application-binary-interface">
-<h2>穩定的應用程式二進位介面<a class="headerlink" href="#stable-application-binary-interface" title="Link to this heading">¶</a></h2>
+<h2>穩定的應用程式二進位介面<a class="headerlink" href="#stable-application-binary-interface" title="連結到這個標頭">¶</a></h2>
 <p>為簡單起見，本文件討論<em>擴充 (extension)</em>，但受限 API 和穩定 ABI 在所有 API 使用方式中都以相同的方式運作 -- 例如在嵌入式 Python (embedding Python) 中。</p>
 <section id="limited-c-api">
-<span id="id2"></span><h3>受限 C API<a class="headerlink" href="#limited-c-api" title="Link to this heading">¶</a></h3>
+<span id="id2"></span><h3>受限 C API<a class="headerlink" href="#limited-c-api" title="連結到這個標頭">¶</a></h3>
 <p>Python 3.2 引入了<em>受限 API (Limited API)</em>，它是 Python C API 的一個子集。僅使用受限 API 的擴充可以只編譯一次就使用於多個版本的 Python。受限 API 的內容<a class="reference internal" href="#limited-api-list"><span class="std std-ref">列在下方</span></a>。</p>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_LIMITED_API">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_LIMITED_API</span></span></span><a class="headerlink" href="#c.Py_LIMITED_API" title="Link to this definition">¶</a><br /></dt>
+<span class="sig-name descname"><span class="n"><span class="pre">Py_LIMITED_API</span></span></span><a class="headerlink" href="#c.Py_LIMITED_API" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>在包含 <code class="docutils literal notranslate"><span class="pre">Python.h</span></code> 之前定義此巨集以選擇只使用受限 API，並挑選受限 API 版本。</p>
 <p>將 <code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code> 定義為對應於你的擴充有支援的最低 Python 版本的 <a class="reference internal" href="apiabiversion.html#c.PY_VERSION_HEX" title="PY_VERSION_HEX"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PY_VERSION_HEX</span></code></a> 值。該擴充無需重新編譯即可與從指定版本開始的所有 Python 3 版本一起使用，並且可以使用過去版本有引入的受限 API。</p>
 <p>與其直接使用 <code class="docutils literal notranslate"><span class="pre">PY_VERSION_HEX</span></code> 巨集，不如寫死 (hardcode) 最小次要版本（例如代表 Python 3.10 的 <code class="docutils literal notranslate"><span class="pre">0x030A0000</span></code>），以便在使用未來的 Python 版本進行編譯時仍保持穩定性。</p>
@@ -221,7 +307,7 @@
 
 </section>
 <section id="stable-abi">
-<span id="id3"></span><h3>穩定 ABI<a class="headerlink" href="#stable-abi" title="Link to this heading">¶</a></h3>
+<span id="id3"></span><h3>穩定 ABI<a class="headerlink" href="#stable-abi" title="連結到這個標頭">¶</a></h3>
 <p>為了實現它，Python 提供了一個<em>穩定 ABI (Stable ABI)</em>：一組將在各個 Python 3.x 版本之間保持相容的符號。</p>
 <p>穩定 ABI 被包含在<a class="reference internal" href="#limited-c-api"><span class="std std-ref">受限 API</span></a> 中開放的符號，但也包含其他符號 - 例如，支援舊版受限 API 所必需的函式。</p>
 <p>在 Windows 上，使用穩定 ABI 的擴充應該連接到 <code class="docutils literal notranslate"><span class="pre">python3.dll</span></code> 而不是特定版本的函式庫，例如 <code class="docutils literal notranslate"><span class="pre">python39.dll</span></code>。</p>
@@ -229,14 +315,14 @@
 <p>穩定 ABI 中的所有函式都作為函式存在於 Python 的共享函式庫中，而不僅是作為巨集。這使得它們可被用於不使用 C 預處理器 (preprocessor) 的語言。</p>
 </section>
 <section id="limited-api-scope-and-performance">
-<h3>受限 API 範圍和性能<a class="headerlink" href="#limited-api-scope-and-performance" title="Link to this heading">¶</a></h3>
+<h3>受限 API 範圍和性能<a class="headerlink" href="#limited-api-scope-and-performance" title="連結到這個標頭">¶</a></h3>
 <p>受限 API 的目標是允許使用完整的 C API 進行所有可能的操作，但可能會降低性能。</p>
 <p>例如，雖然 <a class="reference internal" href="list.html#c.PyList_GetItem" title="PyList_GetItem"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyList_GetItem()</span></code></a> 可用，但它的「不安全」巨集變體 <a class="reference internal" href="list.html#c.PyList_GET_ITEM" title="PyList_GET_ITEM"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyList_GET_ITEM()</span></code></a> 為不可用。巨集運行可以更快，因為它可以依賴 list 物件的特定版本實作細節。</p>
 <p>如果沒有定義 <code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code>，一些 C API 函式將被嵌入或被替換為巨集。定義 <code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code> 會禁用嵌入，從而隨著 Python 資料結構的改進而提高穩定性，但可能會降低性能。</p>
 <p>通過省略 <code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code> 定義，可以使用特定版本的 ABI 編譯受限 API 擴充。這可以提高該 Python 版本的性能，但會限制相容性。使用 <code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code> 編譯將產生一個擴充，可以在特定版本的擴充不可用的地方發布 — 例如，用於即將發布的 Python 版本的預發布版本 (prerelease)。</p>
 </section>
 <section id="limited-api-caveats">
-<h3>受限 API 注意事項<a class="headerlink" href="#limited-api-caveats" title="Link to this heading">¶</a></h3>
+<h3>受限 API 注意事項<a class="headerlink" href="#limited-api-caveats" title="連結到這個標頭">¶</a></h3>
 <p>請注意，使用 <code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code> 進行編譯<em>不</em>完全保證程式碼符合<a class="reference internal" href="#limited-c-api"><span class="std std-ref">受限 API</span></a> 或<a class="reference internal" href="#stable-abi"><span class="std std-ref">穩定 ABI</span></a>。<code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code> 僅涵蓋定義，但 API 還包括其他議題，例如預期的語義 (semantic)。</p>
 <p><code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code> 無法防範的一個問題是使用在較低 Python 版本中無效的引數來呼叫函式。例如一個開始接受 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> 作為引數的函式。在 Python 3.9 中，<code class="docutils literal notranslate"><span class="pre">NULL</span></code> 現在代表選擇預設行為，但在 Python 3.8 中，引數將被直接使用，導致 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> 取消參照 (dereference) 且崩潰 (crash)。類似的引數適用於結構 (struct) 的欄位。</p>
 <p>另一個問題是，當有定義 <code class="docutils literal notranslate"><span class="pre">Py_LIMITED_API</span></code> 時，一些結構欄位目前不會被隱藏，即使它們是受限 API 的一部分。</p>
@@ -246,12 +332,12 @@
 </section>
 </section>
 <section id="platform-considerations">
-<span id="stable-abi-platform"></span><h2>平台注意事項<a class="headerlink" href="#platform-considerations" title="Link to this heading">¶</a></h2>
+<span id="stable-abi-platform"></span><h2>平台注意事項<a class="headerlink" href="#platform-considerations" title="連結到這個標頭">¶</a></h2>
 <p>ABI 穩定性不僅取決於 Python，還取決於使用的編譯器、低階函式庫和編譯器選項。出於<a class="reference internal" href="#stable-abi"><span class="std std-ref">穩定 ABI</span></a> 的目的，這些細節定義了一個「平台」。它們通常取決於作業系統種類和處理器架構</p>
 <p>每個特定的 Python 發布者都有責任確保特定平台上的所有 Python 版本都以不破壞穩定 ABI 的方式建置。<code class="docutils literal notranslate"><span class="pre">python.org</span></code> 和許多第三方發布者發布的 Windows 和 macOS 版本就是這種情況。</p>
 </section>
 <section id="contents-of-limited-api">
-<span id="limited-api-list"></span><h2>受限 API 的內容<a class="headerlink" href="#contents-of-limited-api" title="Link to this heading">¶</a></h2>
+<span id="limited-api-list"></span><h2>受限 API 的內容<a class="headerlink" href="#contents-of-limited-api" title="連結到這個標頭">¶</a></h2>
 <p>目前，<a class="reference internal" href="#limited-c-api"><span class="std std-ref">受限 API</span></a> 包括以下項目：</p>
 <p><ul class="simple">
 <li><p><a class="reference internal" href="call.html#c.PY_VECTORCALL_ARGUMENTS_OFFSET" title="PY_VECTORCALL_ARGUMENTS_OFFSET"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PY_VECTORCALL_ARGUMENTS_OFFSET</span></code></a></p></li>
@@ -1293,13 +1379,13 @@
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Apr 15, 2024 (12:58 UTC)。
+      最後更新於 Apr 18, 2024 (19:44 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
     <br />
 
-    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6 建立。
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.6 建立。
     </div>
 
   </body>

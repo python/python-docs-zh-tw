@@ -12,9 +12,9 @@
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=b20cc3f5" />
     
     <script src="../_static/documentation_options.js?v=17adff09"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/translations.js?v=d9a6981e"></script>
+    <script src="../_static/translations.js?v=1fe8cbde"></script>
     
     <script src="../_static/sidebar.js"></script>
     
@@ -46,6 +46,92 @@
             <script type="text/javascript" src="../_static/menu.js"></script>
             <script type="text/javascript" src="../_static/search-focus.js"></script>
             <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+
+<meta name="readthedocs-addons-api-version" content="1">
+<script type="text/javascript">
+ function onSwitch(event) {
+     const option = event.target.selectedIndex;
+     const item = event.target.options[option];
+     window.location.href = item.dataset.url;
+ }
+
+ document.addEventListener("readthedocs-addons-data-ready", function(event) {
+   const config = event.detail.data()
+
+   // Add some mocked hardcoded versions pointing to the official
+   // documentation while migrating to Read the Docs.
+   // These are only for testing purposes.
+   // TODO: remove them when managing all the versions on Read the Docs,
+   // since all the "active, built and not hidden" versions will be shown automatically.
+   let versions = config.versions.active.concat([
+       {
+           slug: "dev (3.13)",
+           urls: {
+               documentation: "https://docs.python.org/3.13/",
+           }
+       },
+       {
+           slug: "3.12",
+           urls: {
+               documentation: "https://docs.python.org/3.12/",
+           }
+       },
+       {
+           slug: "3.11",
+           urls: {
+               documentation: "https://docs.python.org/3.11/",
+           }
+       },
+   ]);
+
+   const versionSelect = `
+   <select id="version_select">
+   ${ versions.map(
+       (version) => `
+       <option
+           value="${ version.slug }"
+           ${ config.versions.current.slug === version.slug ? 'selected="selected"' : '' }
+           data-url="${ version.urls.documentation }">
+           ${ version.slug }
+       </option>`
+   ).join("\n") }
+   </select>
+   `;
+
+   // Prepend the current language to the options on the selector
+   let languages = config.projects.translations.concat(config.projects.current);
+   languages = languages.sort((a, b) => a.language.name.localeCompare(b.language.name));
+
+   const languageSelect = `
+   <select id="language_select">
+   ${ languages.map(
+       (translation) => `
+       <option
+           value="${ translation.slug }"
+           ${ config.projects.current.slug === translation.slug ? 'selected="selected"' : '' }
+           data-url="${ translation.urls.documentation }">
+           ${ translation.language.name }
+       </option>`
+   ).join("\n") }
+   </select>
+   `;
+
+   // Query all the placeholders because there are different ones for Desktop/Mobile
+   const versionPlaceholders = document.querySelectorAll(".version_switcher_placeholder");
+   for (placeholder of versionPlaceholders) {
+       placeholder.innerHTML = versionSelect;
+       let selectElement = placeholder.querySelector("select");
+       selectElement.addEventListener("change", onSwitch);
+   }
+
+   const languagePlaceholders = document.querySelectorAll(".language_switcher_placeholder");
+   for (placeholder of languagePlaceholders) {
+       placeholder.innerHTML = languageSelect;
+       let selectElement = placeholder.querySelector("select");
+       selectElement.addEventListener("change", onSwitch);
+   }
+ });
+</script>
 
   </head>
 <body>
@@ -184,7 +270,7 @@
           <div class="body" role="main">
             
   <section id="instrumenting-cpython-with-dtrace-and-systemtap">
-<span id="instrumentation"></span><h1>使用 DTrace 和 SystemTap 檢測 CPython<a class="headerlink" href="#instrumenting-cpython-with-dtrace-and-systemtap" title="Link to this heading">¶</a></h1>
+<span id="instrumentation"></span><h1>使用 DTrace 和 SystemTap 檢測 CPython<a class="headerlink" href="#instrumenting-cpython-with-dtrace-and-systemtap" title="連結到這個標頭">¶</a></h1>
 <dl class="field-list simple">
 <dt class="field-odd">作者<span class="colon">:</span></dt>
 <dd class="field-odd"><p>David Malcolm</p>
@@ -204,7 +290,7 @@
 <p><strong>CPython 實作細節：</strong> DTrace 標記是 CPython 直譯器的實作細節。不保證 CPython 版本之間的探針相容性。更改 CPython 版本時，DTrace 腳本可能會停止運作或錯誤地運作，而不會發出警告。</p>
 </div>
 <section id="enabling-the-static-markers">
-<h2>啟用靜態標記<a class="headerlink" href="#enabling-the-static-markers" title="Link to this heading">¶</a></h2>
+<h2>啟用靜態標記<a class="headerlink" href="#enabling-the-static-markers" title="連結到這個標頭">¶</a></h2>
 <p>macOS 內建了對 DTrace 的支援。在 Linux 上，為了建置帶有 SystemTap 嵌入標記的 CPython，必須安裝 SystemTap 開發工具。</p>
 <p>在 Linux 機器上，這可以透過以下方式完成：</p>
 <div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>yum<span class="w"> </span>install<span class="w"> </span>systemtap-sdt-devel
@@ -283,7 +369,7 @@
 <p>上述元資料包含 SystemTap 的資訊，描述了它如何修補策略性放置的機器碼指令以啟用 SystemTap 腳本使用的追蹤 hook。</p>
 </section>
 <section id="static-dtrace-probes">
-<h2>靜態 DTrace 探針<a class="headerlink" href="#static-dtrace-probes" title="Link to this heading">¶</a></h2>
+<h2>靜態 DTrace 探針<a class="headerlink" href="#static-dtrace-probes" title="連結到這個標頭">¶</a></h2>
 <p>以下範例示範 DTrace 腳本可用於顯示 Python 腳本的呼叫/回傳階層結構，僅在名為 &quot;start&quot; 的函式的呼叫內進行追蹤。換句話說，引入時的函式呼叫不會被列出：</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>self int indent;
 
@@ -345,7 +431,7 @@ python$target:::function-return
 </div>
 </section>
 <section id="static-systemtap-markers">
-<h2>靜態 SystemTap 標記<a class="headerlink" href="#static-systemtap-markers" title="Link to this heading">¶</a></h2>
+<h2>靜態 SystemTap 標記<a class="headerlink" href="#static-systemtap-markers" title="連結到這個標頭">¶</a></h2>
 <p>使用 SystemTap 整合的低階方法是直接使用靜態標記。這會需要你明確聲明包含它們的二進位檔案。</p>
 <p>例如，此 SystemTap 腳本可用於顯示 Python 腳本的呼叫/回傳階層結構：</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>probe process(&quot;python&quot;).mark(&quot;function__entry&quot;) {
@@ -400,7 +486,7 @@ probe process(&quot;python&quot;).mark(&quot;function__return&quot;) {
 <p>（假設 CPython 3.6 的<a class="reference internal" href="../using/configure.html#debug-build"><span class="std std-ref">除錯建置版本</span></a>）</p>
 </section>
 <section id="available-static-markers">
-<h2>可用的靜態標記<a class="headerlink" href="#available-static-markers" title="Link to this heading">¶</a></h2>
+<h2>可用的靜態標記<a class="headerlink" href="#available-static-markers" title="連結到這個標頭">¶</a></h2>
 <dl class="object">
 <dt class="sig sig-object">
 <span class="sig-name descname"><span class="pre">function__entry(str</span> <span class="pre">filename,</span> <span class="pre">str</span> <span class="pre">funcname,</span> <span class="pre">int</span> <span class="pre">lineno)</span></span></dt>
@@ -446,7 +532,7 @@ probe process(&quot;python&quot;).mark(&quot;function__return&quot;) {
 <span class="sig-name descname"><span class="pre">import__find__load__start(str</span> <span class="pre">modulename)</span></span></dt>
 <dd><p>在 <a class="reference internal" href="../library/importlib.html#module-importlib" title="importlib: The implementation of the import machinery."><code class="xref py py-mod docutils literal notranslate"><span class="pre">importlib</span></code></a> 嘗試查找並載入模組之前觸發。<code class="docutils literal notranslate"><span class="pre">arg0</span></code> 是模組名稱。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.7 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.7.</span></p>
 </div>
 </dd></dl>
 
@@ -455,7 +541,7 @@ probe process(&quot;python&quot;).mark(&quot;function__return&quot;) {
 <span class="sig-name descname"><span class="pre">import__find__load__done(str</span> <span class="pre">modulename,</span> <span class="pre">int</span> <span class="pre">found)</span></span></dt>
 <dd><p>在呼叫 <a class="reference internal" href="../library/importlib.html#module-importlib" title="importlib: The implementation of the import machinery."><code class="xref py py-mod docutils literal notranslate"><span class="pre">importlib</span></code></a> 的 find_and_load 函式後觸發。 <code class="docutils literal notranslate"><span class="pre">arg0</span></code> 是模組名稱，<code class="docutils literal notranslate"><span class="pre">arg1</span></code> 代表模組是否已成功載入。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.7 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.7.</span></p>
 </div>
 </dd></dl>
 
@@ -464,13 +550,13 @@ probe process(&quot;python&quot;).mark(&quot;function__return&quot;) {
 <span class="sig-name descname"><span class="pre">audit(str</span> <span class="pre">event,</span> <span class="pre">void</span> <span class="pre">*tuple)</span></span></dt>
 <dd><p>當呼叫 <a class="reference internal" href="../library/sys.html#sys.audit" title="sys.audit"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.audit()</span></code></a> 或 <a class="reference internal" href="../c-api/sys.html#c.PySys_Audit" title="PySys_Audit"><code class="xref c c-func docutils literal notranslate"><span class="pre">PySys_Audit()</span></code></a> 時觸發。<code class="docutils literal notranslate"><span class="pre">arg0</span></code> 是 C 字串形式的事件名稱，<code class="docutils literal notranslate"><span class="pre">arg1</span></code> 是指向元組 (tuple) 物件的 <a class="reference internal" href="../c-api/structures.html#c.PyObject" title="PyObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyObject</span></code></a> 指標。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.8 版新加入.</span></p>
+<p><span class="versionmodified added">Added in version 3.8.</span></p>
 </div>
 </dd></dl>
 
 </section>
 <section id="systemtap-tapsets">
-<h2>SystemTap Tapsets<a class="headerlink" href="#systemtap-tapsets" title="Link to this heading">¶</a></h2>
+<h2>SystemTap Tapsets<a class="headerlink" href="#systemtap-tapsets" title="連結到這個標頭">¶</a></h2>
 <p>使用 SystemTap 整合的高階方法是使用 &quot;tapset&quot;：SystemTap 相當於一個函式庫，它隱藏了靜態標記的一些低階詳細資訊。</p>
 <p>這是一個 tapset 檔案，是基於 CPython 的非共享建置版本：</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/*
@@ -508,7 +594,7 @@ probe python.function.return = process(&quot;python&quot;).mark(&quot;function__
 
 </section>
 <section id="examples">
-<h2>範例<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h2>
+<h2>範例<a class="headerlink" href="#examples" title="連結到這個標頭">¶</a></h2>
 <p>此 SystemTap 腳本使用上面的 tapset 來更清晰地實作上面給出的追蹤 Python 函式呼叫階層結構的範例，而無需直接命名靜態標記：</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>probe python.function.entry
 {
@@ -675,13 +761,13 @@ probe timer.ms(1000) {
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Apr 15, 2024 (12:58 UTC)。
+      最後更新於 Apr 18, 2024 (19:44 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
     <br />
 
-    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6 建立。
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.6 建立。
     </div>
 
   </body>
