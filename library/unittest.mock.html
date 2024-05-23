@@ -579,10 +579,17 @@
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.6 版的變更: </span>reset_mock 函式新增了兩個僅限關鍵字引數 (keyword-only arguments)。</p>
 </div>
-<p>這在你想要進行一系列重複使用同一物件的斷言時非常有用。請注意，預設情況下，<a class="reference internal" href="#unittest.mock.Mock.reset_mock" title="unittest.mock.Mock.reset_mock"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset_mock()</span></code></a> <em>不會</em>清除回傳值、<a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> 或使用普通賦值設定的任何子屬性。如果你想要重置 <em>return_value</em> 或 <a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a>，則將相應的參數設置為 <code class="docutils literal notranslate"><span class="pre">True</span></code>。Child mock 和回傳值 mock（如果有的話）也會被重置。</p>
+<p>This can be useful where you want to make a series of assertions that
+reuse the same object. Note that <a class="reference internal" href="#unittest.mock.Mock.reset_mock" title="unittest.mock.Mock.reset_mock"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reset_mock()</span></code></a> <em>doesn't</em> clear the
+<a class="reference internal" href="#unittest.mock.Mock.return_value" title="unittest.mock.Mock.return_value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">return_value</span></code></a>, <a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> or any child attributes you have
+set using normal assignment by default. In case you want to reset
+<a class="reference internal" href="#unittest.mock.Mock.return_value" title="unittest.mock.Mock.return_value"><code class="xref py py-attr docutils literal notranslate"><span class="pre">return_value</span></code></a> or <a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a>, then pass the corresponding
+parameter as <code class="docutils literal notranslate"><span class="pre">True</span></code>. Child mocks and the return value mock
+(if any) are reset as well.</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p><em>return_value</em> 和 <a class="reference internal" href="#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> 是僅限關鍵字引數。</p>
+<p><em>return_value</em>, and <em>side_effect</em> are keyword-only
+arguments.</p>
 </div>
 </dd></dl>
 
@@ -2263,26 +2270,15 @@
 <span id="auto-speccing"></span><h3>Autospeccing（自動規格）<a class="headerlink" href="#autospeccing" title="連結到這個標頭">¶</a></h3>
 <p>自動規格以 mock 現有的 <code class="xref py py-attr docutils literal notranslate"><span class="pre">spec</span></code> 功能作為基礎。它將 mock 的 api 限制為原始物件（規格）的 api，但它是遞迴的（惰性 (lazily) 實現），因此 mock 的屬性僅具有與規格的屬性相同的 api。此外，被 mock 的函式/方法具有與原始的函式/方法相同的呼叫簽名，因此如果它們被不正確地呼叫，就會引發 <a class="reference internal" href="exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a>。</p>
 <p>在解釋自動規格如何運作之前，我們先解釋為什麼需要它。</p>
-<p><a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> 是一個非常強大且靈活的物件，但是當用於從被測試的系統中 mock out 物件時，它有兩個缺陷。其中一個缺陷是 <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> api 特有的，另一個缺陷是使用 mock 物件時出現的更普遍的問題。</p>
-<p>首先是 <a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> 特有的問題。<a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> 有兩個非常方便的斷言方法：<code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_used_with()</span></code> 和 <code class="xref py py-meth docutils literal notranslate"><span class="pre">assert_used_once_with()</span></code>。</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Thing&#39;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">assert_called_once_with</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<span class="gt">Traceback (most recent call last):</span>
-<span class="w"> </span><span class="c">...</span>
-<span class="gr">AssertionError</span>: <span class="n">Expected &#39;mock&#39; to be called once. Called 2 times.</span>
-</pre></div>
+<p><a class="reference internal" href="#unittest.mock.Mock" title="unittest.mock.Mock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mock</span></code></a> is a very powerful and flexible object, but it suffers from a flaw which
+is general to mocking. If you refactor some of your code, rename members and so on, any
+tests for code that is still using the <em>old api</em> but uses mocks instead of the real
+objects will still pass. This means your tests can all pass even though your code is
+broken.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.5 版的變更: </span>Before 3.5, tests with a typo in the word assert would silently pass when they should
+raise an error. You can still achieve this behavior by passing <code class="docutils literal notranslate"><span class="pre">unsafe=True</span></code> to Mock.</p>
 </div>
-<p>因為 mock 會根據需要自動建立屬性，並允許你使用任意引數呼叫它們，所以如果你拼錯了其中一個斷言方法，那麼你的斷言就不見了：</p>
-<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span> <span class="o">=</span> <span class="n">Mock</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Thing&#39;</span><span class="p">,</span> <span class="n">return_value</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mock</span><span class="o">.</span><span class="n">assret_called_once_with</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>  <span class="c1"># Intentional typo!</span>
-</pre></div>
-</div>
-<p>由於拼字錯誤，你的測試可能會安靜且錯誤地通過。</p>
-<p>第二個問題對於 mock 來說更為普遍。如果你重構某些程式碼、重新命名成員等等，則對任何仍然使用<em>舊 api</em> 但使用 mock 而不是真實物件的程式碼的測試仍然會通過。這意味著即使你的程式碼已經壞了，你的測試也可以全部通過。</p>
 <p>謹記這是你需要有整合測試和單元測試的另一個原因。單獨測試所有內容都很好，但如果你不測試你的單元是如何「連接在一起」的，那麼測試還是有機會發現很多錯誤。</p>
 <p><code class="xref py py-mod docutils literal notranslate"><span class="pre">mock</span></code> 已經提供了一個功能來幫助解決這個問題，其稱為 speccing。如果你使用類別或實例作為 mock 的 <code class="xref py py-attr docutils literal notranslate"><span class="pre">spec</span></code>，那麼你在 mock 上只能存取真實類別中存在的屬性：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">urllib</span> <span class="kn">import</span> <span class="n">request</span>
@@ -2717,7 +2713,7 @@ exception is raised.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 May 16, 2024 (07:44 UTC)。
+      最後更新於 May 23, 2024 (05:22 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
