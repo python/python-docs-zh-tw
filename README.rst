@@ -84,12 +84,14 @@ the PSF for inclusion in the documentation.
   上請參考 https://gitforwindows.org/）
 - 一個 ``.po`` 檔的編輯器。推薦使用 `Poedit <https://poedit.net>`_，若熟悉 po 檔用一般文字編輯器亦可。
 - macOS 的使用者還需要先利用 `homebrew <https://brew.sh/index_zh-tw>`_ 安裝 gettext，屆時 Sphinx 會使用到。
+
 .. code-block:: bash
 
   brew install gettext
-
   brew link gettext --force
+
 - 安裝 pre-commit 自動在 commit 時檢查 ``.po`` 檔格式。
+
 .. code-block:: bash
 
   pip install pre-commit
