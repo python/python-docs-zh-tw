@@ -3,6 +3,7 @@
 # Here is what you can do:
 #
 # - make all # Automatically build an html local version
+# - make build  # To build a single .po file
 # - make todo  # To list remaining tasks
 # - make merge  # To merge pot from upstream
 # - make fuzzy  # To find fuzzy strings
