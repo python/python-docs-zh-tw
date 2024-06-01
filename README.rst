@@ -150,8 +150,8 @@ the PSF for inclusion in the documentation.
 
    確保輸出中沒有任何關於正在翻譯的檔案的警告訊息。
 
-   在 ``make all`` 後，可以使用 ``make build`` 來只對單一 ``.po`` 檔進行編譯 ::
-    
+   在 ``make all`` 後，可以使用 ``make build`` 來只對單一 ``.po`` 檔進行編譯，可以節省較多的時間 ::
+
     VERSION=3.12 make build glossary.po
 
    如果你還沒有執行 `維護、預覽`_ 的 clone CPython 的動作，此指令會自動幫你 clone CPython，\
