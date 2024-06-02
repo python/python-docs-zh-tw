@@ -42,6 +42,7 @@ SPHINX_CONF := $(CPYTHON_CLONE)/Doc/conf.py
 LANGUAGE := zh_TW
 LC_MESSAGES := $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/LC_MESSAGES
 VENV := ~/.venvs/python-docs-i18n/
+VENV_FOR_SCRIPT := ~/.venvs/python-docs-zhtw-script/
 PYTHON := $(shell which python3)
 MODE := autobuild-dev-html
 BRANCH := $(or $(VERSION), $(shell git describe --contains --all HEAD))
@@ -104,6 +105,49 @@ $(VENV)/bin/sphinx-lint: $(VENV)/bin/activate
 
 $(VENV)/bin/blurb: $(VENV)/bin/activate
 	. $(VENV)/bin/activate; python3 -m pip install blurb
+
+$(VENV_FOR_SCRIPT)/bin/activate:
+	mkdir -p $(VENV_FOR_SCRIPT)
+	$(PYTHON) -m venv $(VENV_FOR_SCRIPT)
+	. $(VENV_FOR_SCRIPT)/bin/activate; python3 -m pip install -r .scripts/requirements.txt
+
+.PHONY: summarize_progress
+summarize_progress: $(VENV_FOR_SCRIPT)/bin/activate
+	cd .scripts && \
+	. $(VENV_FOR_SCRIPT)/bin/activate; \
+	python3 summarize_progress/main.py
+
+.PHONY: google_translate
+google_translate: $(VENV_FOR_SCRIPT)/bin/activate
+
+	@$(eval _target=$(filter-out $@, $(MAKECMDGOALS)))
+	@if [ -z $(_target) ]; then \
+		echo "Please provide a file argument."; \
+		exit 1; \
+	fi
+
+
+	@if [ "$(suffix $(_target))" != ".po" ]; then \
+		echo "Incorrect file extension. Only '.po' files are allowed."; \
+		exit 1; \
+	else \
+		_target=$(addsuffix ,po,$(_target)); \
+	fi
+
+	@if [ ! -f "$(_target)" ]; then \
+		echo "File '$(filter-out $@, $(_target))' does not exist."; \
+		exit 1; \
+	fi
+	
+	@$(eval _tmp_po_file=tmp.po)
+	@$(eval _file_path=$(addprefix  ../, $(_target)))
+
+	cd .scripts && \
+	. $(VENV_FOR_SCRIPT)/bin/activate; \
+	python3 google_translate/main.py  $(_file_path) > $(_tmp_po_file) ; \
+	pomerge -t $(_file_path) -i $(_tmp_po_file) -o $(_file_path) ; \ 
+	# rm $(_tmp_po_file)
+	exit 0
 
 
 .PHONY: upgrade_venv
