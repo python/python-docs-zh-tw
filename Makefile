@@ -72,13 +72,12 @@ build: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build a
 	@mkdir -p $(LC_MESSAGES)
 	@$(eval dir=`echo $(target) | xargs -n1 dirname`) ## Get dir
 # If the build target is in under directory
-# We should make direcotry in $(LC_MESSAGES) and link the file.
+# We should make direcotry in $(LC_MESSAGES).
 	@if [ $(dir) != "." ]; then \
 		echo "mkdir -p $(LC_MESSAGES)/$(dir)"; \
 		mkdir -p $(LC_MESSAGES)/$(dir); \
-		echo "ln -f ./$(target) $(LC_MESSAGES)/$(target)"; \
-		ln -f ./$(target) $(LC_MESSAGES)/$(target); \
 	fi
+	@ln -f ./$(target) $(LC_MESSAGES)/$(target)
 # Build
 	@echo "----"
 	@. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D language=$(LANGUAGE) -D locale_dirs=locales -D gettext_compact=0' SOURCES='$(basename $(target)).rst' html
