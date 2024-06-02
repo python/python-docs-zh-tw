@@ -38,13 +38,13 @@ endef
 export PRINT_HELP_PYSCRIPT # End of python section
 
 CPYTHON_CLONE := ../cpython
+VERSION := $(or $(VERSION), 3.12)
 SPHINX_CONF := $(CPYTHON_CLONE)/Doc/conf.py
 LANGUAGE := zh_TW
 LC_MESSAGES := $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/LC_MESSAGES
 VENV := ~/.venvs/python-docs-i18n/
 PYTHON := $(shell which python3)
 MODE := autobuild-dev-html
-BRANCH := $(or $(VERSION), $(shell git describe --contains --all HEAD))
 JOBS := 4
 
 .PHONY: all
@@ -82,7 +82,7 @@ help:
 
 clone: ## Clone latest cpython repository to `../cpython/` if it doesn't exist
 	git clone --depth 1 --no-single-branch https://github.com/python/cpython.git $(CPYTHON_CLONE)  || echo "cpython exists"
-	cd $(CPYTHON_CLONE) && git checkout $(BRANCH)
+	cd $(CPYTHON_CLONE) && git checkout $(VERSION)
 
 
 $(VENV)/bin/activate:
@@ -119,9 +119,6 @@ todo: ## List remaining tasks
 
 .PHONY: merge
 merge: upgrade_venv ## To merge pot from upstream
-ifneq "$(shell cd $(CPYTHON_CLONE) 2>/dev/null && git describe --contains --all HEAD)" "$(BRANCH)"
-	$(error "You're merging from a different branch")
-endif
 	(cd $(CPYTHON_CLONE)/Doc; rm -f build/NEWS)
 	(cd $(CPYTHON_CLONE)/Doc; $(VENV)/bin/sphinx-build -Q -b gettext -D gettext_compact=0 . locales/pot/)
 	find $(CPYTHON_CLONE)/Doc/locales/pot/ -name '*.pot' |\
@@ -140,7 +137,7 @@ endif
 
 .PHONY: update_txconfig
 update_txconfig:
-	curl -L https://rawgit.com/python-doc-ja/cpython-doc-catalog/catalog-$(BRANCH)/Doc/locales/.tx/config |\
+	curl -L https://rawgit.com/python-doc-ja/cpython-doc-catalog/catalog-$(VERSION)/Doc/locales/.tx/config |\
 		grep --invert-match '^file_filter = *' |\
 		sed -e 's/source_file = pot\/\(.*\)\.pot/trans.zh_TW = \1.po/' |\
 		sed -n 'w .tx/config'
