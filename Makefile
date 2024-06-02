@@ -3,7 +3,7 @@
 # Here is what you can do:
 #
 # - make all # Automatically build an html local version
-# - make build  # To build a single .po file
+# - make build <po-file>  # To build a single .po file
 # - make todo  # To list remaining tasks
 # - make merge  # To merge pot from upstream
 # - make fuzzy  # To find fuzzy strings
@@ -37,7 +37,7 @@ print('\n'.join(output))
 endef
 export PRINT_HELP_PYSCRIPT # End of python section
 
-CPYTHON_CLONE := ../cpython/
+CPYTHON_CLONE := ../cpython
 SPHINX_CONF := $(CPYTHON_CLONE)/Doc/conf.py
 LANGUAGE := zh_TW
 LC_MESSAGES := $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/LC_MESSAGES
@@ -55,7 +55,7 @@ all: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build an 
 	. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D locale_dirs=locales -D language=$(LANGUAGE) -D gettext_compact=0' $(MODE)
 
 .PHONY: build
-build: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build an html local version
+build: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build an html local version for a single file
 	@$(eval target=$(filter-out $@,$(MAKECMDGOALS)))
 	@if [ -z $(target) ]; then \
 		echo "\x1B[1;31m""Please provide a file argument.""\x1B[m"; \
@@ -69,18 +69,13 @@ build: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build a
 		echo "\x1B[1;31m""ERROR: $(target) not exist.""\x1B[m"; \
 		exit 1; \
 	fi
-	@mkdir -p $(LC_MESSAGES)
+
 	@$(eval dir=`echo $(target) | xargs -n1 dirname`) ## Get dir
-# If the build target is in under directory
-# We should make direcotry in $(LC_MESSAGES).
-	@if [ $(dir) != "." ]; then \
-		echo "mkdir -p $(LC_MESSAGES)/$(dir)"; \
-		mkdir -p $(LC_MESSAGES)/$(dir); \
-	fi
+	@mkdir -p $(LC_MESSAGES)/$(dir)
 	@ln -f ./$(target) $(LC_MESSAGES)/$(target)
-# Build
-	@echo "----"
+
 	@. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D language=$(LANGUAGE) -D locale_dirs=locales -D gettext_compact=0' SOURCES='$(basename $(target)).rst' html
+
 
 help:
 	@python3 -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
