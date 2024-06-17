@@ -47,91 +47,8 @@
             <script type="text/javascript" src="../_static/menu.js"></script>
             <script type="text/javascript" src="../_static/search-focus.js"></script>
             <script type="text/javascript" src="../_static/themetoggle.js"></script> 
-<meta name="readthedocs-addons-api-version" content="1">
-<script type="text/javascript">
- function onSwitch(event) {
-     const option = event.target.selectedIndex;
-     const item = event.target.options[option];
-     window.location.href = item.dataset.url;
- }
-
- document.addEventListener("readthedocs-addons-data-ready", function(event) {
-   const config = event.detail.data()
-
-   // Add some mocked hardcoded versions pointing to the official
-   // documentation while migrating to Read the Docs.
-   // These are only for testing purposes.
-   // TODO: remove them when managing all the versions on Read the Docs,
-   // since all the "active, built and not hidden" versions will be shown automatically.
-   let versions = config.versions.active.concat([
-       {
-           slug: "dev (3.13)",
-           urls: {
-               documentation: "https://docs.python.org/3.13/",
-           }
-       },
-       {
-           slug: "3.12",
-           urls: {
-               documentation: "https://docs.python.org/3.12/",
-           }
-       },
-       {
-           slug: "3.11",
-           urls: {
-               documentation: "https://docs.python.org/3.11/",
-           }
-       },
-   ]);
-
-   const versionSelect = `
-   <select id="version_select">
-   ${ versions.map(
-       (version) => `
-       <option
-           value="${ version.slug }"
-           ${ config.versions.current.slug === version.slug ? 'selected="selected"' : '' }
-           data-url="${ version.urls.documentation }">
-           ${ version.slug }
-       </option>`
-   ).join("\n") }
-   </select>
-   `;
-
-   // Prepend the current language to the options on the selector
-   let languages = config.projects.translations.concat(config.projects.current);
-   languages = languages.sort((a, b) => a.language.name.localeCompare(b.language.name));
-
-   const languageSelect = `
-   <select id="language_select">
-   ${ languages.map(
-       (translation) => `
-       <option
-           value="${ translation.slug }"
-           ${ config.projects.current.slug === translation.slug ? 'selected="selected"' : '' }
-           data-url="${ translation.urls.documentation }">
-           ${ translation.language.name }
-       </option>`
-   ).join("\n") }
-   </select>
-   `;
-
-   // Query all the placeholders because there are different ones for Desktop/Mobile
-   const versionPlaceholders = document.querySelectorAll(".version_switcher_placeholder");
-   for (placeholder of versionPlaceholders) {
-       placeholder.innerHTML = versionSelect;
-       let selectElement = placeholder.querySelector("select");
-       selectElement.addEventListener("change", onSwitch);
-   }
-
-   const languagePlaceholders = document.querySelectorAll(".language_switcher_placeholder");
-   for (placeholder of languagePlaceholders) {
-       placeholder.innerHTML = languageSelect;
-       let selectElement = placeholder.querySelector("select");
-       selectElement.addEventListener("change", onSwitch);
-   }
- });
-</script>
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
 
   </head>
 <body>
@@ -504,14 +421,17 @@ statement, of a variable or attribute annotation and an optional assignment stat
                                [&quot;=&quot; (<a class="reference internal" href="expressions.html#grammar-token-python-grammar-starred_expression"><code class="xref docutils literal notranslate"><span class="pre">starred_expression</span></code></a> | <a class="reference internal" href="expressions.html#grammar-token-python-grammar-yield_expression"><code class="xref docutils literal notranslate"><span class="pre">yield_expression</span></code></a>)]
 </pre>
 <p>The difference from normal <a class="reference internal" href="#assignment"><span class="std std-ref">Assignment statements</span></a> is that only a single target is allowed.</p>
-<p>For simple names as assignment targets, if in class or module scope,
+<p>The assignment target is considered &quot;simple&quot; if it consists of a single
+name that is not enclosed in parentheses.
+For simple assignment targets, if in class or module scope,
 the annotations are evaluated and stored in a special class or module
 attribute <code class="xref py py-attr docutils literal notranslate"><span class="pre">__annotations__</span></code>
 that is a dictionary mapping from variable names (mangled if private) to
 evaluated annotations. This attribute is writable and is automatically
 created at the start of class or module body execution, if annotations
 are found statically.</p>
-<p>For expressions as assignment targets, the annotations are evaluated if
+<p>If the assignment target is not simple (an attribute, subscript node, or
+parenthesized name), the annotation is evaluated if
 in class or module scope, but not stored.</p>
 <p>If a name is annotated in a function scope, then this name is local for
 that scope. Annotations are never evaluated and stored in function scopes.</p>
@@ -1187,7 +1107,7 @@ generic classes and functions.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Jun 12, 2024 (00:20 UTC)。
+      最後更新於 Jun 17, 2024 (05:43 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     

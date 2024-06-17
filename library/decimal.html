@@ -47,91 +47,8 @@
             <script type="text/javascript" src="../_static/menu.js"></script>
             <script type="text/javascript" src="../_static/search-focus.js"></script>
             <script type="text/javascript" src="../_static/themetoggle.js"></script> 
-<meta name="readthedocs-addons-api-version" content="1">
-<script type="text/javascript">
- function onSwitch(event) {
-     const option = event.target.selectedIndex;
-     const item = event.target.options[option];
-     window.location.href = item.dataset.url;
- }
-
- document.addEventListener("readthedocs-addons-data-ready", function(event) {
-   const config = event.detail.data()
-
-   // Add some mocked hardcoded versions pointing to the official
-   // documentation while migrating to Read the Docs.
-   // These are only for testing purposes.
-   // TODO: remove them when managing all the versions on Read the Docs,
-   // since all the "active, built and not hidden" versions will be shown automatically.
-   let versions = config.versions.active.concat([
-       {
-           slug: "dev (3.13)",
-           urls: {
-               documentation: "https://docs.python.org/3.13/",
-           }
-       },
-       {
-           slug: "3.12",
-           urls: {
-               documentation: "https://docs.python.org/3.12/",
-           }
-       },
-       {
-           slug: "3.11",
-           urls: {
-               documentation: "https://docs.python.org/3.11/",
-           }
-       },
-   ]);
-
-   const versionSelect = `
-   <select id="version_select">
-   ${ versions.map(
-       (version) => `
-       <option
-           value="${ version.slug }"
-           ${ config.versions.current.slug === version.slug ? 'selected="selected"' : '' }
-           data-url="${ version.urls.documentation }">
-           ${ version.slug }
-       </option>`
-   ).join("\n") }
-   </select>
-   `;
-
-   // Prepend the current language to the options on the selector
-   let languages = config.projects.translations.concat(config.projects.current);
-   languages = languages.sort((a, b) => a.language.name.localeCompare(b.language.name));
-
-   const languageSelect = `
-   <select id="language_select">
-   ${ languages.map(
-       (translation) => `
-       <option
-           value="${ translation.slug }"
-           ${ config.projects.current.slug === translation.slug ? 'selected="selected"' : '' }
-           data-url="${ translation.urls.documentation }">
-           ${ translation.language.name }
-       </option>`
-   ).join("\n") }
-   </select>
-   `;
-
-   // Query all the placeholders because there are different ones for Desktop/Mobile
-   const versionPlaceholders = document.querySelectorAll(".version_switcher_placeholder");
-   for (placeholder of versionPlaceholders) {
-       placeholder.innerHTML = versionSelect;
-       let selectElement = placeholder.querySelector("select");
-       selectElement.addEventListener("change", onSwitch);
-   }
-
-   const languagePlaceholders = document.querySelectorAll(".language_switcher_placeholder");
-   for (placeholder of languagePlaceholders) {
-       placeholder.innerHTML = languageSelect;
-       let selectElement = placeholder.querySelector("select");
-       selectElement.addEventListener("change", onSwitch);
-   }
- });
-</script>
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
 
   </head>
 <body>
@@ -1205,6 +1122,53 @@ current context is used.</p>
 <dd><p>Round to the nearest integer without signaling <a class="reference internal" href="#decimal.Inexact" title="decimal.Inexact"><code class="xref py py-const docutils literal notranslate"><span class="pre">Inexact</span></code></a> or
 <a class="reference internal" href="#decimal.Rounded" title="decimal.Rounded"><code class="xref py py-const docutils literal notranslate"><span class="pre">Rounded</span></code></a>.  If given, applies <em>rounding</em>; otherwise, uses the
 rounding method in either the supplied <em>context</em> or the current context.</p>
+</dd></dl>
+
+<p>Decimal numbers can be rounded using the <a class="reference internal" href="functions.html#round" title="round"><code class="xref py py-func docutils literal notranslate"><span class="pre">round()</span></code></a> function:</p>
+<dl class="describe">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">round(number)</span></span></dt>
+<dd></dd></dl>
+
+<dl class="describe">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">round(number,</span> <span class="pre">ndigits)</span></span></dt>
+<dd><p>If <em>ndigits</em> is not given or <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+returns the nearest <a class="reference internal" href="functions.html#int" title="int"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a> to <em>number</em>,
+rounding ties to even, and ignoring the rounding mode of the
+<a class="reference internal" href="#decimal.Decimal" title="decimal.Decimal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Decimal</span></code></a> context.  Raises <a class="reference internal" href="exceptions.html#OverflowError" title="OverflowError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">OverflowError</span></code></a> if <em>number</em> is an
+infinity or <a class="reference internal" href="exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> if it is a (quiet or signaling) NaN.</p>
+<p>If <em>ndigits</em> is an <a class="reference internal" href="functions.html#int" title="int"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, the context's rounding mode is respected
+and a <a class="reference internal" href="#decimal.Decimal" title="decimal.Decimal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Decimal</span></code></a> representing <em>number</em> rounded to the nearest
+multiple of <code class="docutils literal notranslate"><span class="pre">Decimal('1E-ndigits')</span></code> is returned; in this case,
+<code class="docutils literal notranslate"><span class="pre">round(number,</span> <span class="pre">ndigits)</span></code> is equivalent to
+<code class="docutils literal notranslate"><span class="pre">self.quantize(Decimal('1E-ndigits'))</span></code>.  Returns <code class="docutils literal notranslate"><span class="pre">Decimal('NaN')</span></code> if
+<em>number</em> is a quiet NaN.  Raises <a class="reference internal" href="#decimal.InvalidOperation" title="decimal.InvalidOperation"><code class="xref py py-class docutils literal notranslate"><span class="pre">InvalidOperation</span></code></a> if <em>number</em>
+is an infinity, a signaling NaN, or if the length of the coefficient after
+the quantize operation would be greater than the current context's
+precision.  In other words, for the non-corner cases:</p>
+<ul class="simple">
+<li><p>if <em>ndigits</em> is positive, return <em>number</em> rounded to <em>ndigits</em> decimal
+places;</p></li>
+<li><p>if <em>ndigits</em> is zero, return <em>number</em> rounded to the nearest integer;</p></li>
+<li><p>if <em>ndigits</em> is negative, return <em>number</em> rounded to the nearest
+multiple of <code class="docutils literal notranslate"><span class="pre">10**abs(ndigits)</span></code>.</p></li>
+</ul>
+<p>For example:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">decimal</span> <span class="kn">import</span> <span class="n">Decimal</span><span class="p">,</span> <span class="n">getcontext</span><span class="p">,</span> <span class="n">ROUND_DOWN</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">getcontext</span><span class="p">()</span><span class="o">.</span><span class="n">rounding</span> <span class="o">=</span> <span class="n">ROUND_DOWN</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s1">&#39;3.75&#39;</span><span class="p">))</span>     <span class="c1"># context rounding ignored</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s1">&#39;3.5&#39;</span><span class="p">))</span>      <span class="c1"># round-ties-to-even</span>
+<span class="go">4</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s1">&#39;3.75&#39;</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># uses the context rounding</span>
+<span class="go">Decimal(&#39;3&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s1">&#39;3.75&#39;</span><span class="p">),</span> <span class="mi">1</span><span class="p">)</span>
+<span class="go">Decimal(&#39;3.7&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">round</span><span class="p">(</span><span class="n">Decimal</span><span class="p">(</span><span class="s1">&#39;3.75&#39;</span><span class="p">),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="go">Decimal(&#39;0E+1&#39;)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -2738,7 +2702,7 @@ are expected to be exact.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Jun 12, 2024 (00:20 UTC)。
+      最後更新於 Jun 17, 2024 (05:43 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
