@@ -166,12 +166,12 @@ the PSF for inclusion in the documentation.
 
        make build library/math.po
 
-   如果你還沒有執行\ `維護、預覽`_ 的 clone CPython 的動作，此指令會自動幫你 clone CPython，\
+   如果你還沒有執行\ `維護、預覽`_\ 的 clone CPython 的動作，此指令會自動幫你 clone CPython，\
    並且會使用 Sphinx 幫你檢查 reST 語法錯誤，我們盡量保持沒有 warning \
    的狀態，因此如果有出現 warning 的話請修復它。另外也記得檢查是否符合\
    `翻譯守則`_
 
-4. 輸出的文件會被放置在你的本地端 CPython clone（見\ `維護、預覽`_ 段落的圖示）\
+4. 輸出的文件會被放置在你的本地端 CPython clone（見\ `維護、預覽`_\ 段落的圖示）\
    底下的 ``Doc/build/html``，可以使用 `http.server` 或其他靜態網頁伺服器即可以預覽成果。
 
    .. code-block:: bash
@@ -251,7 +251,7 @@ po 檔皆為首要的翻譯對象。你也可以幫忙校對已經翻譯過的�
 
    例如：使用 CPU 運算、使用「CPU」運算
 
-#. 專有名詞應該參考\ `術語表 Glossary`_ 裡翻譯方式。
+#. 專有名詞應該參考\ `術語表 Glossary`_ 裡的翻譯方式。
 
 #. 專有名詞可以選擇不翻譯。
 
