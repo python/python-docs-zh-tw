@@ -98,13 +98,13 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#concrete-paths">實體路徑</a><ul>
+<li><a class="reference internal" href="#expanding-and-resolving-paths">Expanding and resolving paths</a></li>
 <li><a class="reference internal" href="#querying-file-type-and-status">Querying file type and status</a></li>
 <li><a class="reference internal" href="#reading-and-writing-files">Reading and writing files</a></li>
 <li><a class="reference internal" href="#reading-directories">讀取目錄</a></li>
 <li><a class="reference internal" href="#creating-files-and-directories">Creating files and directories</a></li>
 <li><a class="reference internal" href="#renaming-and-deleting">Renaming and deleting</a></li>
-<li><a class="reference internal" href="#ownership-and-permissions">Ownership and permissions</a></li>
-<li><a class="reference internal" href="#other-methods">其他方法</a></li>
+<li><a class="reference internal" href="#permissions-and-ownership">Permissions and ownership</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#correspondence-to-tools-in-the-os-module">與 <code class="xref py py-mod docutils literal notranslate"><span class="pre">os</span></code> 模組裡的工具的對應關係</a></li>
@@ -208,7 +208,7 @@
 <p><strong>原始碼：</strong><a class="reference external" href="https://github.com/python/cpython/tree/3.12/Lib/pathlib.py">Lib/pathlib.py</a></p>
 <hr class="docutils" id="index-0" />
 <p>此模組提供代表檔案系統路徑的類別，能適用不同作業系統的語意。路徑類別分成兩種，一種是<a class="reference internal" href="#pure-paths"><span class="std std-ref">純路徑 (pure paths)</span></a>，提供沒有 I/O 的單純計算操作，另一種是<a class="reference internal" href="#concrete-paths"><span class="std std-ref">實體路徑 (concrete paths)</span></a>，繼承自純路徑但也提供 IO 操作。</p>
-<img alt="../_images/pathlib-inheritance.png" class="invert-in-dark-mode align-center" src="../_images/pathlib-inheritance.png" />
+<img alt="Inheritance diagram showing the classes available in pathlib. The most basic class is PurePath, which has three direct subclasses: PurePosixPath, PureWindowsPath, and Path. Further to these four classes, there are two classes that use multiple inheritance: PosixPath subclasses PurePosixPath and Path, and WindowsPath subclasses PureWindowsPath and Path." class="invert-in-dark-mode align-center" src="../_images/pathlib-inheritance.png" />
 <p>如果你之前從未使用過此模組或不確定哪個類別適合你的任務，那你需要的最有可能是 <a class="reference internal" href="#pathlib.Path" title="pathlib.Path"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>。它針對程式執行所在的平台實例化一個<a class="reference internal" href="#concrete-paths"><span class="std std-ref">實體路徑</span></a>。</p>
 <p>純路徑在某些特殊情境下是有用的，例如：</p>
 <ol class="arabic simple">
@@ -937,6 +937,97 @@ like non-recursive &quot;<code class="docutils literal notranslate"><span class=
 </pre></div>
 </div>
 <p>有些實體路徑方法會在系統呼叫失敗（例如因為路徑不存在）時引發 <a class="reference internal" href="exceptions.html#OSError" title="OSError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code></a></p>
+<section id="expanding-and-resolving-paths">
+<h3>Expanding and resolving paths<a class="headerlink" href="#expanding-and-resolving-paths" title="連結到這個標頭">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="pathlib.Path.home">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">home</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.home" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳一個代表使用者家目錄的新的路徑物件（像以 <code class="docutils literal notranslate"><span class="pre">~</span></code> 構成的 <a class="reference internal" href="os.path.html#os.path.expanduser" title="os.path.expanduser"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.path.expanduser()</span></code></a> 的回傳一樣）。如果無法解析家目錄，會引發 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>。</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span>
+<span class="go">PosixPath(&#39;/home/antoine&#39;)</span>
+</pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 3.5.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pathlib.Path.expanduser">
+<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">expanduser</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.expanduser" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳一個展開 <code class="docutils literal notranslate"><span class="pre">~</span></code> 和 <code class="docutils literal notranslate"><span class="pre">~user</span></code> 構成的新路徑，像 <a class="reference internal" href="os.path.html#os.path.expanduser" title="os.path.expanduser"><code class="xref py py-meth docutils literal notranslate"><span class="pre">os.path.expanduser()</span></code></a> 回傳的一樣。如果無法解析家目錄，會引發 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>。</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">PosixPath</span><span class="p">(</span><span class="s1">&#39;~/films/Monty Python&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
+<span class="go">PosixPath(&#39;/home/eric/films/Monty Python&#39;)</span>
+</pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 3.5.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pathlib.Path.cwd">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">cwd</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.cwd" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳一個代表目前目錄的新的路徑物件（像 <a class="reference internal" href="os.html#os.getcwd" title="os.getcwd"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.getcwd()</span></code></a> 回傳的一樣）：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
+<span class="go">PosixPath(&#39;/home/antoine/pathlib&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pathlib.Path.absolute">
+<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">absolute</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.absolute" title="連結到這個定義">¶</a></dt>
+<dd><p>將路徑轉換為絕對路徑，不進行標準化或解析符號連結。回傳一個新的路徑物件：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;tests&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span>
+<span class="go">PosixPath(&#39;tests&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
+<span class="go">PosixPath(&#39;/home/antoine/pathlib/tests&#39;)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pathlib.Path.resolve">
+<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">resolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.resolve" title="連結到這個定義">¶</a></dt>
+<dd><p>將路徑轉換為絕對路徑，解析所有符號連結。回傳一個新的路徑物件：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span>
+<span class="go">PosixPath(&#39;.&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+<span class="go">PosixPath(&#39;/home/antoine/pathlib&#39;)</span>
+</pre></div>
+</div>
+<p>同時也會消除 &quot;<code class="docutils literal notranslate"><span class="pre">..</span></code>&quot; 的路徑組成（只有此方法這樣做）：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;docs/../setup.py&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
+<span class="go">PosixPath(&#39;/home/antoine/pathlib/setup.py&#39;)</span>
+</pre></div>
+</div>
+<p>如果路徑不存在且 <em>strict</em> 為 <code class="docutils literal notranslate"><span class="pre">True</span></code>，則引發 <a class="reference internal" href="exceptions.html#FileNotFoundError" title="FileNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">FileNotFoundError</span></code></a>。如果 <em>strict</em> 為 <code class="docutils literal notranslate"><span class="pre">False</span></code>，則將盡可能解析該路徑，並將任何剩餘部分追加到路徑中，而不檢查其是否存在。如果在解析過程中遇到無窮迴圈，則引發 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>。</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.6 版的變更: </span>新增 <em>strict</em> 參數（在 3.6 版本之前的行為是嚴格的）。</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pathlib.Path.readlink">
+<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">readlink</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.readlink" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳符號連結指向的路徑（如 <a class="reference internal" href="os.html#os.readlink" title="os.readlink"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.readlink()</span></code></a> 的回傳值）：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;mylink&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">symlink_to</span><span class="p">(</span><span class="s1">&#39;setup.py&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">readlink</span><span class="p">()</span>
+<span class="go">PosixPath(&#39;setup.py&#39;)</span>
+</pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">Added in version 3.9.</span></p>
+</div>
+</dd></dl>
+
+</section>
 <section id="querying-file-type-and-status">
 <h3>Querying file type and status<a class="headerlink" href="#querying-file-type-and-status" title="連結到這個標頭">¶</a></h3>
 <div class="versionchanged">
@@ -1426,8 +1517,8 @@ relative to the current working directory, <em>not</em> the directory of the
 </dd></dl>
 
 </section>
-<section id="ownership-and-permissions">
-<h3>Ownership and permissions<a class="headerlink" href="#ownership-and-permissions" title="連結到這個標頭">¶</a></h3>
+<section id="permissions-and-ownership">
+<h3>Permissions and ownership<a class="headerlink" href="#permissions-and-ownership" title="連結到這個標頭">¶</a></h3>
 <dl class="py method">
 <dt class="sig sig-object py" id="pathlib.Path.owner">
 <span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">owner</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.owner" title="連結到這個定義">¶</a></dt>
@@ -1464,97 +1555,6 @@ if the file's group identifier (GID) isn't found in the system database.</p>
 <dt class="sig sig-object py" id="pathlib.Path.lchmod">
 <span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">lchmod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mode</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.lchmod" title="連結到這個定義">¶</a></dt>
 <dd><p>類似 <a class="reference internal" href="#pathlib.Path.chmod" title="pathlib.Path.chmod"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Path.chmod()</span></code></a>，但如果該路徑指向一個符號連結，則符號連結的模式 (mode) 會被改變而不是其指向的目標。</p>
-</dd></dl>
-
-</section>
-<section id="other-methods">
-<h3>其他方法<a class="headerlink" href="#other-methods" title="連結到這個標頭">¶</a></h3>
-<dl class="py method">
-<dt class="sig sig-object py" id="pathlib.Path.cwd">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">cwd</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.cwd" title="連結到這個定義">¶</a></dt>
-<dd><p>回傳一個代表目前目錄的新的路徑物件（像 <a class="reference internal" href="os.html#os.getcwd" title="os.getcwd"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.getcwd()</span></code></a> 回傳的一樣）：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span>
-<span class="go">PosixPath(&#39;/home/antoine/pathlib&#39;)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pathlib.Path.home">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">home</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.home" title="連結到這個定義">¶</a></dt>
-<dd><p>回傳一個代表使用者家目錄的新的路徑物件（像以 <code class="docutils literal notranslate"><span class="pre">~</span></code> 構成的 <a class="reference internal" href="os.path.html#os.path.expanduser" title="os.path.expanduser"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.path.expanduser()</span></code></a> 的回傳一樣）。如果無法解析家目錄，會引發 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>。</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">Path</span><span class="o">.</span><span class="n">home</span><span class="p">()</span>
-<span class="go">PosixPath(&#39;/home/antoine&#39;)</span>
-</pre></div>
-</div>
-<div class="versionadded">
-<p><span class="versionmodified added">Added in version 3.5.</span></p>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pathlib.Path.expanduser">
-<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">expanduser</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.expanduser" title="連結到這個定義">¶</a></dt>
-<dd><p>回傳一個展開 <code class="docutils literal notranslate"><span class="pre">~</span></code> 和 <code class="docutils literal notranslate"><span class="pre">~user</span></code> 構成的新路徑，像 <a class="reference internal" href="os.path.html#os.path.expanduser" title="os.path.expanduser"><code class="xref py py-meth docutils literal notranslate"><span class="pre">os.path.expanduser()</span></code></a> 回傳的一樣。如果無法解析家目錄，會引發 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>。</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">PosixPath</span><span class="p">(</span><span class="s1">&#39;~/films/Monty Python&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">expanduser</span><span class="p">()</span>
-<span class="go">PosixPath(&#39;/home/eric/films/Monty Python&#39;)</span>
-</pre></div>
-</div>
-<div class="versionadded">
-<p><span class="versionmodified added">Added in version 3.5.</span></p>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pathlib.Path.readlink">
-<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">readlink</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.readlink" title="連結到這個定義">¶</a></dt>
-<dd><p>回傳符號連結指向的路徑（如 <a class="reference internal" href="os.html#os.readlink" title="os.readlink"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.readlink()</span></code></a> 的回傳值）：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;mylink&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">symlink_to</span><span class="p">(</span><span class="s1">&#39;setup.py&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">readlink</span><span class="p">()</span>
-<span class="go">PosixPath(&#39;setup.py&#39;)</span>
-</pre></div>
-</div>
-<div class="versionadded">
-<p><span class="versionmodified added">Added in version 3.9.</span></p>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pathlib.Path.absolute">
-<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">absolute</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.absolute" title="連結到這個定義">¶</a></dt>
-<dd><p>將路徑轉換為絕對路徑，不進行標準化或解析符號連結。回傳一個新的路徑物件：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;tests&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span>
-<span class="go">PosixPath(&#39;tests&#39;)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">absolute</span><span class="p">()</span>
-<span class="go">PosixPath(&#39;/home/antoine/pathlib/tests&#39;)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pathlib.Path.resolve">
-<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">resolve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.resolve" title="連結到這個定義">¶</a></dt>
-<dd><p>將路徑轉換為絕對路徑，解析所有符號連結。回傳一個新的路徑物件：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">()</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span>
-<span class="go">PosixPath(&#39;.&#39;)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
-<span class="go">PosixPath(&#39;/home/antoine/pathlib&#39;)</span>
-</pre></div>
-</div>
-<p>同時也會消除 &quot;<code class="docutils literal notranslate"><span class="pre">..</span></code>&quot; 的路徑組成（只有此方法這樣做）：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;docs/../setup.py&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">resolve</span><span class="p">()</span>
-<span class="go">PosixPath(&#39;/home/antoine/pathlib/setup.py&#39;)</span>
-</pre></div>
-</div>
-<p>如果路徑不存在且 <em>strict</em> 為 <code class="docutils literal notranslate"><span class="pre">True</span></code>，則引發 <a class="reference internal" href="exceptions.html#FileNotFoundError" title="FileNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">FileNotFoundError</span></code></a>。如果 <em>strict</em> 為 <code class="docutils literal notranslate"><span class="pre">False</span></code>，則將盡可能解析該路徑，並將任何剩餘部分追加到路徑中，而不檢查其是否存在。如果在解析過程中遇到無窮迴圈，則引發 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>。</p>
-<div class="versionchanged">
-<p><span class="versionmodified changed">在 3.6 版的變更: </span>新增 <em>strict</em> 參數（在 3.6 版本之前的行為是嚴格的）。</p>
-</div>
 </dd></dl>
 
 </section>
@@ -1693,13 +1693,13 @@ if the file's group identifier (GID) isn't found in the system database.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#concrete-paths">實體路徑</a><ul>
+<li><a class="reference internal" href="#expanding-and-resolving-paths">Expanding and resolving paths</a></li>
 <li><a class="reference internal" href="#querying-file-type-and-status">Querying file type and status</a></li>
 <li><a class="reference internal" href="#reading-and-writing-files">Reading and writing files</a></li>
 <li><a class="reference internal" href="#reading-directories">讀取目錄</a></li>
 <li><a class="reference internal" href="#creating-files-and-directories">Creating files and directories</a></li>
 <li><a class="reference internal" href="#renaming-and-deleting">Renaming and deleting</a></li>
-<li><a class="reference internal" href="#ownership-and-permissions">Ownership and permissions</a></li>
-<li><a class="reference internal" href="#other-methods">其他方法</a></li>
+<li><a class="reference internal" href="#permissions-and-ownership">Permissions and ownership</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#correspondence-to-tools-in-the-os-module">與 <code class="xref py py-mod docutils literal notranslate"><span class="pre">os</span></code> 模組裡的工具的對應關係</a></li>
@@ -1815,7 +1815,7 @@ if the file's group identifier (GID) isn't found in the system database.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Jun 29, 2024 (06:51 UTC)。
+      最後更新於 Jul 03, 2024 (03:49 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
