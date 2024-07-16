@@ -14,7 +14,7 @@
     <script src="../_static/documentation_options.js?v=6bff4b4f"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/translations.js?v=1fe8cbde"></script>
+    <script src="../_static/translations.js?v=f1e884e3"></script>
     
     <script src="../_static/sidebar.js"></script>
     
@@ -91,7 +91,10 @@
 <li><a class="reference internal" href="#">6. 運算式</a><ul>
 <li><a class="reference internal" href="#arithmetic-conversions">6.1. Arithmetic conversions</a></li>
 <li><a class="reference internal" href="#atoms">6.2. Atoms</a><ul>
-<li><a class="reference internal" href="#atom-identifiers">6.2.1. Identifiers (Names)</a></li>
+<li><a class="reference internal" href="#atom-identifiers">6.2.1. Identifiers (Names)</a><ul>
+<li><a class="reference internal" href="#index-5">6.2.1.1. Private name mangling</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#literals">6.2.2. Literals</a></li>
 <li><a class="reference internal" href="#parenthesized-forms">6.2.3. Parenthesized forms</a></li>
 <li><a class="reference internal" href="#displays-for-lists-sets-and-dictionaries">6.2.4. Displays for lists, sets and dictionaries</a></li>
@@ -165,7 +168,7 @@
 </div>
 
   
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>瀏覽</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -269,17 +272,43 @@ binding.</p>
 <p id="index-4">When the name is bound to an object, evaluation of the atom yields that object.
 When a name is not bound, an attempt to evaluate it raises a <a class="reference internal" href="../library/exceptions.html#NameError" title="NameError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NameError</span></code></a>
 exception.</p>
-<p id="index-5"><span id="private-name-mangling"></span><strong>Private name mangling:</strong> When an identifier that textually occurs in a class
-definition begins with two or more underscore characters and does not end in two
-or more underscores, it is considered a <em class="dfn">private name</em> of that class.
-Private names are transformed to a longer form before code is generated for
-them.  The transformation inserts the class name, with leading underscores
-removed and a single underscore inserted, in front of the name.  For example,
-the identifier <code class="docutils literal notranslate"><span class="pre">__spam</span></code> occurring in a class named <code class="docutils literal notranslate"><span class="pre">Ham</span></code> will be transformed
-to <code class="docutils literal notranslate"><span class="pre">_Ham__spam</span></code>.  This transformation is independent of the syntactical
-context in which the identifier is used.  If the transformed name is extremely
-long (longer than 255 characters), implementation defined truncation may happen.
-If the class name consists only of underscores, no transformation is done.</p>
+<section id="index-5">
+<span id="private-name-mangling"></span><span id="id3"></span><h4><span class="section-number">6.2.1.1. </span>Private name mangling<a class="headerlink" href="#index-5" title="連結到這個標頭">¶</a></h4>
+<p>When an identifier that textually occurs in a class definition begins with two
+or more underscore characters and does not end in two or more underscores, it
+is considered a <em class="dfn">private name</em> of that class.</p>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p>The <a class="reference internal" href="compound_stmts.html#class"><span class="std std-ref">class specifications</span></a>.</p>
+</div>
+<p>More precisely, private names are transformed to a longer form before code is
+generated for them.  If the transformed name is longer than 255 characters,
+implementation-defined truncation may happen.</p>
+<p>The transformation is independent of the syntactical context in which the
+identifier is used but only the following private identifiers are mangled:</p>
+<ul>
+<li><p>Any name used as the name of a variable that is assigned or read or any
+name of an attribute being accessed.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">__name__</span></code> attribute of nested functions, classes, and type aliases
+is however not mangled.</p>
+</li>
+<li><p>The name of imported modules, e.g., <code class="docutils literal notranslate"><span class="pre">__spam</span></code> in <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">__spam</span></code>.
+If the module is part of a package (i.e., its name contains a dot),
+the name is <em>not</em> mangled, e.g., the <code class="docutils literal notranslate"><span class="pre">__foo</span></code> in <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">__foo.bar</span></code>
+is not mangled.</p></li>
+<li><p>The name of an imported member, e.g., <code class="docutils literal notranslate"><span class="pre">__f</span></code> in <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">spam</span> <span class="pre">import</span> <span class="pre">__f</span></code>.</p></li>
+</ul>
+<p>The transformation rule is defined as follows:</p>
+<ul class="simple">
+<li><p>The class name, with leading underscores removed and a single leading
+underscore inserted, is inserted in front of the identifier, e.g., the
+identifier <code class="docutils literal notranslate"><span class="pre">__spam</span></code> occurring in a class named <code class="docutils literal notranslate"><span class="pre">Foo</span></code>, <code class="docutils literal notranslate"><span class="pre">_Foo</span></code> or
+<code class="docutils literal notranslate"><span class="pre">__Foo</span></code> is transformed to <code class="docutils literal notranslate"><span class="pre">_Foo__spam</span></code>.</p></li>
+<li><p>If the class name consists only of underscores, the transformation is the
+identity, e.g., the identifier <code class="docutils literal notranslate"><span class="pre">__spam</span></code> occurring in a class named <code class="docutils literal notranslate"><span class="pre">_</span></code>
+or <code class="docutils literal notranslate"><span class="pre">__</span></code> is left as is.</p></li>
+</ul>
+</section>
 </section>
 <section id="literals">
 <span id="atom-literals"></span><h3><span class="section-number">6.2.2. </span>Literals<a class="headerlink" href="#literals" title="連結到這個標頭">¶</a></h3>
@@ -362,7 +391,7 @@ the iterable expression in the leftmost <code class="xref std std-keyword docuti
 execution of the coroutine function in which it appears.
 See also <span class="target" id="index-14"></span><a class="pep reference external" href="https://peps.python.org/pep-0530/"><strong>PEP 530</strong></a>.</p>
 <div class="versionadded">
-<p><span class="versionmodified added">Added in version 3.6: </span>Asynchronous comprehensions were introduced.</p>
+<p><span class="versionmodified added">在 3.6 版被加入: </span>Asynchronous comprehensions were introduced.</p>
 </div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.8 版的變更: </span><code class="docutils literal notranslate"><span class="pre">yield</span></code> and <code class="docutils literal notranslate"><span class="pre">yield</span> <span class="pre">from</span></code> prohibited in the implicitly nested scope.</p>
@@ -422,7 +451,7 @@ Its operand must be a <a class="reference internal" href="../glossary.html#term-
 to the new dictionary.  Later values replace values already set by
 earlier dict items and earlier dictionary unpackings.</p>
 <div class="versionadded">
-<p><span class="versionmodified added">Added in version 3.5: </span>Unpacking into dictionary displays, originally proposed by <span class="target" id="index-19"></span><a class="pep reference external" href="https://peps.python.org/pep-0448/"><strong>PEP 448</strong></a>.</p>
+<p><span class="versionmodified added">在 3.5 版被加入: </span>Unpacking into dictionary displays, originally proposed by <span class="target" id="index-19"></span><a class="pep reference external" href="https://peps.python.org/pep-0448/"><strong>PEP 448</strong></a>.</p>
 </div>
 <p>A dict comprehension, in contrast to list and set comprehensions, needs two
 expressions separated with a colon followed by the usual &quot;for&quot; and &quot;if&quot; clauses.
@@ -470,7 +499,7 @@ clauses or <a class="reference internal" href="#await"><code class="xref std std
 expression returns a new asynchronous generator object,
 which is an asynchronous iterator (see <a class="reference internal" href="datamodel.html#async-iterators"><span class="std std-ref">Asynchronous Iterators</span></a>).</p>
 <div class="versionadded">
-<p><span class="versionmodified added">Added in version 3.6: </span>Asynchronous generator expressions were introduced.</p>
+<p><span class="versionmodified added">在 3.6 版被加入: </span>Asynchronous generator expressions were introduced.</p>
 </div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.7 版的變更: </span>Prior to Python 3.7, asynchronous generator expressions could
@@ -677,7 +706,7 @@ generator functions:</p>
 Python.&quot;</p>
 </section>
 <section id="asynchronous-generator-functions">
-<span id="id3"></span><h4><span class="section-number">6.2.9.3. </span>Asynchronous generator functions<a class="headerlink" href="#asynchronous-generator-functions" title="連結到這個標頭">¶</a></h4>
+<span id="id4"></span><h4><span class="section-number">6.2.9.3. </span>Asynchronous generator functions<a class="headerlink" href="#asynchronous-generator-functions" title="連結到這個標頭">¶</a></h4>
 <p>The presence of a yield expression in a function or method defined using
 <a class="reference internal" href="compound_stmts.html#async-def"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">async</span> <span class="pre">def</span></code></a> further defines the function as an
 <a class="reference internal" href="../glossary.html#term-asynchronous-generator"><span class="xref std std-term">asynchronous generator</span></a> function.</p>
@@ -727,7 +756,7 @@ This  <em>finalizer</em> may be registered by calling <a class="reference intern
 When first iterated over, an asynchronous generator-iterator will store the
 registered <em>finalizer</em> to be called upon finalization. For a reference example
 of a <em>finalizer</em> method see the implementation of
-<code class="docutils literal notranslate"><span class="pre">asyncio.Loop.shutdown_asyncgens</span></code> in <a class="reference external" href="https://github.com/python/cpython/tree/3.12/Lib/asyncio/base_events.py">Lib/asyncio/base_events.py</a>.</p>
+<code class="docutils literal notranslate"><span class="pre">asyncio.Loop.shutdown_asyncgens</span></code> in <a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.12/Lib/asyncio/base_events.py">Lib/asyncio/base_events.py</a>.</p>
 <p>The expression <code class="docutils literal notranslate"><span class="pre">yield</span> <span class="pre">from</span> <span class="pre">&lt;expr&gt;</span></code> is a syntax error when used in an
 asynchronous generator function.</p>
 </section>
@@ -809,14 +838,14 @@ further calls to <a class="reference internal" href="#agen.aclose" title="agen.a
 </section>
 </section>
 <section id="primaries">
-<span id="id4"></span><h2><span class="section-number">6.3. </span>Primaries<a class="headerlink" href="#primaries" title="連結到這個標頭">¶</a></h2>
+<span id="id5"></span><h2><span class="section-number">6.3. </span>Primaries<a class="headerlink" href="#primaries" title="連結到這個標頭">¶</a></h2>
 <p id="index-38">Primaries represent the most tightly bound operations of the language. Their
 syntax is:</p>
 <pre>
 <strong id="grammar-token-python-grammar-primary">primary</strong> ::=  <a class="reference internal" href="#grammar-token-python-grammar-atom"><code class="xref docutils literal notranslate"><span class="pre">atom</span></code></a> | <a class="reference internal" href="#grammar-token-python-grammar-attributeref"><code class="xref docutils literal notranslate"><span class="pre">attributeref</span></code></a> | <a class="reference internal" href="#grammar-token-python-grammar-subscription"><code class="xref docutils literal notranslate"><span class="pre">subscription</span></code></a> | <a class="reference internal" href="#grammar-token-python-grammar-slicing"><code class="xref docutils literal notranslate"><span class="pre">slicing</span></code></a> | <a class="reference internal" href="#grammar-token-python-grammar-call"><code class="xref docutils literal notranslate"><span class="pre">call</span></code></a>
 </pre>
 <section id="attribute-references">
-<span id="id5"></span><h3><span class="section-number">6.3.1. </span>Attribute references<a class="headerlink" href="#attribute-references" title="連結到這個標頭">¶</a></h3>
+<span id="id6"></span><h3><span class="section-number">6.3.1. </span>Attribute references<a class="headerlink" href="#attribute-references" title="連結到這個標頭">¶</a></h3>
 <p id="index-39">An attribute reference is a primary followed by a period and a name:</p>
 <pre>
 <strong id="grammar-token-python-grammar-attributeref">attributeref</strong> ::=  <a class="reference internal" href="#grammar-token-python-grammar-primary"><code class="xref docutils literal notranslate"><span class="pre">primary</span></code></a> &quot;.&quot; <a class="reference internal" href="lexical_analysis.html#grammar-token-python-grammar-identifier"><code class="xref docutils literal notranslate"><span class="pre">identifier</span></code></a>
@@ -835,7 +864,7 @@ available.</p>
 method, that method is called as a fallback.</p>
 </section>
 <section id="subscriptions">
-<span id="id6"></span><h3><span class="section-number">6.3.2. </span>Subscriptions<a class="headerlink" href="#subscriptions" title="連結到這個標頭">¶</a></h3>
+<span id="id7"></span><h3><span class="section-number">6.3.2. </span>Subscriptions<a class="headerlink" href="#subscriptions" title="連結到這個標頭">¶</a></h3>
 <p id="index-42"><span id="index-41"></span>The subscription of an instance of a <a class="reference internal" href="datamodel.html#sequence-types"><span class="std std-ref">container class</span></a>
 will generally select an element from the container. The subscription of a
 <a class="reference internal" href="../glossary.html#term-generic-type"><span class="xref std std-term">generic class</span></a> will generally return a
@@ -880,7 +909,7 @@ this method will need to explicitly add that support.</p>
 string of exactly one character.</p>
 </section>
 <section id="slicings">
-<span id="id7"></span><h3><span class="section-number">6.3.3. </span>Slicings<a class="headerlink" href="#slicings" title="連結到這個標頭">¶</a></h3>
+<span id="id8"></span><h3><span class="section-number">6.3.3. </span>Slicings<a class="headerlink" href="#slicings" title="連結到這個標頭">¶</a></h3>
 <p id="index-45"><span id="index-44"></span>A slicing selects a range of items in a sequence object (e.g., a string, tuple
 or list).  Slicings may be used as expressions or as targets in assignment or
 <a class="reference internal" href="simple_stmts.html#del"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">del</span></code></a> statements.  The syntax for a slicing:</p>
@@ -912,7 +941,7 @@ expressions given as lower bound, upper bound and stride, respectively,
 substituting <code class="docutils literal notranslate"><span class="pre">None</span></code> for missing expressions.</p>
 </section>
 <section id="calls">
-<span id="index-47"></span><span id="id8"></span><h3><span class="section-number">6.3.4. </span>Calls<a class="headerlink" href="#calls" title="連結到這個標頭">¶</a></h3>
+<span id="index-47"></span><span id="id9"></span><h3><span class="section-number">6.3.4. </span>Calls<a class="headerlink" href="#calls" title="連結到這個標頭">¶</a></h3>
 <p>A call calls a callable object (e.g., a <a class="reference internal" href="../glossary.html#term-function"><span class="xref std std-term">function</span></a>) with a possibly empty
 series of <a class="reference internal" href="../glossary.html#term-argument"><span class="xref std std-term">arguments</span></a>:</p>
 <pre>
@@ -1051,7 +1080,7 @@ Can only be used inside a <a class="reference internal" href="../glossary.html#t
 <strong id="grammar-token-python-grammar-await_expr">await_expr</strong> ::=  &quot;await&quot; <a class="reference internal" href="#grammar-token-python-grammar-primary"><code class="xref docutils literal notranslate"><span class="pre">primary</span></code></a>
 </pre>
 <div class="versionadded">
-<p><span class="versionmodified added">Added in version 3.5.</span></p>
+<p><span class="versionmodified added">在 3.5 版被加入.</span></p>
 </div>
 </section>
 <section id="the-power-operator">
@@ -1119,7 +1148,7 @@ builtin Python types implement this operator.</p>
 <p>This operation can be customized using the special <a class="reference internal" href="datamodel.html#object.__matmul__" title="object.__matmul__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__matmul__()</span></code></a> and
 <a class="reference internal" href="datamodel.html#object.__rmatmul__" title="object.__rmatmul__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__rmatmul__()</span></code></a> methods.</p>
 <div class="versionadded">
-<p><span class="versionmodified added">Added in version 3.5.</span></p>
+<p><span class="versionmodified added">在 3.5 版被加入.</span></p>
 </div>
 <p id="index-67">The <code class="docutils literal notranslate"><span class="pre">/</span></code> (division) and <code class="docutils literal notranslate"><span class="pre">//</span></code> (floor division) operators yield the quotient of
 their arguments.  The numeric arguments are first converted to a common type.
@@ -1138,11 +1167,11 @@ arguments may be floating point numbers, e.g., <code class="docutils literal not
 (since <code class="docutils literal notranslate"><span class="pre">3.14</span></code> equals <code class="docutils literal notranslate"><span class="pre">4*0.7</span> <span class="pre">+</span> <span class="pre">0.34</span></code>.)  The modulo operator always yields a
 result with the same sign as its second operand (or zero); the absolute value of
 the result is strictly smaller than the absolute value of the second operand
-<a class="footnote-reference brackets" href="#id17" id="id9" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
+<a class="footnote-reference brackets" href="#id18" id="id10" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
 <p>The floor division and modulo operators are connected by the following
 identity: <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">==</span> <span class="pre">(x//y)*y</span> <span class="pre">+</span> <span class="pre">(x%y)</span></code>.  Floor division and modulo are also
 connected with the built-in function <a class="reference internal" href="../library/functions.html#divmod" title="divmod"><code class="xref py py-func docutils literal notranslate"><span class="pre">divmod()</span></code></a>: <code class="docutils literal notranslate"><span class="pre">divmod(x,</span> <span class="pre">y)</span> <span class="pre">==</span> <span class="pre">(x//y,</span>
-<span class="pre">x%y)</span></code>. <a class="footnote-reference brackets" href="#id18" id="id10" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>.</p>
+<span class="pre">x%y)</span></code>. <a class="footnote-reference brackets" href="#id19" id="id11" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>.</p>
 <p>In addition to performing the modulo operation on numbers, the <code class="docutils literal notranslate"><span class="pre">%</span></code> operator is
 also overloaded by string objects to perform old-style string formatting (also
 known as interpolation).  The syntax for string formatting is described in the
@@ -1197,7 +1226,7 @@ must be integers or one of them must be a custom object overriding <a class="ref
 <a class="reference internal" href="datamodel.html#object.__ror__" title="object.__ror__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__ror__()</span></code></a> special methods.</p>
 </section>
 <section id="comparisons">
-<span id="id11"></span><h2><span class="section-number">6.10. </span>Comparisons<a class="headerlink" href="#comparisons" title="連結到這個標頭">¶</a></h2>
+<span id="id12"></span><h2><span class="section-number">6.10. </span>Comparisons<a class="headerlink" href="#comparisons" title="連結到這個標頭">¶</a></h2>
 <p id="index-77">Unlike C, all comparison operations in Python have the same priority, which is
 lower than that of any arithmetic, shifting or bitwise operation.  Also unlike
 C, expressions like <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">&lt;</span> <span class="pre">b</span> <span class="pre">&lt;</span> <span class="pre">c</span></code> have the interpretation that is conventional
@@ -1275,7 +1304,7 @@ compared within and across their types.  They compare lexicographically using
 the numeric values of their elements.</p></li>
 <li><p>Strings (instances of <a class="reference internal" href="../library/stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) compare lexicographically using the
 numerical Unicode code points (the result of the built-in function
-<a class="reference internal" href="../library/functions.html#ord" title="ord"><code class="xref py py-func docutils literal notranslate"><span class="pre">ord()</span></code></a>) of their characters. <a class="footnote-reference brackets" href="#id19" id="id12" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a></p>
+<a class="reference internal" href="../library/functions.html#ord" title="ord"><code class="xref py py-func docutils literal notranslate"><span class="pre">ord()</span></code></a>) of their characters. <a class="footnote-reference brackets" href="#id20" id="id13" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a></p>
 <p>Strings and binary sequences cannot be directly compared.</p>
 </li>
 <li><p>Sequences (instances of <a class="reference internal" href="../library/stdtypes.html#tuple" title="tuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>, <a class="reference internal" href="../library/stdtypes.html#list" title="list"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, or <a class="reference internal" href="../library/stdtypes.html#range" title="range"><code class="xref py py-class docutils literal notranslate"><span class="pre">range</span></code></a>) can
@@ -1396,7 +1425,7 @@ if <a class="reference internal" href="#in"><code class="xref std std-keyword do
 <p>The operators <a class="reference internal" href="#is"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">is</span></code></a> and <a class="reference internal" href="#is-not"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">is</span> <span class="pre">not</span></code></a> test for an object's identity: <code class="docutils literal notranslate"><span class="pre">x</span>
 <span class="pre">is</span> <span class="pre">y</span></code> is true if and only if <em>x</em> and <em>y</em> are the same object.  An Object's identity
 is determined using the <a class="reference internal" href="../library/functions.html#id" title="id"><code class="xref py py-meth docutils literal notranslate"><span class="pre">id()</span></code></a> function.  <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">is</span> <span class="pre">not</span> <span class="pre">y</span></code> yields the inverse
-truth value. <a class="footnote-reference brackets" href="#id20" id="id13" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a></p>
+truth value. <a class="footnote-reference brackets" href="#id21" id="id14" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a></p>
 </section>
 </section>
 <section id="boolean-operations">
@@ -1453,7 +1482,7 @@ in <code class="docutils literal notranslate"><span class="pre">assert</span></c
 In all other places where they can be used, parentheses are not required,
 including in <code class="docutils literal notranslate"><span class="pre">if</span></code> and <code class="docutils literal notranslate"><span class="pre">while</span></code> statements.</p>
 <div class="versionadded">
-<p><span class="versionmodified added">Added in version 3.8: </span>See <span class="target" id="index-87"></span><a class="pep reference external" href="https://peps.python.org/pep-0572/"><strong>PEP 572</strong></a> for more details about assignment expressions.</p>
+<p><span class="versionmodified added">在 3.8 版被加入: </span>See <span class="target" id="index-87"></span><a class="pep reference external" href="https://peps.python.org/pep-0572/"><strong>PEP 572</strong></a> for more details about assignment expressions.</p>
 </div>
 </section>
 <section id="conditional-expressions">
@@ -1470,7 +1499,7 @@ evaluated and its value is returned.</p>
 <p>See <span class="target" id="index-89"></span><a class="pep reference external" href="https://peps.python.org/pep-0308/"><strong>PEP 308</strong></a> for more details about conditional expressions.</p>
 </section>
 <section id="lambda">
-<span id="lambdas"></span><span id="id14"></span><h2><span class="section-number">6.14. </span>Lambdas<a class="headerlink" href="#lambda" title="連結到這個標頭">¶</a></h2>
+<span id="lambdas"></span><span id="id15"></span><h2><span class="section-number">6.14. </span>Lambdas<a class="headerlink" href="#lambda" title="連結到這個標頭">¶</a></h2>
 <pre id="index-90">
 <strong id="grammar-token-python-grammar-lambda_expr">lambda_expr</strong> ::=  &quot;lambda&quot; [<a class="reference internal" href="compound_stmts.html#grammar-token-python-grammar-parameter_list"><code class="xref docutils literal notranslate"><span class="pre">parameter_list</span></code></a>] &quot;:&quot; <a class="reference internal" href="#grammar-token-python-grammar-expression"><code class="xref docutils literal notranslate"><span class="pre">expression</span></code></a>
 </pre>
@@ -1502,7 +1531,7 @@ an <a class="reference internal" href="../glossary.html#term-iterable"><span cla
 which are included in the new tuple, list, or set, at the site of
 the unpacking.</p>
 <div class="versionadded">
-<p><span class="versionmodified added">Added in version 3.5: </span>Iterable unpacking in expression lists, originally proposed by <span class="target" id="index-94"></span><a class="pep reference external" href="https://peps.python.org/pep-0448/"><strong>PEP 448</strong></a>.</p>
+<p><span class="versionmodified added">在 3.5 版被加入: </span>Iterable unpacking in expression lists, originally proposed by <span class="target" id="index-94"></span><a class="pep reference external" href="https://peps.python.org/pep-0448/"><strong>PEP 448</strong></a>.</p>
 </div>
 <p id="index-95">A trailing comma is required only to create a one-item tuple,
 such as <code class="docutils literal notranslate"><span class="pre">1,</span></code>; it is optional in all other cases.
@@ -1563,7 +1592,7 @@ call, attribute reference</p></td>
 <td><p>Await expression</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">**</span></code></p></td>
-<td><p>Exponentiation <a class="footnote-reference brackets" href="#id21" id="id15" role="doc-noteref"><span class="fn-bracket">[</span>5<span class="fn-bracket">]</span></a></p></td>
+<td><p>Exponentiation <a class="footnote-reference brackets" href="#id22" id="id16" role="doc-noteref"><span class="fn-bracket">[</span>5<span class="fn-bracket">]</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">+x</span></code>, <code class="docutils literal notranslate"><span class="pre">-x</span></code>, <code class="docutils literal notranslate"><span class="pre">~x</span></code></p></td>
 <td><p>Positive, negative, bitwise NOT</p></td>
@@ -1571,7 +1600,7 @@ call, attribute reference</p></td>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">*</span></code>, <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>, <code class="docutils literal notranslate"><span class="pre">/</span></code>, <code class="docutils literal notranslate"><span class="pre">//</span></code>, <code class="docutils literal notranslate"><span class="pre">%</span></code></p></td>
 <td><p>Multiplication, matrix
 multiplication, division, floor
-division, remainder <a class="footnote-reference brackets" href="#id22" id="id16" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a></p></td>
+division, remainder <a class="footnote-reference brackets" href="#id23" id="id17" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a></p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">+</span></code>, <code class="docutils literal notranslate"><span class="pre">-</span></code></p></td>
 <td><p>Addition and subtraction</p></td>
@@ -1616,8 +1645,8 @@ tests and identity tests</p></td>
 </table>
 <p class="rubric">註解</p>
 <aside class="footnote-list brackets">
-<aside class="footnote brackets" id="id17" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id9">1</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id18" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id10">1</a><span class="fn-bracket">]</span></span>
 <p>While <code class="docutils literal notranslate"><span class="pre">abs(x%y)</span> <span class="pre">&lt;</span> <span class="pre">abs(y)</span></code> is true mathematically, for floats it may not be
 true numerically due to roundoff.  For example, and assuming a platform on which
 a Python float is an IEEE 754 double-precision number, in order that <code class="docutils literal notranslate"><span class="pre">-1e-100</span> <span class="pre">%</span>
@@ -1627,15 +1656,15 @@ a Python float is an IEEE 754 double-precision number, in order that <code class
 first argument instead, and so returns <code class="docutils literal notranslate"><span class="pre">-1e-100</span></code> in this case. Which approach
 is more appropriate depends on the application.</p>
 </aside>
-<aside class="footnote brackets" id="id18" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id10">2</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id19" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id11">2</a><span class="fn-bracket">]</span></span>
 <p>If x is very close to an exact integer multiple of y, it's possible for
 <code class="docutils literal notranslate"><span class="pre">x//y</span></code> to be one larger than <code class="docutils literal notranslate"><span class="pre">(x-x%y)//y</span></code> due to rounding.  In such
 cases, Python returns the latter result, in order to preserve that
 <code class="docutils literal notranslate"><span class="pre">divmod(x,y)[0]</span> <span class="pre">*</span> <span class="pre">y</span> <span class="pre">+</span> <span class="pre">x</span> <span class="pre">%</span> <span class="pre">y</span></code> be very close to <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
 </aside>
-<aside class="footnote brackets" id="id19" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id12">3</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id20" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id13">3</a><span class="fn-bracket">]</span></span>
 <p>The Unicode standard distinguishes between <em class="dfn">code points</em>
 (e.g. U+0041) and <em class="dfn">abstract characters</em> (e.g. &quot;LATIN CAPITAL LETTER A&quot;).
 While most abstract characters in Unicode are only represented using one
@@ -1653,20 +1682,20 @@ represent the same abstract character &quot;LATIN CAPITAL LETTER C WITH CEDILLA&
 <p>To compare strings at the level of abstract characters (that is, in a way
 intuitive to humans), use <a class="reference internal" href="../library/unicodedata.html#unicodedata.normalize" title="unicodedata.normalize"><code class="xref py py-func docutils literal notranslate"><span class="pre">unicodedata.normalize()</span></code></a>.</p>
 </aside>
-<aside class="footnote brackets" id="id20" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id13">4</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id21" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id14">4</a><span class="fn-bracket">]</span></span>
 <p>Due to automatic garbage-collection, free lists, and the dynamic nature of
 descriptors, you may notice seemingly unusual behaviour in certain uses of
 the <a class="reference internal" href="#is"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">is</span></code></a> operator, like those involving comparisons between instance
 methods, or constants.  Check their documentation for more info.</p>
 </aside>
-<aside class="footnote brackets" id="id21" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id15">5</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id22" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id16">5</a><span class="fn-bracket">]</span></span>
 <p>The power operator <code class="docutils literal notranslate"><span class="pre">**</span></code> binds less tightly than an arithmetic or
 bitwise unary operator on its right, that is, <code class="docutils literal notranslate"><span class="pre">2**-1</span></code> is <code class="docutils literal notranslate"><span class="pre">0.5</span></code>.</p>
 </aside>
-<aside class="footnote brackets" id="id22" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id16">6</a><span class="fn-bracket">]</span></span>
+<aside class="footnote brackets" id="id23" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id17">6</a><span class="fn-bracket">]</span></span>
 <p>The <code class="docutils literal notranslate"><span class="pre">%</span></code> operator is also used for string formatting; the same
 precedence applies.</p>
 </aside>
@@ -1679,7 +1708,7 @@ precedence applies.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="../contents.html">目錄</a></h3>
@@ -1687,7 +1716,10 @@ precedence applies.</p>
 <li><a class="reference internal" href="#">6. 運算式</a><ul>
 <li><a class="reference internal" href="#arithmetic-conversions">6.1. Arithmetic conversions</a></li>
 <li><a class="reference internal" href="#atoms">6.2. Atoms</a><ul>
-<li><a class="reference internal" href="#atom-identifiers">6.2.1. Identifiers (Names)</a></li>
+<li><a class="reference internal" href="#atom-identifiers">6.2.1. Identifiers (Names)</a><ul>
+<li><a class="reference internal" href="#index-5">6.2.1.1. Private name mangling</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#literals">6.2.2. Literals</a></li>
 <li><a class="reference internal" href="#parenthesized-forms">6.2.3. Parenthesized forms</a></li>
 <li><a class="reference internal" href="#displays-for-lists-sets-and-dictionaries">6.2.4. Displays for lists, sets and dictionaries</a></li>
@@ -1764,7 +1796,7 @@ precedence applies.</p>
       </div>
       <div class="clearer"></div>
     </div>  
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>瀏覽</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -1841,13 +1873,13 @@ precedence applies.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Jul 11, 2024 (06:27 UTC)。
+      最後更新於 Jul 16, 2024 (02:41 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
     <br />
 
-    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7 建立。
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.4 建立。
     </div>
 
   </body>
