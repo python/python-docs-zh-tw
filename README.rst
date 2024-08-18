@@ -178,7 +178,7 @@ the PSF for inclusion in the documentation.
 
        cd ../cpython/Doc/build/html
        python3 -m http.server
-   
+
    你也可以執行下列指令請瀏覽器打開編譯出來的文件\
    以確認整份文件的語意通暢（翻譯別的檔案時將 library/math 換成別的檔名）：
 
