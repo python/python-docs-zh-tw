@@ -1596,7 +1596,7 @@ msgstr ""
 
 #: ../../library/pickle.rst:782
 msgid "Dispatch Tables"
-msgstr "分派表"
+msgstr "調度表"
 
 #: ../../library/pickle.rst:784
 msgid ""
@@ -1604,6 +1604,8 @@ msgid ""
 "other code which depends on pickling, then one can create a pickler with a "
 "private dispatch table."
 msgstr ""
+"如果你希望在不干擾其他物件正常封裝的前提下建立一個針對特定物件的封裝器，你可"
+"建立一個有私密調度表的封裝器。"
 
 #: ../../library/pickle.rst:788
 msgid ""
@@ -1611,6 +1613,9 @@ msgid ""
 "as :data:`!copyreg.dispatch_table`.  Therefore, one may choose to use a "
 "modified copy of :data:`!copyreg.dispatch_table` as a private dispatch table."
 msgstr ""
+"由 :mod:`copyreg` 模組管理的全域調度表可以 :data:`!copyreg.dispatch_table` 呼"
+"叫。你可以透過這個方式來基於原始 :data:`!copyreg.dispatch_table` 創建一個修改"
+"過的版本，作為你的專屬用途的調度表。"
 
 #: ../../library/pickle.rst:793
 msgid "For example ::"
@@ -1633,6 +1638,8 @@ msgid ""
 "creates an instance of :class:`pickle.Pickler` with a private dispatch table "
 "which handles the ``SomeClass`` class specially.  Alternatively, the code ::"
 msgstr ""
+"建立了一個 :class:`pickle.Pickler`，其中含有專門處裡 ``SomeClass`` 類別的專屬"
+"調度表。此外，你也可以寫作：::"
 
 #: ../../library/pickle.rst:804
 msgid ""
@@ -1653,6 +1660,8 @@ msgid ""
 "does the same but all instances of ``MyPickler`` will by default share the "
 "private dispatch table.  On the other hand, the code ::"
 msgstr ""
+"這樣可產生相似的結果，唯一不同的是往後所有 ``MyPickler`` 預設都會使用這個專屬"
+"調度表。最後，如果將程式寫為：::"
 
 #: ../../library/pickle.rst:813
 msgid ""
@@ -1668,11 +1677,11 @@ msgstr ""
 msgid ""
 "modifies the global dispatch table shared by all users of the :mod:`copyreg` "
 "module."
-msgstr ""
+msgstr "則會改變 :mod:`copyreg` 模組內建、所有使用者共通的調度表。"
 
 #: ../../library/pickle.rst:822
 msgid "Handling Stateful Objects"
-msgstr ""
+msgstr "處裡紀錄大量狀態的物件"
 
 #: ../../library/pickle.rst:828
 msgid ""
@@ -1685,6 +1694,12 @@ msgid ""
 "__setstate__` and :meth:`!__getstate__` methods are used to implement this "
 "behavior. ::"
 msgstr ""
+"以下的範例展示了如何修改針對特定類別封裝時的行為。下面的 :class:`!"
+"TextReader` 類別會開啟一個文字檔案，並在每次呼叫其 :meth:`!readline` 方法時返"
+"回當前行編號與該行內容。如果 :class:`!TextReader` 實例被封裝，所有*除了檔案物"
+"件之外*的屬性成員都會被保存。在該實例被拆封時，檔案將被重新開啟，並從上次的位"
+"置繼續讀取。這個行為的達成是透過 :meth:`!__setstate__` 和 :meth:`!"
+"__getstate__` 方法來實作的。::"
 
 #: ../../library/pickle.rst:836
 msgid ""
@@ -1725,10 +1740,45 @@ msgid ""
 "        # Finally, save the file.\n"
 "        self.file = file"
 msgstr ""
+"class TextReader:\n"
+"    \"\"\"列出文字檔案中的行並對其進行編號。\"\"\"\n"
+"\n"
+"    def __init__(self, filename):\n"
+"        self.filename = filename\n"
+"        self.file = open(filename)\n"
+"        self.lineno = 0\n"
+"\n"
+"    def readline(self):\n"
+"        self.lineno += 1\n"
+"        line = self.file.readline()\n"
+"        if not line:\n"
+"            return None\n"
+"        if line.endswith('\\n'):\n"
+"            line = line[:-1]\n"
+"        return \"%i: %s\" % (self.lineno, line)\n"
+"\n"
+"    def __getstate__(self):\n"
+"        # 從 self.__dict__ 中複製物件的狀態。包含了所有的實例屬性。\n"
+"        # 使用 dict.copy() 方法以避免修改原始狀態。\n"
+"        state = self.__dict__.copy()\n"
+"        # 移除不可封裝的項目。\n"
+"        del state['file']\n"
+"        return state\n"
+"\n"
+"    def __setstate__(self, state):\n"
+"        # 恢復實例屬性（即 filename 和 lineno）。\n"
+"        self.__dict__.update(state)\n"
+"        # 恢復到先前開啟了檔案的狀態。為此，我們需要重新開啟它並一直讀取到行"
+"數編號相同。\n"
+"        file = open(self.filename)\n"
+"        for _ in range(self.lineno):\n"
+"            file.readline()\n"
+"        # 存檔。\n"
+"        self.file = file"
 
 #: ../../library/pickle.rst:874
 msgid "A sample usage might be something like this::"
-msgstr ""
+msgstr "可以這樣實際使用：::"
 
 #: ../../library/pickle.rst:876
 msgid ""
@@ -1752,7 +1802,7 @@ msgstr ""
 
 #: ../../library/pickle.rst:888
 msgid "Custom Reduction for Types, Functions, and Other Objects"
-msgstr ""
+msgstr "針對型別、函數或特定物件定製縮減函數"
 
 #: ../../library/pickle.rst:892
 msgid ""
@@ -1761,6 +1811,9 @@ msgid ""
 "the object's type, or we may want to customize the pickling of functions and "
 "classes."
 msgstr ""
+"有時候，:attr:`~Pickler.dispatch_table` 的彈性空間可能不夠。尤其當我們想要使"
+"用型別以外的方式來判斷如何使用自訂封裝、或者我們想要自訂特定函式和類別的封裝"
+"方法時。"
 
 #: ../../library/pickle.rst:897
 msgid ""
@@ -1770,6 +1823,9 @@ msgid ""
 "alternatively return :data:`NotImplemented` to fallback to the traditional "
 "behavior."
 msgstr ""
+"如果是這樣的話，可以繼承 :class:`Pickler` 類別並實作一個 :meth:`~Pickler."
+"reducer_override` 方法。此方法可以回傳任意的縮減元組（參閱 :meth:`~object."
+"__reduce__`）、也可以回傳 :data:`NotImplemented` 以回退至原始的行為。"
 
 #: ../../library/pickle.rst:902
 msgid ""
@@ -1777,6 +1833,8 @@ msgid ""
 "reducer_override` are defined, then :meth:`~Pickler.reducer_override` method "
 "takes priority."
 msgstr ""
+"如果 :attr:`~Pickler.dispatch_table` 和 :meth:`~Pickler.reducer_override` 都"
+"被定義了的話，:meth:`~Pickler.reducer_override` 的優先度較高。"
 
 #: ../../library/pickle.rst:907
 msgid ""
@@ -1786,12 +1844,16 @@ msgid ""
 "class:`dict`, :class:`set`, :class:`frozenset`, :class:`list` and :class:"
 "`tuple`."
 msgstr ""
+"出於效能考量，處裡以下物件可能不會呼叫 :meth:`~Pickler.reducer_override`："
+"``None``、``True``、``False``，以及 :class:`int`、:class:`float`、:class:"
+"`bytes`、:class:`str`、:class:`dict`、:class:`set`、:class:`frozenset`、:"
+"class:`list` 和 :class:`tuple` 的實例。"
 
 #: ../../library/pickle.rst:913
 msgid ""
 "Here is a simple example where we allow pickling and reconstructing a given "
 "class::"
-msgstr ""
+msgstr "以下是一個簡單的例子，我們示範如何允許封裝和重建給定的類別：::"
 
 #: ../../library/pickle.rst:916
 msgid ""
@@ -1823,10 +1885,37 @@ msgid ""
 "assert unpickled_class.__name__ == \"MyClass\"\n"
 "assert unpickled_class.my_attribute == 1"
 msgstr ""
+"import io\n"
+"import pickle\n"
+"\n"
+"class MyClass:\n"
+"    my_attribute = 1\n"
+"\n"
+"class MyPickler(pickle.Pickler):\n"
+"    def reducer_override(self, obj):\n"
+"        \"\"\"MyClass 的自訂縮減函數。\"\"\"\n"
+"        if getattr(obj, \"__name__\", None) == \"MyClass\":\n"
+"            return type, (obj.__name__, obj.__bases__,\n"
+"                          {'my_attribute': obj.my_attribute})\n"
+"        else:\n"
+"            # 遭遇其他物件，則使用一般的縮減方式\n"
+"            return NotImplemented\n"
+"\n"
+"f = io.BytesIO()\n"
+"p = MyPickler(f)\n"
+"p.dump(MyClass)\n"
+"\n"
+"del MyClass\n"
+"\n"
+"unpickled_class = pickle.loads(f.getvalue())\n"
+"\n"
+"assert isinstance(unpickled_class, type)\n"
+"assert unpickled_class.__name__ == \"MyClass\"\n"
+"assert unpickled_class.my_attribute == 1\n"
 
 #: ../../library/pickle.rst:948
 msgid "Out-of-band Buffers"
-msgstr ""
+msgstr "帶外（Out-of-band）資料緩衝區"
 
 #: ../../library/pickle.rst:952
 msgid ""
@@ -1837,6 +1926,10 @@ msgid ""
 "structure of objects into a sequential stream of bytes, intrinsically "
 "involves copying data to and from the pickle stream."
 msgstr ""
+":mod:`pickle` 模組會被用於用於傳輸龐大的資料。此時，將複製記憶體的次數降到最"
+"低以保持效能變得很重要。然而，:mod:`pickle` 模組的正常操作過程中，當它將物件"
+"的圖狀結構（graph-like structure）轉換為連續的位元組串流時，本質上就涉及將資"
+"料複製到封裝流以及從封裝流複製資料。"
 
 #: ../../library/pickle.rst:959
 msgid ""
@@ -1845,10 +1938,12 @@ msgid ""
 "implementation of the communications system) support the out-of-band "
 "transfer facilities provided by pickle protocol 5 and higher."
 msgstr ""
+"如果*供給者*（被傳遞物件的型別的實作）與*消費者*（資訊交換系統的實作）都支援"
+"由 pickle 協定 5 或更高版本提供的帶外傳輸功能，則可以避免此一先天限制。"
 
 #: ../../library/pickle.rst:965
 msgid "Provider API"
-msgstr ""
+msgstr "供給者 API"
 
 #: ../../library/pickle.rst:967
 msgid ""
@@ -1857,6 +1952,9 @@ msgid ""
 "a :class:`PickleBuffer` instance (instead of e.g. a :class:`bytes` object) "
 "for any large data."
 msgstr ""
+"要封裝的大型資料物件，則必須實作一個針對 5 版協定及以上的 :meth:`~object."
+"__reduce_ex__` 方法，該方法應返回一個 :class:`PickleBuffer` 實例來處理任何大"
+"型資料（而非返回如 :class:`bytes` 物件）。"
 
 #: ../../library/pickle.rst:972
 msgid ""
@@ -1866,16 +1964,21 @@ msgid ""
 "opt-in to tell :mod:`pickle` that they will handle those buffers by "
 "themselves."
 msgstr ""
+"一個 :class:`PickleBuffer` 物件*指示*了當下底層的緩衝區狀態適合進行帶外資料傳"
+"輸。這些物件仍然相容 :mod:`pickle` 模組的一般使用方式。消費者程式也可以選擇介"
+"入，指示 :mod:`pickle` 他們將自行處理這些緩衝區。"
 
 #: ../../library/pickle.rst:979
 msgid "Consumer API"
-msgstr ""
+msgstr "消費者 API"
 
 #: ../../library/pickle.rst:981
 msgid ""
 "A communications system can enable custom handling of the :class:"
 "`PickleBuffer` objects generated when serializing an object graph."
 msgstr ""
+"一個資訊交換系統可以決定要自行處裡序列化物件圖時產生的 :class:`PickleBuffer` "
+"物件。"
 
 #: ../../library/pickle.rst:984
 msgid ""
