@@ -6,7 +6,7 @@ Python 官方說明文件臺灣繁體中文翻譯計畫
    :target: https://discord.gg/44XheGXhWH
    :alt: Join Chat on Discord
 
-這是 Python 3.12 官方說明文件的臺灣繁體中文（zh_TW）翻譯。
+這是 Python 3.13 官方說明文件的臺灣繁體中文（zh_TW）翻譯。
 
 翻譯之前，請務必詳讀並同意\ `授權與 License`_。參與方式請參考\ `參與翻譯`_。
 
@@ -132,13 +132,13 @@ the PSF for inclusion in the documentation.
 
 接著在 terminal 裡按照以下步驟：
 
-1. 基於最新版本的 ``upstream/3.12`` 開啟一個 branch，現在假設我們想要翻譯 library/math.po \
+1. 基於最新版本的 ``upstream/3.13`` 開啟一個 branch，現在假設我們想要翻譯 library/math.po \
    所以把這個 branch 叫做 ``library/math``：
 
    .. code-block:: bash
 
       git fetch upstream
-      git checkout -b library/math upstream/3.12
+      git checkout -b library/math upstream/3.13
 
 2. 接著就可以開始翻譯（翻譯時可參考\ `翻譯守則`_），你可以手動開啟 Poedit 應用程式再選 \
    library/math.po 檔案打開
@@ -222,7 +222,7 @@ the PSF for inclusion in the documentation.
 
 - 從 upstream（我們的主要 GitHub repo）做 fetch 的動作
 - 對 origin（你的 fork）做 push
-- 永遠不對 ``3.12`` branch 進行修改，請保持讓這個 branch 唯讀，可以避免掉很多問題。
+- 永遠不對 ``3.13`` branch 進行修改，請保持讓這個 branch 唯讀，可以避免掉很多問題。
 
 要翻譯哪些東西
 --------------
