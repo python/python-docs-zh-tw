@@ -38,7 +38,7 @@ endef
 export PRINT_HELP_PYSCRIPT # End of python section
 
 CPYTHON_CLONE := ../cpython
-VERSION := $(or $(VERSION), 3.12)
+VERSION := $(or $(VERSION), 3.13)
 SPHINX_CONF := $(CPYTHON_CLONE)/Doc/conf.py
 LANGUAGE := zh_TW
 LC_MESSAGES := $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/LC_MESSAGES
