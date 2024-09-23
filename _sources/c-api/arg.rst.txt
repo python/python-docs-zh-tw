@@ -27,8 +27,17 @@ unit; the entry in (round) parentheses is the Python object type that matches
 the format unit; and the entry in [square] brackets is the type of the C
 variable(s) whose address should be passed.
 
+.. _arg-parsing-string-and-buffers:
+
 Strings and buffers
 -------------------
+
+.. note::
+
+   On Python 3.12 and older, the macro :c:macro:`!PY_SSIZE_T_CLEAN` must be
+   defined before including :file:`Python.h` to use all ``#`` variants of
+   formats (``s#``, ``y#``, etc.) explained below.
+   This is not necessary on Python 3.13 and later.
 
 These formats allow accessing an object as a contiguous chunk of memory.
 You don't have to provide raw storage for the returned unicode or bytes
@@ -67,15 +76,6 @@ There are three ways strings and buffers can be converted to C:
    Besides this ``bf_releasebuffer`` requirement, there is no check to verify
    whether the input object is immutable (e.g. whether it would honor a request
    for a writable buffer, or whether another thread can mutate the data).
-
-.. note::
-
-   For all ``#`` variants of formats (``s#``, ``y#``, etc.), the macro
-   :c:macro:`PY_SSIZE_T_CLEAN` must be defined before including
-   :file:`Python.h`. On Python 3.9 and older, the type of the length argument
-   is :c:type:`Py_ssize_t` if the :c:macro:`PY_SSIZE_T_CLEAN` macro is defined,
-   or int otherwise.
-
 
 ``s`` (:class:`str`) [const char \*]
    Convert a Unicode object to a C pointer to a character string.
@@ -413,21 +413,35 @@ API Functions
    than a variable number of arguments.
 
 
-.. c:function:: int PyArg_ParseTupleAndKeywords(PyObject *args, PyObject *kw, const char *format, char *keywords[], ...)
+.. c:function:: int PyArg_ParseTupleAndKeywords(PyObject *args, PyObject *kw, const char *format, char * const *keywords, ...)
 
    Parse the parameters of a function that takes both positional and keyword
-   parameters into local variables.  The *keywords* argument is a
-   ``NULL``-terminated array of keyword parameter names.  Empty names denote
+   parameters into local variables.
+   The *keywords* argument is a ``NULL``-terminated array of keyword parameter
+   names specified as null-terminated ASCII or UTF-8 encoded C strings.
+   Empty names denote
    :ref:`positional-only parameters <positional-only_parameter>`.
    Returns true on success; on failure, it returns false and raises the
    appropriate exception.
+
+   .. note::
+
+      The *keywords* parameter declaration is :c:expr:`char * const *` in C and
+      :c:expr:`const char * const *` in C++.
+      This can be overridden with the :c:macro:`PY_CXX_CONST` macro.
 
    .. versionchanged:: 3.6
       Added support for :ref:`positional-only parameters
       <positional-only_parameter>`.
 
+   .. versionchanged:: 3.13
+      The *keywords* parameter has now type :c:expr:`char * const *` in C and
+      :c:expr:`const char * const *` in C++, instead of :c:expr:`char **`.
+      Added support for non-ASCII keyword parameter names.
 
-.. c:function:: int PyArg_VaParseTupleAndKeywords(PyObject *args, PyObject *kw, const char *format, char *keywords[], va_list vargs)
+
+
+.. c:function:: int PyArg_VaParseTupleAndKeywords(PyObject *args, PyObject *kw, const char *format, char * const *keywords, va_list vargs)
 
    Identical to :c:func:`PyArg_ParseTupleAndKeywords`, except that it accepts a
    va_list rather than a variable number of arguments.
@@ -442,16 +456,24 @@ API Functions
    .. versionadded:: 3.2
 
 
-.. XXX deprecated, will be removed
 .. c:function:: int PyArg_Parse(PyObject *args, const char *format, ...)
 
-   Function used to deconstruct the argument lists of "old-style" functions ---
-   these are functions which use the :const:`METH_OLDARGS` parameter parsing
-   method, which has been removed in Python 3.  This is not recommended for use
-   in parameter parsing in new code, and most code in the standard interpreter
-   has been modified to no longer use this for that purpose.  It does remain a
-   convenient way to decompose other tuples, however, and may continue to be
-   used for that purpose.
+   Parse the parameter of a function that takes a single positional parameter
+   into a local variable.  Returns true on success; on failure, it returns
+   false and raises the appropriate exception.
+
+   Example::
+
+       // Function using METH_O calling convention
+       static PyObject*
+       my_function(PyObject *module, PyObject *arg)
+       {
+           int value;
+           if (!PyArg_Parse(arg, "i:my_function", &value)) {
+               return NULL;
+           }
+           // ... use value ...
+       }
 
 
 .. c:function:: int PyArg_UnpackTuple(PyObject *args, const char *name, Py_ssize_t min, Py_ssize_t max, ...)
@@ -491,6 +513,19 @@ API Functions
    this call to :c:func:`PyArg_ParseTuple`::
 
       PyArg_ParseTuple(args, "O|O:ref", &object, &callback)
+
+.. c:macro:: PY_CXX_CONST
+
+   The value to be inserted, if any, before :c:expr:`char * const *`
+   in the *keywords* parameter declaration of
+   :c:func:`PyArg_ParseTupleAndKeywords` and
+   :c:func:`PyArg_VaParseTupleAndKeywords`.
+   Default empty for C and ``const`` for C++
+   (:c:expr:`const char * const *`).
+   To override, define it to the desired value before including
+   :file:`Python.h`.
+
+   .. versionadded:: 3.13
 
 
 ---------------

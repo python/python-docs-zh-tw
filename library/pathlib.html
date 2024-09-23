@@ -5,13 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>pathlib --- 物件導向檔案系統路徑 &#8212; Python 3.12.6 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pathlib --- 物件導向檔案系統路徑 &#8212; Python 3.13.0rc2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=41b4f12d" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=b20cc3f5" />
     
-    <script src="../_static/documentation_options.js?v=4e73337b"></script>
+    <script src="../_static/documentation_options.js?v=b64cfe1d"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=f1e884e3"></script>
@@ -19,7 +19,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.12.6 說明文件 中搜尋"
+          title="在 Python 3.13.0rc2 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -90,6 +90,7 @@
     <ul>
 <li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pathlib</span></code> --- 物件導向檔案系統路徑</a><ul>
 <li><a class="reference internal" href="#basic-use">基本用法</a></li>
+<li><a class="reference internal" href="#exceptions">Exceptions</a></li>
 <li><a class="reference internal" href="#pure-paths">純路徑</a><ul>
 <li><a class="reference internal" href="#general-properties">通用屬性</a></li>
 <li><a class="reference internal" href="#operators">運算子</a></li>
@@ -98,6 +99,7 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#concrete-paths">實體路徑</a><ul>
+<li><a class="reference internal" href="#parsing-and-generating-uris">Parsing and generating URIs</a></li>
 <li><a class="reference internal" href="#expanding-and-resolving-paths">Expanding and resolving paths</a></li>
 <li><a class="reference internal" href="#querying-file-type-and-status">Querying file type and status</a></li>
 <li><a class="reference internal" href="#reading-and-writing-files">Reading and writing files</a></li>
@@ -107,7 +109,12 @@
 <li><a class="reference internal" href="#permissions-and-ownership">Permissions and ownership</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#correspondence-to-tools-in-the-os-module">與 <code class="xref py py-mod docutils literal notranslate"><span class="pre">os</span></code> 模組裡的工具的對應關係</a></li>
+<li><a class="reference internal" href="#pattern-language">Pattern language</a></li>
+<li><a class="reference internal" href="#comparison-to-the-glob-module">Comparison to the <code class="xref py py-mod docutils literal notranslate"><span class="pre">glob</span></code> module</a></li>
+<li><a class="reference internal" href="#comparison-to-the-os-and-os-path-modules">Comparison to the <code class="xref py py-mod docutils literal notranslate"><span class="pre">os</span></code> and <code class="xref py py-mod docutils literal notranslate"><span class="pre">os.path</span></code> modules</a><ul>
+<li><a class="reference internal" href="#corresponding-tools">Corresponding tools</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -165,7 +172,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.12.6 Documentation</a> &#187;
+      <a href="../index.html">3.13.0rc2 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -205,7 +212,7 @@
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.4 版被加入.</span></p>
 </div>
-<p><strong>原始碼：</strong><a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.12/Lib/pathlib.py">Lib/pathlib.py</a></p>
+<p><strong>Source code:</strong> <a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.13/Lib/pathlib/">Lib/pathlib/</a></p>
 <hr class="docutils" id="index-0" />
 <p>此模組提供代表檔案系統路徑的類別，能適用不同作業系統的語意。路徑類別分成兩種，一種是<a class="reference internal" href="#pure-paths"><span class="std std-ref">純路徑 (pure paths)</span></a>，提供沒有 I/O 的單純計算操作，另一種是<a class="reference internal" href="#concrete-paths"><span class="std std-ref">實體路徑 (concrete paths)</span></a>，繼承自純路徑但也提供 IO 操作。</p>
 <img alt="Inheritance diagram showing the classes available in pathlib. The most basic class is PurePath, which has three direct subclasses: PurePosixPath, PureWindowsPath, and Path. Further to these four classes, there are two classes that use multiple inheritance: PosixPath subclasses PurePosixPath and Path, and WindowsPath subclasses PureWindowsPath and Path." class="invert-in-dark-mode align-center" src="../_images/pathlib-inheritance.png" />
@@ -217,7 +224,7 @@
 </ol>
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
-<p><span class="target" id="index-3"></span><a class="pep reference external" href="https://peps.python.org/pep-0428/"><strong>PEP 428</strong></a>：pathlib 模組 -- 物件導向檔案系統路徑。</p>
+<p><span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0428/"><strong>PEP 428</strong></a>：pathlib 模組 -- 物件導向檔案系統路徑。</p>
 </div>
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
@@ -265,6 +272,19 @@
 <span class="go">&#39;#!/bin/bash\n&#39;</span>
 </pre></div>
 </div>
+</section>
+<section id="exceptions">
+<h2>Exceptions<a class="headerlink" href="#exceptions" title="連結到這個標頭">¶</a></h2>
+<dl class="py exception">
+<dt class="sig sig-object py" id="pathlib.UnsupportedOperation">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pathlib.</span></span><span class="sig-name descname"><span class="pre">UnsupportedOperation</span></span><a class="headerlink" href="#pathlib.UnsupportedOperation" title="連結到這個定義">¶</a></dt>
+<dd><p>An exception inheriting <a class="reference internal" href="exceptions.html#NotImplementedError" title="NotImplementedError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a> that is raised when an
+unsupported operation is called on a path object.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
 </section>
 <section id="pure-paths">
 <span id="id1"></span><h2>純路徑<a class="headerlink" href="#pure-paths" title="連結到這個標頭">¶</a></h2>
@@ -434,6 +454,16 @@
 <h3>方法與屬性<a class="headerlink" href="#methods-and-properties" title="連結到這個標頭">¶</a></h3>
 <p>純路徑提供以下方法與屬性：</p>
 <dl class="py attribute">
+<dt class="sig sig-object py" id="pathlib.PurePath.parser">
+<span class="sig-prename descclassname"><span class="pre">PurePath.</span></span><span class="sig-name descname"><span class="pre">parser</span></span><a class="headerlink" href="#pathlib.PurePath.parser" title="連結到這個定義">¶</a></dt>
+<dd><p>The implementation of the <a class="reference internal" href="os.path.html#module-os.path" title="os.path: Operations on pathnames."><code class="xref py py-mod docutils literal notranslate"><span class="pre">os.path</span></code></a> module used for low-level path
+parsing and joining: either <code class="xref py py-mod docutils literal notranslate"><span class="pre">posixpath</span></code> or <code class="xref py py-mod docutils literal notranslate"><span class="pre">ntpath</span></code>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="pathlib.PurePath.drive">
 <span class="sig-prename descclassname"><span class="pre">PurePath.</span></span><span class="sig-name descname"><span class="pre">drive</span></span><a class="headerlink" href="#pathlib.PurePath.drive" title="連結到這個定義">¶</a></dt>
 <dd><p>若存在則為一個表示磁碟機字母 (drive letter) 或磁碟機名稱 (drive name) 的字串：</p>
@@ -569,7 +599,7 @@
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pathlib.PurePath.suffix">
 <span class="sig-prename descclassname"><span class="pre">PurePath.</span></span><span class="sig-name descname"><span class="pre">suffix</span></span><a class="headerlink" href="#pathlib.PurePath.suffix" title="連結到這個定義">¶</a></dt>
-<dd><p>若存在則為最後的路徑組成的檔案副檔名：</p>
+<dd><p>The last dot-separated portion of the final component, if any:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PurePosixPath</span><span class="p">(</span><span class="s1">&#39;my/library/setup.py&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span>
 <span class="go">&#39;.py&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">PurePosixPath</span><span class="p">(</span><span class="s1">&#39;my/library.tar.gz&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">suffix</span>
@@ -578,12 +608,13 @@
 <span class="go">&#39;&#39;</span>
 </pre></div>
 </div>
+<p>This is commonly called the file extension.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pathlib.PurePath.suffixes">
 <span class="sig-prename descclassname"><span class="pre">PurePath.</span></span><span class="sig-name descname"><span class="pre">suffixes</span></span><a class="headerlink" href="#pathlib.PurePath.suffixes" title="連結到這個定義">¶</a></dt>
-<dd><p>路徑檔案副檔名的串列：</p>
+<dd><p>A list of the path's suffixes, often called file extensions:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PurePosixPath</span><span class="p">(</span><span class="s1">&#39;my/library.tar.gar&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">suffixes</span>
 <span class="go">[&#39;.tar&#39;, &#39;.gar&#39;]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">PurePosixPath</span><span class="p">(</span><span class="s1">&#39;my/library.tar.gz&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">suffixes</span>
@@ -617,20 +648,6 @@
 <span class="go">&#39;c:\\windows&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">as_posix</span><span class="p">()</span>
 <span class="go">&#39;c:/windows&#39;</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pathlib.PurePath.as_uri">
-<span class="sig-prename descclassname"><span class="pre">PurePath.</span></span><span class="sig-name descname"><span class="pre">as_uri</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.PurePath.as_uri" title="連結到這個定義">¶</a></dt>
-<dd><p>以 <code class="docutils literal notranslate"><span class="pre">file</span></code> URI 來表示一個路徑。如果不是絕對路徑會引發 <a class="reference internal" href="exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a>。</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">PurePosixPath</span><span class="p">(</span><span class="s1">&#39;/etc/passwd&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">as_uri</span><span class="p">()</span>
-<span class="go">&#39;file:///etc/passwd&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">PureWindowsPath</span><span class="p">(</span><span class="s1">&#39;c:/Windows&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">as_uri</span><span class="p">()</span>
-<span class="go">&#39;file:///c:/Windows&#39;</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -685,13 +702,14 @@
 <dt class="sig sig-object py" id="pathlib.PurePath.is_reserved">
 <span class="sig-prename descclassname"><span class="pre">PurePath.</span></span><span class="sig-name descname"><span class="pre">is_reserved</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.PurePath.is_reserved" title="連結到這個定義">¶</a></dt>
 <dd><p>對 <a class="reference internal" href="#pathlib.PureWindowsPath" title="pathlib.PureWindowsPath"><code class="xref py py-class docutils literal notranslate"><span class="pre">PureWindowsPath</span></code></a> 來說，當路徑在 Windows 下被視為保留的話會回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>，否則回傳 <code class="docutils literal notranslate"><span class="pre">False</span></code>。對 <a class="reference internal" href="#pathlib.PurePosixPath" title="pathlib.PurePosixPath"><code class="xref py py-class docutils literal notranslate"><span class="pre">PurePosixPath</span></code></a> 來說，總是回傳 <code class="docutils literal notranslate"><span class="pre">False</span></code>。</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PureWindowsPath</span><span class="p">(</span><span class="s1">&#39;nul&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_reserved</span><span class="p">()</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">PurePosixPath</span><span class="p">(</span><span class="s1">&#39;nul&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">is_reserved</span><span class="p">()</span>
-<span class="go">False</span>
-</pre></div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>Windows path names that contain a colon, or end with a dot or a space,
+are considered reserved. UNC paths may be reserved.</p>
 </div>
-<p>在保留路徑上的檔案系統呼叫會神秘地失敗或有意外的效果。</p>
+<div class="deprecated-removed">
+<p><span class="versionmodified deprecated">Deprecated since version 3.13, will be removed in version 3.15: </span>This method is deprecated; use <a class="reference internal" href="os.path.html#os.path.isreserved" title="os.path.isreserved"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.path.isreserved()</span></code></a> to detect
+reserved paths on Windows.</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -711,10 +729,46 @@
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pathlib.PurePath.full_match">
+<span class="sig-prename descclassname"><span class="pre">PurePath.</span></span><span class="sig-name descname"><span class="pre">full_match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case_sensitive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.PurePath.full_match" title="連結到這個定義">¶</a></dt>
+<dd><p>Match this path against the provided glob-style pattern.  Return <code class="docutils literal notranslate"><span class="pre">True</span></code>
+if matching is successful, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.  For example:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PurePath</span><span class="p">(</span><span class="s1">&#39;a/b.py&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">full_match</span><span class="p">(</span><span class="s1">&#39;a/*.py&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PurePath</span><span class="p">(</span><span class="s1">&#39;a/b.py&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">full_match</span><span class="p">(</span><span class="s1">&#39;*.py&#39;</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PurePath</span><span class="p">(</span><span class="s1">&#39;/a/b/c.py&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">full_match</span><span class="p">(</span><span class="s1">&#39;/a/**&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PurePath</span><span class="p">(</span><span class="s1">&#39;/a/b/c.py&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">full_match</span><span class="p">(</span><span class="s1">&#39;**/*.py&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><a class="reference internal" href="#pathlib-pattern-language"><span class="std std-ref">Pattern language</span></a> documentation.</p>
+</div>
+<p>像其它方法一樣，是否區分大小寫會遵循平台的預設行為：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PurePosixPath</span><span class="p">(</span><span class="s1">&#39;b.py&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">full_match</span><span class="p">(</span><span class="s1">&#39;*.PY&#39;</span><span class="p">)</span>
+<span class="go">False</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">PureWindowsPath</span><span class="p">(</span><span class="s1">&#39;b.py&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">full_match</span><span class="p">(</span><span class="s1">&#39;*.PY&#39;</span><span class="p">)</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>將 <em>case_sensitive</em> 設定成 <code class="docutils literal notranslate"><span class="pre">True</span></code> 或 <code class="docutils literal notranslate"><span class="pre">False</span></code> 會覆蓋這個行為。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pathlib.PurePath.match">
 <span class="sig-prename descclassname"><span class="pre">PurePath.</span></span><span class="sig-name descname"><span class="pre">match</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case_sensitive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.PurePath.match" title="連結到這個定義">¶</a></dt>
-<dd><p>將路徑與 glob 形式的樣式 (glob-style pattern) 做比對。如果比對成功則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>，否則回傳 <code class="docutils literal notranslate"><span class="pre">False</span></code>。</p>
-<p>如果 <em>pattern</em> 是相對的，則路徑可以是相對或絕對的，而且會從右邊來完成比對：</p>
+<dd><p>Match this path against the provided non-recursive glob-style pattern.
+Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if matching is successful, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+<p>This method is similar to <a class="reference internal" href="#pathlib.PurePath.full_match" title="pathlib.PurePath.full_match"><code class="xref py py-meth docutils literal notranslate"><span class="pre">full_match()</span></code></a>, but empty patterns
+aren't allowed (<a class="reference internal" href="exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> is raised), the recursive wildcard
+&quot;<code class="docutils literal notranslate"><span class="pre">**</span></code>&quot; isn't supported (it acts like non-recursive &quot;<code class="docutils literal notranslate"><span class="pre">*</span></code>&quot;), and if a
+relative pattern is provided, then matching is done from the right:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PurePath</span><span class="p">(</span><span class="s1">&#39;a/b.py&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;*.py&#39;</span><span class="p">)</span>
 <span class="go">True</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">PurePath</span><span class="p">(</span><span class="s1">&#39;/a/b/c.py&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;b/*.py&#39;</span><span class="p">)</span>
@@ -723,35 +777,9 @@
 <span class="go">False</span>
 </pre></div>
 </div>
-<p>如果 <em>pattern</em> 是絕對的，則路徑必須是絕對的，且整個路徑都要比對到：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PurePath</span><span class="p">(</span><span class="s1">&#39;/a.py&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;/*.py&#39;</span><span class="p">)</span>
-<span class="go">True</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">PurePath</span><span class="p">(</span><span class="s1">&#39;a/b.py&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;/*.py&#39;</span><span class="p">)</span>
-<span class="go">False</span>
-</pre></div>
-</div>
-<p><em>pattern</em> 可以是另一個路徑物件；這會加速對多個檔案比對相同的樣式：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pattern</span> <span class="o">=</span> <span class="n">PurePath</span><span class="p">(</span><span class="s1">&#39;*.py&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">PurePath</span><span class="p">(</span><span class="s1">&#39;a/b.py&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="n">pattern</span><span class="p">)</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-<div class="admonition note">
-<p class="admonition-title">備註</p>
-<p>The recursive wildcard &quot;<code class="docutils literal notranslate"><span class="pre">**</span></code>&quot; isn't supported by this method (it acts
-like non-recursive &quot;<code class="docutils literal notranslate"><span class="pre">*</span></code>&quot;.)</p>
-</div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.12 版的變更: </span>接受一個有實作 <a class="reference internal" href="os.html#os.PathLike" title="os.PathLike"><code class="xref py py-class docutils literal notranslate"><span class="pre">os.PathLike</span></code></a> 介面的物件。</p>
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>The <em>pattern</em> parameter accepts a <a class="reference internal" href="../glossary.html#term-path-like-object"><span class="xref std std-term">path-like object</span></a>.</p>
 </div>
-<p>像其它方法一樣，是否區分大小寫會遵循平台的預設行為：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">PurePosixPath</span><span class="p">(</span><span class="s1">&#39;b.py&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;*.PY&#39;</span><span class="p">)</span>
-<span class="go">False</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">PureWindowsPath</span><span class="p">(</span><span class="s1">&#39;b.py&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s1">&#39;*.PY&#39;</span><span class="p">)</span>
-<span class="go">True</span>
-</pre></div>
-</div>
-<p>將 <em>case_sensitive</em> 設定成 <code class="docutils literal notranslate"><span class="pre">True</span></code> 或 <code class="docutils literal notranslate"><span class="pre">False</span></code> 會覆蓋這個行為。</p>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.12 版的變更: </span>新增 <em>case_sensitive</em> 參數。</p>
 </div>
@@ -907,6 +935,10 @@ like non-recursive &quot;<code class="docutils literal notranslate"><span class=
 </pre></div>
 </div>
 <p><em>pathsegments</em> 的指定方式與 <a class="reference internal" href="#pathlib.PurePath" title="pathlib.PurePath"><code class="xref py py-class docutils literal notranslate"><span class="pre">PurePath</span></code></a> 類似。</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>Raises <a class="reference internal" href="#pathlib.UnsupportedOperation" title="pathlib.UnsupportedOperation"><code class="xref py py-exc docutils literal notranslate"><span class="pre">UnsupportedOperation</span></code></a> on Windows. In previous versions,
+<a class="reference internal" href="exceptions.html#NotImplementedError" title="NotImplementedError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a> was raised instead.</p>
+</div>
 </dd></dl>
 
 <dl class="py class">
@@ -918,6 +950,10 @@ like non-recursive &quot;<code class="docutils literal notranslate"><span class=
 </pre></div>
 </div>
 <p><em>pathsegments</em> 的指定方式與 <a class="reference internal" href="#pathlib.PurePath" title="pathlib.PurePath"><code class="xref py py-class docutils literal notranslate"><span class="pre">PurePath</span></code></a> 類似。</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>Raises <a class="reference internal" href="#pathlib.UnsupportedOperation" title="pathlib.UnsupportedOperation"><code class="xref py py-exc docutils literal notranslate"><span class="pre">UnsupportedOperation</span></code></a> on non-Windows platforms. In previous
+versions, <a class="reference internal" href="exceptions.html#NotImplementedError" title="NotImplementedError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a> was raised instead.</p>
+</div>
 </dd></dl>
 
 <p>你只能實例化對應你的系統的類別類型（允許在不相容的路徑類型上做系統呼叫可能在你的應用程式導致漏洞或故障）：</p>
@@ -933,10 +969,71 @@ like non-recursive &quot;<code class="docutils literal notranslate"><span class=
   File <span class="nb">&quot;&lt;stdin&gt;&quot;</span>, line <span class="m">1</span>, in <span class="n">&lt;module&gt;</span>
   File <span class="nb">&quot;pathlib.py&quot;</span>, line <span class="m">798</span>, in <span class="n">__new__</span>
 <span class="w">    </span><span class="o">%</span> <span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,))</span>
-<span class="gr">NotImplementedError</span>: <span class="n">cannot instantiate &#39;WindowsPath&#39; on your system</span>
+<span class="gr">UnsupportedOperation</span>: <span class="n">cannot instantiate &#39;WindowsPath&#39; on your system</span>
 </pre></div>
 </div>
 <p>有些實體路徑方法會在系統呼叫失敗（例如因為路徑不存在）時引發 <a class="reference internal" href="exceptions.html#OSError" title="OSError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code></a></p>
+<section id="parsing-and-generating-uris">
+<h3>Parsing and generating URIs<a class="headerlink" href="#parsing-and-generating-uris" title="連結到這個標頭">¶</a></h3>
+<p>Concrete path objects can be created from, and represented as, 'file' URIs
+conforming to <span class="target" id="index-2"></span><a class="rfc reference external" href="https://datatracker.ietf.org/doc/html/rfc8089.html"><strong>RFC 8089</strong></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>File URIs are not portable across machines with different
+<a class="reference internal" href="os.html#filesystem-encoding"><span class="std std-ref">filesystem encodings</span></a>.</p>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="pathlib.Path.from_uri">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">from_uri</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">uri</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.from_uri" title="連結到這個定義">¶</a></dt>
+<dd><p>Return a new path object from parsing a 'file' URI. For example:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">from_uri</span><span class="p">(</span><span class="s1">&#39;file:///etc/hosts&#39;</span><span class="p">)</span>
+<span class="go">PosixPath(&#39;/etc/hosts&#39;)</span>
+</pre></div>
+</div>
+<p>On Windows, DOS device and UNC paths may be parsed from URIs:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">from_uri</span><span class="p">(</span><span class="s1">&#39;file:///c:/windows&#39;</span><span class="p">)</span>
+<span class="go">WindowsPath(&#39;c:/windows&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">from_uri</span><span class="p">(</span><span class="s1">&#39;file://server/share&#39;</span><span class="p">)</span>
+<span class="go">WindowsPath(&#39;//server/share&#39;)</span>
+</pre></div>
+</div>
+<p>Several variant forms are supported:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">from_uri</span><span class="p">(</span><span class="s1">&#39;file:////server/share&#39;</span><span class="p">)</span>
+<span class="go">WindowsPath(&#39;//server/share&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">from_uri</span><span class="p">(</span><span class="s1">&#39;file://///server/share&#39;</span><span class="p">)</span>
+<span class="go">WindowsPath(&#39;//server/share&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">from_uri</span><span class="p">(</span><span class="s1">&#39;file:c:/windows&#39;</span><span class="p">)</span>
+<span class="go">WindowsPath(&#39;c:/windows&#39;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">from_uri</span><span class="p">(</span><span class="s1">&#39;file:/c|/windows&#39;</span><span class="p">)</span>
+<span class="go">WindowsPath(&#39;c:/windows&#39;)</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> is raised if the URI does not start with <code class="docutils literal notranslate"><span class="pre">file:</span></code>, or
+the parsed path isn't absolute.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pathlib.Path.as_uri">
+<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">as_uri</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.as_uri" title="連結到這個定義">¶</a></dt>
+<dd><p>Represent the path as a 'file' URI.  <a class="reference internal" href="exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> is raised if
+the path isn't absolute.</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">PosixPath</span><span class="p">(</span><span class="s1">&#39;/etc/passwd&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">as_uri</span><span class="p">()</span>
+<span class="go">&#39;file:///etc/passwd&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">WindowsPath</span><span class="p">(</span><span class="s1">&#39;c:/Windows&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">as_uri</span><span class="p">()</span>
+<span class="go">&#39;file:///c:/Windows&#39;</span>
+</pre></div>
+</div>
+<p>For historical reasons, this method is also available from
+<a class="reference internal" href="#pathlib.PurePath" title="pathlib.PurePath"><code class="xref py py-class docutils literal notranslate"><span class="pre">PurePath</span></code></a> objects. However, its use of <a class="reference internal" href="os.html#os.fsencode" title="os.fsencode"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.fsencode()</span></code></a> makes
+it strictly impure.</p>
+</dd></dl>
+
+</section>
 <section id="expanding-and-resolving-paths">
 <h3>Expanding and resolving paths<a class="headerlink" href="#expanding-and-resolving-paths" title="連結到這個標頭">¶</a></h3>
 <dl class="py method">
@@ -1006,9 +1103,17 @@ like non-recursive &quot;<code class="docutils literal notranslate"><span class=
 <span class="go">PosixPath(&#39;/home/antoine/pathlib/setup.py&#39;)</span>
 </pre></div>
 </div>
-<p>如果路徑不存在且 <em>strict</em> 為 <code class="docutils literal notranslate"><span class="pre">True</span></code>，則引發 <a class="reference internal" href="exceptions.html#FileNotFoundError" title="FileNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">FileNotFoundError</span></code></a>。如果 <em>strict</em> 為 <code class="docutils literal notranslate"><span class="pre">False</span></code>，則將盡可能解析該路徑，並將任何剩餘部分追加到路徑中，而不檢查其是否存在。如果在解析過程中遇到無窮迴圈，則引發 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>。</p>
+<p>If a path doesn't exist or a symlink loop is encountered, and <em>strict</em> is
+<code class="docutils literal notranslate"><span class="pre">True</span></code>, <a class="reference internal" href="exceptions.html#OSError" title="OSError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code></a> is raised.  If <em>strict</em> is <code class="docutils literal notranslate"><span class="pre">False</span></code>, the path is
+resolved as far as possible and any remainder is appended without checking
+whether it exists.</p>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.6 版的變更: </span>新增 <em>strict</em> 參數（在 3.6 版本之前的行為是嚴格的）。</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>Symlink loops are treated like other errors: <a class="reference internal" href="exceptions.html#OSError" title="OSError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code></a> is raised in
+strict mode, and no exception is raised in non-strict mode. In previous
+versions, <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> is raised no matter the value of <em>strict</em>.</p>
 </div>
 </dd></dl>
 
@@ -1024,6 +1129,10 @@ like non-recursive &quot;<code class="docutils literal notranslate"><span class=
 </div>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.9 版被加入.</span></p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>Raises <a class="reference internal" href="#pathlib.UnsupportedOperation" title="pathlib.UnsupportedOperation"><code class="xref py py-exc docutils literal notranslate"><span class="pre">UnsupportedOperation</span></code></a> if <a class="reference internal" href="os.html#os.readlink" title="os.readlink"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.readlink()</span></code></a> is not
+available. In previous versions, <a class="reference internal" href="exceptions.html#NotImplementedError" title="NotImplementedError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a> was raised.</p>
 </div>
 </dd></dl>
 
@@ -1078,16 +1187,28 @@ like non-recursive &quot;<code class="docutils literal notranslate"><span class=
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pathlib.Path.is_file">
-<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">is_file</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.is_file" title="連結到這個定義">¶</a></dt>
-<dd><p>如果該路徑指向一個普通檔案（或者是一個指向普通檔案的符號連結）則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>，如果指向其他類型的檔案則回傳 <code class="docutils literal notranslate"><span class="pre">False</span></code>。</p>
+<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">is_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">follow_symlinks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.is_file" title="連結到這個定義">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the path points to a regular file, <code class="docutils literal notranslate"><span class="pre">False</span></code> if it
+points to another kind of file.</p>
 <p>如果路徑不存在或者是一個斷掉的符號連結則也會回傳 <code class="docutils literal notranslate"><span class="pre">False</span></code>；其他錯誤（例如權限錯誤）則會傳遞出來。</p>
+<p>This method normally follows symlinks; to exclude symlinks, add the
+argument <code class="docutils literal notranslate"><span class="pre">follow_symlinks=False</span></code>.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>新增 <em>follow_symlinks</em> 參數。</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pathlib.Path.is_dir">
-<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">is_dir</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.is_dir" title="連結到這個定義">¶</a></dt>
-<dd><p>如果該路徑指向一個目錄（或者是一個指向目錄的符號連結）則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>，如果指向其他類型的檔案則回傳 <code class="docutils literal notranslate"><span class="pre">False</span></code>。</p>
+<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">is_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">follow_symlinks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.is_dir" title="連結到這個定義">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the path points to a directory, <code class="docutils literal notranslate"><span class="pre">False</span></code> if it points
+to another kind of file.</p>
 <p>如果路徑不存在或者是一個斷掉的符號連結則也會回傳 <code class="docutils literal notranslate"><span class="pre">False</span></code>；其他錯誤（例如權限錯誤）則會傳遞出來。</p>
+<p>This method normally follows symlinks; to exclude symlinks to directories,
+add the argument <code class="docutils literal notranslate"><span class="pre">follow_symlinks=False</span></code>.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>新增 <em>follow_symlinks</em> 參數。</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1182,7 +1303,7 @@ like non-recursive &quot;<code class="docutils literal notranslate"><span class=
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pathlib.Path.read_text">
-<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">read_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.read_text" title="連結到這個定義">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">read_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encoding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">errors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">newline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.read_text" title="連結到這個定義">¶</a></dt>
 <dd><p>將路徑指向的檔案的解碼內容以字串形式回傳：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">p</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s1">&#39;my_text_file&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">p</span><span class="o">.</span><span class="n">write_text</span><span class="p">(</span><span class="s1">&#39;Text file contents&#39;</span><span class="p">)</span>
@@ -1194,6 +1315,9 @@ like non-recursive &quot;<code class="docutils literal notranslate"><span class=
 <p>該檔案被打開並且隨後關閉。可選參數的含義與 <a class="reference internal" href="functions.html#open" title="open"><code class="xref py py-func docutils literal notranslate"><span class="pre">open()</span></code></a> 中的相同。</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.5 版被加入.</span></p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>新增 <em>newline</em> 參數。</p>
 </div>
 </dd></dl>
 
@@ -1276,16 +1400,13 @@ raised.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pathlib.Path.glob">
-<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">glob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case_sensitive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.glob" title="連結到這個定義">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">glob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case_sensitive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recurse_symlinks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.glob" title="連結到這個定義">¶</a></dt>
 <dd><p>在該路徑表示的目錄裡，以 glob 方式比對所給定的相對 <em>pattern</em>，並 yield 所有比對到的檔案（任意類型）：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*.py&#39;</span><span class="p">))</span>
 <span class="go">[PosixPath(&#39;pathlib.py&#39;), PosixPath(&#39;setup.py&#39;), PosixPath(&#39;test_pathlib.py&#39;)]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;*/*.py&#39;</span><span class="p">))</span>
 <span class="go">[PosixPath(&#39;docs/conf.py&#39;)]</span>
-</pre></div>
-</div>
-<p>模式 (pattern) 和給 <a class="reference internal" href="fnmatch.html#module-fnmatch" title="fnmatch: Unix shell style filename pattern matching."><code class="xref py py-mod docutils literal notranslate"><span class="pre">fnmatch</span></code></a> 的一樣，加上 &quot;<code class="docutils literal notranslate"><span class="pre">**</span></code>&quot; 代表「目前目錄及所有遞迴的子目錄」。也就是說它能夠做遞迴的 glob 比對：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;**/*.py&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;**/*.py&#39;</span><span class="p">))</span>
 <span class="go">[PosixPath(&#39;build/lib/pathlib.py&#39;),</span>
 <span class="go"> PosixPath(&#39;docs/conf.py&#39;),</span>
 <span class="go"> PosixPath(&#39;pathlib.py&#39;),</span>
@@ -1293,40 +1414,49 @@ raised.</p>
 <span class="go"> PosixPath(&#39;test_pathlib.py&#39;)]</span>
 </pre></div>
 </div>
-<p>此方法在頂層目錄上呼叫 <a class="reference internal" href="#pathlib.Path.is_dir" title="pathlib.Path.is_dir"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Path.is_dir()</span></code></a> 並傳遞引發的任何 <a class="reference internal" href="exceptions.html#OSError" title="OSError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code></a> 例外。將會抑制在目錄對於 <a class="reference internal" href="exceptions.html#OSError" title="OSError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code></a> 例外的後續掃描。</p>
-<p>預設情況下，或者當 <em>case_sensitive</em> 僅限關鍵字引數被設定為 <code class="docutils literal notranslate"><span class="pre">None</span></code> 的時候，此方法會使用平台特定的大小寫規則來比對路徑；通常在 POSIX 上會區分大小寫，而在 Windows 上不區分大小寫。將 <em>case_sensitive</em> 設成 <code class="docutils literal notranslate"><span class="pre">True</span></code> 或 <code class="docutils literal notranslate"><span class="pre">False</span></code> 會覆寫這個行為。</p>
-<div class="admonition note">
-<p class="admonition-title">備註</p>
-<p>在很大的目錄樹裡使用 &quot;<code class="docutils literal notranslate"><span class="pre">**</span></code>&quot; 可能會耗費過多的時間。</p>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><a class="reference internal" href="#pathlib-pattern-language"><span class="std std-ref">Pattern language</span></a> documentation.</p>
 </div>
+<p>預設情況下，或者當 <em>case_sensitive</em> 僅限關鍵字引數被設定為 <code class="docutils literal notranslate"><span class="pre">None</span></code> 的時候，此方法會使用平台特定的大小寫規則來比對路徑；通常在 POSIX 上會區分大小寫，而在 Windows 上不區分大小寫。將 <em>case_sensitive</em> 設成 <code class="docutils literal notranslate"><span class="pre">True</span></code> 或 <code class="docutils literal notranslate"><span class="pre">False</span></code> 會覆寫這個行為。</p>
+<p>By default, or when the <em>recurse_symlinks</em> keyword-only argument is set to
+<code class="docutils literal notranslate"><span class="pre">False</span></code>, this method follows symlinks except when expanding &quot;<code class="docutils literal notranslate"><span class="pre">**</span></code>&quot;
+wildcards. Set <em>recurse_symlinks</em> to <code class="docutils literal notranslate"><span class="pre">True</span></code> to always follow symlinks.</p>
 <p class="audit-hook">引發一個附帶引數 <code class="docutils literal notranslate"><span class="pre">self</span></code>、<code class="docutils literal notranslate"><span class="pre">pattern</span></code> 的<a class="reference internal" href="sys.html#auditing"><span class="std std-ref">稽核事件</span></a> <code class="docutils literal notranslate"><span class="pre">pathlib.Path.glob</span></code>。</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.11 版的變更: </span>如果 <em>pattern</em> 以路徑名稱組成的分隔符號（<a class="reference internal" href="os.html#os.sep" title="os.sep"><code class="xref py py-data docutils literal notranslate"><span class="pre">sep</span></code></a> 或 <a class="reference internal" href="os.html#os.altsep" title="os.altsep"><code class="xref py py-data docutils literal notranslate"><span class="pre">altsep</span></code></a>）作結尾則只會回傳目錄。</p>
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>新增 <em>case_sensitive</em> 參數。</p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.12 版的變更: </span>新增 <em>case_sensitive</em> 參數。</p>
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>The <em>recurse_symlinks</em> parameter was added.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>The <em>pattern</em> parameter accepts a <a class="reference internal" href="../glossary.html#term-path-like-object"><span class="xref std std-term">path-like object</span></a>.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>Any <a class="reference internal" href="exceptions.html#OSError" title="OSError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code></a> exceptions raised from scanning the filesystem are
+suppressed. In previous versions, such exceptions are suppressed in many
+cases, but not all.</p>
 </div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pathlib.Path.rglob">
-<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">rglob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case_sensitive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.rglob" title="連結到這個定義">¶</a></dt>
-<dd><p>遞迴地 glob 給定的相對 <em>pattern</em>。這相當於在給定的相對 <em>pattern</em> 前面加上 &quot;<code class="docutils literal notranslate"><span class="pre">**/</span></code>&quot; 並呼叫 <a class="reference internal" href="#pathlib.Path.glob" title="pathlib.Path.glob"><code class="xref py py-func docutils literal notranslate"><span class="pre">Path.glob()</span></code></a>，其中 <em>patterns</em> 和給 <a class="reference internal" href="fnmatch.html#module-fnmatch" title="fnmatch: Unix shell style filename pattern matching."><code class="xref py py-mod docutils literal notranslate"><span class="pre">fnmatch</span></code></a> 的相同：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">sorted</span><span class="p">(</span><span class="n">Path</span><span class="p">()</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.py&quot;</span><span class="p">))</span>
-<span class="go">[PosixPath(&#39;build/lib/pathlib.py&#39;),</span>
-<span class="go"> PosixPath(&#39;docs/conf.py&#39;),</span>
-<span class="go"> PosixPath(&#39;pathlib.py&#39;),</span>
-<span class="go"> PosixPath(&#39;setup.py&#39;),</span>
-<span class="go"> PosixPath(&#39;test_pathlib.py&#39;)]</span>
-</pre></div>
+<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">rglob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pattern</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">case_sensitive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recurse_symlinks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.rglob" title="連結到這個定義">¶</a></dt>
+<dd><p>Glob the given relative <em>pattern</em> recursively.  This is like calling
+<a class="reference internal" href="#pathlib.Path.glob" title="pathlib.Path.glob"><code class="xref py py-func docutils literal notranslate"><span class="pre">Path.glob()</span></code></a> with &quot;<code class="docutils literal notranslate"><span class="pre">**/</span></code>&quot; added in front of the <em>pattern</em>.</p>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><a class="reference internal" href="#pathlib-pattern-language"><span class="std std-ref">Pattern language</span></a> and <a class="reference internal" href="#pathlib.Path.glob" title="pathlib.Path.glob"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Path.glob()</span></code></a> documentation.</p>
 </div>
-<p>預設情況下，或者當 <em>case_sensitive</em> 僅限關鍵字引數被設定為 <code class="docutils literal notranslate"><span class="pre">None</span></code> 的時候，此方法會使用平台特定的大小寫規則來比對路徑；通常在 POSIX 上會區分大小寫，而在 Windows 上不區分大小寫。將 <em>case_sensitive</em> 設成 <code class="docutils literal notranslate"><span class="pre">True</span></code> 或 <code class="docutils literal notranslate"><span class="pre">False</span></code> 會覆寫這個行為。</p>
 <p class="audit-hook">引發一個附帶引數 <code class="docutils literal notranslate"><span class="pre">self</span></code>、<code class="docutils literal notranslate"><span class="pre">pattern</span></code> 的<a class="reference internal" href="sys.html#auditing"><span class="std std-ref">稽核事件</span></a> <code class="docutils literal notranslate"><span class="pre">pathlib.Path.rglob</span></code>。</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.11 版的變更: </span>如果 <em>pattern</em> 以路徑名稱組成的分隔符號（<a class="reference internal" href="os.html#os.sep" title="os.sep"><code class="xref py py-data docutils literal notranslate"><span class="pre">sep</span></code></a> 或 <a class="reference internal" href="os.html#os.altsep" title="os.altsep"><code class="xref py py-data docutils literal notranslate"><span class="pre">altsep</span></code></a>）作結尾則只會回傳目錄。</p>
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>新增 <em>case_sensitive</em> 參數。</p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.12 版的變更: </span>新增 <em>case_sensitive</em> 參數。</p>
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>The <em>recurse_symlinks</em> parameter was added.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>The <em>pattern</em> parameter accepts a <a class="reference internal" href="../glossary.html#term-path-like-object"><span class="xref std std-term">path-like object</span></a>.</p>
 </div>
 </dd></dl>
 
@@ -1429,6 +1559,10 @@ raised.</p>
 <p class="admonition-title">備註</p>
 <p>引數的順序 (link, target) 和 <a class="reference internal" href="os.html#os.symlink" title="os.symlink"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.symlink()</span></code></a> 相反。</p>
 </div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>Raises <a class="reference internal" href="#pathlib.UnsupportedOperation" title="pathlib.UnsupportedOperation"><code class="xref py py-exc docutils literal notranslate"><span class="pre">UnsupportedOperation</span></code></a> if <a class="reference internal" href="os.html#os.symlink" title="os.symlink"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.symlink()</span></code></a> is not
+available. In previous versions, <a class="reference internal" href="exceptions.html#NotImplementedError" title="NotImplementedError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a> was raised.</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1441,6 +1575,10 @@ raised.</p>
 </div>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.10 版被加入.</span></p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>Raises <a class="reference internal" href="#pathlib.UnsupportedOperation" title="pathlib.UnsupportedOperation"><code class="xref py py-exc docutils literal notranslate"><span class="pre">UnsupportedOperation</span></code></a> if <a class="reference internal" href="os.html#os.link" title="os.link"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.link()</span></code></a> is not
+available. In previous versions, <a class="reference internal" href="exceptions.html#NotImplementedError" title="NotImplementedError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a> was raised.</p>
 </div>
 </dd></dl>
 
@@ -1500,14 +1638,34 @@ raised.</p>
 <h3>Permissions and ownership<a class="headerlink" href="#permissions-and-ownership" title="連結到這個標頭">¶</a></h3>
 <dl class="py method">
 <dt class="sig sig-object py" id="pathlib.Path.owner">
-<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">owner</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.owner" title="連結到這個定義">¶</a></dt>
-<dd><p>回傳擁有該檔案的用戶名稱。如果在系統資料庫中找不到該檔案的使用者識別字 (UID)，則會引發 <a class="reference internal" href="exceptions.html#KeyError" title="KeyError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyError</span></code></a>。</p>
+<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">owner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">follow_symlinks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.owner" title="連結到這個定義">¶</a></dt>
+<dd><p>Return the name of the user owning the file. <a class="reference internal" href="exceptions.html#KeyError" title="KeyError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyError</span></code></a> is raised
+if the file's user identifier (UID) isn't found in the system database.</p>
+<p>This method normally follows symlinks; to get the owner of the symlink, add
+the argument <code class="docutils literal notranslate"><span class="pre">follow_symlinks=False</span></code>.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>Raises <a class="reference internal" href="#pathlib.UnsupportedOperation" title="pathlib.UnsupportedOperation"><code class="xref py py-exc docutils literal notranslate"><span class="pre">UnsupportedOperation</span></code></a> if the <a class="reference internal" href="pwd.html#module-pwd" title="pwd: The password database (getpwnam() and friends). (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pwd</span></code></a> module is not
+available. In earlier versions, <a class="reference internal" href="exceptions.html#NotImplementedError" title="NotImplementedError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a> was raised.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>新增 <em>follow_symlinks</em> 參數。</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pathlib.Path.group">
-<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">group</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.group" title="連結到這個定義">¶</a></dt>
-<dd><p>回傳擁有該檔案的群組名稱。如果在系統資料庫裡找不到檔案的群組識別字 (GID) 會引發 <a class="reference internal" href="exceptions.html#KeyError" title="KeyError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyError</span></code></a>。</p>
+<span class="sig-prename descclassname"><span class="pre">Path.</span></span><span class="sig-name descname"><span class="pre">group</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">follow_symlinks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pathlib.Path.group" title="連結到這個定義">¶</a></dt>
+<dd><p>Return the name of the group owning the file. <a class="reference internal" href="exceptions.html#KeyError" title="KeyError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyError</span></code></a> is raised
+if the file's group identifier (GID) isn't found in the system database.</p>
+<p>This method normally follows symlinks; to get the group of the symlink, add
+the argument <code class="docutils literal notranslate"><span class="pre">follow_symlinks=False</span></code>.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>Raises <a class="reference internal" href="#pathlib.UnsupportedOperation" title="pathlib.UnsupportedOperation"><code class="xref py py-exc docutils literal notranslate"><span class="pre">UnsupportedOperation</span></code></a> if the <a class="reference internal" href="grp.html#module-grp" title="grp: The group database (getgrnam() and friends). (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">grp</span></code></a> module is not
+available. In earlier versions, <a class="reference internal" href="exceptions.html#NotImplementedError" title="NotImplementedError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a> was raised.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>新增 <em>follow_symlinks</em> 參數。</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1536,8 +1694,122 @@ raised.</p>
 
 </section>
 </section>
-<section id="correspondence-to-tools-in-the-os-module">
-<h2>與 <a class="reference internal" href="os.html#module-os" title="os: Miscellaneous operating system interfaces."><code class="xref py py-mod docutils literal notranslate"><span class="pre">os</span></code></a> 模組裡的工具的對應關係<a class="headerlink" href="#correspondence-to-tools-in-the-os-module" title="連結到這個標頭">¶</a></h2>
+<section id="pattern-language">
+<span id="pathlib-pattern-language"></span><h2>Pattern language<a class="headerlink" href="#pattern-language" title="連結到這個標頭">¶</a></h2>
+<p>The following wildcards are supported in patterns for
+<a class="reference internal" href="#pathlib.PurePath.full_match" title="pathlib.PurePath.full_match"><code class="xref py py-meth docutils literal notranslate"><span class="pre">full_match()</span></code></a>, <a class="reference internal" href="#pathlib.Path.glob" title="pathlib.Path.glob"><code class="xref py py-meth docutils literal notranslate"><span class="pre">glob()</span></code></a> and <a class="reference internal" href="#pathlib.Path.rglob" title="pathlib.Path.rglob"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rglob()</span></code></a>:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">**</span></code> (entire segment)</dt><dd><p>Matches any number of file or directory segments, including zero.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">*</span></code> (entire segment)</dt><dd><p>Matches one file or directory segment.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">*</span></code> (part of a segment)</dt><dd><p>Matches any number of non-separator characters, including zero.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">?</span></code></dt><dd><p>Matches one non-separator character.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">[seq]</span></code></dt><dd><p>Matches one character in <em>seq</em>.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">[!seq]</span></code></dt><dd><p>Matches one character not in <em>seq</em>.</p>
+</dd>
+</dl>
+<p>For a literal match, wrap the meta-characters in brackets.
+For example, <code class="docutils literal notranslate"><span class="pre">&quot;[?]&quot;</span></code> matches the character <code class="docutils literal notranslate"><span class="pre">&quot;?&quot;</span></code>.</p>
+<p>The &quot;<code class="docutils literal notranslate"><span class="pre">**</span></code>&quot; wildcard enables recursive globbing. A few examples:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Pattern</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>&quot;<code class="docutils literal notranslate"><span class="pre">**/*</span></code>&quot;</p></td>
+<td><p>Any path with at least one segment.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&quot;<code class="docutils literal notranslate"><span class="pre">**/*.py</span></code>&quot;</p></td>
+<td><p>Any path with a final segment ending &quot;<code class="docutils literal notranslate"><span class="pre">.py</span></code>&quot;.</p></td>
+</tr>
+<tr class="row-even"><td><p>&quot;<code class="docutils literal notranslate"><span class="pre">assets/**</span></code>&quot;</p></td>
+<td><p>Any path starting with &quot;<code class="docutils literal notranslate"><span class="pre">assets/</span></code>&quot;.</p></td>
+</tr>
+<tr class="row-odd"><td><p>&quot;<code class="docutils literal notranslate"><span class="pre">assets/**/*</span></code>&quot;</p></td>
+<td><p>Any path starting with &quot;<code class="docutils literal notranslate"><span class="pre">assets/</span></code>&quot;, excluding &quot;<code class="docutils literal notranslate"><span class="pre">assets/</span></code>&quot; itself.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Globbing with the &quot;<code class="docutils literal notranslate"><span class="pre">**</span></code>&quot; wildcard visits every directory in the tree.
+Large directory trees may take a long time to search.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>Globbing with a pattern that ends with &quot;<code class="docutils literal notranslate"><span class="pre">**</span></code>&quot; returns both files and
+directories. In previous versions, only directories were returned.</p>
+</div>
+<p>In <a class="reference internal" href="#pathlib.Path.glob" title="pathlib.Path.glob"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Path.glob()</span></code></a> and <a class="reference internal" href="#pathlib.Path.rglob" title="pathlib.Path.rglob"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rglob()</span></code></a>, a trailing slash may be added to
+the pattern to match only directories.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.11 版的變更: </span>Globbing with a pattern that ends with a pathname components separator
+(<a class="reference internal" href="os.html#os.sep" title="os.sep"><code class="xref py py-data docutils literal notranslate"><span class="pre">sep</span></code></a> or <a class="reference internal" href="os.html#os.altsep" title="os.altsep"><code class="xref py py-data docutils literal notranslate"><span class="pre">altsep</span></code></a>) returns only directories.</p>
+</div>
+</section>
+<section id="comparison-to-the-glob-module">
+<h2>Comparison to the <a class="reference internal" href="glob.html#module-glob" title="glob: Unix shell style pathname pattern expansion."><code class="xref py py-mod docutils literal notranslate"><span class="pre">glob</span></code></a> module<a class="headerlink" href="#comparison-to-the-glob-module" title="連結到這個標頭">¶</a></h2>
+<p>The patterns accepted and results generated by <a class="reference internal" href="#pathlib.Path.glob" title="pathlib.Path.glob"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Path.glob()</span></code></a> and
+<a class="reference internal" href="#pathlib.Path.rglob" title="pathlib.Path.rglob"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Path.rglob()</span></code></a> differ slightly from those by the <a class="reference internal" href="glob.html#module-glob" title="glob: Unix shell style pathname pattern expansion."><code class="xref py py-mod docutils literal notranslate"><span class="pre">glob</span></code></a> module:</p>
+<ol class="arabic simple">
+<li><p>Files beginning with a dot are not special in pathlib. This is
+like passing <code class="docutils literal notranslate"><span class="pre">include_hidden=True</span></code> to <a class="reference internal" href="glob.html#glob.glob" title="glob.glob"><code class="xref py py-func docutils literal notranslate"><span class="pre">glob.glob()</span></code></a>.</p></li>
+<li><p>&quot;<code class="docutils literal notranslate"><span class="pre">**</span></code>&quot; pattern components are always recursive in pathlib. This is like
+passing <code class="docutils literal notranslate"><span class="pre">recursive=True</span></code> to <a class="reference internal" href="glob.html#glob.glob" title="glob.glob"><code class="xref py py-func docutils literal notranslate"><span class="pre">glob.glob()</span></code></a>.</p></li>
+<li><p>&quot;<code class="docutils literal notranslate"><span class="pre">**</span></code>&quot; pattern components do not follow symlinks by default in pathlib.
+This behaviour has no equivalent in <a class="reference internal" href="glob.html#glob.glob" title="glob.glob"><code class="xref py py-func docutils literal notranslate"><span class="pre">glob.glob()</span></code></a>, but you can pass
+<code class="docutils literal notranslate"><span class="pre">recurse_symlinks=True</span></code> to <a class="reference internal" href="#pathlib.Path.glob" title="pathlib.Path.glob"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Path.glob()</span></code></a> for compatible behaviour.</p></li>
+<li><p>Like all <a class="reference internal" href="#pathlib.PurePath" title="pathlib.PurePath"><code class="xref py py-class docutils literal notranslate"><span class="pre">PurePath</span></code></a> and <a class="reference internal" href="#pathlib.Path" title="pathlib.Path"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a> objects, the values returned
+from <a class="reference internal" href="#pathlib.Path.glob" title="pathlib.Path.glob"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Path.glob()</span></code></a> and <a class="reference internal" href="#pathlib.Path.rglob" title="pathlib.Path.rglob"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Path.rglob()</span></code></a> don't include trailing
+slashes.</p></li>
+<li><p>The values returned from pathlib's <code class="docutils literal notranslate"><span class="pre">path.glob()</span></code> and <code class="docutils literal notranslate"><span class="pre">path.rglob()</span></code>
+include the <em>path</em> as a prefix, unlike the results of
+<code class="docutils literal notranslate"><span class="pre">glob.glob(root_dir=path)</span></code>.</p></li>
+<li><p>The values returned from pathlib's <code class="docutils literal notranslate"><span class="pre">path.glob()</span></code> and <code class="docutils literal notranslate"><span class="pre">path.rglob()</span></code>
+may include <em>path</em> itself, for example when globbing &quot;<code class="docutils literal notranslate"><span class="pre">**</span></code>&quot;, whereas the
+results of <code class="docutils literal notranslate"><span class="pre">glob.glob(root_dir=path)</span></code> never include an empty string that
+would correspond to <em>path</em>.</p></li>
+</ol>
+</section>
+<section id="comparison-to-the-os-and-os-path-modules">
+<h2>Comparison to the <a class="reference internal" href="os.html#module-os" title="os: Miscellaneous operating system interfaces."><code class="xref py py-mod docutils literal notranslate"><span class="pre">os</span></code></a> and <a class="reference internal" href="os.path.html#module-os.path" title="os.path: Operations on pathnames."><code class="xref py py-mod docutils literal notranslate"><span class="pre">os.path</span></code></a> modules<a class="headerlink" href="#comparison-to-the-os-and-os-path-modules" title="連結到這個標頭">¶</a></h2>
+<p>pathlib implements path operations using <a class="reference internal" href="#pathlib.PurePath" title="pathlib.PurePath"><code class="xref py py-class docutils literal notranslate"><span class="pre">PurePath</span></code></a> and <a class="reference internal" href="#pathlib.Path" title="pathlib.Path"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a>
+objects, and so it's said to be <em>object-oriented</em>. On the other hand, the
+<a class="reference internal" href="os.html#module-os" title="os: Miscellaneous operating system interfaces."><code class="xref py py-mod docutils literal notranslate"><span class="pre">os</span></code></a> and <a class="reference internal" href="os.path.html#module-os.path" title="os.path: Operations on pathnames."><code class="xref py py-mod docutils literal notranslate"><span class="pre">os.path</span></code></a> modules supply functions that work with low-level
+<code class="docutils literal notranslate"><span class="pre">str</span></code> and <code class="docutils literal notranslate"><span class="pre">bytes</span></code> objects, which is a more <em>procedural</em> approach. Some
+users consider the object-oriented style to be more readable.</p>
+<p>Many functions in <a class="reference internal" href="os.html#module-os" title="os: Miscellaneous operating system interfaces."><code class="xref py py-mod docutils literal notranslate"><span class="pre">os</span></code></a> and <a class="reference internal" href="os.path.html#module-os.path" title="os.path: Operations on pathnames."><code class="xref py py-mod docutils literal notranslate"><span class="pre">os.path</span></code></a> support <code class="docutils literal notranslate"><span class="pre">bytes</span></code> paths and
+<a class="reference internal" href="os.html#dir-fd"><span class="std std-ref">paths relative to directory descriptors</span></a>. These features aren't
+available in pathlib.</p>
+<p>Python's <code class="docutils literal notranslate"><span class="pre">str</span></code> and <code class="docutils literal notranslate"><span class="pre">bytes</span></code> types, and portions of the <a class="reference internal" href="os.html#module-os" title="os: Miscellaneous operating system interfaces."><code class="xref py py-mod docutils literal notranslate"><span class="pre">os</span></code></a> and
+<a class="reference internal" href="os.path.html#module-os.path" title="os.path: Operations on pathnames."><code class="xref py py-mod docutils literal notranslate"><span class="pre">os.path</span></code></a> modules, are written in C and are very speedy. pathlib is
+written in pure Python and is often slower, but rarely slow enough to matter.</p>
+<p>pathlib's path normalization is slightly more opinionated and consistent than
+<a class="reference internal" href="os.path.html#module-os.path" title="os.path: Operations on pathnames."><code class="xref py py-mod docutils literal notranslate"><span class="pre">os.path</span></code></a>. For example, whereas <a class="reference internal" href="os.path.html#os.path.abspath" title="os.path.abspath"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.path.abspath()</span></code></a> eliminates
+&quot;<code class="docutils literal notranslate"><span class="pre">..</span></code>&quot; segments from a path, which may change its meaning if symlinks are
+involved, <a class="reference internal" href="#pathlib.Path.absolute" title="pathlib.Path.absolute"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Path.absolute()</span></code></a> preserves these segments for greater safety.</p>
+<p>pathlib's path normalization may render it unsuitable for some applications:</p>
+<ol class="arabic simple">
+<li><p>pathlib normalizes <code class="docutils literal notranslate"><span class="pre">Path(&quot;my_folder/&quot;)</span></code> to <code class="docutils literal notranslate"><span class="pre">Path(&quot;my_folder&quot;)</span></code>, which
+changes a path's meaning when supplied to various operating system APIs and
+command-line utilities. Specifically, the absence of a trailing separator
+may allow the path to be resolved as either a file or directory, rather
+than a directory only.</p></li>
+<li><p>pathlib normalizes <code class="docutils literal notranslate"><span class="pre">Path(&quot;./my_program&quot;)</span></code> to <code class="docutils literal notranslate"><span class="pre">Path(&quot;my_program&quot;)</span></code>,
+which changes a path's meaning when used as an executable search path, such
+as in a shell or when spawning a child process. Specifically, the absence
+of a separator in the path may force it to be looked up in <span class="target" id="index-3"></span><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PATH</span></code>
+rather than the current directory.</p></li>
+</ol>
+<p>As a consequence of these differences, pathlib is not a drop-in replacement
+for <a class="reference internal" href="os.path.html#module-os.path" title="os.path: Operations on pathnames."><code class="xref py py-mod docutils literal notranslate"><span class="pre">os.path</span></code></a>.</p>
+<section id="corresponding-tools">
+<h3>Corresponding tools<a class="headerlink" href="#corresponding-tools" title="連結到這個標頭">¶</a></h3>
 <p>以下是一張表格，對應許多 <a class="reference internal" href="os.html#module-os" title="os: Miscellaneous operating system interfaces."><code class="xref py py-mod docutils literal notranslate"><span class="pre">os</span></code></a> 函式及其相符於 <a class="reference internal" href="#pathlib.PurePath" title="pathlib.PurePath"><code class="xref py py-class docutils literal notranslate"><span class="pre">PurePath</span></code></a>/<a class="reference internal" href="#pathlib.Path" title="pathlib.Path"><code class="xref py py-class docutils literal notranslate"><span class="pre">Path</span></code></a> 的項目。</p>
 <table class="docutils align-default">
 <thead>
@@ -1671,6 +1943,7 @@ symlinks into <em>filenames</em> when <em>follow_symlinks</em> is false (the def
 </aside>
 </section>
 </section>
+</section>
 
 
             <div class="clearer"></div>
@@ -1684,6 +1957,7 @@ symlinks into <em>filenames</em> when <em>follow_symlinks</em> is false (the def
     <ul>
 <li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pathlib</span></code> --- 物件導向檔案系統路徑</a><ul>
 <li><a class="reference internal" href="#basic-use">基本用法</a></li>
+<li><a class="reference internal" href="#exceptions">Exceptions</a></li>
 <li><a class="reference internal" href="#pure-paths">純路徑</a><ul>
 <li><a class="reference internal" href="#general-properties">通用屬性</a></li>
 <li><a class="reference internal" href="#operators">運算子</a></li>
@@ -1692,6 +1966,7 @@ symlinks into <em>filenames</em> when <em>follow_symlinks</em> is false (the def
 </ul>
 </li>
 <li><a class="reference internal" href="#concrete-paths">實體路徑</a><ul>
+<li><a class="reference internal" href="#parsing-and-generating-uris">Parsing and generating URIs</a></li>
 <li><a class="reference internal" href="#expanding-and-resolving-paths">Expanding and resolving paths</a></li>
 <li><a class="reference internal" href="#querying-file-type-and-status">Querying file type and status</a></li>
 <li><a class="reference internal" href="#reading-and-writing-files">Reading and writing files</a></li>
@@ -1701,7 +1976,12 @@ symlinks into <em>filenames</em> when <em>follow_symlinks</em> is false (the def
 <li><a class="reference internal" href="#permissions-and-ownership">Permissions and ownership</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#correspondence-to-tools-in-the-os-module">與 <code class="xref py py-mod docutils literal notranslate"><span class="pre">os</span></code> 模組裡的工具的對應關係</a></li>
+<li><a class="reference internal" href="#pattern-language">Pattern language</a></li>
+<li><a class="reference internal" href="#comparison-to-the-glob-module">Comparison to the <code class="xref py py-mod docutils literal notranslate"><span class="pre">glob</span></code> module</a></li>
+<li><a class="reference internal" href="#comparison-to-the-os-and-os-path-modules">Comparison to the <code class="xref py py-mod docutils literal notranslate"><span class="pre">os</span></code> and <code class="xref py py-mod docutils literal notranslate"><span class="pre">os.path</span></code> modules</a><ul>
+<li><a class="reference internal" href="#corresponding-tools">Corresponding tools</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -1762,7 +2042,7 @@ symlinks into <em>filenames</em> when <em>follow_symlinks</em> is false (the def
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.12.6 Documentation</a> &#187;
+      <a href="../index.html">3.13.0rc2 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -1814,7 +2094,7 @@ symlinks into <em>filenames</em> when <em>follow_symlinks</em> is false (the def
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Sep 18, 2024 (00:50 UTC)。
+      最後更新於 Sep 23, 2024 (01:21 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     

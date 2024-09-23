@@ -5,13 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>模組物件 &#8212; Python 3.12.6 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模組物件 &#8212; Python 3.13.0rc2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=41b4f12d" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=b20cc3f5" />
     
-    <script src="../_static/documentation_options.js?v=4e73337b"></script>
+    <script src="../_static/documentation_options.js?v=b64cfe1d"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=f1e884e3"></script>
@@ -19,7 +19,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.12.6 說明文件 中搜尋"
+          title="在 Python 3.13.0rc2 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -154,7 +154,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.12.6 Documentation</a> &#187;
+      <a href="../index.html">3.13.0rc2 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python/C API 參考手冊</a> &#187;</li>
@@ -610,6 +610,35 @@ machinery defaults to <code class="docutils literal notranslate"><span class="pr
 </div>
 </dd></dl>
 
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.Py_mod_gil">
+<span class="sig-name descname"><span class="n"><span class="pre">Py_mod_gil</span></span></span><a class="headerlink" href="#c.Py_mod_gil" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Specifies one of the following values:</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.Py_mod_gil.Py_MOD_GIL_USED">
+<span class="sig-name descname"><span class="n"><span class="pre">Py_MOD_GIL_USED</span></span></span><a class="headerlink" href="#c.Py_mod_gil.Py_MOD_GIL_USED" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The module depends on the presence of the global interpreter lock (GIL),
+and may access global state without synchronization.</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.Py_mod_gil.Py_MOD_GIL_NOT_USED">
+<span class="sig-name descname"><span class="n"><span class="pre">Py_MOD_GIL_NOT_USED</span></span></span><a class="headerlink" href="#c.Py_mod_gil.Py_MOD_GIL_NOT_USED" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The module is safe to run without an active GIL.</p>
+</dd></dl>
+
+<p>This slot is ignored by Python builds not configured with
+<a class="reference internal" href="../using/configure.html#cmdoption-disable-gil"><code class="xref std std-option docutils literal notranslate"><span class="pre">--disable-gil</span></code></a>.  Otherwise, it determines whether or not importing
+this module will cause the GIL to be automatically enabled. See
+<a class="reference internal" href="../whatsnew/3.13.html#whatsnew313-free-threaded-cpython"><span class="std std-ref">Free-threaded CPython</span></a> for more detail.</p>
+<p>Multiple <code class="docutils literal notranslate"><span class="pre">Py_mod_gil</span></code> slots may not be specified in one module definition.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">Py_mod_gil</span></code> is not specified, the import machinery defaults to
+<code class="docutils literal notranslate"><span class="pre">Py_MOD_GIL_USED</span></code>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
 <p>See <span class="target" id="index-8"></span><a class="pep reference external" href="https://peps.python.org/pep-0489/"><strong>PEP 489</strong></a> for more details on multi-phase initialization.</p>
 </section>
 <section id="low-level-module-creation-functions">
@@ -727,8 +756,33 @@ raised in this case.</p>
 </div>
 <p>Note that <code class="docutils literal notranslate"><span class="pre">Py_XDECREF()</span></code> should be used instead of <code class="docutils literal notranslate"><span class="pre">Py_DECREF()</span></code> in
 this case, since <em>obj</em> can be <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<p>The number of different <em>name</em> strings passed to this function
+should be kept small, usually by only using statically allocated strings
+as <em>name</em>.
+For names that aren't known at compile time, prefer calling
+<a class="reference internal" href="unicode.html#c.PyUnicode_FromString" title="PyUnicode_FromString"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_FromString()</span></code></a> and <a class="reference internal" href="object.html#c.PyObject_SetAttr" title="PyObject_SetAttr"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_SetAttr()</span></code></a> directly.
+For more details, see <a class="reference internal" href="unicode.html#c.PyUnicode_InternFromString" title="PyUnicode_InternFromString"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_InternFromString()</span></code></a>, which may be
+used internally to create a key object.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.10 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyModule_Add">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyModule_Add</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">module</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">name</span></span>, <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">value</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyModule_Add" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.13 版本開始.</em><p>Similar to <a class="reference internal" href="#c.PyModule_AddObjectRef" title="PyModule_AddObjectRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_AddObjectRef()</span></code></a>, but &quot;steals&quot; a reference
+to <em>value</em>.
+It can be called with a result of function that returns a new reference
+without bothering to check its result or even saving it to a variable.</p>
+<p>用法範例：</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PyModule_Add</span><span class="p">(</span><span class="n">module</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;spam&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">PyBytes_FromString</span><span class="p">(</span><span class="n">value</span><span class="p">))</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">goto</span><span class="w"> </span><span class="n">error</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
 </div>
 </dd></dl>
 
@@ -737,7 +791,8 @@ this case, since <em>obj</em> can be <code class="docutils literal notranslate">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyModule_AddObject</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">module</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">name</span></span>, <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">value</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyModule_AddObject" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Similar to <a class="reference internal" href="#c.PyModule_AddObjectRef" title="PyModule_AddObjectRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_AddObjectRef()</span></code></a>, but steals a reference to
 <em>value</em> on success (if it returns <code class="docutils literal notranslate"><span class="pre">0</span></code>).</p>
-<p>The new <a class="reference internal" href="#c.PyModule_AddObjectRef" title="PyModule_AddObjectRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_AddObjectRef()</span></code></a> function is recommended, since it is
+<p>The new <a class="reference internal" href="#c.PyModule_Add" title="PyModule_Add"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_Add()</span></code></a> or <a class="reference internal" href="#c.PyModule_AddObjectRef" title="PyModule_AddObjectRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_AddObjectRef()</span></code></a>
+functions are recommended, since it is
 easy to introduce reference leaks by misusing the
 <a class="reference internal" href="#c.PyModule_AddObject" title="PyModule_AddObject"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_AddObject()</span></code></a> function.</p>
 <div class="admonition note">
@@ -745,44 +800,24 @@ easy to introduce reference leaks by misusing the
 <p>Unlike other functions that steal references, <code class="docutils literal notranslate"><span class="pre">PyModule_AddObject()</span></code>
 only releases the reference to <em>value</em> <strong>on success</strong>.</p>
 <p>This means that its return value must be checked, and calling code must
-<a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> <em>value</em> manually on error.</p>
+<a class="reference internal" href="refcounting.html#c.Py_XDECREF" title="Py_XDECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_XDECREF()</span></code></a> <em>value</em> manually on error.</p>
 </div>
 <p>用法範例：</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span>
-<span class="nf">add_spam</span><span class="p">(</span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">module</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">obj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyLong_FromLong</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">obj</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PyModule_AddObject</span><span class="p">(</span><span class="n">module</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;spam&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">obj</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">Py_DECREF</span><span class="p">(</span><span class="n">obj</span><span class="p">);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="c1">// PyModule_AddObject() stole a reference to obj:</span>
-<span class="w">    </span><span class="c1">// Py_DECREF(obj) is not needed here</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">obj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyBytes_FromString</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PyModule_AddObject</span><span class="p">(</span><span class="n">module</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;spam&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">obj</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// If &#39;obj&#39; is not NULL and PyModule_AddObject() failed,</span>
+<span class="w">    </span><span class="c1">// &#39;obj&#39; strong reference must be deleted with Py_XDECREF().</span>
+<span class="w">    </span><span class="c1">// If &#39;obj&#39; is NULL, Py_XDECREF() does nothing.</span>
+<span class="w">    </span><span class="n">Py_XDECREF</span><span class="p">(</span><span class="n">obj</span><span class="p">);</span>
+<span class="w">    </span><span class="k">goto</span><span class="w"> </span><span class="n">error</span><span class="p">;</span>
 <span class="p">}</span>
+<span class="c1">// PyModule_AddObject() stole a reference to obj:</span>
+<span class="c1">// Py_XDECREF(obj) is not needed here.</span>
 </pre></div>
 </div>
-<p>The example can also be written without checking explicitly if <em>obj</em> is
-<code class="docutils literal notranslate"><span class="pre">NULL</span></code>:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span>
-<span class="nf">add_spam</span><span class="p">(</span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">module</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">obj</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyLong_FromLong</span><span class="p">(</span><span class="n">value</span><span class="p">);</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PyModule_AddObject</span><span class="p">(</span><span class="n">module</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;spam&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">obj</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">Py_XDECREF</span><span class="p">(</span><span class="n">obj</span><span class="p">);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
-<span class="w">    </span><span class="p">}</span>
-<span class="w">    </span><span class="c1">// PyModule_AddObject() stole a reference to obj:</span>
-<span class="w">    </span><span class="c1">// Py_DECREF(obj) is not needed here</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">在 3.13 版之後被棄用: </span><a class="reference internal" href="#c.PyModule_AddObject" title="PyModule_AddObject"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_AddObject()</span></code></a> is <a class="reference internal" href="../glossary.html#term-soft-deprecated"><span class="xref std std-term">soft deprecated</span></a>.</p>
 </div>
-<p>Note that <code class="docutils literal notranslate"><span class="pre">Py_XDECREF()</span></code> should be used instead of <code class="docutils literal notranslate"><span class="pre">Py_DECREF()</span></code> in
-this case, since <em>obj</em> can be <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
 </dd></dl>
 
 <dl class="c function">
@@ -791,6 +826,8 @@ this case, since <em>obj</em> can be <code class="docutils literal notranslate">
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Add an integer constant to <em>module</em> as <em>name</em>.  This convenience function can be
 used from the module's initialization function.
 Return <code class="docutils literal notranslate"><span class="pre">-1</span></code> with an exception set on error, <code class="docutils literal notranslate"><span class="pre">0</span></code> on success.</p>
+<p>This is a convenience function that calls <a class="reference internal" href="long.html#c.PyLong_FromLong" title="PyLong_FromLong"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyLong_FromLong()</span></code></a> and
+<a class="reference internal" href="#c.PyModule_AddObjectRef" title="PyModule_AddObjectRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_AddObjectRef()</span></code></a>; see their documentation for details.</p>
 </dd></dl>
 
 <dl class="c function">
@@ -800,6 +837,9 @@ Return <code class="docutils literal notranslate"><span class="pre">-1</span></c
 used from the module's initialization function.  The string <em>value</em> must be
 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>-terminated.
 Return <code class="docutils literal notranslate"><span class="pre">-1</span></code> with an exception set on error, <code class="docutils literal notranslate"><span class="pre">0</span></code> on success.</p>
+<p>This is a convenience function that calls
+<a class="reference internal" href="unicode.html#c.PyUnicode_InternFromString" title="PyUnicode_InternFromString"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_InternFromString()</span></code></a> and <a class="reference internal" href="#c.PyModule_AddObjectRef" title="PyModule_AddObjectRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_AddObjectRef()</span></code></a>;
+see their documentation for details.</p>
 </dd></dl>
 
 <dl class="c macro">
@@ -827,6 +867,24 @@ The name of the type object is taken from the last component of
 Return <code class="docutils literal notranslate"><span class="pre">-1</span></code> with an exception set on error, <code class="docutils literal notranslate"><span class="pre">0</span></code> on success.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.9 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyUnstable_Module_SetGIL">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyUnstable_Module_SetGIL</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">module</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">gil</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyUnstable_Module_SetGIL" title="連結到這個定義">¶</a><br /></dt>
+<dd><div class="unstable-c-api warning admonition">
+<em>這是 <a class="reference internal" href="stable.html#unstable-c-api"><span class="std std-ref">不穩定 API</span></a>，它可能在小版本發布中沒有任何警告地被變更。</em></div>
+<p>Indicate that <em>module</em> does or does not support running without the global
+interpreter lock (GIL), using one of the values from
+<a class="reference internal" href="#c.Py_mod_gil" title="Py_mod_gil"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_mod_gil</span></code></a>. It must be called during <em>module</em>'s initialization
+function. If this function is not called during module initialization, the
+import machinery assumes the module does not support running without the
+GIL. This function is only available in Python builds configured with
+<a class="reference internal" href="../using/configure.html#cmdoption-disable-gil"><code class="xref std std-option docutils literal notranslate"><span class="pre">--disable-gil</span></code></a>.
+Return <code class="docutils literal notranslate"><span class="pre">-1</span></code> with an exception set on error, <code class="docutils literal notranslate"><span class="pre">0</span></code> on success.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
 </div>
 </dd></dl>
 
@@ -961,7 +1019,7 @@ Return <code class="docutils literal notranslate"><span class="pre">-1</span></c
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.12.6 Documentation</a> &#187;
+      <a href="../index.html">3.13.0rc2 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python/C API 參考手冊</a> &#187;</li>
@@ -1013,7 +1071,7 @@ Return <code class="docutils literal notranslate"><span class="pre">-1</span></c
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Sep 18, 2024 (00:50 UTC)。
+      最後更新於 Sep 23, 2024 (01:21 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     

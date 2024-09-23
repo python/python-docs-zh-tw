@@ -5,13 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>同步化原始物件 (Synchronization Primitives) &#8212; Python 3.12.6 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>同步化原始物件 (Synchronization Primitives) &#8212; Python 3.13.0rc2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=41b4f12d" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=b20cc3f5" />
     
-    <script src="../_static/documentation_options.js?v=4e73337b"></script>
+    <script src="../_static/documentation_options.js?v=b64cfe1d"></script>
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=f1e884e3"></script>
@@ -19,7 +19,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.12.6 說明文件 中搜尋"
+          title="在 Python 3.13.0rc2 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -152,7 +152,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.12.6 Documentation</a> &#187;
+      <a href="../index.html">3.13.0rc2 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -190,7 +190,7 @@
             
   <section id="synchronization-primitives">
 <span id="asyncio-sync"></span><h1>同步化原始物件 (Synchronization Primitives)<a class="headerlink" href="#synchronization-primitives" title="連結到這個標頭">¶</a></h1>
-<p><strong>原始碼：</strong><a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.12/Lib/asyncio/locks.py">Lib/asyncio/locks.py</a></p>
+<p><strong>原始碼：</strong><a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.13/Lib/asyncio/locks.py">Lib/asyncio/locks.py</a></p>
 <hr class="docutils" />
 <p>asyncio 的同步化原始物件被設計成和那些 <a class="reference internal" href="threading.html#module-threading" title="threading: Thread-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code></a> 模組 (module) 中的同名物件相似，但有兩個重要的限制條件：</p>
 <ul class="simple">
@@ -367,7 +367,8 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="asyncio.Condition.notify">
 <span class="sig-name descname"><span class="pre">notify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Condition.notify" title="連結到這個定義">¶</a></dt>
-<dd><p>喚醒至多 <em>n</em> 個正在等待此條件的任務（預設為 1），如果沒有正在等待的任務則此方法為空操作 (no-op)。</p>
+<dd><p>Wake up <em>n</em> tasks (1 by default) waiting on this
+condition.  If fewer than <em>n</em> tasks are waiting they are all awakened.</p>
 <p>在此方法被呼叫前必須先獲得鎖，並在之後立刻將其釋放。如果呼叫於一個 <em>unlocked</em> 的鎖則 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> 錯誤會被引發。</p>
 </dd></dl>
 
@@ -398,13 +399,20 @@
 <dd><p>持續等待直到被通知 (notify)。</p>
 <p>當此方法被呼叫時，如果呼叫它的任務還沒有獲取鎖的話，<a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> 會被引發。</p>
 <p>此方法會釋放底層的鎖，然後持續阻塞直到被 <a class="reference internal" href="#asyncio.Condition.notify" title="asyncio.Condition.notify"><code class="xref py py-meth docutils literal notranslate"><span class="pre">notify()</span></code></a> 或 <a class="reference internal" href="#asyncio.Condition.notify_all" title="asyncio.Condition.notify_all"><code class="xref py py-meth docutils literal notranslate"><span class="pre">notify_all()</span></code></a> 的呼叫所喚醒。一但被喚醒，Condition 會重新獲取該鎖且此方法會回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+<p>Note that a task <em>may</em> return from this call spuriously,
+which is why the caller should always re-check the state
+and be prepared to <a class="reference internal" href="asyncio-task.html#asyncio.wait" title="asyncio.wait"><code class="xref py py-meth docutils literal notranslate"><span class="pre">wait()</span></code></a> again. For this reason, you may
+prefer to use <a class="reference internal" href="asyncio-task.html#asyncio.wait_for" title="asyncio.wait_for"><code class="xref py py-meth docutils literal notranslate"><span class="pre">wait_for()</span></code></a> instead.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="asyncio.Condition.wait_for">
 <em class="property"><span class="pre">coroutine</span> </em><span class="sig-name descname"><span class="pre">wait_for</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predicate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.Condition.wait_for" title="連結到這個定義">¶</a></dt>
 <dd><p>持續等待直到謂語 (predicate) 成為 <em>true</em>。</p>
-<p>謂語必須是一個結果可被直譯為一個 boolean 值的可呼叫物件 (callable)。最終值為回傳值。</p>
+<p>The predicate must be a callable which result will be
+interpreted as a boolean value.  The method will repeatedly
+<a class="reference internal" href="asyncio-task.html#asyncio.wait" title="asyncio.wait"><code class="xref py py-meth docutils literal notranslate"><span class="pre">wait()</span></code></a> until the predicate evaluates to <em>true</em>. The final value is the
+return value.</p>
 </dd></dl>
 
 </dd></dl>
@@ -675,7 +683,7 @@ waiting tasks.</p>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.12.6 Documentation</a> &#187;
+      <a href="../index.html">3.13.0rc2 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -728,7 +736,7 @@ waiting tasks.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Sep 18, 2024 (00:50 UTC)。
+      最後更新於 Sep 23, 2024 (01:21 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     

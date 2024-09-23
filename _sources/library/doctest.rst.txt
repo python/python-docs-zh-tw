@@ -123,10 +123,10 @@ And so on, eventually ending with:
        OverflowError: n too large
    ok
    2 items passed all tests:
-      1 tests in __main__
-      8 tests in __main__.factorial
-   9 tests in 2 items.
-   9 passed and 0 failed.
+      1 test in __main__
+      6 tests in __main__.factorial
+   7 tests in 2 items.
+   7 passed.
    Test passed.
    $
 
@@ -1021,7 +1021,8 @@ from text files and modules with doctests:
    and runs the interactive examples in each file.  If an example in any file
    fails, then the synthesized unit test fails, and a :exc:`failureException`
    exception is raised showing the name of the file containing the test and a
-   (sometimes approximate) line number.
+   (sometimes approximate) line number.  If all the examples in a file are
+   skipped, then the synthesized unit test is also marked as skipped.
 
    Pass one or more paths (as strings) to text files to be examined.
 
@@ -1087,7 +1088,8 @@ from text files and modules with doctests:
    and runs each doctest in the module.  If any of the doctests fail, then the
    synthesized unit test fails, and a :exc:`failureException` exception is raised
    showing the name of the file containing the test and a (sometimes approximate)
-   line number.
+   line number.  If all the examples in a docstring are skipped, then the
+   synthesized unit test is also marked as skipped.
 
    Optional argument *module* provides the module to be tested.  It can be a module
    object or a (possibly dotted) module name.  If not specified, the module calling
@@ -1437,6 +1439,27 @@ DocTestParser objects
       identifying this string, and is only used for error messages.
 
 
+TestResults objects
+^^^^^^^^^^^^^^^^^^^
+
+
+.. class:: TestResults(failed, attempted)
+
+   .. attribute:: failed
+
+      Number of failed tests.
+
+   .. attribute:: attempted
+
+      Number of attempted tests.
+
+   .. attribute:: skipped
+
+      Number of skipped tests.
+
+      .. versionadded:: 3.13
+
+
 .. _doctest-doctestrunner:
 
 DocTestRunner objects
@@ -1476,6 +1499,10 @@ DocTestRunner objects
    runner compares expected output to actual output, and how it displays failures.
    For more information, see section :ref:`doctest-options`.
 
+   The test runner accumulates statistics. The aggregated number of attempted,
+   failed and skipped examples is also available via the :attr:`tries`,
+   :attr:`failures` and :attr:`skips` attributes. The :meth:`run` and
+   :meth:`summarize` methods return a :class:`TestResults` instance.
 
    :class:`DocTestRunner` defines the following methods:
 
@@ -1528,7 +1555,8 @@ DocTestRunner objects
    .. method:: run(test, compileflags=None, out=None, clear_globs=True)
 
       Run the examples in *test* (a :class:`DocTest` object), and display the
-      results using the writer function *out*.
+      results using the writer function *out*. Return a :class:`TestResults`
+      instance.
 
       The examples are run in the namespace ``test.globs``.  If *clear_globs* is
       true (the default), then this namespace will be cleared after the test runs,
@@ -1547,11 +1575,28 @@ DocTestRunner objects
    .. method:: summarize(verbose=None)
 
       Print a summary of all the test cases that have been run by this DocTestRunner,
-      and return a :term:`named tuple` ``TestResults(failed, attempted)``.
+      and return a :class:`TestResults` instance.
 
       The optional *verbose* argument controls how detailed the summary is.  If the
       verbosity is not specified, then the :class:`DocTestRunner`'s verbosity is
       used.
+
+   :class:`DocTestParser` has the following attributes:
+
+   .. attribute:: tries
+
+      Number of attempted examples.
+
+   .. attribute:: failures
+
+      Number of failed examples.
+
+   .. attribute:: skips
+
+      Number of skipped examples.
+
+      .. versionadded:: 3.13
+
 
 .. _doctest-outputchecker:
 
@@ -1890,7 +1935,7 @@ such a test runner::
                                            optionflags=flags)
         else:
             fail, total = doctest.testmod(optionflags=flags)
-            print("{} failures out of {} tests".format(fail, total))
+            print(f"{fail} failures out of {total} tests")
 
 
 .. rubric:: Footnotes

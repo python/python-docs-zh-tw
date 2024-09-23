@@ -33,6 +33,30 @@ See also :c:func:`PyObject_GetItem`, :c:func:`PyObject_SetItem` and
    rather than a :c:expr:`PyObject*`.
 
 
+.. c:function:: int PyMapping_GetOptionalItem(PyObject *obj, PyObject *key, PyObject **result)
+
+   Variant of :c:func:`PyObject_GetItem` which doesn't raise
+   :exc:`KeyError` if the key is not found.
+
+   If the key is found, return ``1`` and set *\*result* to a new
+   :term:`strong reference` to the corresponding value.
+   If the key is not found, return ``0`` and set *\*result* to ``NULL``;
+   the :exc:`KeyError` is silenced.
+   If an error other than :exc:`KeyError` is raised, return ``-1`` and
+   set *\*result* to ``NULL``.
+
+   .. versionadded:: 3.13
+
+
+.. c:function:: int PyMapping_GetOptionalItemString(PyObject *obj, const char *key, PyObject **result)
+
+   This is the same as :c:func:`PyMapping_GetOptionalItem`, but *key* is
+   specified as a :c:expr:`const char*` UTF-8 encoded bytes string,
+   rather than a :c:expr:`PyObject*`.
+
+   .. versionadded:: 3.13
+
+
 .. c:function:: int PyMapping_SetItemString(PyObject *o, const char *key, PyObject *v)
 
    This is the same as :c:func:`PyObject_SetItem`, but *key* is
@@ -52,6 +76,24 @@ See also :c:func:`PyObject_GetItem`, :c:func:`PyObject_SetItem` and
    rather than a :c:expr:`PyObject*`.
 
 
+.. c:function:: int PyMapping_HasKeyWithError(PyObject *o, PyObject *key)
+
+   Return ``1`` if the mapping object has the key *key* and ``0`` otherwise.
+   This is equivalent to the Python expression ``key in o``.
+   On failure, return ``-1``.
+
+   .. versionadded:: 3.13
+
+
+.. c:function:: int PyMapping_HasKeyStringWithError(PyObject *o, const char *key)
+
+   This is the same as :c:func:`PyMapping_HasKeyWithError`, but *key* is
+   specified as a :c:expr:`const char*` UTF-8 encoded bytes string,
+   rather than a :c:expr:`PyObject*`.
+
+   .. versionadded:: 3.13
+
+
 .. c:function:: int PyMapping_HasKey(PyObject *o, PyObject *key)
 
    Return ``1`` if the mapping object has the key *key* and ``0`` otherwise.
@@ -62,7 +104,8 @@ See also :c:func:`PyObject_GetItem`, :c:func:`PyObject_SetItem` and
 
       Exceptions which occur when this calls :meth:`~object.__getitem__`
       method are silently ignored.
-      For proper error handling, use :c:func:`PyObject_GetItem()` instead.
+      For proper error handling, use :c:func:`PyMapping_HasKeyWithError`,
+      :c:func:`PyMapping_GetOptionalItem` or :c:func:`PyObject_GetItem()` instead.
 
 
 .. c:function:: int PyMapping_HasKeyString(PyObject *o, const char *key)
@@ -76,7 +119,9 @@ See also :c:func:`PyObject_GetItem`, :c:func:`PyObject_SetItem` and
       Exceptions that occur when this calls :meth:`~object.__getitem__`
       method or while creating the temporary :class:`str`
       object are silently ignored.
-      For proper error handling, use :c:func:`PyMapping_GetItemString` instead.
+      For proper error handling, use :c:func:`PyMapping_HasKeyStringWithError`,
+      :c:func:`PyMapping_GetOptionalItemString` or
+      :c:func:`PyMapping_GetItemString` instead.
 
 
 .. c:function:: PyObject* PyMapping_Keys(PyObject *o)

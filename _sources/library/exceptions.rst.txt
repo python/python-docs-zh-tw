@@ -416,6 +416,24 @@ The following exceptions are the exceptions that are usually raised.
    handling in C, most floating-point operations are not checked.
 
 
+.. exception:: PythonFinalizationError
+
+   This exception is derived from :exc:`RuntimeError`.  It is raised when
+   an operation is blocked during interpreter shutdown also known as
+   :term:`Python finalization <interpreter shutdown>`.
+
+   Examples of operations which can be blocked with a
+   :exc:`PythonFinalizationError` during the Python finalization:
+
+   * Creating a new Python thread.
+   * :func:`os.fork`.
+
+   See also the :func:`sys.is_finalizing` function.
+
+   .. versionadded:: 3.13
+      Previously, a plain :exc:`RuntimeError` was raised.
+
+
 .. exception:: RecursionError
 
    This exception is derived from :exc:`RuntimeError`.  It is raised when the
@@ -940,10 +958,11 @@ their subgroups based on the types of the contained exceptions.
       Returns an exception group that contains only the exceptions from the
       current group that match *condition*, or ``None`` if the result is empty.
 
-      The condition can be either a function that accepts an exception and returns
-      true for those that should be in the subgroup, or it can be an exception type
-      or a tuple of exception types, which is used to check for a match using the
-      same check that is used in an ``except`` clause.
+      The condition can be an exception type or tuple of exception types, in which
+      case each exception is checked for a match using the same check that is used
+      in an ``except`` clause.  The condition can also be a callable (other than
+      a type object) that accepts an exception as its single argument and returns
+      true for the exceptions that should be in the subgroup.
 
       The nesting structure of the current exception is preserved in the result,
       as are the values of its :attr:`message`,
@@ -955,6 +974,9 @@ their subgroups based on the types of the contained exceptions.
       The condition is checked for all exceptions in the nested exception group,
       including the top-level and any nested exception groups. If the condition is
       true for such an exception group, it is included in the result in full.
+
+      .. versionadded:: 3.13
+         ``condition`` can be any callable which is not a type object.
 
    .. method:: split(condition)
 

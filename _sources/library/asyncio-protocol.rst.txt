@@ -362,6 +362,11 @@ Datagram Transports
    This method does not block; it buffers the data and arranges
    for it to be sent out asynchronously.
 
+   .. versionchanged:: 3.13
+      This method can be called with an empty bytes object to send a
+      zero-length datagram. The buffer size calculation used for flow
+      control is also updated to account for the datagram header.
+
 .. method:: DatagramTransport.abort()
 
    Close the transport immediately, without waiting for pending
@@ -749,7 +754,7 @@ received data, and close the connection::
         loop = asyncio.get_running_loop()
 
         server = await loop.create_server(
-            lambda: EchoServerProtocol(),
+            EchoServerProtocol,
             '127.0.0.1', 8888)
 
         async with server:
@@ -853,7 +858,7 @@ method, sends back received data::
         # One protocol instance will be created to serve all
         # client requests.
         transport, protocol = await loop.create_datagram_endpoint(
-            lambda: EchoServerProtocol(),
+            EchoServerProtocol,
             local_addr=('127.0.0.1', 9999))
 
         try:

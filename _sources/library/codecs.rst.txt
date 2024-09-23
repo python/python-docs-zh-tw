@@ -1132,7 +1132,8 @@ particular, the following variants typically exist:
 +-----------------+--------------------------------+--------------------------------+
 | cp875           |                                | Greek                          |
 +-----------------+--------------------------------+--------------------------------+
-| cp932           | 932, ms932, mskanji, ms-kanji  | Japanese                       |
+| cp932           | 932, ms932, mskanji, ms-kanji, | Japanese                       |
+|                 | windows-31j                    |                                |
 +-----------------+--------------------------------+--------------------------------+
 | cp949           | 949, ms949, uhc                | Korean                         |
 +-----------------+--------------------------------+--------------------------------+
@@ -1420,10 +1421,8 @@ to :class:`bytes` mappings. They are not supported by :meth:`bytes.decode`
 |                      | quotedprintable, | quoted printable.            | ``quotetabs=True`` /         |
 |                      | quoted_printable |                              | :meth:`quopri.decode`        |
 +----------------------+------------------+------------------------------+------------------------------+
-| uu_codec             | uu               | Convert the operand using    | :meth:`!uu.encode` /         |
-|                      |                  | uuencode.                    | :meth:`!uu.decode`           |
-|                      |                  |                              | (Note: :mod:`uu` is          |
-|                      |                  |                              | deprecated.)                 |
+| uu_codec             | uu               | Convert the operand using    |                              |
+|                      |                  | uuencode.                    |                              |
 +----------------------+------------------+------------------------------+------------------------------+
 | zlib_codec           | zip, zlib        | Compress the operand using   | :meth:`zlib.compress` /      |
 |                      |                  | gzip.                        | :meth:`zlib.decompress`      |

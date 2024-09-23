@@ -69,8 +69,10 @@ the module and a copyright notice if you like).
    headers on some systems, you *must* include :file:`Python.h` before any standard
    headers are included.
 
-   It is recommended to always define ``PY_SSIZE_T_CLEAN`` before including
-   ``Python.h``.  See :ref:`parsetuple` for a description of this macro.
+   ``#define PY_SSIZE_T_CLEAN`` was used to indicate that ``Py_ssize_t`` should be
+   used in some APIs instead of ``int``.
+   It is not necessary since Python 3.13, but we keep it here for backward compatibility.
+   See :ref:`arg-parsing-string-and-buffers` for a description of this macro.
 
 All user-visible symbols defined by :file:`Python.h` have a prefix of ``Py`` or
 ``PY``, except those defined in standard header files. For convenience, and
@@ -219,9 +221,7 @@ with an exception object::
            return NULL;
 
        SpamError = PyErr_NewException("spam.error", NULL, NULL);
-       Py_XINCREF(SpamError);
-       if (PyModule_AddObject(m, "error", SpamError) < 0) {
-           Py_XDECREF(SpamError);
+       if (PyModule_AddObjectRef(m, "error", SpamError) < 0) {
            Py_CLEAR(SpamError);
            Py_DECREF(m);
            return NULL;
@@ -383,14 +383,15 @@ automatically unless there's an entry in the :c:data:`PyImport_Inittab` table.
 To add the module to the initialization table, use :c:func:`PyImport_AppendInittab`,
 optionally followed by an import of the module::
 
+   #define PY_SSIZE_T_CLEAN
+   #include <Python.h>
+
    int
    main(int argc, char *argv[])
    {
-       wchar_t *program = Py_DecodeLocale(argv[0], NULL);
-       if (program == NULL) {
-           fprintf(stderr, "Fatal error: cannot decode argv[0]\n");
-           exit(1);
-       }
+       PyStatus status;
+       PyConfig config;
+       PyConfig_InitPythonConfig(&config);
 
        /* Add a built-in module, before Py_Initialize */
        if (PyImport_AppendInittab("spam", PyInit_spam) == -1) {
@@ -399,11 +400,18 @@ optionally followed by an import of the module::
        }
 
        /* Pass argv[0] to the Python interpreter */
-       Py_SetProgramName(program);
+       status = PyConfig_SetBytesString(&config, &config.program_name, argv[0]);
+       if (PyStatus_Exception(status)) {
+           goto exception;
+       }
 
        /* Initialize the Python interpreter.  Required.
           If this step fails, it will be a fatal error. */
-       Py_Initialize();
+       status = Py_InitializeFromConfig(&config);
+       if (PyStatus_Exception(status)) {
+           goto exception;
+       }
+       PyConfig_Clear(&config);
 
        /* Optionally import the module; alternatively,
           import can be deferred until the embedded script
@@ -414,10 +422,13 @@ optionally followed by an import of the module::
            fprintf(stderr, "Error: could not import module 'spam'\n");
        }
 
-       ...
+       // ... use Python C API here ...
 
-       PyMem_RawFree(program);
        return 0;
+
+     exception:
+        PyConfig_Clear(&config);
+        Py_ExitStatusException(status);
    }
 
 .. note::
@@ -649,7 +660,7 @@ Note that any Python object references which are provided to the caller are
 
 Some example calls::
 
-   #define PY_SSIZE_T_CLEAN  /* Make "s#" use Py_ssize_t rather than int. */
+   #define PY_SSIZE_T_CLEAN
    #include <Python.h>
 
 ::
@@ -724,7 +735,7 @@ Keyword Parameters for Extension Functions
 The :c:func:`PyArg_ParseTupleAndKeywords` function is declared as follows::
 
    int PyArg_ParseTupleAndKeywords(PyObject *arg, PyObject *kwdict,
-                                   const char *format, char *kwlist[], ...);
+                                   const char *format, char * const *kwlist, ...);
 
 The *arg* and *format* parameters are identical to those of the
 :c:func:`PyArg_ParseTuple` function.  The *kwdict* parameter is the dictionary of
@@ -745,7 +756,7 @@ it returns false and raises an appropriate exception.
 Here is an example module which uses keywords, based on an example by Geoff
 Philbrick (philbrick@hks.com)::
 
-   #define PY_SSIZE_T_CLEAN  /* Make "s#" use Py_ssize_t rather than int. */
+   #define PY_SSIZE_T_CLEAN
    #include <Python.h>
 
    static PyObject *
@@ -1268,8 +1279,7 @@ function must take care of initializing the C API pointer array::
        /* Create a Capsule containing the API pointer array's address */
        c_api_object = PyCapsule_New((void *)PySpam_API, "spam._C_API", NULL);
 
-       if (PyModule_AddObject(m, "_C_API", c_api_object) < 0) {
-           Py_XDECREF(c_api_object);
+       if (PyModule_Add(m, "_C_API", c_api_object) < 0) {
            Py_DECREF(m);
            return NULL;
        }

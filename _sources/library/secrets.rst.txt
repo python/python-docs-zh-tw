@@ -52,7 +52,7 @@ randomness that your operating system provides.
 
 .. function:: randbits(k)
 
-   Return a non-negative int with *k* random bits.
+   Return an int with *k* random bits.
 
 
 Generating tokens
