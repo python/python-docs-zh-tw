@@ -91,7 +91,7 @@
 <li><a class="reference internal" href="#">簡介</a><ul>
 <li><a class="reference internal" href="#notes-on-availability">可用性之註釋</a><ul>
 <li><a class="reference internal" href="#webassembly-platforms">WebAssembly 平台</a></li>
-<li><a class="reference internal" href="#ios">iOS</a></li>
+<li><a class="reference internal" href="#mobile-platforms">Mobile platforms</a></li>
 </ul>
 </li>
 </ul>
@@ -199,7 +199,7 @@
 <ul class="simple">
 <li><p>如果出現「適用：Unix」註釋，則代表該函式普遍存在於 Unix 系統中，但這並不保證其存在於某特定作業系統。</p></li>
 <li><p>If not separately noted, all functions that claim &quot;Availability: Unix&quot; are
-supported on macOS and iOS, both of which build on a Unix core.</p></li>
+supported on macOS, iOS and Android, all of which build on a Unix core.</p></li>
 <li><p>If an availability note contains both a minimum Kernel version and a minimum
 libc version, then both conditions must hold. For example a feature with note
 <em>Availability: Linux &gt;= 3.17 with glibc &gt;= 2.27</em> requires both Linux 3.17 or
@@ -245,38 +245,52 @@ links are limited and don't support some operations. For example, WASI does
 not permit symlinks with absolute file names.</p></li>
 </ul>
 </section>
-<section id="ios">
-<span id="ios-availability"></span><h3>iOS<a class="headerlink" href="#ios" title="連結到這個標頭">¶</a></h3>
-<p>iOS is, in most respects, a POSIX operating system. File I/O, socket handling,
+<section id="mobile-platforms">
+<span id="ios-availability"></span><span id="mobile-availability"></span><h3>Mobile platforms<a class="headerlink" href="#mobile-platforms" title="連結到這個標頭">¶</a></h3>
+<p>Android and iOS are, in most respects, POSIX operating systems. File I/O, socket handling,
 and threading all behave as they would on any POSIX operating system. However,
-there are several major differences between iOS and other POSIX systems.</p>
+there are several major differences:</p>
 <ul>
-<li><p>iOS can only use Python in &quot;embedded&quot; mode. There is no Python REPL, and no
-ability to execute binaries that are part of the normal Python developer
-experience, such as <strong class="program">pip</strong>. To add Python code to your iOS app, you must use
-the <a class="reference internal" href="../extending/embedding.html#embedding"><span class="std std-ref">Python embedding API</span></a> to add a Python interpreter to an
-iOS app created with Xcode. See the <a class="reference internal" href="../using/ios.html#using-ios"><span class="std std-ref">iOS usage guide</span></a> for
-more details.</p></li>
-<li><p>An iOS app cannot use any form of subprocessing, background processing, or
+<li><p>Mobile platforms can only use Python in &quot;embedded&quot; mode. There is no Python
+REPL, and no ability to use separate executables such as <strong class="program">python</strong> or
+<strong class="program">pip</strong>. To add Python code to your mobile app, you must use
+the <a class="reference internal" href="../extending/embedding.html#embedding"><span class="std std-ref">Python embedding API</span></a>. For more details, see
+<a class="reference internal" href="../using/android.html#using-android"><span class="std std-ref">Using Python on Android</span></a> and <a class="reference internal" href="../using/ios.html#using-ios"><span class="std std-ref">Using Python on iOS</span></a>.</p></li>
+<li><p>Subprocesses:</p>
+<ul class="simple">
+<li><p>On Android, creating subprocesses is possible but <a class="reference external" href="https://issuetracker.google.com/issues/128554619#comment4">officially unsupported</a>.
+In particular, Android does not support any part of the System V IPC API,
+so <a class="reference internal" href="multiprocessing.html#module-multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">multiprocessing</span></code></a> is not available.</p></li>
+<li><p>An iOS app cannot use any form of subprocessing, multiprocessing, or
 inter-process communication. If an iOS app attempts to create a subprocess,
 the process creating the subprocess will either lock up, or crash. An iOS app
 has no visibility of other applications that are running, nor any ability to
 communicate with other running applications, outside of the iOS-specific APIs
 that exist for this purpose.</p></li>
-<li><p>iOS apps have limited access to modify system resources (such as the system
+</ul>
+</li>
+<li><p>Mobile apps have limited access to modify system resources (such as the system
 clock). These resources will often be <em>readable</em>, but attempts to modify
 those resources will usually fail.</p></li>
-<li><p>iOS apps have a limited concept of console input and output. <code class="docutils literal notranslate"><span class="pre">stdout</span></code> and
+<li><p>Console input and output:</p>
+<ul>
+<li><p>On Android, the native <code class="docutils literal notranslate"><span class="pre">stdout</span></code> and <code class="docutils literal notranslate"><span class="pre">stderr</span></code> are not connected to
+anything, so Python installs its own streams which redirect messages to the
+system log. These can be seen under the tags <code class="docutils literal notranslate"><span class="pre">python.stdout</span></code> and
+<code class="docutils literal notranslate"><span class="pre">python.stderr</span></code> respectively.</p></li>
+<li><p>iOS apps have a limited concept of console output. <code class="docutils literal notranslate"><span class="pre">stdout</span></code> and
 <code class="docutils literal notranslate"><span class="pre">stderr</span></code> <em>exist</em>, and content written to <code class="docutils literal notranslate"><span class="pre">stdout</span></code> and <code class="docutils literal notranslate"><span class="pre">stderr</span></code> will be
 visible in logs when running in Xcode, but this content <em>won't</em> be recorded
 in the system log. If a user who has installed your app provides their app
 logs as a diagnostic aid, they will not include any detail written to
-<code class="docutils literal notranslate"><span class="pre">stdout</span></code> or <code class="docutils literal notranslate"><span class="pre">stderr</span></code>.</p>
-<p>iOS apps have no concept of  <code class="docutils literal notranslate"><span class="pre">stdin</span></code> at all. While iOS apps can have a
+<code class="docutils literal notranslate"><span class="pre">stdout</span></code> or <code class="docutils literal notranslate"><span class="pre">stderr</span></code>.</p></li>
+<li><p>Mobile apps have no usable <code class="docutils literal notranslate"><span class="pre">stdin</span></code> at all. While apps can display an on-screen
 keyboard, this is a software feature, not something that is attached to
 <code class="docutils literal notranslate"><span class="pre">stdin</span></code>.</p>
-<p>As a result, Python library that involve console manipulation (such as
-<a class="reference internal" href="curses.html#module-curses" title="curses: An interface to the curses library, providing portable terminal handling. (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">curses</span></code></a> and <a class="reference internal" href="readline.html#module-readline" title="readline: GNU readline support for Python. (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">readline</span></code></a>) are not available on iOS.</p>
+<p>As a result, Python modules that involve console manipulation (such as
+<a class="reference internal" href="curses.html#module-curses" title="curses: An interface to the curses library, providing portable terminal handling. (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">curses</span></code></a> and <a class="reference internal" href="readline.html#module-readline" title="readline: GNU readline support for Python. (Unix)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">readline</span></code></a>) are not available on mobile platforms.</p>
+</li>
+</ul>
 </li>
 </ul>
 </section>
@@ -296,7 +310,7 @@ keyboard, this is a software feature, not something that is attached to
 <li><a class="reference internal" href="#">簡介</a><ul>
 <li><a class="reference internal" href="#notes-on-availability">可用性之註釋</a><ul>
 <li><a class="reference internal" href="#webassembly-platforms">WebAssembly 平台</a></li>
-<li><a class="reference internal" href="#ios">iOS</a></li>
+<li><a class="reference internal" href="#mobile-platforms">Mobile platforms</a></li>
 </ul>
 </li>
 </ul>
@@ -410,7 +424,7 @@ keyboard, this is a software feature, not something that is attached to
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Sep 23, 2024 (08:30 UTC)。
+      最後更新於 Sep 24, 2024 (07:20 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     

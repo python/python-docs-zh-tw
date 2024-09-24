@@ -271,30 +271,34 @@ new pymalloc object arena is created, and on shutdown.</p>
 strategies and are optimized for different purposes. The specific details on
 how every domain allocates memory or what internal functions each domain calls
 is considered an implementation detail, but for debugging purposes a simplified
-table can be found at <a class="reference internal" href="#default-memory-allocators"><span class="std std-ref">here</span></a>. There is no hard
-requirement to use the memory returned by the allocation functions belonging to
-a given domain for only the purposes hinted by that domain (although this is the
-recommended practice). For example, one could use the memory returned by
-<a class="reference internal" href="#c.PyMem_RawMalloc" title="PyMem_RawMalloc"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMem_RawMalloc()</span></code></a> for allocating Python objects or the memory returned
-by <a class="reference internal" href="#c.PyObject_Malloc" title="PyObject_Malloc"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_Malloc()</span></code></a> for allocating memory for buffers.</p>
+table can be found at <a class="reference internal" href="#default-memory-allocators"><span class="std std-ref">here</span></a>.
+The APIs used to allocate and free a block of memory must be from the same domain.
+For example, <a class="reference internal" href="#c.PyMem_Free" title="PyMem_Free"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMem_Free()</span></code></a> must be used to free memory allocated using <a class="reference internal" href="#c.PyMem_Malloc" title="PyMem_Malloc"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMem_Malloc()</span></code></a>.</p>
 <p>The three allocation domains are:</p>
 <ul class="simple">
 <li><p>Raw domain: intended for allocating memory for general-purpose memory
 buffers where the allocation <em>must</em> go to the system allocator or where the
 allocator can operate without the <a class="reference internal" href="../glossary.html#term-GIL"><span class="xref std std-term">GIL</span></a>. The memory is requested directly
-to the system.</p></li>
+from the system. See <a class="reference internal" href="#raw-memoryinterface"><span class="std std-ref">Raw Memory Interface</span></a>.</p></li>
 <li><p>&quot;Mem&quot; domain: intended for allocating memory for Python buffers and
 general-purpose memory buffers where the allocation must be performed with
-the <a class="reference internal" href="../glossary.html#term-GIL"><span class="xref std std-term">GIL</span></a> held. The memory is taken from the Python private heap.</p></li>
-<li><p>Object domain: intended for allocating memory belonging to Python objects. The
-memory is taken from the Python private heap.</p></li>
+the <a class="reference internal" href="../glossary.html#term-GIL"><span class="xref std std-term">GIL</span></a> held. The memory is taken from the Python private heap.
+See <a class="reference internal" href="#memoryinterface"><span class="std std-ref">Memory Interface</span></a>.</p></li>
+<li><p>Object domain: intended for allocating memory for Python objects. The
+memory is taken from the Python private heap. See <a class="reference internal" href="#objectinterface"><span class="std std-ref">Object allocators</span></a>.</p></li>
 </ul>
-<p>When freeing memory previously allocated by the allocating functions belonging to a
-given domain,the matching specific deallocating functions must be used. For example,
-<a class="reference internal" href="#c.PyMem_Free" title="PyMem_Free"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMem_Free()</span></code></a> must be used to free memory allocated using <a class="reference internal" href="#c.PyMem_Malloc" title="PyMem_Malloc"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMem_Malloc()</span></code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>The <a class="reference internal" href="../glossary.html#term-free-threading"><span class="xref std std-term">free-threaded</span></a> build requires that only Python objects are allocated using the &quot;object&quot; domain
+and that all Python objects are allocated using that domain. This differs from the prior Python versions,
+where this was only a best practice and not a hard requirement.</p>
+<p>For example, buffers (non-Python objects) should be allocated using <a class="reference internal" href="#c.PyMem_Malloc" title="PyMem_Malloc"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMem_Malloc()</span></code></a>,
+<a class="reference internal" href="#c.PyMem_RawMalloc" title="PyMem_RawMalloc"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMem_RawMalloc()</span></code></a>, or <code class="xref c c-func docutils literal notranslate"><span class="pre">malloc()</span></code>, but not <a class="reference internal" href="#c.PyObject_Malloc" title="PyObject_Malloc"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_Malloc()</span></code></a>.</p>
+<p>See <a class="reference internal" href="../howto/free-threading-extensions.html#free-threaded-memory-allocation"><span class="std std-ref">Memory Allocation APIs</span></a>.</p>
+</div>
 </section>
 <section id="raw-memory-interface">
-<h2>Raw Memory Interface<a class="headerlink" href="#raw-memory-interface" title="連結到這個標頭">¶</a></h2>
+<span id="raw-memoryinterface"></span><h2>Raw Memory Interface<a class="headerlink" href="#raw-memory-interface" title="連結到這個標頭">¶</a></h2>
 <p>The following function sets are wrappers to the system allocator. These
 functions are thread-safe, the <a class="reference internal" href="../glossary.html#term-global-interpreter-lock"><span class="xref std std-term">GIL</span></a> does not
 need to be held.</p>
@@ -459,7 +463,7 @@ versions and is therefore deprecated in extension modules.</p>
 </ul>
 </section>
 <section id="object-allocators">
-<h2>Object allocators<a class="headerlink" href="#object-allocators" title="連結到這個標頭">¶</a></h2>
+<span id="objectinterface"></span><h2>Object allocators<a class="headerlink" href="#object-allocators" title="連結到這個標頭">¶</a></h2>
 <p>The following function sets, modeled after the ANSI C standard, but specifying
 behavior when requesting zero bytes, are available for allocating and releasing
 memory from the Python heap.</p>
@@ -1087,7 +1091,7 @@ object types in C.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Sep 23, 2024 (08:30 UTC)。
+      最後更新於 Sep 24, 2024 (07:20 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     

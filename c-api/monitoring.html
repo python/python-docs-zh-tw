@@ -183,7 +183,7 @@
           <div class="body" role="main">
             
   <section id="monitoring-c-api">
-<span id="monitoring"></span><h1>Monitoring C API<a class="headerlink" href="#monitoring-c-api" title="連結到這個標頭">¶</a></h1>
+<span id="c-api-monitoring"></span><h1>Monitoring C API<a class="headerlink" href="#monitoring-c-api" title="連結到這個標頭">¶</a></h1>
 <p>Added in version 3.13.</p>
 <p>An extension may need to interact with the event monitoring system. Subscribing
 to events and registering callbacks can be done via the Python API exposed in
@@ -320,6 +320,183 @@ a new <a class="reference internal" href="../library/exceptions.html#StopIterati
 <h2>Managing the Monitoring State<a class="headerlink" href="#managing-the-monitoring-state" title="連結到這個標頭">¶</a></h2>
 <p>Monitoring states can be managed with the help of monitoring scopes. A scope
 would typically correspond to a python function.</p>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyMonitoring_EnterScope">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyMonitoring_EnterScope</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyMonitoringState" title="PyMonitoringState"><span class="n"><span class="pre">PyMonitoringState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">state_array</span></span>, <span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">version</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">event_types</span></span>, <a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><span class="n"><span class="pre">Py_ssize_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">length</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyMonitoring_EnterScope" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Enter a monitored scope. <code class="docutils literal notranslate"><span class="pre">event_types</span></code> is an array of the event IDs for
+events that may be fired from the scope. For example, the ID of a <code class="docutils literal notranslate"><span class="pre">PY_START</span></code>
+event is the value <code class="docutils literal notranslate"><span class="pre">PY_MONITORING_EVENT_PY_START</span></code>, which is numerically equal
+to the base-2 logarithm of <code class="docutils literal notranslate"><span class="pre">sys.monitoring.events.PY_START</span></code>.
+<code class="docutils literal notranslate"><span class="pre">state_array</span></code> is an array with a monitoring state entry for each event in
+<code class="docutils literal notranslate"><span class="pre">event_types</span></code>, it is allocated by the user but populated by
+<code class="xref c c-func docutils literal notranslate"><span class="pre">PyMonitoring_EnterScope()</span></code> with information about the activation state of
+the event. The size of <code class="docutils literal notranslate"><span class="pre">event_types</span></code> (and hence also of <code class="docutils literal notranslate"><span class="pre">state_array</span></code>)
+is given in <code class="docutils literal notranslate"><span class="pre">length</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">version</span></code> argument is a pointer to a value which should be allocated
+by the user together with <code class="docutils literal notranslate"><span class="pre">state_array</span></code> and initialized to 0,
+and then set only by <code class="xref c c-func docutils literal notranslate"><span class="pre">PyMonitoring_EnterScope()</span></code> itelf. It allows this
+function to determine whether event states have changed since the previous call,
+and to return quickly if they have not.</p>
+<p>The scopes referred to here are lexical scopes: a function, class or method.
+<code class="xref c c-func docutils literal notranslate"><span class="pre">PyMonitoring_EnterScope()</span></code> should be called whenever the lexical scope is
+entered. Scopes can be reentered, reusing the same <em>state_array</em> and <em>version</em>,
+in situations like when emulating a recursive Python function. When a code-like's
+execution is paused, such as when emulating a generator, the scope needs to
+be exited and re-entered.</p>
+<p>The macros for <em>event_types</em> are:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Macro</p></th>
+<th class="head"><p>Event</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_BRANCH">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_BRANCH</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_BRANCH" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-BRANCH"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">BRANCH</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_CALL">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_CALL</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_CALL" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-CALL"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">CALL</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_C_RAISE">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_C_RAISE</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_C_RAISE" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-C_RAISE"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">C_RAISE</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_C_RETURN">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_C_RETURN</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_C_RETURN" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-C_RETURN"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">C_RETURN</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_EXCEPTION_HANDLED">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_EXCEPTION_HANDLED</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_EXCEPTION_HANDLED" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-EXCEPTION_HANDLED"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">EXCEPTION_HANDLED</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_INSTRUCTION">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_INSTRUCTION</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_INSTRUCTION" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-INSTRUCTION"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">INSTRUCTION</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_JUMP">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_JUMP</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_JUMP" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-JUMP"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">JUMP</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_LINE">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_LINE</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_LINE" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-LINE"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">LINE</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_PY_RESUME">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_PY_RESUME</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_PY_RESUME" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-PY_RESUME"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">PY_RESUME</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_PY_RETURN">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_PY_RETURN</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_PY_RETURN" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-PY_RETURN"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">PY_RETURN</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_PY_START">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_PY_START</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_PY_START" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-PY_START"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">PY_START</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_PY_THROW">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_PY_THROW</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_PY_THROW" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-PY_THROW"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">PY_THROW</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_PY_UNWIND">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_PY_UNWIND</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_PY_UNWIND" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-PY_UNWIND"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">PY_UNWIND</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_PY_YIELD">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_PY_YIELD</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_PY_YIELD" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-PY_YIELD"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">PY_YIELD</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_RAISE">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_RAISE</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_RAISE" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-RAISE"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">RAISE</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_RERAISE">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_RERAISE</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_RERAISE" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-RERAISE"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">RERAISE</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_MONITORING_EVENT_STOP_ITERATION">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_MONITORING_EVENT_STOP_ITERATION</span></span></span><a class="headerlink" href="#c.PY_MONITORING_EVENT_STOP_ITERATION" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-STOP_ITERATION"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">STOP_ITERATION</span></code></a></p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyMonitoring_ExitScope">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyMonitoring_ExitScope</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyMonitoring_ExitScope" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Exit the last scope that was entered with <code class="xref c c-func docutils literal notranslate"><span class="pre">PyMonitoring_EnterScope()</span></code>.</p>
+</dd></dl>
+
 </section>
 </section>
 
@@ -447,7 +624,7 @@ would typically correspond to a python function.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Sep 23, 2024 (08:30 UTC)。
+      最後更新於 Sep 24, 2024 (07:20 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
