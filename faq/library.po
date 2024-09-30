@@ -6,9 +6,9 @@
 # Ching-Lung Chuang, 2015
 msgid ""
 msgstr ""
-"Project-Id-Version: Python 3.12\n"
+"Project-Id-Version: Python 3.13\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-03 11:11+0800\n"
+"POT-Creation-Date: 2024-09-23 07:52+0800\n"
 "PO-Revision-Date: 2023-02-18 13:22+0800\n"
 "Last-Translator: Adrian Liaw <adrianliaw2000@gmail.com>\n"
 "Language-Team: Chinese - TAIWAN (https://github.com/python/python-docs-zh-"
@@ -716,7 +716,7 @@ msgstr ""
 msgid "Can't we get rid of the Global Interpreter Lock?"
 msgstr "不能擺脫全局直譯器鎖嗎？"
 
-#: ../../faq/library.rst:410
+#: ../../faq/library.rst:408
 #, fuzzy
 msgid ""
 "The :term:`global interpreter lock` (GIL) is often seen as a hindrance to "
@@ -728,17 +728,32 @@ msgstr ""
 "機器上部署的障礙，因為多執行緒 Python 程式實際上只使用一個 CPU，因為堅持（幾"
 "乎）所有 Python 程式碼只能在持有 GIL 的情況下運行。"
 
-#: ../../faq/library.rst:415
+#: ../../faq/library.rst:413
+msgid ""
+"With the approval of :pep:`703` work is now underway to remove the GIL from "
+"the CPython implementation of Python.  Initially it will be implemented as "
+"an optional compiler flag when building the interpreter, and so separate "
+"builds will be available with and without the GIL.  Long-term, the hope is "
+"to settle on a single build, once the performance implications of removing "
+"the GIL are fully understood.  Python 3.13 is likely to be the first release "
+"containing this work, although it may not be completely functional in this "
+"release."
+msgstr ""
+
+#: ../../faq/library.rst:422
 #, fuzzy
 msgid ""
-"Back in the days of Python 1.5, Greg Stein actually implemented a "
+"The current work to remove the GIL is based on a `fork of Python 3.9 with "
+"the GIL removed <https://github.com/colesbury/nogil>`_ by Sam Gross. Prior "
+"to that, in the days of Python 1.5, Greg Stein actually implemented a "
 "comprehensive patch set (the \"free threading\" patches) that removed the "
-"GIL and replaced it with fine-grained locking.  Adam Olsen recently did a "
-"similar experiment in his `python-safethread <https://code.google.com/"
-"archive/p/python-safethread>`_ project.  Unfortunately, both experiments "
-"exhibited a sharp drop in single-thread performance (at least 30% slower), "
-"due to the amount of fine-grained locking necessary to compensate for the "
-"removal of the GIL."
+"GIL and replaced it with fine-grained locking.  Adam Olsen did a similar "
+"experiment in his `python-safethread <https://code.google.com/archive/p/"
+"python-safethread>`_ project.  Unfortunately, both of these earlier "
+"experiments exhibited a sharp drop in single-thread performance (at least "
+"30% slower), due to the amount of fine-grained locking necessary to "
+"compensate for the removal of the GIL.  The Python 3.9 fork is the first "
+"attempt at removing the GIL with an acceptable performance impact."
 msgstr ""
 "回到 Python 1.5 時代，Greg Stein 實際上實作了一個全面的補丁集（ \"自由執行緒"
 "\" 補丁），刪除了 GIL 並用細粒度鎖定取而代之。 Adam Olsen 最近在他的 `python-"
@@ -746,16 +761,16 @@ msgstr ""
 "一個類似的實驗。不幸的是，這兩個實驗都表現出單執行緒性能的急劇下降（至少慢了 "
 "30%），這是由於需要大量的細粒度鎖定來補償 GIL 的移除。"
 
-#: ../../faq/library.rst:423
+#: ../../faq/library.rst:437
 #, fuzzy
 msgid ""
-"This doesn't mean that you can't make good use of Python on multi-CPU "
-"machines! You just have to be creative with dividing the work up between "
-"multiple *processes* rather than multiple *threads*.  The :class:"
-"`~concurrent.futures.ProcessPoolExecutor` class in the new :mod:`concurrent."
-"futures` module provides an easy way of doing so; the :mod:`multiprocessing` "
-"module provides a lower-level API in case you want more control over "
-"dispatching of tasks."
+"The presence of the GIL in current Python releases doesn't mean that you "
+"can't make good use of Python on multi-CPU machines! You just have to be "
+"creative with dividing the work up between multiple *processes* rather than "
+"multiple *threads*.  The :class:`~concurrent.futures.ProcessPoolExecutor` "
+"class in the new :mod:`concurrent.futures` module provides an easy way of "
+"doing so; the :mod:`multiprocessing` module provides a lower-level API in "
+"case you want more control over dispatching of tasks."
 msgstr ""
 "這並不意味著你不能在多 CPU 機器上用好 Python！你只需要創造性地將工作分配給多"
 "個*行程*而​​不是多個*執行緒*。新的 :mod:`concurrent.futures` 模組中的 :class:"
@@ -763,7 +778,7 @@ msgstr ""
 "`multiprocessing` 模組提供了一個較低階別的 API，以防你希望更好地控制任務的調"
 "度。"
 
-#: ../../faq/library.rst:431
+#: ../../faq/library.rst:446
 #, fuzzy
 msgid ""
 "Judicious use of C extensions will also help; if you use a C extension to "
@@ -776,53 +791,26 @@ msgstr ""
 "在執行執行緒在 C 程式碼中時釋放 GIL，並允許其他執行緒完成一些工作。一些標準函"
 "式庫模組，例如 :mod:`zlib` 和 :mod:`hashlib` 已經這樣做了。"
 
-#: ../../faq/library.rst:437
-#, fuzzy
+#: ../../faq/library.rst:452
 msgid ""
-"It has been suggested that the GIL should be a per-interpreter-state lock "
-"rather than truly global; interpreters then wouldn't be able to share "
-"objects. Unfortunately, this isn't likely to happen either.  It would be a "
-"tremendous amount of work, because many object implementations currently "
-"have global state. For example, small integers and short strings are cached; "
-"these caches would have to be moved to the interpreter state.  Other object "
-"types have their own free list; these free lists would have to be moved to "
-"the interpreter state. And so on."
+"An alternative approach to reducing the impact of the GIL is to make the GIL "
+"a per-interpreter-state lock rather than truly global. This was :ref:`first "
+"implemented in Python 3.12 <whatsnew312-pep684>` and is available in the C "
+"API. A Python interface to it is expected in Python 3.13. The main "
+"limitation to it at the moment is likely to be 3rd party extension modules, "
+"since these must be written with multiple interpreters in mind in order to "
+"be usable, so many older extension modules will not be usable."
 msgstr ""
-"有人建議 GIL 應該是每個直譯器狀態鎖，而不是真正的全局鎖；口譯員將無法共享物"
-"件。不幸的是，這也不太可能發生。這將是一項巨大的工作量，因為目前許多物件實作"
-"都具有全局狀態。例如，快取小整數和短字串；這些快取必須移至直譯器狀態。其他物"
-"件型別有自己的空閒列表；這些空閒列表必須移至直譯器狀態。等等。"
 
-#: ../../faq/library.rst:446
-#, fuzzy
-msgid ""
-"And I doubt that it can even be done in finite time, because the same "
-"problem exists for 3rd party extensions.  It is likely that 3rd party "
-"extensions are being written at a faster rate than you can convert them to "
-"store all their global state in the interpreter state."
-msgstr ""
-"而且我懷疑它甚至可以在有限的時間內完成，因為第 3 方擴充存在同樣的問題。 3rd "
-"方擴充的編寫速度可能比你轉換它們以將其所有全局狀態存儲在直譯器狀態中的速度更"
-"快。"
-
-#: ../../faq/library.rst:451
-#, fuzzy
-msgid ""
-"And finally, once you have multiple interpreters not sharing any state, what "
-"have you gained over running each interpreter in a separate process?"
-msgstr ""
-"最後，如果你有多個不共享任何狀態的直譯器，那麼在單獨的行程中運行每個直譯器有"
-"什麼好處呢？"
-
-#: ../../faq/library.rst:456
+#: ../../faq/library.rst:462
 msgid "Input and Output"
 msgstr "輸入與輸出"
 
-#: ../../faq/library.rst:459
+#: ../../faq/library.rst:465
 msgid "How do I delete a file? (And other file questions...)"
 msgstr "如何刪除檔案？（以及其他檔案問題...）"
 
-#: ../../faq/library.rst:461
+#: ../../faq/library.rst:467
 #, fuzzy
 msgid ""
 "Use ``os.remove(filename)`` or ``os.unlink(filename)``; for documentation, "
@@ -833,7 +821,7 @@ msgstr ""
 "mod:`os` 模組。這兩個功能是相同的； :func:`~os.unlink` 只是這個函式的 Unix 系"
 "統呼叫的名稱。"
 
-#: ../../faq/library.rst:465
+#: ../../faq/library.rst:471
 #, fuzzy
 msgid ""
 "To remove a directory, use :func:`os.rmdir`; use :func:`os.mkdir` to create "
@@ -847,11 +835,11 @@ msgstr ""
 "removedirs(path)`` 將刪除中間目錄，只要它們是空的；如果要刪除整個目錄樹及其內"
 "容，請使用 :func:`shutil.rmtree`。"
 
-#: ../../faq/library.rst:471
+#: ../../faq/library.rst:477
 msgid "To rename a file, use ``os.rename(old_path, new_path)``."
 msgstr "要重新命名檔案，請使用 ``os.rename(old_path, new_path)``。"
 
-#: ../../faq/library.rst:473
+#: ../../faq/library.rst:479
 #, fuzzy
 msgid ""
 "To truncate a file, open it using ``f = open(filename, \"rb+\")``, and use "
@@ -864,7 +852,7 @@ msgstr ""
 "檔案，還有 ``os.ftruncate(fd, offset)``，其中 *fd* 是檔案描述器（一個小整"
 "數）。"
 
-#: ../../faq/library.rst:478
+#: ../../faq/library.rst:484
 #, fuzzy
 msgid ""
 "The :mod:`shutil` module also contains a number of functions to work on "
@@ -874,11 +862,11 @@ msgstr ""
 ":mod:`shutil` 模組還包含許多用於處理檔案的函式，包括:func:`~shutil."
 "copyfile`、:func:`~shutil.copytree` 和:func:`~shutil.rmtree`。"
 
-#: ../../faq/library.rst:484
+#: ../../faq/library.rst:490
 msgid "How do I copy a file?"
 msgstr "如何複製檔案？"
 
-#: ../../faq/library.rst:486
+#: ../../faq/library.rst:492
 #, fuzzy
 msgid ""
 "The :mod:`shutil` module contains a :func:`~shutil.copyfile` function. Note "
@@ -896,11 +884,11 @@ msgstr ""
 "使用。它也不會複製檔案權限和元資料，儘管使用 :func:`shutil.copy2` 會保留其中"
 "的大部分（儘管不是全部）。"
 
-#: ../../faq/library.rst:497
+#: ../../faq/library.rst:503
 msgid "How do I read (or write) binary data?"
 msgstr "如何讀取（或寫入）二進位制資料？"
 
-#: ../../faq/library.rst:499
+#: ../../faq/library.rst:505
 #, fuzzy
 msgid ""
 "To read or write complex binary data formats, it's best to use the :mod:"
@@ -910,7 +898,7 @@ msgstr ""
 "要讀取或寫入複雜的二進制資料格式，最好使用 :mod:`struct` 模組。它允許你獲取包"
 "含二進制資料（通常是數字）的字串並將其轉換為 Python 物件；反之亦然。"
 
-#: ../../faq/library.rst:503
+#: ../../faq/library.rst:509
 #, fuzzy
 msgid ""
 "For example, the following code reads two 2-byte integers and one 4-byte "
@@ -919,7 +907,7 @@ msgstr ""
 "例如，以下程式碼從一個檔案中以大端格式讀取兩個 2 位元組整數和一個 4 位元組整"
 "數： ::"
 
-#: ../../faq/library.rst:506
+#: ../../faq/library.rst:512
 msgid ""
 "import struct\n"
 "\n"
@@ -933,7 +921,7 @@ msgstr ""
 "    s = f.read(8)\n"
 "    x, y, z = struct.unpack(\">hhl\", s)"
 
-#: ../../faq/library.rst:512
+#: ../../faq/library.rst:518
 #, fuzzy
 msgid ""
 "The '>' in the format string forces big-endian data; the letter 'h' reads "
@@ -943,7 +931,7 @@ msgstr ""
 "格式字串中的 \">\" 強制使用大端資料；字母 'h' 讀取一個 \"短整數\" （2 位元"
 "組）， 'l' 從字串中讀取一個 \"長整數\" （4 位元組）。"
 
-#: ../../faq/library.rst:516
+#: ../../faq/library.rst:522
 #, fuzzy
 msgid ""
 "For data that is more regular (e.g. a homogeneous list of ints or floats), "
@@ -952,7 +940,7 @@ msgstr ""
 "對於更規則的資料（例如，整數或浮點數的同類列表），你還可以使用 :mod:`array` "
 "模組。"
 
-#: ../../faq/library.rst:521
+#: ../../faq/library.rst:527
 #, fuzzy
 msgid ""
 "To read and write binary data, it is mandatory to open the file in binary "
@@ -964,12 +952,12 @@ msgstr ""
 "給 :func:`open`）。如果你改用 ``\"r\"``（預設設定），檔案將以文本模式打開，並"
 "且 ``f.read()`` 將回傳 str 物件而不是 bytes ` 物件。"
 
-#: ../../faq/library.rst:529
+#: ../../faq/library.rst:535
 #, fuzzy
 msgid "I can't seem to use os.read() on a pipe created with os.popen(); why?"
 msgstr "我似乎無法在用 os.popen() 建立的管道上使用 os.read()；為什麼？"
 
-#: ../../faq/library.rst:531
+#: ../../faq/library.rst:537
 #, fuzzy
 msgid ""
 ":func:`os.read` is a low-level function which takes a file descriptor, a "
@@ -983,38 +971,38 @@ msgstr ""
 "型別相同。因此，要從使用 :func:`os.popen` 建立的管道 *p* 中讀取 *n* 個位元"
 "組，你需要使用 ``p.read(n)``。"
 
-#: ../../faq/library.rst:617
+#: ../../faq/library.rst:623
 msgid "How do I access the serial (RS232) port?"
 msgstr "如何存取序列 (RS232) 連接埠？"
 
-#: ../../faq/library.rst:619
+#: ../../faq/library.rst:625
 msgid "For Win32, OSX, Linux, BSD, Jython, IronPython:"
 msgstr "對於 Win32、OSX、Linux、BSD、Jython、IronPython："
 
-#: ../../faq/library.rst:621
+#: ../../faq/library.rst:627
 msgid ":pypi:`pyserial`"
 msgstr ":pypi:`pyserial`"
 
-#: ../../faq/library.rst:623
+#: ../../faq/library.rst:629
 msgid "For Unix, see a Usenet post by Mitch Chapman:"
 msgstr "對於 Unix，請參閱 Mitch Chapman 的 Usenet 貼文："
 
-#: ../../faq/library.rst:625
+#: ../../faq/library.rst:631
 msgid "https://groups.google.com/groups?selm=34A04430.CF9@ohioee.com"
 msgstr "https://groups.google.com/groups?selm=34A04430.CF9@ohioee.com"
 
-#: ../../faq/library.rst:629
+#: ../../faq/library.rst:635
 msgid "Why doesn't closing sys.stdout (stdin, stderr) really close it?"
 msgstr "為什麼關閉 sys.stdout (stdin, stderr) 並沒有真正關閉它？"
 
-#: ../../faq/library.rst:631
+#: ../../faq/library.rst:637
 msgid ""
 "Python :term:`file objects <file object>` are a high-level layer of "
 "abstraction on low-level C file descriptors."
 msgstr ""
 "Python :term:`檔案物件 <file object>`\\ 是低階 C 檔案描述器的高階抽象層。"
 
-#: ../../faq/library.rst:634
+#: ../../faq/library.rst:640
 #, fuzzy
 msgid ""
 "For most file objects you create in Python via the built-in :func:`open` "
@@ -1027,7 +1015,7 @@ msgstr ""
 "close()`` 從 Python 的角度將 Python 檔案物件標記為已關閉，並安排關閉底層 C 檔"
 "案描述器。當 ``f`` 變成垃圾時，這也會自動發生在 ``f`` 的析構函式中。"
 
-#: ../../faq/library.rst:640
+#: ../../faq/library.rst:646
 #, fuzzy
 msgid ""
 "But stdin, stdout and stderr are treated specially by Python, because of the "
@@ -1039,7 +1027,7 @@ msgstr ""
 "態。運行 ``sys.stdout.close()`` 將 Python 級檔案物件標記為已關閉，但是 * "
 "not* 關閉關聯的 C 檔案描述器。"
 
-#: ../../faq/library.rst:645
+#: ../../faq/library.rst:651
 #, fuzzy
 msgid ""
 "To close the underlying C file descriptor for one of these three, you should "
@@ -1049,7 +1037,7 @@ msgstr ""
 "要關閉這三個之一的底層 C 檔案描述器，你應該首先確定這是你真正想要做的（例如，"
 "你可能會混淆試圖執行 I/O 的擴充模組）。如果是，使用 :func:`os.close`： ::"
 
-#: ../../faq/library.rst:649
+#: ../../faq/library.rst:655
 msgid ""
 "os.close(stdin.fileno())\n"
 "os.close(stdout.fileno())\n"
@@ -1059,19 +1047,19 @@ msgstr ""
 "os.close(stdout.fileno())\n"
 "os.close(stderr.fileno())"
 
-#: ../../faq/library.rst:653
+#: ../../faq/library.rst:659
 msgid "Or you can use the numeric constants 0, 1 and 2, respectively."
 msgstr "或者你可以分別使用數字常數 0、1 和 2。"
 
-#: ../../faq/library.rst:657
+#: ../../faq/library.rst:663
 msgid "Network/Internet Programming"
 msgstr "網路 (Network)/網際網路 (Internet) 程式"
 
-#: ../../faq/library.rst:660
+#: ../../faq/library.rst:666
 msgid "What WWW tools are there for Python?"
 msgstr "Python 有哪些 WWW 工具？"
 
-#: ../../faq/library.rst:662
+#: ../../faq/library.rst:668
 #, fuzzy
 msgid ""
 "See the chapters titled :ref:`internet` and :ref:`netdata` in the Library "
@@ -1081,7 +1069,7 @@ msgstr ""
 "請參閱函式庫參考手冊中標題為 :ref:`internet` 和 :ref:`netdata` 的章節。 "
 "Python 有許多模組可以幫助你構建伺服器端和用戶端 Web 系統。"
 
-#: ../../faq/library.rst:668
+#: ../../faq/library.rst:674
 #, fuzzy
 msgid ""
 "A summary of available frameworks is maintained by Paul Boddie at https://"
@@ -1090,78 +1078,11 @@ msgstr ""
 "可用框架的摘要由 Paul Boddie 在 https://wiki.python.org/moin/"
 "WebProgramming\\ 維護。"
 
-#: ../../faq/library.rst:671
-#, fuzzy
-msgid ""
-"Cameron Laird maintains a useful set of pages about Python web technologies "
-"at https://web.archive.org/web/20210224183619/http://phaseit.net/claird/comp."
-"lang.python/web_python."
-msgstr ""
-"Cameron Laird 在 https://web.archive.org/web/20210224183619/http://phaseit."
-"net/claird/comp.lang.python/web_python 維護著一組有用的關於 Python 網路技術的"
-"頁面。"
-
-#: ../../faq/library.rst:676
-msgid "How can I mimic CGI form submission (METHOD=POST)?"
-msgstr "如何模擬 CGI 表單送出 (submission) (METHOD=POST)？"
-
-#: ../../faq/library.rst:678
-#, fuzzy
-msgid ""
-"I would like to retrieve web pages that are the result of POSTing a form. Is "
-"there existing code that would let me do this easily?"
-msgstr ""
-"我想檢索作為發布表單結果的網頁。是否有現成的程式碼可以讓我輕鬆地做到這一點？"
-
-#: ../../faq/library.rst:681
-msgid "Yes. Here's a simple example that uses :mod:`urllib.request`::"
-msgstr "是的，這是一個 :mod:`urllib.request` 的簡單範例： ::"
-
-#: ../../faq/library.rst:683
-msgid ""
-"#!/usr/local/bin/python\n"
-"\n"
-"import urllib.request\n"
-"\n"
-"# build the query string\n"
-"qs = \"First=Josephine&MI=Q&Last=Public\"\n"
-"\n"
-"# connect and send the server a path\n"
-"req = urllib.request.urlopen('http://www.some-server.out-there'\n"
-"                             '/cgi-bin/some-cgi-script', data=qs)\n"
-"with req:\n"
-"    msg, hdrs = req.read(), req.info()"
-msgstr ""
-
-#: ../../faq/library.rst:696
-#, fuzzy
-msgid ""
-"Note that in general for percent-encoded POST operations, query strings must "
-"be quoted using :func:`urllib.parse.urlencode`.  For example, to send "
-"``name=Guy Steele, Jr.``::"
-msgstr ""
-"請注意，通常對於百分比編碼的 POST 操作，查詢字串必須使用 :func:`urllib.parse."
-"urlencode` 引用。例如，發送 ``name=Guy Steele, Jr.``： ::"
-
-#: ../../faq/library.rst:700
-msgid ""
-">>> import urllib.parse\n"
-">>> urllib.parse.urlencode({'name': 'Guy Steele, Jr.'})\n"
-"'name=Guy+Steele%2C+Jr.'"
-msgstr ""
-">>> import urllib.parse\n"
-">>> urllib.parse.urlencode({'name': 'Guy Steele, Jr.'})\n"
-"'name=Guy+Steele%2C+Jr.'"
-
-#: ../../faq/library.rst:704
-msgid ":ref:`urllib-howto` for extensive examples."
-msgstr ":ref:`urllib-howto` 內有大量範例。"
-
-#: ../../faq/library.rst:708
+#: ../../faq/library.rst:679
 msgid "What module should I use to help with generating HTML?"
 msgstr "我應該使用什麼模組來輔助產生 HTML？"
 
-#: ../../faq/library.rst:712
+#: ../../faq/library.rst:683
 #, fuzzy
 msgid ""
 "You can find a collection of useful links on the `Web Programming wiki page "
@@ -1170,15 +1091,15 @@ msgstr ""
 "你可以在 \"Web 編寫程式維基頁面 <https://wiki.python.org/moin/"
 "WebProgramming>\" 上找到一組有用的鏈接。"
 
-#: ../../faq/library.rst:717
+#: ../../faq/library.rst:688
 msgid "How do I send mail from a Python script?"
 msgstr "如何從 Python 腳本發送郵件？"
 
-#: ../../faq/library.rst:719
+#: ../../faq/library.rst:690
 msgid "Use the standard library module :mod:`smtplib`."
 msgstr "使用標準函式庫模組 :mod:`smtplib`。"
 
-#: ../../faq/library.rst:721
+#: ../../faq/library.rst:692
 #, fuzzy
 msgid ""
 "Here's a very simple interactive mail sender that uses it.  This method will "
@@ -1187,7 +1108,7 @@ msgstr ""
 "這是一個使用它的非常簡單的交互式郵件發件人。此方法適用於任何支援 SMTP 偵聽器"
 "的主機。： ::"
 
-#: ../../faq/library.rst:724
+#: ../../faq/library.rst:695
 msgid ""
 "import sys, smtplib\n"
 "\n"
@@ -1207,7 +1128,7 @@ msgid ""
 "server.quit()"
 msgstr ""
 
-#: ../../faq/library.rst:741
+#: ../../faq/library.rst:712
 #, fuzzy
 msgid ""
 "A Unix-only alternative uses sendmail.  The location of the sendmail program "
@@ -1219,7 +1140,7 @@ msgstr ""
 "時是 \"/usr/lib/sendmail\" ，有時是 \"/usr/sbin/sendmail\" 。 sendmail 手冊頁"
 "將幫助你。這是一些示例程式碼： ::"
 
-#: ../../faq/library.rst:746
+#: ../../faq/library.rst:717
 msgid ""
 "import os\n"
 "\n"
@@ -1235,18 +1156,18 @@ msgid ""
 "    print(\"Sendmail exit status\", sts)"
 msgstr ""
 
-#: ../../faq/library.rst:761
+#: ../../faq/library.rst:732
 #, fuzzy
 msgid "How do I avoid blocking in the connect() method of a socket?"
 msgstr "如何避免阻塞 socket 的 connect() 方法？"
 
-#: ../../faq/library.rst:763
+#: ../../faq/library.rst:734
 msgid ""
 "The :mod:`select` module is commonly used to help with asynchronous I/O on "
 "sockets."
 msgstr ":mod:`select` 模組通常用於幫助處理 socket 上的非同步 I/O。"
 
-#: ../../faq/library.rst:766
+#: ../../faq/library.rst:737
 #, fuzzy
 msgid ""
 "To prevent the TCP connect from blocking, you can set the socket to non-"
@@ -1262,7 +1183,7 @@ msgstr ""
 "誤號 ``.errno``。 ``errno.EINPROGRESS`` 表示連接正在進行中，但尚未完成。不同"
 "的作業系統將回傳不同的值，因此你將不得不檢查系統回傳的內容。"
 
-#: ../../faq/library.rst:774
+#: ../../faq/library.rst:745
 #, fuzzy
 msgid ""
 "You can use the :meth:`~socket.socket.connect_ex` method to avoid creating "
@@ -1276,7 +1197,7 @@ msgstr ""
 "EISCONN`` 表示你已連接 - 或者你可以將此 socket 傳遞給 :meth:`select.select` "
 "檢查它是否可寫。"
 
-#: ../../faq/library.rst:782
+#: ../../faq/library.rst:753
 msgid ""
 "The :mod:`asyncio` module provides a general purpose single-threaded and "
 "concurrent asynchronous library, which can be used for writing non-blocking "
@@ -1287,19 +1208,19 @@ msgstr ""
 "網路程式碼。第三方 `Twisted <https://twisted.org/>`_ 函式庫是一種流行且功能豐"
 "富的替代方案。"
 
-#: ../../faq/library.rst:790
+#: ../../faq/library.rst:761
 msgid "Databases"
 msgstr "資料庫"
 
-#: ../../faq/library.rst:793
+#: ../../faq/library.rst:764
 msgid "Are there any interfaces to database packages in Python?"
 msgstr "Python 中是否有任何資料庫套件的介面？"
 
-#: ../../faq/library.rst:795
+#: ../../faq/library.rst:766
 msgid "Yes."
 msgstr "有的。"
 
-#: ../../faq/library.rst:797
+#: ../../faq/library.rst:768
 #, fuzzy
 msgid ""
 "Interfaces to disk-based hashes such as :mod:`DBM <dbm.ndbm>` and :mod:`GDBM "
@@ -1311,7 +1232,7 @@ msgstr ""
 "含在標準 Python 中。還有 :mod:`sqlite3` 模組，它提供了一個輕量級的基於磁盤的"
 "關係資料庫。"
 
-#: ../../faq/library.rst:802
+#: ../../faq/library.rst:773
 #, fuzzy
 msgid ""
 "Support for most relational databases is available.  See the "
@@ -1321,12 +1242,12 @@ msgstr ""
 "支援大多數關係資料庫。有關詳細資訊，請參閱`DatabaseProgramming 維基頁面 "
 "<https://wiki.python.org/moin/DatabaseProgramming>`_。"
 
-#: ../../faq/library.rst:808
+#: ../../faq/library.rst:779
 #, fuzzy
 msgid "How do you implement persistent objects in Python?"
 msgstr "你如何在 Python 中實作持久物件？"
 
-#: ../../faq/library.rst:810
+#: ../../faq/library.rst:781
 #, fuzzy
 msgid ""
 "The :mod:`pickle` library module solves this in a very general way (though "
@@ -1338,21 +1259,21 @@ msgstr ""
 "如打開的檔案、socket 或窗口之類的東西），而 :mod:`shelve` 庫模組使用 pickle "
 "和 (g) dbm 建立包含任意 Python 物件的持久映射。"
 
-#: ../../faq/library.rst:817
+#: ../../faq/library.rst:788
 msgid "Mathematics and Numerics"
 msgstr "數學和數值"
 
-#: ../../faq/library.rst:820
+#: ../../faq/library.rst:791
 msgid "How do I generate random numbers in Python?"
 msgstr "如何在 Python 中生成隨機數？"
 
-#: ../../faq/library.rst:822
+#: ../../faq/library.rst:793
 msgid ""
 "The standard module :mod:`random` implements a random number generator.  "
 "Usage is simple::"
 msgstr "標準模組 :mod:`random` 實作了一個隨機數生成器。用法很簡單： ::"
 
-#: ../../faq/library.rst:825
+#: ../../faq/library.rst:796
 msgid ""
 "import random\n"
 "random.random()"
@@ -1360,43 +1281,123 @@ msgstr ""
 "import random\n"
 "random.random()"
 
-#: ../../faq/library.rst:828
+#: ../../faq/library.rst:799
 msgid "This returns a random floating-point number in the range [0, 1)."
 msgstr "這將回傳 [0, 1) 範圍內的隨機浮點數。"
 
-#: ../../faq/library.rst:830
+#: ../../faq/library.rst:801
 msgid ""
 "There are also many other specialized generators in this module, such as:"
 msgstr "該模組中還有許多其他專用生成器，例如："
 
-#: ../../faq/library.rst:832
+#: ../../faq/library.rst:803
 msgid "``randrange(a, b)`` chooses an integer in the range [a, b)."
 msgstr "``randrange(a, b)`` 會選擇 [a, b) 範圍內的一個整數。"
 
-#: ../../faq/library.rst:833
+#: ../../faq/library.rst:804
 msgid "``uniform(a, b)`` chooses a floating-point number in the range [a, b)."
 msgstr "``uniform(a, b)`` 會選擇 [a, b) 範圍內的浮點數。"
 
-#: ../../faq/library.rst:834
+#: ../../faq/library.rst:805
 msgid ""
 "``normalvariate(mean, sdev)`` samples the normal (Gaussian) distribution."
 msgstr "``normalvariate(mean, sdev)`` 對常態（高斯）分佈進行採樣 (sample)。"
 
-#: ../../faq/library.rst:836
+#: ../../faq/library.rst:807
 msgid "Some higher-level functions operate on sequences directly, such as:"
 msgstr "一些更高階的函式會直接對序列進行操作，例如："
 
-#: ../../faq/library.rst:838
+#: ../../faq/library.rst:809
 msgid "``choice(S)`` chooses a random element from a given sequence."
 msgstr "``choice(S)`` 會從給定序列中選擇一個隨機元素。"
 
-#: ../../faq/library.rst:839
+#: ../../faq/library.rst:810
 msgid "``shuffle(L)`` shuffles a list in-place, i.e. permutes it randomly."
 msgstr "``shuffle(L)`` 會原地 (in-place) 打亂 list，即隨機排列它。"
 
-#: ../../faq/library.rst:841
+#: ../../faq/library.rst:812
 msgid ""
 "There's also a ``Random`` class you can instantiate to create independent "
 "multiple random number generators."
 msgstr ""
 "還有一個 ``Random`` 類別，你可以將它實例化以建立多個獨立的隨機數生成器。"
+
+#, fuzzy
+#~ msgid ""
+#~ "It has been suggested that the GIL should be a per-interpreter-state lock "
+#~ "rather than truly global; interpreters then wouldn't be able to share "
+#~ "objects. Unfortunately, this isn't likely to happen either.  It would be "
+#~ "a tremendous amount of work, because many object implementations "
+#~ "currently have global state. For example, small integers and short "
+#~ "strings are cached; these caches would have to be moved to the "
+#~ "interpreter state.  Other object types have their own free list; these "
+#~ "free lists would have to be moved to the interpreter state. And so on."
+#~ msgstr ""
+#~ "有人建議 GIL 應該是每個直譯器狀態鎖，而不是真正的全局鎖；口譯員將無法共享"
+#~ "物件。不幸的是，這也不太可能發生。這將是一項巨大的工作量，因為目前許多物件"
+#~ "實作都具有全局狀態。例如，快取小整數和短字串；這些快取必須移至直譯器狀態。"
+#~ "其他物件型別有自己的空閒列表；這些空閒列表必須移至直譯器狀態。等等。"
+
+#, fuzzy
+#~ msgid ""
+#~ "And I doubt that it can even be done in finite time, because the same "
+#~ "problem exists for 3rd party extensions.  It is likely that 3rd party "
+#~ "extensions are being written at a faster rate than you can convert them "
+#~ "to store all their global state in the interpreter state."
+#~ msgstr ""
+#~ "而且我懷疑它甚至可以在有限的時間內完成，因為第 3 方擴充存在同樣的問題。 "
+#~ "3rd 方擴充的編寫速度可能比你轉換它們以將其所有全局狀態存儲在直譯器狀態中的"
+#~ "速度更快。"
+
+#, fuzzy
+#~ msgid ""
+#~ "And finally, once you have multiple interpreters not sharing any state, "
+#~ "what have you gained over running each interpreter in a separate process?"
+#~ msgstr ""
+#~ "最後，如果你有多個不共享任何狀態的直譯器，那麼在單獨的行程中運行每個直譯器"
+#~ "有什麼好處呢？"
+
+#, fuzzy
+#~ msgid ""
+#~ "Cameron Laird maintains a useful set of pages about Python web "
+#~ "technologies at https://web.archive.org/web/20210224183619/http://phaseit."
+#~ "net/claird/comp.lang.python/web_python."
+#~ msgstr ""
+#~ "Cameron Laird 在 https://web.archive.org/web/20210224183619/http://"
+#~ "phaseit.net/claird/comp.lang.python/web_python 維護著一組有用的關於 "
+#~ "Python 網路技術的頁面。"
+
+#~ msgid "How can I mimic CGI form submission (METHOD=POST)?"
+#~ msgstr "如何模擬 CGI 表單送出 (submission) (METHOD=POST)？"
+
+#, fuzzy
+#~ msgid ""
+#~ "I would like to retrieve web pages that are the result of POSTing a form. "
+#~ "Is there existing code that would let me do this easily?"
+#~ msgstr ""
+#~ "我想檢索作為發布表單結果的網頁。是否有現成的程式碼可以讓我輕鬆地做到這一"
+#~ "點？"
+
+#~ msgid "Yes. Here's a simple example that uses :mod:`urllib.request`::"
+#~ msgstr "是的，這是一個 :mod:`urllib.request` 的簡單範例： ::"
+
+#, fuzzy
+#~ msgid ""
+#~ "Note that in general for percent-encoded POST operations, query strings "
+#~ "must be quoted using :func:`urllib.parse.urlencode`.  For example, to "
+#~ "send ``name=Guy Steele, Jr.``::"
+#~ msgstr ""
+#~ "請注意，通常對於百分比編碼的 POST 操作，查詢字串必須使用 :func:`urllib."
+#~ "parse.urlencode` 引用。例如，發送 ``name=Guy Steele, Jr.``： ::"
+
+#~ msgid ""
+#~ ">>> import urllib.parse\n"
+#~ ">>> urllib.parse.urlencode({'name': 'Guy Steele, Jr.'})\n"
+#~ "'name=Guy+Steele%2C+Jr.'"
+#~ msgstr ""
+#~ ">>> import urllib.parse\n"
+#~ ">>> urllib.parse.urlencode({'name': 'Guy Steele, Jr.'})\n"
+#~ "'name=Guy+Steele%2C+Jr.'"
+
+#~ msgid ":ref:`urllib-howto` for extensive examples."
+#~ msgstr ":ref:`urllib-howto` 內有大量範例。"
