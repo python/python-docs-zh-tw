@@ -509,6 +509,26 @@ a default when the iterable is empty.  If <em>initial</em> is not given and
 <span class="gp">...</span>
 </pre></div>
 </div>
+<p>For code that dispatches on a collections type (e.g., <code class="docutils literal notranslate"><span class="pre">list</span></code>), but wants
+to typehint the items of the collection (e.g., <code class="docutils literal notranslate"><span class="pre">list[int]</span></code>), the
+dispatch type should be passed explicitly to the decorator itself with the
+typehint going into the function definition:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nd">@fun</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">_</span><span class="p">(</span><span class="n">arg</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Enumerate this:&quot;</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">elem</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">elem</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>At runtime the function will dispatch on an instance of a list regardless
+of the type contained within the list i.e. <code class="docutils literal notranslate"><span class="pre">[1,2,3]</span></code> will be
+dispatched the same as <code class="docutils literal notranslate"><span class="pre">[&quot;foo&quot;,</span> <span class="pre">&quot;bar&quot;,</span> <span class="pre">&quot;baz&quot;]</span></code>. The annotation
+provided in this example is for static type checkers only and has no
+runtime impact.</p>
+</div>
 <p>若要啟用註冊 <a class="reference internal" href="../glossary.html#term-lambda"><span class="xref std std-term">lambdas</span></a> 和預先存在的函式，<code class="xref py py-func docutils literal notranslate"><span class="pre">register()</span></code> 屬性也能以函式形式使用：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">nothing</span><span class="p">(</span><span class="n">arg</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Nothing.&quot;</span><span class="p">)</span>
@@ -636,18 +656,30 @@ a default when the iterable is empty.  If <em>initial</em> is not given and
 <dl class="py function">
 <dt class="sig sig-object py" id="functools.update_wrapper">
 <span class="sig-prename descclassname"><span class="pre">functools.</span></span><span class="sig-name descname"><span class="pre">update_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wrapper</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wrapped</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assigned</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">WRAPPER_ASSIGNMENTS</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">updated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">WRAPPER_UPDATES</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functools.update_wrapper" title="連結到這個定義">¶</a></dt>
-<dd><p>更新 <em>wrapper</em> 函式，使其看起來像 <em>wrapped</em> 函式。可選引數是元組，用於指定原始函式的哪些屬性直接賦值給包裝函式上的匹配屬性，以及包裝函式的哪些屬性使用原始函式中的對應屬性進行更新。這些引數的預設值是模組層級的常數 <code class="docutils literal notranslate"><span class="pre">WRAPPER_ASSIGNMENTS</span></code>（它賦值給包裝函式的 <code class="docutils literal notranslate"><span class="pre">__module__</span></code>、<code class="docutils literal notranslate"><span class="pre">__name__</span></code>、<code class="docutils literal notranslate"><span class="pre">__qualname__</span></code>、<code class="docutils literal notranslate"><span class="pre">__annotations__</span></code> 和 <code class="docutils literal notranslate"><span class="pre">__doc__</span></code> 文件字串 (docstring）和 <code class="docutils literal notranslate"><span class="pre">WRAPPER_UPDATES</span></code>（更新包裝器函式的 <code class="docutils literal notranslate"><span class="pre">__dict__</span></code>，即實例字典）。</p>
+<dd><p>Update a <em>wrapper</em> function to look like the <em>wrapped</em> function. The optional
+arguments are tuples to specify which attributes of the original function are
+assigned directly to the matching attributes on the wrapper function and which
+attributes of the wrapper function are updated with the corresponding attributes
+from the original function. The default values for these arguments are the
+module level constants <code class="docutils literal notranslate"><span class="pre">WRAPPER_ASSIGNMENTS</span></code> (which assigns to the wrapper
+function's <a class="reference internal" href="../reference/datamodel.html#function.__module__" title="function.__module__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__module__</span></code></a>, <a class="reference internal" href="../reference/datamodel.html#function.__name__" title="function.__name__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__name__</span></code></a>,
+<a class="reference internal" href="../reference/datamodel.html#function.__qualname__" title="function.__qualname__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__qualname__</span></code></a>, <a class="reference internal" href="../reference/datamodel.html#function.__annotations__" title="function.__annotations__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__annotations__</span></code></a>,
+<a class="reference internal" href="../reference/datamodel.html#function.__type_params__" title="function.__type_params__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__type_params__</span></code></a>, and <a class="reference internal" href="../reference/datamodel.html#function.__doc__" title="function.__doc__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__doc__</span></code></a>, the
+documentation string) and <code class="docutils literal notranslate"><span class="pre">WRAPPER_UPDATES</span></code> (which updates the wrapper
+function's <a class="reference internal" href="../reference/datamodel.html#function.__dict__" title="function.__dict__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__dict__</span></code></a>, i.e. the instance dictionary).</p>
 <p>為了允許出於內省 (introspection) 和其他目的所對原始函式的存取（例如繞過快取裝飾器，如 <a class="reference internal" href="#functools.lru_cache" title="functools.lru_cache"><code class="xref py py-func docutils literal notranslate"><span class="pre">lru_cache()</span></code></a>），此函式會自動向包裝器新增 <code class="docutils literal notranslate"><span class="pre">__wrapped__</span></code> 屬性，該包裝器參照被包裝的函式。</p>
 <p>此函式的主要用途是在 <a class="reference internal" href="../glossary.html#term-decorator"><span class="xref std std-term">decorator</span></a> 函式中，它包裝函式並回傳包裝器。如果包裝器函式未更新，則回傳函式的元資料 (metadata) 將反映包裝器定義而非原始函式定義，這通常不太會有幫助。</p>
 <p><a class="reference internal" href="#functools.update_wrapper" title="functools.update_wrapper"><code class="xref py py-func docutils literal notranslate"><span class="pre">update_wrapper()</span></code></a> 可以與函式以外的可呼叫物件一起使用。被包裝的物件中缺少的 <em>assigned</em> 或 <em>updated</em> 中指定的任何屬性都將被忽略（即此函式不會嘗試在包裝器函式上設定它們）。如果包裝函式本身缺少 <em>updated</em> 中指定的任何屬性，仍然會引發 <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a>。</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.2 版的變更: </span>現在會自動新增 <code class="docutils literal notranslate"><span class="pre">__wrapped__</span></code> 屬性。現在預設會複製 <code class="docutils literal notranslate"><span class="pre">__annotations__</span></code> 屬性。缺少的屬性不再觸發 <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a>。</p>
+<p><span class="versionmodified changed">在 3.2 版的變更: </span>The <code class="docutils literal notranslate"><span class="pre">__wrapped__</span></code> attribute is now automatically added.
+The <a class="reference internal" href="../reference/datamodel.html#function.__annotations__" title="function.__annotations__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__annotations__</span></code></a> attribute is now copied by default.
+Missing attributes no longer trigger an <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a>.</p>
 </div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.4 版的變更: </span><code class="docutils literal notranslate"><span class="pre">__wrapped__</span></code> 屬性現在都會參照包裝函式，即便函式有定義 <code class="docutils literal notranslate"><span class="pre">__wrapped__</span></code> 屬性。（參見 <a class="reference external" href="https://bugs.python.org/issue?&#64;action=redirect&amp;bpo=17482">bpo-17482</a>）</p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.12 版的變更: </span>現在預設會複製 <code class="docutils literal notranslate"><span class="pre">__type_params__</span></code> 屬性。</p>
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>The <a class="reference internal" href="../reference/datamodel.html#function.__type_params__" title="function.__type_params__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__type_params__</span></code></a> attribute is now copied by default.</p>
 </div>
 </dd></dl>
 
@@ -701,7 +733,13 @@ a default when the iterable is empty.  If <em>initial</em> is not given and
 <dd><p>呼叫 <a class="reference internal" href="#functools.partial" title="functools.partial"><code class="xref py py-class docutils literal notranslate"><span class="pre">partial</span></code></a> 物件時將提供的關鍵字引數。</p>
 </dd></dl>
 
-<p><a class="reference internal" href="#functools.partial" title="functools.partial"><code class="xref py py-class docutils literal notranslate"><span class="pre">partial</span></code></a> 物件與 <code class="xref py py-class docutils literal notranslate"><span class="pre">function</span></code> 物件類似，因為它們是可呼叫的、可弱參照的 (weak referencable) 且可以具有屬性。有一些重要的區別，例如，<a class="reference internal" href="stdtypes.html#definition.__name__" title="definition.__name__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__name__</span></code></a> 和 <code class="xref py py-attr docutils literal notranslate"><span class="pre">__doc__</span></code> 屬性不會自動建立。此外，類別中定義的 <a class="reference internal" href="#functools.partial" title="functools.partial"><code class="xref py py-class docutils literal notranslate"><span class="pre">partial</span></code></a> 物件的行為類似於靜態方法，並且在實例屬性查找期間不會轉換為繫結方法。</p>
+<p><a class="reference internal" href="#functools.partial" title="functools.partial"><code class="xref py py-class docutils literal notranslate"><span class="pre">partial</span></code></a> objects are like <a class="reference internal" href="../reference/datamodel.html#user-defined-funcs"><span class="std std-ref">function objects</span></a>
+in that they are callable, weak referenceable, and can have attributes.
+There are some important differences.  For instance, the
+<a class="reference internal" href="../reference/datamodel.html#function.__name__" title="function.__name__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__name__</span></code></a> and <a class="reference internal" href="../reference/datamodel.html#function.__doc__" title="function.__doc__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">function.__doc__</span></code></a> attributes
+are not created automatically.  Also, <a class="reference internal" href="#functools.partial" title="functools.partial"><code class="xref py py-class docutils literal notranslate"><span class="pre">partial</span></code></a> objects defined in
+classes behave like static methods and do not transform into bound methods
+during instance attribute look-up.</p>
 </section>
 </section>
 
@@ -829,7 +867,7 @@ a default when the iterable is empty.  If <em>initial</em> is not given and
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Sep 24, 2024 (11:36 UTC)。
+      最後更新於 Sep 30, 2024 (09:19 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     

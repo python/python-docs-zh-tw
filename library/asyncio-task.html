@@ -93,7 +93,10 @@
 <li><a class="reference internal" href="#awaitables">Awaitables</a></li>
 <li><a class="reference internal" href="#creating-tasks">Creating Tasks</a></li>
 <li><a class="reference internal" href="#task-cancellation">Task Cancellation</a></li>
-<li><a class="reference internal" href="#task-groups">Task Groups</a></li>
+<li><a class="reference internal" href="#task-groups">Task Groups</a><ul>
+<li><a class="reference internal" href="#terminating-a-task-group">Terminating a Task Group</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#sleeping">Sleeping</a></li>
 <li><a class="reference internal" href="#running-tasks-concurrently">Running Tasks Concurrently</a></li>
 <li><a class="reference internal" href="#eager-task-factory">Eager Task Factory</a></li>
@@ -586,6 +589,49 @@ reported by <a class="reference internal" href="#asyncio.Task.cancelling" title=
 <p><span class="versionmodified changed">在 3.13 版的變更: </span>Improved handling of simultaneous internal and external cancellations
 and correct preservation of cancellation counts.</p>
 </div>
+<section id="terminating-a-task-group">
+<h3>Terminating a Task Group<a class="headerlink" href="#terminating-a-task-group" title="連結到這個標頭">¶</a></h3>
+<p>While terminating a task group is not natively supported by the standard
+library, termination can be achieved by adding an exception-raising task
+to the task group and ignoring the raised exception:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">from</span> <span class="nn">asyncio</span> <span class="kn">import</span> <span class="n">TaskGroup</span>
+
+<span class="k">class</span> <span class="nc">TerminateTaskGroup</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Exception raised to terminate a task group.&quot;&quot;&quot;</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">force_terminate_task_group</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Used to force termination of a task group.&quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="n">TerminateTaskGroup</span><span class="p">()</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">job</span><span class="p">(</span><span class="n">task_id</span><span class="p">,</span> <span class="n">sleep_time</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Task </span><span class="si">{</span><span class="n">task_id</span><span class="si">}</span><span class="s1">: start&#39;</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">sleep_time</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Task </span><span class="si">{</span><span class="n">task_id</span><span class="si">}</span><span class="s1">: done&#39;</span><span class="p">)</span>
+
+<span class="k">async</span> <span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">async</span> <span class="k">with</span> <span class="n">TaskGroup</span><span class="p">()</span> <span class="k">as</span> <span class="n">group</span><span class="p">:</span>
+            <span class="c1"># spawn some tasks</span>
+            <span class="n">group</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">job</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">))</span>
+            <span class="n">group</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">job</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">))</span>
+            <span class="c1"># sleep for 1 second</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># add an exception-raising task to force the group to terminate</span>
+            <span class="n">group</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">force_terminate_task_group</span><span class="p">())</span>
+    <span class="k">except</span><span class="o">*</span> <span class="n">TerminateTaskGroup</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>Expected output:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Task 1: start
+Task 2: start
+Task 1: done
+</pre></div>
+</div>
+</section>
 </section>
 <section id="sleeping">
 <h2><a class="toc-backref" href="#id8" role="doc-backlink">Sleeping</a><a class="headerlink" href="#sleeping" title="連結到這個標頭">¶</a></h2>
@@ -1606,7 +1652,10 @@ used by end-user code.  See <a class="reference internal" href="#asyncio.Task.un
 <li><a class="reference internal" href="#awaitables">Awaitables</a></li>
 <li><a class="reference internal" href="#creating-tasks">Creating Tasks</a></li>
 <li><a class="reference internal" href="#task-cancellation">Task Cancellation</a></li>
-<li><a class="reference internal" href="#task-groups">Task Groups</a></li>
+<li><a class="reference internal" href="#task-groups">Task Groups</a><ul>
+<li><a class="reference internal" href="#terminating-a-task-group">Terminating a Task Group</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#sleeping">Sleeping</a></li>
 <li><a class="reference internal" href="#running-tasks-concurrently">Running Tasks Concurrently</a></li>
 <li><a class="reference internal" href="#eager-task-factory">Eager Task Factory</a></li>
@@ -1730,7 +1779,7 @@ used by end-user code.  See <a class="reference internal" href="#asyncio.Task.un
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Sep 24, 2024 (11:36 UTC)。
+      最後更新於 Sep 30, 2024 (09:19 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
