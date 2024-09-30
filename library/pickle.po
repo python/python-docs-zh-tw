@@ -1988,6 +1988,10 @@ msgid ""
 "graph.  Buffers accumulated by the *buffer_callback* will not see their data "
 "copied into the pickle stream, only a cheap marker will be inserted."
 msgstr ""
+"傳送端需要傳遞一個調用緩衝區的回呼函數給 :class:`Pickler`（或 :func:`dump` "
+"或 :func:`dumps` 函數）的 *buffer_callback* 引數，使每次生成 :class:"
+"`PickleBuffer` 時，該物件在處理物件圖時能被呼叫。除了一個簡易標記以外，由 "
+"*buffer_callback* 累積的緩衝區資料不會被複製到 pickle 串流中。"
 
 #: ../../library/pickle.rst:991
 msgid ""
@@ -1999,6 +2003,12 @@ msgid ""
 "reconstructors of the objects whose pickling produced the original :class:"
 "`PickleBuffer` objects."
 msgstr ""
+"接收端需要傳遞一個緩衝區物件給 :class:`Unpickler`（或 :func:`load` 或 :func:"
+"`loads` 函式）的  *buffers* 引數。該物件須是一個可疊代的（iterable）緩衝區"
+"（buffer）物件，其中包含傳遞給 *buffer_callback* 的緩衝區物件。這個可疊代物件"
+"的緩衝區順序應該與它們當初被封裝時傳遞給 *buffer_callback* 的順序相同。這些緩"
+"衝區將提供物件重建所需的資料，以使重建器能還原出那個當時產生了 :class:"
+"`PickleBuffer` 的物件。"
 
 #: ../../library/pickle.rst:999
 msgid ""
@@ -2007,6 +2017,8 @@ msgid ""
 "Potential optimizations include the use of shared memory or datatype-"
 "dependent compression."
 msgstr ""
+"在傳送與接收端之間，通訊系統可以自由實作轉移帶外緩衝區資料的機制。該機制可能"
+"可以利用共用記憶體機制或根據資料類型特定的壓縮方式來最佳化執行速度。"
 
 #: ../../library/pickle.rst:1005
 msgid "Example"
@@ -2017,6 +2029,8 @@ msgid ""
 "Here is a trivial example where we implement a :class:`bytearray` subclass "
 "able to participate in out-of-band buffer pickling::"
 msgstr ""
+"這一個簡單的範例展示了如何實作一個可以參與帶外緩衝區封裝的 :class:"
+"`bytearray` 子類別：::"
 
 #: ../../library/pickle.rst:1010
 msgid ""
@@ -2041,6 +2055,25 @@ msgid ""
 "            else:\n"
 "                return cls(obj)"
 msgstr ""
+"class ZeroCopyByteArray(bytearray):\n"
+"\n"
+"    def __reduce_ex__(self, protocol):\n"
+"        if protocol >= 5:\n"
+"            return type(self)._reconstruct, (PickleBuffer(self),), None\n"
+"        else:\n"
+"            # PickleBuffer 在 pickle 協定 <= 4 時禁止使用。\n"
+"            return type(self)._reconstruct, (bytearray(self),)\n"
+"\n"
+"    @classmethod\n"
+"    def _reconstruct(cls, obj):\n"
+"        with memoryview(obj) as m:\n"
+"            # 取得對原始緩衝區物件的控制\n"
+"            obj = m.obj\n"
+"            if type(obj) is cls:\n"
+"                # 若原本的緩衝區物件是 ZeroCopyByteArray，則直接回傳。\n"
+"                return obj\n"
+"            else:\n"
+"                return cls(obj)"
 
 #: ../../library/pickle.rst:1031
 msgid ""
@@ -2048,12 +2081,16 @@ msgid ""
 "providing object if it has the right type.  This is an easy way to simulate "
 "zero-copy behaviour on this toy example."
 msgstr ""
+"如果型別正確，重建器（``_reconstruct`` 類別方法）會返回當時提供緩衝區的物件。"
+"這個簡易實作可以模擬一個無複製行為的重建器。"
 
 #: ../../library/pickle.rst:1035
 msgid ""
 "On the consumer side, we can pickle those objects the usual way, which when "
 "unserialized will give us a copy of the original object::"
 msgstr ""
+"在使用端，我們可以用一般的方式封裝這些物件，當我們拆封時會得到一個原始物件的"
+"副本：::"
 
 #: ../../library/pickle.rst:1038
 msgid ""
@@ -2063,12 +2100,19 @@ msgid ""
 "print(b == new_b)  # True\n"
 "print(b is new_b)  # False: a copy was made"
 msgstr ""
+"b = ZeroCopyByteArray(b\"abc\")\n"
+"data = pickle.dumps(b, protocol=5)\n"
+"new_b = pickle.loads(data)\n"
+"print(b == new_b)  # True\n"
+"print(b is new_b)  # False: 曾進行過複製運算"
 
 #: ../../library/pickle.rst:1044
 msgid ""
 "But if we pass a *buffer_callback* and then give back the accumulated "
 "buffers when unserializing, we are able to get back the original object::"
 msgstr ""
+"但如果我們傳一個 *buffer_callback* 並在去序列化時正確返回積累的緩衝資料，我們"
+"就能拿回原始的物件：::"
 
 #: ../../library/pickle.rst:1047
 msgid ""
@@ -2079,6 +2123,12 @@ msgid ""
 "print(b == new_b)  # True\n"
 "print(b is new_b)  # True: no copy was made"
 msgstr ""
+"b = ZeroCopyByteArray(b\"abc\")\n"
+"buffers = []\n"
+"data = pickle.dumps(b, protocol=5, buffer_callback=buffers.append)\n"
+"new_b = pickle.loads(data, buffers=buffers)\n"
+"print(b == new_b)  # True\n"
+"print(b is new_b)  # True: 沒有進行過複製"
 
 #: ../../library/pickle.rst:1054
 msgid ""
@@ -2089,14 +2139,18 @@ msgid ""
 "making as few copies as possible) when transferring between distinct "
 "processes or systems."
 msgstr ""
+"此範例是因為受限於 :class:`bytearray` 會自行分配記憶體：您無法創建以其他物件"
+"的記憶體為基礎的 :class:`bytearray` 實例。不過第三方資料型態（如 NumPy 陣列）"
+"則可能沒有這個限制，而允許在不同程序或系統之間傳輸資料時使用零拷貝封裝（或儘"
+"可能地減少拷貝次數）。"
 
 #: ../../library/pickle.rst:1061
 msgid ":pep:`574` -- Pickle protocol 5 with out-of-band data"
-msgstr ""
+msgstr ":pep:`574` -- 第 5 版 Pickle 協定的帶外資料（out-of-band data）處裡"
 
 #: ../../library/pickle.rst:1067
 msgid "Restricting Globals"
-msgstr ""
+msgstr "限制全域物件"
 
 #: ../../library/pickle.rst:1072
 msgid ""
@@ -2105,6 +2159,9 @@ msgid ""
 "it permits the unpickler to import and invoke arbitrary code.  Just consider "
 "what this hand-crafted pickle data stream does when loaded::"
 msgstr ""
+"預設情況下，拆封過程將會引入任何在 pickle 資料中找到的類別或函式。對於許多應"
+"用程式來說，這種行為是不可接受的，因為它讓拆封器能夠引入並執行任意程式碼。請"
+"參見以下 pickle 資料流在載入時的行為：::"
 
 #: ../../library/pickle.rst:1077
 msgid ""
@@ -2125,6 +2182,9 @@ msgid ""
 "is inoffensive, it is not difficult to imagine one that could damage your "
 "system."
 msgstr ""
+"在這個例子中，拆封器會引入 :func:`os.system` 函式，然後執行命令「echo hello "
+"world」。雖然這個例子是無害的，但不難想像可以這個方式輕易執行任意可能對系統造"
+"成損害的命令。"
 
 #: ../../library/pickle.rst:1086
 msgid ""
@@ -2134,12 +2194,18 @@ msgid ""
 "requested.  Thus it is possible to either completely forbid globals or "
 "restrict them to a safe subset."
 msgstr ""
+"基於以上原因，您可能會希望透過自訂 :meth:`Unpickler.find_class` 來控制哪些是"
+"能夠被拆封的內容。與其名稱字面意義暗示的不同，實際上每當你請求一個全域物件"
+"（例如，類別或函式）時，就會調用 :meth:`Unpickler.find_class`。因此，可以透過"
+"這個方法完全禁止全域物件或將其限制在安全的子集合。"
 
 #: ../../library/pickle.rst:1092
 msgid ""
 "Here is an example of an unpickler allowing only few safe classes from the :"
 "mod:`builtins` module to be loaded::"
 msgstr ""
+"以下是一個僅允許從 :mod:`builtins` 模組中載入少數安全類別的拆封器"
+"（unpickler）的例子：::"
 
 #: ../../library/pickle.rst:1095
 msgid ""
@@ -2169,10 +2235,35 @@ msgid ""
 "    \"\"\"Helper function analogous to pickle.loads().\"\"\"\n"
 "    return RestrictedUnpickler(io.BytesIO(s)).load()"
 msgstr ""
+"import builtins\n"
+"import io\n"
+"import pickle\n"
+"\n"
+"safe_builtins = {\n"
+"    'range',\n"
+"    'complex',\n"
+"    'set',\n"
+"    'frozenset',\n"
+"    'slice',\n"
+"}\n"
+"\n"
+"class RestrictedUnpickler(pickle.Unpickler):\n"
+"\n"
+"    def find_class(self, module, name):\n"
+"        # 只允許幾個內建的安全類別\n"
+"        if module == \"builtins\" and name in safe_builtins:\n"
+"            return getattr(builtins, name)\n"
+"        # 完全禁止任何其他類別\n"
+"        raise pickle.UnpicklingError(\"global '%s.%s' is forbidden\" %\n"
+"                                     (module, name))\n"
+"\n"
+"def restricted_loads(s):\n"
+"    \"\"\"一個模擬 pickle.loads() 的輔助函數\"\"\"\n"
+"    return RestrictedUnpickler(io.BytesIO(s)).load()"
 
 #: ../../library/pickle.rst:1121
 msgid "A sample usage of our unpickler working as intended::"
-msgstr ""
+msgstr "我們剛才實作的的拆封器範例正常運作的樣子：::"
 
 #: ../../library/pickle.rst:1123
 msgid ""
@@ -2209,10 +2300,13 @@ msgid ""
 "alternatives such as the marshalling API in :mod:`xmlrpc.client` or third-"
 "party solutions."
 msgstr ""
+"正如我們的範例所示，必須謹慎審視能被拆封的內容。因此，如果您的應用場景非常關"
+"心安全性，您可能需要考慮其他選擇，例如 :mod:`xmlrpc.client` 中的 marshalling "
+"API 或其他第三方解決方案。"
 
 #: ../../library/pickle.rst:1147
 msgid "Performance"
-msgstr ""
+msgstr "效能"
 
 #: ../../library/pickle.rst:1149
 msgid ""
@@ -2220,6 +2314,9 @@ msgid ""
 "efficient binary encodings for several common features and built-in types. "
 "Also, the :mod:`pickle` module has a transparent optimizer written in C."
 msgstr ""
+"較近期的 pickle 協定版本（從 2 版協定開始）為多種常見功能和內建型別提供了高效"
+"率的二進位編碼。此外，:mod:`pickle` 模組還具備一個透明化的、以 C 語言編寫的最"
+"佳化工具。"
 
 #: ../../library/pickle.rst:1157
 msgid "Examples"
@@ -2228,7 +2325,7 @@ msgstr "範例"
 #: ../../library/pickle.rst:1159
 msgid ""
 "For the simplest code, use the :func:`dump` and :func:`load` functions. ::"
-msgstr ""
+msgstr "最簡單的使用方式，調用 :func:`dump` 和 :func:`load` 函式。::"
 
 #: ../../library/pickle.rst:1161
 msgid ""
@@ -2245,10 +2342,22 @@ msgid ""
 "    # Pickle the 'data' dictionary using the highest protocol available.\n"
 "    pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)"
 msgstr ""
+"import pickle\n"
+"\n"
+"# 任意 pickle 支援的物件。\n"
+"data = {\n"
+"    'a': [1, 2.0, 3+4j],\n"
+"    'b': (\"string\", b\"byte string\"),\n"
+"    'c': {None, True, False}\n"
+"}\n"
+"\n"
+"with open('data.pickle', 'wb') as f:\n"
+"    # 使用可用的最高協定來封裝 'data' 字典。\n"
+"    pickle.dump(data, f, pickle.HIGHEST_PROTOCOL)\n"
 
 #: ../../library/pickle.rst:1175
 msgid "The following example reads the resulting pickled data. ::"
-msgstr ""
+msgstr "以下範例可以讀取前述程式所封裝的 pickle 資料。::"
 
 #: ../../library/pickle.rst:1177
 msgid ""
@@ -2259,6 +2368,11 @@ msgid ""
 "    # have to specify it.\n"
 "    data = pickle.load(f)"
 msgstr ""
+"import pickle\n"
+"\n"
+"with open('data.pickle', 'rb') as f:\n"
+"    # 會自動檢測資料使用的協定版本，因此我們不需要手動指定。\n"
+"    data = pickle.load(f)"
 
 #: ../../library/pickle.rst:1191
 msgid "Module :mod:`copyreg`"
@@ -2266,7 +2380,7 @@ msgstr ":mod:`copyreg` 模組"
 
 #: ../../library/pickle.rst:1192
 msgid "Pickle interface constructor registration for extension types."
-msgstr ""
+msgstr "註冊擴充型別的 Pickle 介面建構子。"
 
 #: ../../library/pickle.rst:1194
 msgid "Module :mod:`pickletools`"
@@ -2274,7 +2388,7 @@ msgstr ":mod:`pickletools` 模組"
 
 #: ../../library/pickle.rst:1195
 msgid "Tools for working with and analyzing pickled data."
-msgstr ""
+msgstr "用於分析或處裡被封裝資料的工具。"
 
 #: ../../library/pickle.rst:1197
 msgid "Module :mod:`shelve`"
@@ -2282,7 +2396,7 @@ msgstr ":mod:`shelve` 模組"
 
 #: ../../library/pickle.rst:1198
 msgid "Indexed databases of objects; uses :mod:`pickle`."
-msgstr ""
+msgstr "索引式資料庫；使用 :mod:`pickle` 實作。"
 
 #: ../../library/pickle.rst:1200
 msgid "Module :mod:`copy`"
@@ -2290,7 +2404,7 @@ msgstr ":mod:`copy` 模組"
 
 #: ../../library/pickle.rst:1201
 msgid "Shallow and deep object copying."
-msgstr ""
+msgstr "物件的淺層或深度拷貝。"
 
 #: ../../library/pickle.rst:1203
 msgid "Module :mod:`marshal`"
@@ -2298,7 +2412,7 @@ msgstr ":mod:`marshal` 模組"
 
 #: ../../library/pickle.rst:1204
 msgid "High-performance serialization of built-in types."
-msgstr ""
+msgstr "內建型別的高效能序列化。"
 
 #: ../../library/pickle.rst:1208
 msgid "Footnotes"
@@ -2306,25 +2420,29 @@ msgstr "註解"
 
 #: ../../library/pickle.rst:1209
 msgid "Don't confuse this with the :mod:`marshal` module"
-msgstr ""
+msgstr "不要將此模組與 :mod:`marshal` 模組混淆"
 
 #: ../../library/pickle.rst:1211
 msgid ""
 "This is why :keyword:`lambda` functions cannot be pickled:  all :keyword:`!"
 "lambda` functions share the same name:  ``<lambda>``."
 msgstr ""
+"這就是為什麼 :keyword:`lambda` 函式無法被封裝：所有 :keyword:`!lambda` 函式共"
+"享相同的名稱：``<lambda>``。"
 
 #: ../../library/pickle.rst:1214
 msgid ""
 "The exception raised will likely be an :exc:`ImportError` or an :exc:"
 "`AttributeError` but it could be something else."
 msgstr ""
+"拋出的例外應該是 :exc:`ImportError` 或 :exc:`AttributeError`，但也可能是其他"
+"例外。"
 
 #: ../../library/pickle.rst:1217
 msgid ""
 "The :mod:`copy` module uses this protocol for shallow and deep copying "
 "operations."
-msgstr ""
+msgstr ":mod:`copy` 模組使用此協定進行淺層及深層複製操作。"
 
 #: ../../library/pickle.rst:1220
 msgid ""
@@ -2333,6 +2451,9 @@ msgid ""
 "kind of newline characters occurs in persistent IDs, the resulting pickled "
 "data will become unreadable."
 msgstr ""
+"協定 0 中限制僅能使用英文字母或數字字元來分配持久化 ID 是因為持久化 ID 是由換"
+"行符號所分隔的。因此，如果持久化 ID 中出現任何形式的換行字元，將導致封裝資料"
+"變得無法讀取。"
 
 #: ../../library/pickle.rst:12
 msgid "persistence"
@@ -2364,7 +2485,7 @@ msgstr "pickling"
 
 #: ../../library/pickle.rst:123
 msgid "External Data Representation"
-msgstr "External Data Representation（外部資料表示法）"
+msgstr "External Data Representation（外部資料表現）"
 
 #: ../../library/pickle.rst:664
 msgid "copy"
