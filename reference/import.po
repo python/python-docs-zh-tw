@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Python 3.13\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-09-03 11:11+0800\n"
-"PO-Revision-Date: 2024-10-03 12:34+0800\n"
+"PO-Revision-Date: 2024-10-07 17:11+0800\n"
 "Last-Translator: Adrian Liaw <adrianliaw2000@gmail.com>\n"
 "Language-Team: Chinese - TAIWAN (https://github.com/python/python-docs-zh-"
 "tw)\n"
@@ -444,7 +444,7 @@ msgstr ""
 
 #: ../../reference/import.rst:247
 msgid "Import hooks"
-msgstr ""
+msgstr "引入掛勾 (Import hooks)"
 
 #: ../../reference/import.rst:257
 msgid ""
@@ -452,6 +452,8 @@ msgid ""
 "this are the *import hooks*.  There are two types of import hooks: *meta "
 "hooks* and *import path hooks*."
 msgstr ""
+"引入機制的設計是可擴展的；其主要機制是\\ *引入掛鉤*。引入掛鉤有兩種類型：*元"
+"掛鉤 (meta hooks)* 和\\ *引入路徑掛鉤*。"
 
 #: ../../reference/import.rst:261
 msgid ""
@@ -461,6 +463,10 @@ msgid ""
 "modules, or even built-in modules.  Meta hooks are registered by adding new "
 "finder objects to :data:`sys.meta_path`, as described below."
 msgstr ""
+"元掛鉤會在引入處理的開始階段被呼叫，除了查找 :data:`sys.modules` 快取外，其他"
+"引入處理還未發生時就會呼叫。這允許元掛鉤覆蓋 :data:`sys.path` 的處理、凍結模"
+"組，甚至是內建模組。元掛鉤透過將新的尋檢器物件添加到 :data:`sys.meta_path` 中"
+"來註冊，具體描述請參閱下列章節。"
 
 #: ../../reference/import.rst:267
 msgid ""
@@ -469,10 +475,13 @@ msgid ""
 "encountered.  Import path hooks are registered by adding new callables to :"
 "data:`sys.path_hooks` as described below."
 msgstr ""
+"引入路徑掛鉤被視為 :data:`sys.path`\\ （或 ``package.__path__``）處理過程的一"
+"部分來呼叫，當遇到與其相關聯的路徑項目時就會被觸發。引入路徑掛鉤透過將新的可"
+"呼叫對象增加到 :data:`sys.path_hooks` 中來註冊，具體描述請參閱下列章節。"
 
 #: ../../reference/import.rst:274
 msgid "The meta path"
-msgstr ""
+msgstr "元路徑"
 
 #: ../../reference/import.rst:280
 msgid ""
@@ -485,6 +494,11 @@ msgid ""
 "finder can use any strategy it wants to determine whether it can handle the "
 "named module or not."
 msgstr ""
+"當在 :data:`sys.modules` 中找不到命名模組時，Python 接下來會搜尋 :data:`sys."
+"meta_path`，其中包含一個元路徑尋檢器物件串列。這些尋檢器會依次被查詢，看它們"
+"是否知道如何處理命名模組。元路徑尋檢器必須實作一個名為 :meth:`~importlib.abc."
+"MetaPathFinder.find_spec` 的方法，該方法接收三個引數：名稱、引入路徑和（可選"
+"的）目標模組。元路徑尋檢器可以使用任何策略來確定它是否能處理命名模組。"
 
 #: ../../reference/import.rst:289
 msgid ""
@@ -494,6 +508,10 @@ msgid ""
 "returning a spec, then a :exc:`ModuleNotFoundError` is raised.  Any other "
 "exceptions raised are simply propagated up, aborting the import process."
 msgstr ""
+"如果元路徑尋檢器知道如何處理命名模組，它會回傳一個規格物件。如果它無法處理命"
+"名模組，則回傳 ``None``。如果 :data:`sys.meta_path` 的處理到達串列的末尾仍未"
+"回傳規格，則會引發 :exc:`ModuleNotFoundError`。任何其他引發的例外將直接向上傳"
+"播，並中止引入過程。"
 
 #: ../../reference/import.rst:295
 msgid ""
@@ -508,6 +526,12 @@ msgid ""
 "existing module object that will be the target of loading later. The import "
 "system passes in a target module only during reload."
 msgstr ""
+"元路徑尋檢器的 :meth:`~importlib.abc.MetaPathFinder.find_spec` 方法會以兩個或"
+"三個引數來呼叫。第一個是被引入模組的完全限定名稱，例如 ``foo.bar.baz``。第二"
+"個引數是用於模組搜尋的路徑條目。對於頂層模組，第二個引數是 ``None``，但對於子"
+"模組或子套件，第二個引數是父套件的 ``__path__`` 屬性的值。如果無法存取相應的 "
+"``__path__`` 屬性，將引發 :exc:`ModuleNotFoundError`。第三個引數是一個現有的"
+"模組物件，該物件將成為後續載入的目標。引入系統只會在重新載入時傳入目標模組。"
 
 #: ../../reference/import.rst:306
 msgid ""
@@ -520,6 +544,12 @@ msgid ""
 "__path__, None)``. Once ``foo.bar`` has been imported, the final traversal "
 "will call ``mpf.find_spec(\"foo.bar.baz\", foo.bar.__path__, None)``."
 msgstr ""
+"對於一個引入請求，元路徑可能會被遍歷多次。例如，假設參與的模組都沒有被快取，"
+"則引入 ``foo.bar.baz`` 將首先執行頂層引入，對每個元路徑尋檢器（``mpf``）呼叫 "
+"``mpf.find_spec(\"foo\", None, None)``。當 ``foo`` 被引入後，將再次藉由遍歷元"
+"路徑引入 ``foo.bar``，並呼叫 ``mpf.find_spec(\"foo.bar\", foo.__path__, "
+"None)``。當 ``foo.bar`` 被引入後，最後一次遍歷會呼叫 ``mpf.find_spec(\"foo."
+"bar.baz\", foo.bar.__path__, None)``。"
 
 #: ../../reference/import.rst:316
 msgid ""
@@ -527,6 +557,8 @@ msgid ""
 "always return ``None`` when anything other than ``None`` is passed as the "
 "second argument."
 msgstr ""
+"一些元路徑尋檢器僅支援頂層引入。當第二個引數傳入 ``None`` 以外的值時，這些引"
+"入器將始終回傳 ``None``。"
 
 #: ../../reference/import.rst:320
 msgid ""
@@ -535,6 +567,9 @@ msgid ""
 "modules, and one that knows how to import modules from an :term:`import "
 "path` (i.e. the :term:`path based finder`)."
 msgstr ""
+"Python 的預設 :data:`sys.meta_path` 有三個元路徑尋檢器，一個知道如何引入內建"
+"模組，一個知道如何引入凍結模組，還有一個知道如何從 :term:`import path` 引入模"
+"組（即 :term:`path based finder`）。"
 
 #: ../../reference/import.rst:325
 msgid ""
@@ -544,18 +579,23 @@ msgid ""
 "if the finder does not implement :meth:`~importlib.abc.MetaPathFinder."
 "find_spec`."
 msgstr ""
+"元路徑尋檢器的 :meth:`~importlib.abc.MetaPathFinder.find_spec` 方法取代了 :"
+"meth:`!find_module`，後者現在已被棄用。雖然它將繼續正常工作，但引入機制僅在尋"
+"檢器未實作 :meth:`~importlib.abc.MetaPathFinder.find_spec` 時才會嘗試使用它。"
 
 #: ../../reference/import.rst:332
 msgid ""
 "Use of :meth:`!find_module` by the import system now raises :exc:"
 "`ImportWarning`."
-msgstr ""
+msgstr "引入系統現在使用 :meth:`!find_module` 時將引發 :exc:`ImportWarning`。"
 
 #: ../../reference/import.rst:336
 msgid ""
 ":meth:`!find_module` has been removed. Use :meth:`~importlib.abc."
 "MetaPathFinder.find_spec` instead."
 msgstr ""
+":meth:`!find_module` 已被移除。請改用 :meth:`~importlib.abc.MetaPathFinder."
+"find_spec`。"
 
 #: ../../reference/import.rst:342
 msgid "Loading"
