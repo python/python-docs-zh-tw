@@ -91,15 +91,15 @@
 <li><a class="reference internal" href="#">5. 模組引入系統</a><ul>
 <li><a class="reference internal" href="#importlib">5.1. <code class="xref py py-mod docutils literal notranslate"><span class="pre">importlib</span></code></a></li>
 <li><a class="reference internal" href="#packages">5.2. 套件</a><ul>
-<li><a class="reference internal" href="#regular-packages">5.2.1. Regular packages</a></li>
-<li><a class="reference internal" href="#namespace-packages">5.2.2. Namespace packages</a></li>
+<li><a class="reference internal" href="#regular-packages">5.2.1. 一般套件</a></li>
+<li><a class="reference internal" href="#namespace-packages">5.2.2. 命名空間套件</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#searching">5.3. Searching</a><ul>
-<li><a class="reference internal" href="#the-module-cache">5.3.1. The module cache</a></li>
-<li><a class="reference internal" href="#finders-and-loaders">5.3.2. Finders and loaders</a></li>
-<li><a class="reference internal" href="#import-hooks">5.3.3. Import hooks</a></li>
-<li><a class="reference internal" href="#the-meta-path">5.3.4. The meta path</a></li>
+<li><a class="reference internal" href="#searching">5.3. 搜尋</a><ul>
+<li><a class="reference internal" href="#the-module-cache">5.3.1. 模組快取</a></li>
+<li><a class="reference internal" href="#finders-and-loaders">5.3.2. 尋檢器 (Finder) 與載入器 (Loader)</a></li>
+<li><a class="reference internal" href="#import-hooks">5.3.3. 引入掛鉤 (Import hooks)</a></li>
+<li><a class="reference internal" href="#the-meta-path">5.3.4. 元路徑</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#loading">5.4. Loading</a><ul>
@@ -217,82 +217,28 @@
             
   <section id="the-import-system">
 <span id="importsystem"></span><h1><span class="section-number">5. </span>模組引入系統<a class="headerlink" href="#the-import-system" title="連結到這個標頭">¶</a></h1>
-<p id="index-0">Python code in one <a class="reference internal" href="../glossary.html#term-module"><span class="xref std std-term">module</span></a> gains access to the code in another module
-by the process of <a class="reference internal" href="../glossary.html#term-importing"><span class="xref std std-term">importing</span></a> it.  The <a class="reference internal" href="simple_stmts.html#import"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code></a> statement is
-the most common way of invoking the import machinery, but it is not the only
-way.  Functions such as <a class="reference internal" href="../library/importlib.html#importlib.import_module" title="importlib.import_module"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.import_module()</span></code></a> and built-in
-<a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> can also be used to invoke the import machinery.</p>
-<p>The <a class="reference internal" href="simple_stmts.html#import"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code></a> statement combines two operations; it searches for the
-named module, then it binds the results of that search to a name in the local
-scope.  The search operation of the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code> statement is defined as
-a call to the <a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> function, with the appropriate arguments.
-The return value of <a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> is used to perform the name
-binding operation of the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code> statement.  See the
-<code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code> statement for the exact details of that name binding
-operation.</p>
-<p>A direct call to <a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> performs only the module search and, if
-found, the module creation operation.  While certain side-effects may occur,
-such as the importing of parent packages, and the updating of various caches
-(including <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>), only the <a class="reference internal" href="simple_stmts.html#import"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code></a> statement performs
-a name binding operation.</p>
-<p>When an <a class="reference internal" href="simple_stmts.html#import"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code></a> statement is executed, the standard builtin
-<a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> function is called. Other mechanisms for invoking the
-import system (such as <a class="reference internal" href="../library/importlib.html#importlib.import_module" title="importlib.import_module"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.import_module()</span></code></a>) may choose to bypass
-<a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> and use their own solutions to implement import semantics.</p>
-<p>When a module is first imported, Python searches for the module and if found,
-it creates a module object <a class="footnote-reference brackets" href="#fnmo" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>, initializing it.  If the named module
-cannot be found, a <a class="reference internal" href="../library/exceptions.html#ModuleNotFoundError" title="ModuleNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a> is raised.  Python implements various
-strategies to search for the named module when the import machinery is
-invoked.  These strategies can be modified and extended by using various hooks
-described in the sections below.</p>
+<p id="index-0">一個 <a class="reference internal" href="../glossary.html#term-module"><span class="xref std std-term">module</span></a> 中的 Python 程式碼透過 <a class="reference internal" href="../glossary.html#term-importing"><span class="xref std std-term">importing</span></a> 的過程來存取另一個模組中的程式碼。<a class="reference internal" href="simple_stmts.html#import"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code></a> 陳述式是調用 (invoke) 引入機制最常見的方法，但這不是唯一的方法。函式如 <a class="reference internal" href="../library/importlib.html#importlib.import_module" title="importlib.import_module"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.import_module()</span></code></a> 以及內建函式 <a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> 也可以用來調用引入機制。</p>
+<p><a class="reference internal" href="simple_stmts.html#import"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code></a> 陳述式結合了兩個操作：首先搜尋指定的模組，然後將搜尋結果繫結到本地作用域中的一個名稱。<code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code> 陳述式的搜尋操作被定義為一個對 <a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> 函式的呼叫，並帶有相應的引數。<a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> 的回傳值用於執行 <code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code> 陳述式的名稱繫結操作。有關名稱繫結操作的詳細資訊，請參見 <code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code> 陳述式。</p>
+<p>直接呼叫 <a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> 只會執行模組搜尋操作，以及在找到時執行模組的建立操作。雖然某些副作用可能會發生，例如引入父套件 (parent package)，以及更新各種快取（包括 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>），但只有 <a class="reference internal" href="simple_stmts.html#import"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code></a> 陳述式會執行名稱繫結操作。</p>
+<p>當執行 <a class="reference internal" href="simple_stmts.html#import"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code></a> 陳述式時，會呼叫內建的 <a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> 函式。其他調用引入系統的機制（如 <a class="reference internal" href="../library/importlib.html#importlib.import_module" title="importlib.import_module"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.import_module()</span></code></a>）可以選擇略過 <a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a>，並使用它們自己的解決方案來實作引入語意。</p>
+<p>當模組首次被引入時，Python 會搜尋該模組，若找到則會建立一個模組物件 <a class="footnote-reference brackets" href="#fnmo" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>，並對其進行初始化。如果找不到指定的模組，則會引發 <a class="reference internal" href="../library/exceptions.html#ModuleNotFoundError" title="ModuleNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a>。當引入機制被調用時，Python 會實作各種策略來搜尋指定的模組。這些策略可以透過使用以下章節描述的各種 hook（掛鉤）來修改和擴展。</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.3 版的變更: </span>The import system has been updated to fully implement the second phase
-of <span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0302/"><strong>PEP 302</strong></a>. There is no longer any implicit import machinery - the full
-import system is exposed through <a class="reference internal" href="../library/sys.html#sys.meta_path" title="sys.meta_path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.meta_path</span></code></a>. In addition,
-native namespace package support has been implemented (see <span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a>).</p>
+<p><span class="versionmodified changed">在 3.3 版的變更: </span>引入系統已被更新，以完全實作 <span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0302/"><strong>PEP 302</strong></a> 的第二階段。不再有隱式引入機制——完整的引入系統已透過 <a class="reference internal" href="../library/sys.html#sys.meta_path" title="sys.meta_path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.meta_path</span></code></a> 公開。此外，原生命名空間套件支援（請參閱 <span class="target" id="index-32"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a>）也已被實作。</p>
 </div>
 <section id="importlib">
 <h2><span class="section-number">5.1. </span><a class="reference internal" href="../library/importlib.html#module-importlib" title="importlib: The implementation of the import machinery."><code class="xref py py-mod docutils literal notranslate"><span class="pre">importlib</span></code></a><a class="headerlink" href="#importlib" title="連結到這個標頭">¶</a></h2>
-<p>The <a class="reference internal" href="../library/importlib.html#module-importlib" title="importlib: The implementation of the import machinery."><code class="xref py py-mod docutils literal notranslate"><span class="pre">importlib</span></code></a> module provides a rich API for interacting with the
-import system.  For example <a class="reference internal" href="../library/importlib.html#importlib.import_module" title="importlib.import_module"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.import_module()</span></code></a> provides a
-recommended, simpler API than built-in <a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> for invoking the
-import machinery.  Refer to the <a class="reference internal" href="../library/importlib.html#module-importlib" title="importlib: The implementation of the import machinery."><code class="xref py py-mod docutils literal notranslate"><span class="pre">importlib</span></code></a> library documentation for
-additional detail.</p>
+<p><a class="reference internal" href="../library/importlib.html#module-importlib" title="importlib: The implementation of the import machinery."><code class="xref py py-mod docutils literal notranslate"><span class="pre">importlib</span></code></a> 模組提供了豐富的 API 來與引入系統互動。例如，<a class="reference internal" href="../library/importlib.html#importlib.import_module" title="importlib.import_module"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.import_module()</span></code></a> 提供了一個比內建的 <a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> 更推薦且更簡單的 API 來調用引入機制。更多詳細資訊請參閱 <a class="reference internal" href="../library/importlib.html#module-importlib" title="importlib: The implementation of the import machinery."><code class="xref py py-mod docutils literal notranslate"><span class="pre">importlib</span></code></a> 函式庫文件。</p>
 </section>
 <section id="packages">
 <h2><span class="section-number">5.2. </span>套件<a class="headerlink" href="#packages" title="連結到這個標頭">¶</a></h2>
-<p id="index-3">Python has only one type of module object, and all modules are of this type,
-regardless of whether the module is implemented in Python, C, or something
-else.  To help organize modules and provide a naming hierarchy, Python has a
-concept of <a class="reference internal" href="../glossary.html#term-package"><span class="xref std std-term">packages</span></a>.</p>
-<p>You can think of packages as the directories on a file system and modules as
-files within directories, but don't take this analogy too literally since
-packages and modules need not originate from the file system.  For the
-purposes of this documentation, we'll use this convenient analogy of
-directories and files.  Like file system directories, packages are organized
-hierarchically, and packages may themselves contain subpackages, as well as
-regular modules.</p>
-<p>It's important to keep in mind that all packages are modules, but not all
-modules are packages.  Or put another way, packages are just a special kind of
-module.  Specifically, any module that contains a <code class="docutils literal notranslate"><span class="pre">__path__</span></code> attribute is
-considered a package.</p>
-<p>All modules have a name.  Subpackage names are separated from their parent
-package name by a dot, akin to Python's standard attribute access syntax.  Thus
-you might have a package called <a class="reference internal" href="../library/email.html#module-email" title="email: Package supporting the parsing, manipulating, and generating email messages."><code class="xref py py-mod docutils literal notranslate"><span class="pre">email</span></code></a>, which in turn has a subpackage
-called <a class="reference internal" href="../library/email.mime.html#module-email.mime" title="email.mime: Build MIME messages."><code class="xref py py-mod docutils literal notranslate"><span class="pre">email.mime</span></code></a> and a module within that subpackage called
-<a class="reference internal" href="../library/email.mime.html#module-email.mime.text" title="email.mime.text"><code class="xref py py-mod docutils literal notranslate"><span class="pre">email.mime.text</span></code></a>.</p>
+<p id="index-3">Python 只有一種類型的模組物件，且所有模組，無論其是使用 Python、C 還是其他語言實作，都是這種類型。為了幫助組織模組並提供命名階層，Python 導入了<a class="reference internal" href="../glossary.html#term-package"><span class="xref std std-term">套件</span></a>的概念。</p>
+<p>你可以將套件視為檔案系統中的目錄，模組則是目錄中的檔案，但不要過於字面地理解這個比喻，因為套件和模組不一定來自檔案系統。為了方便解釋，我們將使用這個目錄和檔案的比喻。就像檔案系統目錄一樣，套件是分層組織的，套件本身可以包含子套件以及一般模組。</p>
+<p>請記住，所有的套件都是模組，但並非所有模組都是套件。換句話說，套件只是一種特殊的模組。具體來說，任何包含 <code class="docutils literal notranslate"><span class="pre">__path__</span></code> 屬性的模組都被視為套件。</p>
+<p>所有模組都有一個名稱。子套件的名稱與其父套件名稱之間用一個點來分隔，類似於 Python 的標準屬性存取語法。因此，你可能會有一個名為 <a class="reference internal" href="../library/email.html#module-email" title="email: Package supporting the parsing, manipulating, and generating email messages."><code class="xref py py-mod docutils literal notranslate"><span class="pre">email</span></code></a> 的套件，該套件又有一個名為 <a class="reference internal" href="../library/email.mime.html#module-email.mime" title="email.mime: Build MIME messages."><code class="xref py py-mod docutils literal notranslate"><span class="pre">email.mime</span></code></a> 的子套件，並且該子套件中有一個名為 <a class="reference internal" href="../library/email.mime.html#module-email.mime.text" title="email.mime.text"><code class="xref py py-mod docutils literal notranslate"><span class="pre">email.mime.text</span></code></a> 的模組。</p>
 <section id="regular-packages">
-<h3><span class="section-number">5.2.1. </span>Regular packages<a class="headerlink" href="#regular-packages" title="連結到這個標頭">¶</a></h3>
-<p id="index-4">Python defines two types of packages, <a class="reference internal" href="../glossary.html#term-regular-package"><span class="xref std std-term">regular packages</span></a> and <a class="reference internal" href="../glossary.html#term-namespace-package"><span class="xref std std-term">namespace packages</span></a>.  Regular
-packages are traditional packages as they existed in Python 3.2 and earlier.
-A regular package is typically implemented as a directory containing an
-<code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file.  When a regular package is imported, this
-<code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file is implicitly executed, and the objects it defines are
-bound to names in the package's namespace.  The <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file can
-contain the same Python code that any other module can contain, and Python
-will add some additional attributes to the module when it is imported.</p>
-<p>For example, the following file system layout defines a top level <code class="docutils literal notranslate"><span class="pre">parent</span></code>
-package with three subpackages:</p>
+<h3><span class="section-number">5.2.1. </span>一般套件<a class="headerlink" href="#regular-packages" title="連結到這個標頭">¶</a></h3>
+<p id="index-4">Python 定義了兩種類型的套件，<a class="reference internal" href="../glossary.html#term-regular-package"><span class="xref std std-term">一般套件</span></a>和<a class="reference internal" href="../glossary.html#term-namespace-package"><span class="xref std std-term">命名空間套件</span></a>。一般套件是 Python 3.2 及更早版本中存在的傳統套件。一般套件通常實作成一個包含 <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> 檔案的目錄。當引入一般套件時，該 <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> 檔案會被隱式執行，其定義的物件會繫結到該套件的命名空間中的名稱。<code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> 檔案可以包含與任何其他模組相同的 Python 程式碼，並且 Python 會在引入時為該模組增加一些額外的屬性。</p>
+<p>例如，以下檔案系統布置定義了一個頂層的 <code class="docutils literal notranslate"><span class="pre">parent</span></code> 套件，該套件包含三個子套件：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">parent</span><span class="o">/</span>
     <span class="fm">__init__</span><span class="o">.</span><span class="n">py</span>
     <span class="n">one</span><span class="o">/</span>
@@ -303,169 +249,60 @@ package with three subpackages:</p>
         <span class="fm">__init__</span><span class="o">.</span><span class="n">py</span>
 </pre></div>
 </div>
-<p>Importing <code class="docutils literal notranslate"><span class="pre">parent.one</span></code> will implicitly execute <code class="docutils literal notranslate"><span class="pre">parent/__init__.py</span></code> and
-<code class="docutils literal notranslate"><span class="pre">parent/one/__init__.py</span></code>.  Subsequent imports of <code class="docutils literal notranslate"><span class="pre">parent.two</span></code> or
-<code class="docutils literal notranslate"><span class="pre">parent.three</span></code> will execute <code class="docutils literal notranslate"><span class="pre">parent/two/__init__.py</span></code> and
-<code class="docutils literal notranslate"><span class="pre">parent/three/__init__.py</span></code> respectively.</p>
+<p>引入 <code class="docutils literal notranslate"><span class="pre">parent.one</span></code> 將隱式執行 <code class="docutils literal notranslate"><span class="pre">parent/__init__.py</span></code> 和 <code class="docutils literal notranslate"><span class="pre">parent/one/__init__.py</span></code>。隨後引入 <code class="docutils literal notranslate"><span class="pre">parent.two</span></code> 或 <code class="docutils literal notranslate"><span class="pre">parent.three</span></code> 將分別執行 <code class="docutils literal notranslate"><span class="pre">parent/two/__init__.py</span></code> 和 <code class="docutils literal notranslate"><span class="pre">parent/three/__init__.py</span></code>。</p>
 </section>
 <section id="namespace-packages">
-<h3><span class="section-number">5.2.2. </span>Namespace packages<a class="headerlink" href="#namespace-packages" title="連結到這個標頭">¶</a></h3>
-<p id="index-5">A namespace package is a composite of various <a class="reference internal" href="../glossary.html#term-portion"><span class="xref std std-term">portions</span></a>,
-where each portion contributes a subpackage to the parent package.  Portions
-may reside in different locations on the file system.  Portions may also be
-found in zip files, on the network, or anywhere else that Python searches
-during import.  Namespace packages may or may not correspond directly to
-objects on the file system; they may be virtual modules that have no concrete
-representation.</p>
-<p>Namespace packages do not use an ordinary list for their <code class="docutils literal notranslate"><span class="pre">__path__</span></code>
-attribute. They instead use a custom iterable type which will automatically
-perform a new search for package portions on the next import attempt within
-that package if the path of their parent package (or <a class="reference internal" href="../library/sys.html#sys.path" title="sys.path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a> for a
-top level package) changes.</p>
-<p>With namespace packages, there is no <code class="docutils literal notranslate"><span class="pre">parent/__init__.py</span></code> file.  In fact,
-there may be multiple <code class="docutils literal notranslate"><span class="pre">parent</span></code> directories found during import search, where
-each one is provided by a different portion.  Thus <code class="docutils literal notranslate"><span class="pre">parent/one</span></code> may not be
-physically located next to <code class="docutils literal notranslate"><span class="pre">parent/two</span></code>.  In this case, Python will create a
-namespace package for the top-level <code class="docutils literal notranslate"><span class="pre">parent</span></code> package whenever it or one of
-its subpackages is imported.</p>
-<p>See also <span class="target" id="index-6"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a> for the namespace package specification.</p>
+<h3><span class="section-number">5.2.2. </span>命名空間套件<a class="headerlink" href="#namespace-packages" title="連結到這個標頭">¶</a></h3>
+<p id="index-5">命名空間套件是由不同的<a class="reference internal" href="../glossary.html#term-portion"><span class="xref std std-term">部分</span></a> 組成的，每個部分都為父套件提供一個子套件。這些部分可以位於檔案系統上的不同位置。部分可能也存在於壓縮檔案中、網路上，或 Python 在引入時搜尋的任何其他地方。命名空間套件不一定直接對應於檔案系統中的對象；它們可能是沒有具體表示的虛擬模組。</p>
+<p>命名空間套件的 <code class="docutils literal notranslate"><span class="pre">__path__</span></code> 屬性不使用普通的串列。它們使用自定義的可疊代型別，當父套件的路徑（或頂層套件的 <a class="reference internal" href="../library/sys.html#sys.path" title="sys.path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a>）發生變化時，會在下一次引入嘗試時自動執行新一輪的套件部分搜尋。</p>
+<p>在命名空間套件中，不存在 <code class="docutils literal notranslate"><span class="pre">parent/__init__.py</span></code> 檔案。實際上，在引入搜尋過程中可能會找到多個 <code class="docutils literal notranslate"><span class="pre">parent</span></code> 目錄，每個目錄由不同的部分提供。因此，<code class="docutils literal notranslate"><span class="pre">parent/one</span></code> 可能與 <code class="docutils literal notranslate"><span class="pre">parent/two</span></code> 不會實際位於一起。在這種情況下，每當引入頂層 <code class="docutils literal notranslate"><span class="pre">parent</span></code> 套件或其子套件之一時，Python 會為頂層 <code class="docutils literal notranslate"><span class="pre">parent</span></code> 套件建立一個命名空間套件。</p>
+<p>有關命名空間套件的規範，請參見 <span class="target" id="index-33"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a>。</p>
 </section>
 </section>
 <section id="searching">
-<h2><span class="section-number">5.3. </span>Searching<a class="headerlink" href="#searching" title="連結到這個標頭">¶</a></h2>
-<p>To begin the search, Python needs the <a class="reference internal" href="../glossary.html#term-qualified-name"><span class="xref std std-term">fully qualified</span></a>
-name of the module (or package, but for the purposes of this discussion, the
-difference is immaterial) being imported.  This name may come from various
-arguments to the <a class="reference internal" href="simple_stmts.html#import"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code></a> statement, or from the parameters to the
-<a class="reference internal" href="../library/importlib.html#importlib.import_module" title="importlib.import_module"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.import_module()</span></code></a> or <a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> functions.</p>
-<p>This name will be used in various phases of the import search, and it may be
-the dotted path to a submodule, e.g. <code class="docutils literal notranslate"><span class="pre">foo.bar.baz</span></code>.  In this case, Python
-first tries to import <code class="docutils literal notranslate"><span class="pre">foo</span></code>, then <code class="docutils literal notranslate"><span class="pre">foo.bar</span></code>, and finally <code class="docutils literal notranslate"><span class="pre">foo.bar.baz</span></code>.
-If any of the intermediate imports fail, a <a class="reference internal" href="../library/exceptions.html#ModuleNotFoundError" title="ModuleNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a> is raised.</p>
+<h2><span class="section-number">5.3. </span>搜尋<a class="headerlink" href="#searching" title="連結到這個標頭">¶</a></h2>
+<p>在開始搜尋之前，Python 需要被引入模組（或套件，但在本討論中，兩者的區別無關緊要）的完整<a class="reference internal" href="../glossary.html#term-qualified-name"><span class="xref std std-term">限定名稱 (qualified name)</span></a>。此名稱可能來自 <a class="reference internal" href="simple_stmts.html#import"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code></a> 陳述式的各種引數，或來自 <a class="reference internal" href="../library/importlib.html#importlib.import_module" title="importlib.import_module"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.import_module()</span></code></a> 或 <a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> 函式的參數。</p>
+<p>此名稱將在引入搜尋的各個階段中使用，並且它可能是指向子模組的點分隔路徑，例如 <code class="docutils literal notranslate"><span class="pre">foo.bar.baz</span></code>。在這種情況下，Python 會首先嘗試引入 <code class="docutils literal notranslate"><span class="pre">foo</span></code>，然後是 <code class="docutils literal notranslate"><span class="pre">foo.bar</span></code>，最後是 <code class="docutils literal notranslate"><span class="pre">foo.bar.baz</span></code>。如果任何中間引入失敗，則會引發 <a class="reference internal" href="../library/exceptions.html#ModuleNotFoundError" title="ModuleNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a>。</p>
 <section id="the-module-cache">
-<h3><span class="section-number">5.3.1. </span>The module cache<a class="headerlink" href="#the-module-cache" title="連結到這個標頭">¶</a></h3>
-<p id="index-7">The first place checked during import search is <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>.  This
-mapping serves as a cache of all modules that have been previously imported,
-including the intermediate paths.  So if <code class="docutils literal notranslate"><span class="pre">foo.bar.baz</span></code> was previously
-imported, <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> will contain entries for <code class="docutils literal notranslate"><span class="pre">foo</span></code>, <code class="docutils literal notranslate"><span class="pre">foo.bar</span></code>,
-and <code class="docutils literal notranslate"><span class="pre">foo.bar.baz</span></code>.  Each key will have as its value the corresponding module
-object.</p>
-<p>During import, the module name is looked up in <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> and if
-present, the associated value is the module satisfying the import, and the
-process completes.  However, if the value is <code class="docutils literal notranslate"><span class="pre">None</span></code>, then a
-<a class="reference internal" href="../library/exceptions.html#ModuleNotFoundError" title="ModuleNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a> is raised.  If the module name is missing, Python will
-continue searching for the module.</p>
-<p><a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> is writable.  Deleting a key may not destroy the
-associated module (as other modules may hold references to it),
-but it will invalidate the cache entry for the named module, causing
-Python to search anew for the named module upon its next
-import. The key can also be assigned to <code class="docutils literal notranslate"><span class="pre">None</span></code>, forcing the next import
-of the module to result in a <a class="reference internal" href="../library/exceptions.html#ModuleNotFoundError" title="ModuleNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a>.</p>
-<p>Beware though, as if you keep a reference to the module object,
-invalidate its cache entry in <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>, and then re-import the
-named module, the two module objects will <em>not</em> be the same. By contrast,
-<a class="reference internal" href="../library/importlib.html#importlib.reload" title="importlib.reload"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.reload()</span></code></a> will reuse the <em>same</em> module object, and simply
-reinitialise the module contents by rerunning the module's code.</p>
+<h3><span class="section-number">5.3.1. </span>模組快取<a class="headerlink" href="#the-module-cache" title="連結到這個標頭">¶</a></h3>
+<p id="index-7">在引入搜尋過程中首先檢查的地方是 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>。此對映用作所有先前引入過的模組的快取，包括中間路徑。因此，如果 <code class="docutils literal notranslate"><span class="pre">foo.bar.baz</span></code> 之前已被引入，<a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 將包含 <code class="docutils literal notranslate"><span class="pre">foo</span></code>、<code class="docutils literal notranslate"><span class="pre">foo.bar</span></code> 和 <code class="docutils literal notranslate"><span class="pre">foo.bar.baz</span></code> 的條目。每個鍵的值都是相應的模組物件。</p>
+<p>在引入過程中，會在 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 中查找模組名稱，如果存在，則相關的值為滿足此引入的模組，此引入過程即完成。然而，如果值是 <code class="docutils literal notranslate"><span class="pre">None</span></code>，則會引發 <a class="reference internal" href="../library/exceptions.html#ModuleNotFoundError" title="ModuleNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a>。如果模組名稱不存在，Python 會繼續搜尋該模組。</p>
+<p><a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 是可寫入的。刪除一個鍵可能不會銷毀相關聯的模組（因為其他模組可能持有對它的參照），但會使指定的模組的快取條目失效，導致 Python 在下一次引入該模組時重新搜尋。也可以將鍵賦值為 <code class="docutils literal notranslate"><span class="pre">None</span></code>，這會強制下一次引入該模組時引發 <a class="reference internal" href="../library/exceptions.html#ModuleNotFoundError" title="ModuleNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a>。</p>
+<p>但請注意，如果你保留了對模組物件的參照，並在 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 中使其快取條目失效，然後重新引入指定的模組，這兩個模組物件將<em>不會</em>相同。相比之下，<a class="reference internal" href="../library/importlib.html#importlib.reload" title="importlib.reload"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.reload()</span></code></a> 會重用<em>相同的</em>模組物件，並透過重新執行模組的程式碼來簡單地重新初始化模組內容。</p>
 </section>
 <section id="finders-and-loaders">
-<span id="id2"></span><h3><span class="section-number">5.3.2. </span>Finders and loaders<a class="headerlink" href="#finders-and-loaders" title="連結到這個標頭">¶</a></h3>
-<p id="index-8">If the named module is not found in <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>, then Python's import
-protocol is invoked to find and load the module.  This protocol consists of
-two conceptual objects, <a class="reference internal" href="../glossary.html#term-finder"><span class="xref std std-term">finders</span></a> and <a class="reference internal" href="../glossary.html#term-loader"><span class="xref std std-term">loaders</span></a>.
-A finder's job is to determine whether it can find the named module using
-whatever strategy it knows about. Objects that implement both of these
-interfaces are referred to as <a class="reference internal" href="../glossary.html#term-importer"><span class="xref std std-term">importers</span></a> - they return
-themselves when they find that they can load the requested module.</p>
-<p>Python includes a number of default finders and importers.  The first one
-knows how to locate built-in modules, and the second knows how to locate
-frozen modules.  A third default finder searches an <a class="reference internal" href="../glossary.html#term-import-path"><span class="xref std std-term">import path</span></a>
-for modules.  The <a class="reference internal" href="../glossary.html#term-import-path"><span class="xref std std-term">import path</span></a> is a list of locations that may
-name file system paths or zip files.  It can also be extended to search
-for any locatable resource, such as those identified by URLs.</p>
-<p>The import machinery is extensible, so new finders can be added to extend the
-range and scope of module searching.</p>
-<p>Finders do not actually load modules.  If they can find the named module, they
-return a <em class="dfn">module spec</em>, an encapsulation of the module's import-related
-information, which the import machinery then uses when loading the module.</p>
-<p>The following sections describe the protocol for finders and loaders in more
-detail, including how you can create and register new ones to extend the
-import machinery.</p>
+<span id="id2"></span><h3><span class="section-number">5.3.2. </span>尋檢器 (Finder) 與載入器 (Loader)<a class="headerlink" href="#finders-and-loaders" title="連結到這個標頭">¶</a></h3>
+<p id="index-8">如果在 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 中找不到指定的模組，則會調用 Python 的引入協定來尋找並載入該模組。這個協定由兩個概念性物件組成，<a class="reference internal" href="../glossary.html#term-finder"><span class="xref std std-term">尋檢器</span></a> 和<a class="reference internal" href="../glossary.html#term-loader"><span class="xref std std-term">載入器</span></a>。尋檢器的任務是使用其已知的策略來確定是否能找到命名模組。實作這兩個介面的物件稱為<a class="reference internal" href="../glossary.html#term-importer"><span class="xref std std-term">引入器 (importer)</span></a> ——當它們發現可以載入所請求的模組時，會回傳它們自己。</p>
+<p>Python 包含多個預設的尋檢器和引入器。第一個尋檢器知道如何定位內建模組，第二個尋檢器知道如何定位凍結模組。第三個預設尋檢器會在 <a class="reference internal" href="../glossary.html#term-import-path"><span class="xref std std-term">import path</span></a> 中搜尋模組。<a class="reference internal" href="../glossary.html#term-import-path"><span class="xref std std-term">import path</span></a> 是一個位置的列表，這些位置可能是檔案系統路徑或壓縮檔案，也可以擴展以搜尋任何可定位的資源，例如由 URL 識別的資源。</p>
+<p>引入機制是可擴展的，因此可以增加新的尋檢器來擴展模組搜尋的範圍和作用域。</p>
+<p>尋檢器實際上不會載入模組。如果它們能找到指定的模組，它們會回傳一個<em class="dfn">模組規格</em>，這是一個模組的引入相關資訊的封裝，引入機制會在載入模組時使用這些資訊。</p>
+<p>以下各節將更詳細地描述尋檢器和載入器的協定，包括如何建立和註冊新的尋檢器和載入器來擴展引入機制。</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.4 版的變更: </span>In previous versions of Python, finders returned <a class="reference internal" href="../glossary.html#term-loader"><span class="xref std std-term">loaders</span></a>
-directly, whereas now they return module specs which <em>contain</em> loaders.
-Loaders are still used during import but have fewer responsibilities.</p>
+<p><span class="versionmodified changed">在 3.4 版的變更: </span>Python 在之前的版本中，尋檢器會直接回傳<a class="reference internal" href="../glossary.html#term-loader"><span class="xref std std-term">載入器</span></a>，而現在它們回傳的是<em>包含</em>載入器的模組規格。載入器仍在引入過程中使用，但其責任減少了。</p>
 </div>
 </section>
 <section id="import-hooks">
-<h3><span class="section-number">5.3.3. </span>Import hooks<a class="headerlink" href="#import-hooks" title="連結到這個標頭">¶</a></h3>
-<p id="index-9">The import machinery is designed to be extensible; the primary mechanism for
-this are the <em>import hooks</em>.  There are two types of import hooks: <em>meta
-hooks</em> and <em>import path hooks</em>.</p>
-<p>Meta hooks are called at the start of import processing, before any other
-import processing has occurred, other than <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> cache look up.
-This allows meta hooks to override <a class="reference internal" href="../library/sys.html#sys.path" title="sys.path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a> processing, frozen
-modules, or even built-in modules.  Meta hooks are registered by adding new
-finder objects to <a class="reference internal" href="../library/sys.html#sys.meta_path" title="sys.meta_path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.meta_path</span></code></a>, as described below.</p>
-<p>Import path hooks are called as part of <a class="reference internal" href="../library/sys.html#sys.path" title="sys.path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a> (or
-<code class="docutils literal notranslate"><span class="pre">package.__path__</span></code>) processing, at the point where their associated path
-item is encountered.  Import path hooks are registered by adding new callables
-to <a class="reference internal" href="../library/sys.html#sys.path_hooks" title="sys.path_hooks"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path_hooks</span></code></a> as described below.</p>
+<h3><span class="section-number">5.3.3. </span>引入掛鉤 (Import hooks)<a class="headerlink" href="#import-hooks" title="連結到這個標頭">¶</a></h3>
+<p id="index-9">引入機制的設計是可擴展的；其主要機制是<em>引入掛鉤</em>。引入掛鉤有兩種類型：<em>元掛鉤 (meta hooks)</em> 和<em>引入路徑掛鉤</em>。</p>
+<p>元掛鉤會在引入處理的開始階段被呼叫，除了查找 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 快取外，其他引入處理還未發生時就會呼叫。這允許元掛鉤覆蓋 <a class="reference internal" href="../library/sys.html#sys.path" title="sys.path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a> 的處理、凍結模組，甚至是內建模組。元掛鉤透過將新的尋檢器物件添加到 <a class="reference internal" href="../library/sys.html#sys.meta_path" title="sys.meta_path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.meta_path</span></code></a> 中來註冊，具體描述請參閱以下段落。</p>
+<p>引入路徑掛鉤被視為 <a class="reference internal" href="../library/sys.html#sys.path" title="sys.path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a>（或 <code class="docutils literal notranslate"><span class="pre">package.__path__</span></code>）處理過程的一部分來呼叫，當遇到與其相關聯的路徑項目時就會被觸發。引入路徑掛鉤透過將新的可呼叫對象增加到 <a class="reference internal" href="../library/sys.html#sys.path_hooks" title="sys.path_hooks"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path_hooks</span></code></a> 中來註冊，具體描述請參閱以下段落。</p>
 </section>
 <section id="the-meta-path">
-<h3><span class="section-number">5.3.4. </span>The meta path<a class="headerlink" href="#the-meta-path" title="連結到這個標頭">¶</a></h3>
-<p id="index-10">When the named module is not found in <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>, Python next
-searches <a class="reference internal" href="../library/sys.html#sys.meta_path" title="sys.meta_path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.meta_path</span></code></a>, which contains a list of meta path finder
-objects.  These finders are queried in order to see if they know how to handle
-the named module.  Meta path finders must implement a method called
-<a class="reference internal" href="../library/importlib.html#importlib.abc.MetaPathFinder.find_spec" title="importlib.abc.MetaPathFinder.find_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_spec()</span></code></a> which takes three arguments:
-a name, an import path, and (optionally) a target module.  The meta path
-finder can use any strategy it wants to determine whether it can handle
-the named module or not.</p>
-<p>If the meta path finder knows how to handle the named module, it returns a
-spec object.  If it cannot handle the named module, it returns <code class="docutils literal notranslate"><span class="pre">None</span></code>.  If
-<a class="reference internal" href="../library/sys.html#sys.meta_path" title="sys.meta_path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.meta_path</span></code></a> processing reaches the end of its list without returning
-a spec, then a <a class="reference internal" href="../library/exceptions.html#ModuleNotFoundError" title="ModuleNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a> is raised.  Any other exceptions
-raised are simply propagated up, aborting the import process.</p>
-<p>The <a class="reference internal" href="../library/importlib.html#importlib.abc.MetaPathFinder.find_spec" title="importlib.abc.MetaPathFinder.find_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_spec()</span></code></a> method of meta path
-finders is called with two or three arguments.  The first is the fully
-qualified name of the module being imported, for example <code class="docutils literal notranslate"><span class="pre">foo.bar.baz</span></code>.
-The second argument is the path entries to use for the module search.  For
-top-level modules, the second argument is <code class="docutils literal notranslate"><span class="pre">None</span></code>, but for submodules or
-subpackages, the second argument is the value of the parent package's
-<code class="docutils literal notranslate"><span class="pre">__path__</span></code> attribute. If the appropriate <code class="docutils literal notranslate"><span class="pre">__path__</span></code> attribute cannot
-be accessed, a <a class="reference internal" href="../library/exceptions.html#ModuleNotFoundError" title="ModuleNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a> is raised.  The third argument
-is an existing module object that will be the target of loading later.
-The import system passes in a target module only during reload.</p>
-<p>The meta path may be traversed multiple times for a single import request.
-For example, assuming none of the modules involved has already been cached,
-importing <code class="docutils literal notranslate"><span class="pre">foo.bar.baz</span></code> will first perform a top level import, calling
-<code class="docutils literal notranslate"><span class="pre">mpf.find_spec(&quot;foo&quot;,</span> <span class="pre">None,</span> <span class="pre">None)</span></code> on each meta path finder (<code class="docutils literal notranslate"><span class="pre">mpf</span></code>). After
-<code class="docutils literal notranslate"><span class="pre">foo</span></code> has been imported, <code class="docutils literal notranslate"><span class="pre">foo.bar</span></code> will be imported by traversing the
-meta path a second time, calling
-<code class="docutils literal notranslate"><span class="pre">mpf.find_spec(&quot;foo.bar&quot;,</span> <span class="pre">foo.__path__,</span> <span class="pre">None)</span></code>. Once <code class="docutils literal notranslate"><span class="pre">foo.bar</span></code> has been
-imported, the final traversal will call
-<code class="docutils literal notranslate"><span class="pre">mpf.find_spec(&quot;foo.bar.baz&quot;,</span> <span class="pre">foo.bar.__path__,</span> <span class="pre">None)</span></code>.</p>
-<p>Some meta path finders only support top level imports. These importers will
-always return <code class="docutils literal notranslate"><span class="pre">None</span></code> when anything other than <code class="docutils literal notranslate"><span class="pre">None</span></code> is passed as the
-second argument.</p>
-<p>Python's default <a class="reference internal" href="../library/sys.html#sys.meta_path" title="sys.meta_path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.meta_path</span></code></a> has three meta path finders, one that
-knows how to import built-in modules, one that knows how to import frozen
-modules, and one that knows how to import modules from an <a class="reference internal" href="../glossary.html#term-import-path"><span class="xref std std-term">import path</span></a>
-(i.e. the <a class="reference internal" href="../glossary.html#term-path-based-finder"><span class="xref std std-term">path based finder</span></a>).</p>
+<h3><span class="section-number">5.3.4. </span>元路徑<a class="headerlink" href="#the-meta-path" title="連結到這個標頭">¶</a></h3>
+<p id="index-10">當在 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 中找不到命名模組時，Python 接下來會搜尋 <a class="reference internal" href="../library/sys.html#sys.meta_path" title="sys.meta_path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.meta_path</span></code></a>，其中包含一個元路徑尋檢器物件串列。這些尋檢器會依次被查詢，看它們是否知道如何處理命名模組。元路徑尋檢器必須實作一個名為 <a class="reference internal" href="../library/importlib.html#importlib.abc.MetaPathFinder.find_spec" title="importlib.abc.MetaPathFinder.find_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_spec()</span></code></a> 的方法，該方法接收三個引數：名稱、引入路徑和（可選的）目標模組。元路徑尋檢器可以使用任何策略來確定它是否能處理命名模組。</p>
+<p>如果元路徑尋檢器知道如何處理命名模組，它會回傳一個規格物件。如果它無法處理命名模組，則回傳 <code class="docutils literal notranslate"><span class="pre">None</span></code>。如果 <a class="reference internal" href="../library/sys.html#sys.meta_path" title="sys.meta_path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.meta_path</span></code></a> 的處理到達串列的末尾仍未回傳規格，則會引發 <a class="reference internal" href="../library/exceptions.html#ModuleNotFoundError" title="ModuleNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a>。任何其他引發的例外將直接向上傳播，並中止引入過程。</p>
+<p>元路徑尋檢器的 <a class="reference internal" href="../library/importlib.html#importlib.abc.MetaPathFinder.find_spec" title="importlib.abc.MetaPathFinder.find_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_spec()</span></code></a> 方法會以兩個或三個引數來呼叫。第一個是被引入模組的完全限定名稱，例如 <code class="docutils literal notranslate"><span class="pre">foo.bar.baz</span></code>。第二個引數是用於模組搜尋的路徑條目。對於頂層模組，第二個引數是 <code class="docutils literal notranslate"><span class="pre">None</span></code>，但對於子模組或子套件，第二個引數是父套件的 <code class="docutils literal notranslate"><span class="pre">__path__</span></code> 屬性的值。如果無法存取相應的 <code class="docutils literal notranslate"><span class="pre">__path__</span></code> 屬性，將引發 <a class="reference internal" href="../library/exceptions.html#ModuleNotFoundError" title="ModuleNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a>。第三個引數是一個現有的模組物件，該物件將成為後續載入的目標。引入系統只會在重新載入時傳入目標模組。</p>
+<p>對於一個引入請求，元路徑可能會被遍歷多次。例如，假設參與的模組都沒有被快取，則引入 <code class="docutils literal notranslate"><span class="pre">foo.bar.baz</span></code> 將首先執行頂層引入，對每個元路徑尋檢器（<code class="docutils literal notranslate"><span class="pre">mpf</span></code>）呼叫 <code class="docutils literal notranslate"><span class="pre">mpf.find_spec(&quot;foo&quot;,</span> <span class="pre">None,</span> <span class="pre">None)</span></code>。當 <code class="docutils literal notranslate"><span class="pre">foo</span></code> 被引入後，將再次藉由遍歷元路徑引入 <code class="docutils literal notranslate"><span class="pre">foo.bar</span></code>，並呼叫 <code class="docutils literal notranslate"><span class="pre">mpf.find_spec(&quot;foo.bar&quot;,</span> <span class="pre">foo.__path__,</span> <span class="pre">None)</span></code>。當 <code class="docutils literal notranslate"><span class="pre">foo.bar</span></code> 被引入後，最後一次遍歷會呼叫 <code class="docutils literal notranslate"><span class="pre">mpf.find_spec(&quot;foo.bar.baz&quot;,</span> <span class="pre">foo.bar.__path__,</span> <span class="pre">None)</span></code>。</p>
+<p>一些元路徑尋檢器僅支援頂層引入。當第二個引數傳入 <code class="docutils literal notranslate"><span class="pre">None</span></code> 以外的值時，這些引入器將始終回傳 <code class="docutils literal notranslate"><span class="pre">None</span></code>。</p>
+<p>Python 的預設 <a class="reference internal" href="../library/sys.html#sys.meta_path" title="sys.meta_path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.meta_path</span></code></a> 有三個元路徑尋檢器，一個知道如何引入內建模組，一個知道如何引入凍結模組，還有一個知道如何從 <a class="reference internal" href="../glossary.html#term-import-path"><span class="xref std std-term">import path</span></a> 引入模組（即 <a class="reference internal" href="../glossary.html#term-path-based-finder"><span class="xref std std-term">path based finder</span></a>）。</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.4 版的變更: </span>The <a class="reference internal" href="../library/importlib.html#importlib.abc.MetaPathFinder.find_spec" title="importlib.abc.MetaPathFinder.find_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_spec()</span></code></a> method of meta path
-finders replaced <code class="xref py py-meth docutils literal notranslate"><span class="pre">find_module()</span></code>, which
-is now deprecated.  While it will continue to work without change, the
-import machinery will try it only if the finder does not implement
-<a class="reference internal" href="../library/importlib.html#importlib.abc.MetaPathFinder.find_spec" title="importlib.abc.MetaPathFinder.find_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_spec()</span></code></a>.</p>
+<p><span class="versionmodified changed">在 3.4 版的變更: </span>元路徑尋檢器的 <a class="reference internal" href="../library/importlib.html#importlib.abc.MetaPathFinder.find_spec" title="importlib.abc.MetaPathFinder.find_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_spec()</span></code></a> 方法取代了 <code class="xref py py-meth docutils literal notranslate"><span class="pre">find_module()</span></code>，後者現在已被棄用。雖然它將繼續正常工作，但引入機制僅在尋檢器未實作 <a class="reference internal" href="../library/importlib.html#importlib.abc.MetaPathFinder.find_spec" title="importlib.abc.MetaPathFinder.find_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_spec()</span></code></a> 時才會嘗試使用它。</p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.10 版的變更: </span>Use of <code class="xref py py-meth docutils literal notranslate"><span class="pre">find_module()</span></code> by the import system
-now raises <a class="reference internal" href="../library/exceptions.html#ImportWarning" title="ImportWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportWarning</span></code></a>.</p>
+<p><span class="versionmodified changed">在 3.10 版的變更: </span>引入系統現在使用 <code class="xref py py-meth docutils literal notranslate"><span class="pre">find_module()</span></code> 時將引發 <a class="reference internal" href="../library/exceptions.html#ImportWarning" title="ImportWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportWarning</span></code></a>。</p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.12 版的變更: </span><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_module()</span></code> has been removed.
-Use <a class="reference internal" href="../library/importlib.html#importlib.abc.MetaPathFinder.find_spec" title="importlib.abc.MetaPathFinder.find_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_spec()</span></code></a> instead.</p>
+<p><span class="versionmodified changed">在 3.12 版的變更: </span><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_module()</span></code> 已被移除。請改用 <a class="reference internal" href="../library/importlib.html#importlib.abc.MetaPathFinder.find_spec" title="importlib.abc.MetaPathFinder.find_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_spec()</span></code></a>。</p>
 </div>
 </section>
 </section>
@@ -1153,15 +990,15 @@ Python implementations.</p>
 <li><a class="reference internal" href="#">5. 模組引入系統</a><ul>
 <li><a class="reference internal" href="#importlib">5.1. <code class="xref py py-mod docutils literal notranslate"><span class="pre">importlib</span></code></a></li>
 <li><a class="reference internal" href="#packages">5.2. 套件</a><ul>
-<li><a class="reference internal" href="#regular-packages">5.2.1. Regular packages</a></li>
-<li><a class="reference internal" href="#namespace-packages">5.2.2. Namespace packages</a></li>
+<li><a class="reference internal" href="#regular-packages">5.2.1. 一般套件</a></li>
+<li><a class="reference internal" href="#namespace-packages">5.2.2. 命名空間套件</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#searching">5.3. Searching</a><ul>
-<li><a class="reference internal" href="#the-module-cache">5.3.1. The module cache</a></li>
-<li><a class="reference internal" href="#finders-and-loaders">5.3.2. Finders and loaders</a></li>
-<li><a class="reference internal" href="#import-hooks">5.3.3. Import hooks</a></li>
-<li><a class="reference internal" href="#the-meta-path">5.3.4. The meta path</a></li>
+<li><a class="reference internal" href="#searching">5.3. 搜尋</a><ul>
+<li><a class="reference internal" href="#the-module-cache">5.3.1. 模組快取</a></li>
+<li><a class="reference internal" href="#finders-and-loaders">5.3.2. 尋檢器 (Finder) 與載入器 (Loader)</a></li>
+<li><a class="reference internal" href="#import-hooks">5.3.3. 引入掛鉤 (Import hooks)</a></li>
+<li><a class="reference internal" href="#the-meta-path">5.3.4. 元路徑</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#loading">5.4. Loading</a><ul>
@@ -1297,7 +1134,7 @@ Python implementations.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Oct 05, 2024 (07:08 UTC)。
+      最後更新於 Oct 07, 2024 (13:43 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
