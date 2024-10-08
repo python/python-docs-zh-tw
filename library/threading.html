@@ -91,7 +91,7 @@
 <li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> --- 基於執行緒的平行性</a><ul>
 <li><a class="reference internal" href="#thread-local-data">Thread-Local Data</a></li>
 <li><a class="reference internal" href="#thread-objects">Thread Objects</a></li>
-<li><a class="reference internal" href="#lock-objects">Lock Objects</a></li>
+<li><a class="reference internal" href="#lock-objects">Lock 物件</a></li>
 <li><a class="reference internal" href="#rlock-objects">RLock 物件</a></li>
 <li><a class="reference internal" href="#condition-objects">Condition Objects</a></li>
 <li><a class="reference internal" href="#semaphore-objects">Semaphore Objects</a><ul>
@@ -686,79 +686,48 @@ property instead.</p>
 
 </section>
 <section id="lock-objects">
-<span id="id2"></span><h2>Lock Objects<a class="headerlink" href="#lock-objects" title="連結到這個標頭">¶</a></h2>
-<p>A primitive lock is a synchronization primitive that is not owned by a
-particular thread when locked.  In Python, it is currently the lowest level
-synchronization primitive available, implemented directly by the <a class="reference internal" href="_thread.html#module-_thread" title="_thread: Low-level threading API."><code class="xref py py-mod docutils literal notranslate"><span class="pre">_thread</span></code></a>
-extension module.</p>
-<p>A primitive lock is in one of two states, &quot;locked&quot; or &quot;unlocked&quot;. It is created
-in the unlocked state.  It has two basic methods, <a class="reference internal" href="#threading.Lock.acquire" title="threading.Lock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> and
-<a class="reference internal" href="#threading.Lock.release" title="threading.Lock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a>.  When the state is unlocked, <a class="reference internal" href="#threading.Lock.acquire" title="threading.Lock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a>
-changes the state to locked and returns immediately.  When the state is locked,
-<a class="reference internal" href="#threading.Lock.acquire" title="threading.Lock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> blocks until a call to <a class="reference internal" href="#threading.Lock.release" title="threading.Lock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> in another
-thread changes it to unlocked, then the <a class="reference internal" href="#threading.Lock.acquire" title="threading.Lock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> call resets it
-to locked and returns.  The <a class="reference internal" href="#threading.Lock.release" title="threading.Lock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> method should only be
-called in the locked state; it changes the state to unlocked and returns
-immediately. If an attempt is made to release an unlocked lock, a
-<a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> will be raised.</p>
-<p>Locks also support the <a class="reference internal" href="#with-locks"><span class="std std-ref">context management protocol</span></a>.</p>
-<p>When more than one thread is blocked in <a class="reference internal" href="#threading.Lock.acquire" title="threading.Lock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> waiting for the
-state to turn to unlocked, only one thread proceeds when a <a class="reference internal" href="#threading.Lock.release" title="threading.Lock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a>
-call resets the state to unlocked; which one of the waiting threads proceeds
-is not defined, and may vary across implementations.</p>
-<p>All methods are executed atomically.</p>
+<span id="id2"></span><h2>Lock 物件<a class="headerlink" href="#lock-objects" title="連結到這個標頭">¶</a></h2>
+<p>原始鎖 (primitive lock) 是一種同步原語 (synchronization primitive)，在鎖定時不屬於特定執行緒。在 Python 中，它是目前可用的最低階同步原語，直接由 <a class="reference internal" href="_thread.html#module-_thread" title="_thread: Low-level threading API."><code class="xref py py-mod docutils literal notranslate"><span class="pre">_thread</span></code></a> 擴充模組實作。</p>
+<p>原始鎖會處於兩種狀態之一：「鎖定 (locked)」或「未鎖定 (unclocked)」，建立時會處於未鎖定狀態。它有兩個基本方法 <a class="reference internal" href="#threading.Lock.acquire" title="threading.Lock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> 和 <a class="reference internal" href="#threading.Lock.release" title="threading.Lock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a>。當狀態為未鎖定時，<a class="reference internal" href="#threading.Lock.acquire" title="threading.Lock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> 會將狀態變更為鎖定並立即回傳。當狀態被鎖定時，<a class="reference internal" href="#threading.Lock.acquire" title="threading.Lock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> 會阻塞 (block)，直到另一個執行緒中對 <a class="reference internal" href="#threading.Lock.release" title="threading.Lock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> 的呼叫將其更改為未鎖定狀態，然後 <a class="reference internal" href="#threading.Lock.acquire" title="threading.Lock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> 呼叫會將其重置為鎖定並回傳。<a class="reference internal" href="#threading.Lock.release" title="threading.Lock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> 方法只能在鎖定狀態下呼叫；它將狀態更改為未鎖定並立即回傳。如果嘗試釋放未鎖定的鎖，則會引發 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>。</p>
+<p>鎖也支援<a class="reference internal" href="#with-locks"><span class="std std-ref">情境管理協定</span></a>。</p>
+<p>當多個執行緒阻塞在 <a class="reference internal" href="#threading.Lock.acquire" title="threading.Lock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> 中等待狀態轉變為未鎖定，此時若呼叫 <a class="reference internal" href="#threading.Lock.release" title="threading.Lock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> 將狀態重置為未鎖定，則只會有一個執行緒繼續進行；哪一個等待執行緒會繼續進行是未定義的，並且可能因實作而異。</p>
+<p>所有方法均以最小不可分割的操作方式 (atomically) 執行。</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="threading.Lock">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">threading.</span></span><span class="sig-name descname"><span class="pre">Lock</span></span><a class="headerlink" href="#threading.Lock" title="連結到這個定義">¶</a></dt>
-<dd><p>The class implementing primitive lock objects.  Once a thread has acquired a
-lock, subsequent attempts to acquire it block, until it is released; any
-thread may release it.</p>
+<dd><p>實作原始鎖物件的類別。一旦執行緒獲得了鎖，後續再嘗試獲得它就會被阻塞，直到鎖被釋放；任何執行緒都可以去釋放它。</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.13 版的變更: </span><code class="docutils literal notranslate"><span class="pre">Lock</span></code> is now a class. In earlier Pythons, <code class="docutils literal notranslate"><span class="pre">Lock</span></code> was a factory
-function which returned an instance of the underlying private lock
-type.</p>
+<p><span class="versionmodified changed">在 3.13 版的變更: </span><code class="docutils literal notranslate"><span class="pre">Lock</span></code> 現在是一個類別。在早期的 Python 中，<code class="docutils literal notranslate"><span class="pre">Lock</span></code> 是一個會回傳底層私有鎖型別實例的工廠函式。</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="threading.Lock.acquire">
 <span class="sig-name descname"><span class="pre">acquire</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blocking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#threading.Lock.acquire" title="連結到這個定義">¶</a></dt>
-<dd><p>Acquire a lock, blocking or non-blocking.</p>
-<p>When invoked with the <em>blocking</em> argument set to <code class="docutils literal notranslate"><span class="pre">True</span></code> (the default),
-block until the lock is unlocked, then set it to locked and return <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
-<p>When invoked with the <em>blocking</em> argument set to <code class="docutils literal notranslate"><span class="pre">False</span></code>, do not block.
-If a call with <em>blocking</em> set to <code class="docutils literal notranslate"><span class="pre">True</span></code> would block, return <code class="docutils literal notranslate"><span class="pre">False</span></code>
-immediately; otherwise, set the lock to locked and return <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
-<p>When invoked with the floating-point <em>timeout</em> argument set to a positive
-value, block for at most the number of seconds specified by <em>timeout</em>
-and as long as the lock cannot be acquired.  A <em>timeout</em> argument of <code class="docutils literal notranslate"><span class="pre">-1</span></code>
-specifies an unbounded wait.  It is forbidden to specify a <em>timeout</em>
-when <em>blocking</em> is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
-<p>The return value is <code class="docutils literal notranslate"><span class="pre">True</span></code> if the lock is acquired successfully,
-<code class="docutils literal notranslate"><span class="pre">False</span></code> if not (for example if the <em>timeout</em> expired).</p>
+<dd><p>阻塞或非阻塞地取得鎖。</p>
+<p>當以 <em>blocking</em> 引數設為 <code class="docutils literal notranslate"><span class="pre">True</span></code>（預設值）來調用，將會阻塞直到鎖被解鎖，然後將其設為鎖定並回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+<p>當以 <em>blocking</em> 引數設為 <code class="docutils literal notranslate"><span class="pre">False</span></code> 調用則不會阻塞。如果 <em>blocking</em> 設定為 <code class="docutils literal notranslate"><span class="pre">True</span></code> 的呼叫會阻塞，則立即回傳 <code class="docutils literal notranslate"><span class="pre">False</span></code>；否則將鎖設為鎖定並回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+<p>當使用設定為正值的浮點 <em>timeout</em> 引數進行調用，只要持續無法取得鎖，最多會阻塞 <em>timeout</em> 指定的秒數。<code class="docutils literal notranslate"><span class="pre">-1</span></code> 的 <em>timeout</em> 引數代表指定為不會停止的等待。當 <em>blocking</em> 為 <code class="docutils literal notranslate"><span class="pre">False</span></code> 時禁止指定 <em>timeout</em>。</p>
+<p>如果成功取得鎖，則回傳值為 <code class="docutils literal notranslate"><span class="pre">True</span></code>，否則回傳值為 <code class="docutils literal notranslate"><span class="pre">False</span></code>（例如像是 <em>timeout</em> 已逾期）。</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.2 版的變更: </span>The <em>timeout</em> parameter is new.</p>
+<p><span class="versionmodified changed">在 3.2 版的變更: </span>新的 <em>timeout</em> 參數。</p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.2 版的變更: </span>Lock acquisition can now be interrupted by signals on POSIX if the
-underlying threading implementation supports it.</p>
+<p><span class="versionmodified changed">在 3.2 版的變更: </span>如果底層執行緒實作支援的話，鎖的獲取現在可以被 POSIX 上的訊號中斷。</p>
 </div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="threading.Lock.release">
 <span class="sig-name descname"><span class="pre">release</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#threading.Lock.release" title="連結到這個定義">¶</a></dt>
-<dd><p>Release a lock.  This can be called from any thread, not only the thread
-which has acquired the lock.</p>
-<p>When the lock is locked, reset it to unlocked, and return.  If any other threads
-are blocked waiting for the lock to become unlocked, allow exactly one of them
-to proceed.</p>
-<p>When invoked on an unlocked lock, a <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> is raised.</p>
-<p>There is no return value.</p>
+<dd><p>釋放鎖。這可以從任何執行緒呼叫，而不是只有獲得鎖的執行緒。</p>
+<p>當鎖被鎖定時，將其重置為未鎖定然後回傳。如果任何其他執行緒在等待鎖被解鎖時被阻塞，只允許其中一個執行緒繼續進行。</p>
+<p>當在未鎖定的鎖上調用時，會引發 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a></p>
+<p>沒有回傳值。</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="threading.Lock.locked">
 <span class="sig-name descname"><span class="pre">locked</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#threading.Lock.locked" title="連結到這個定義">¶</a></dt>
-<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the lock is acquired.</p>
+<dd><p>如果有取得了鎖，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
 </dd></dl>
 
 </dd></dl>
@@ -766,94 +735,59 @@ to proceed.</p>
 </section>
 <section id="rlock-objects">
 <span id="id3"></span><h2>RLock 物件<a class="headerlink" href="#rlock-objects" title="連結到這個標頭">¶</a></h2>
-<p>A reentrant lock is a synchronization primitive that may be acquired multiple
-times by the same thread.  Internally, it uses the concepts of &quot;owning thread&quot;
-and &quot;recursion level&quot; in addition to the locked/unlocked state used by primitive
-locks.  In the locked state, some thread owns the lock; in the unlocked state,
-no thread owns it.</p>
-<p>Threads call a lock's <a class="reference internal" href="#threading.RLock.acquire" title="threading.RLock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> method to lock it,
-and its <a class="reference internal" href="#threading.Lock.release" title="threading.Lock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> method to unlock it.</p>
+<p>可重入鎖 (reentrant lock) 是一種同步原語，同一執行緒可以多次取得它。在內部，除了原始鎖使用的鎖定/未鎖定狀態之外，它還使用「所屬執行緒 (owning thread)」和「遞迴等級 (recursion level)」的概念。在鎖定狀態下，某個執行緒會擁有鎖；在未鎖定狀態下則沒有執行緒擁有它。</p>
+<p>執行緒呼叫鎖的 <a class="reference internal" href="#threading.RLock.acquire" title="threading.RLock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> 方法來鎖定它，並呼叫它的 <a class="reference internal" href="#threading.Lock.release" title="threading.Lock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> 方法來解鎖它。</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>Reentrant locks support the <a class="reference internal" href="#with-locks"><span class="std std-ref">context management protocol</span></a>,
-so it is recommended to use <a class="reference internal" href="../reference/compound_stmts.html#with"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">with</span></code></a> instead of manually calling
-<a class="reference internal" href="#threading.RLock.acquire" title="threading.RLock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> and <a class="reference internal" href="#threading.RLock.release" title="threading.RLock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a>
-to handle acquiring and releasing the lock for a block of code.</p>
+<p>可重入鎖支援<a class="reference internal" href="#with-locks"><span class="std std-ref">情境管理協定</span></a>，因此建議使用 <a class="reference internal" href="../reference/compound_stmts.html#with"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">with</span></code></a> 而不是手動呼叫 <a class="reference internal" href="#threading.RLock.acquire" title="threading.RLock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> 和 <a class="reference internal" href="#threading.RLock.release" title="threading.RLock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> 來對程式碼區塊處理鎖的獲得和釋放。</p>
 </div>
-<p>RLock's <a class="reference internal" href="#threading.RLock.acquire" title="threading.RLock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a>/<a class="reference internal" href="#threading.RLock.release" title="threading.RLock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> call pairs may be nested,
-unlike Lock's <a class="reference internal" href="#threading.Lock.acquire" title="threading.Lock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a>/<a class="reference internal" href="#threading.Lock.release" title="threading.Lock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a>. Only the final
-<a class="reference internal" href="#threading.RLock.release" title="threading.RLock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> (the <a class="reference internal" href="#threading.Lock.release" title="threading.Lock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> of the outermost pair) resets
-the lock to an unlocked state and allows another thread blocked in
-<a class="reference internal" href="#threading.RLock.acquire" title="threading.RLock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> to proceed.</p>
-<p><a class="reference internal" href="#threading.RLock.acquire" title="threading.RLock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a>/<a class="reference internal" href="#threading.RLock.release" title="threading.RLock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> must be used in pairs: each acquire
-must have a release in the thread that has acquired the lock. Failing to
-call release as many times the lock has been acquired can lead to deadlock.</p>
+<p>RLock 的 <a class="reference internal" href="#threading.RLock.acquire" title="threading.RLock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a>/<a class="reference internal" href="#threading.RLock.release" title="threading.RLock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> 呼叫成對組合可以嵌套使用，這與 Lock 的 <a class="reference internal" href="#threading.Lock.acquire" title="threading.Lock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a>/<a class="reference internal" href="#threading.Lock.release" title="threading.Lock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> 不同。只有最後一個 <a class="reference internal" href="#threading.RLock.release" title="threading.RLock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a>（最外面一對的 <a class="reference internal" href="#threading.Lock.release" title="threading.Lock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a>）會將鎖重置為未鎖定狀態，並允許在 <a class="reference internal" href="#threading.RLock.acquire" title="threading.RLock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a> 中阻塞的另一個執行緒繼續進行。</p>
+<p><a class="reference internal" href="#threading.RLock.acquire" title="threading.RLock.acquire"><code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code></a>/<a class="reference internal" href="#threading.RLock.release" title="threading.RLock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> 必須成對使用：每次獲得都必須在已獲得鎖的執行緒中有一個釋放。如果鎖釋放的次數不能和獲取的次數一樣的話，可能會導致死鎖 (deadlock)。</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="threading.RLock">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">threading.</span></span><span class="sig-name descname"><span class="pre">RLock</span></span><a class="headerlink" href="#threading.RLock" title="連結到這個定義">¶</a></dt>
-<dd><p>This class implements reentrant lock objects.  A reentrant lock must be
-released by the thread that acquired it.  Once a thread has acquired a
-reentrant lock, the same thread may acquire it again without blocking; the
-thread must release it once for each time it has acquired it.</p>
-<p>Note that <code class="docutils literal notranslate"><span class="pre">RLock</span></code> is actually a factory function which returns an instance
-of the most efficient version of the concrete RLock class that is supported
-by the platform.</p>
+<dd><p>此類別實作了可重入鎖物件。可重入鎖必須由獲得它的執行緒釋放。一旦一個執行緒獲得了可重入鎖，同一個執行緒可以再次獲得它而不會阻塞；執行緒每次獲得它也都必須釋放它一次。</p>
+<p>請注意，<code class="docutils literal notranslate"><span class="pre">RLock</span></code> 實際上是一個工廠函式，它會回傳平台有支援的特定 RLock 類別的最高效率版本的實例。</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="threading.RLock.acquire">
 <span class="sig-name descname"><span class="pre">acquire</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blocking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#threading.RLock.acquire" title="連結到這個定義">¶</a></dt>
-<dd><p>Acquire a lock, blocking or non-blocking.</p>
+<dd><p>阻塞或非阻塞地取得鎖。</p>
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
 <dl class="simple">
-<dt><a class="reference internal" href="#with-locks"><span class="std std-ref">Using RLock as a context manager</span></a></dt><dd><p>Recommended over manual <code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code> and <a class="reference internal" href="#threading.RLock.release" title="threading.RLock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> calls
-whenever practical.</p>
+<dt><a class="reference internal" href="#with-locks"><span class="std std-ref">將 RLock 用作為情境管理器</span></a></dt><dd><p>若是使用場景合理，和手動呼叫 <code class="xref py py-meth docutils literal notranslate"><span class="pre">acquire()</span></code> 和 <a class="reference internal" href="#threading.RLock.release" title="threading.RLock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> 相比，會是更為推薦的使用方式。</p>
 </dd>
 </dl>
 </div>
-<p>When invoked with the <em>blocking</em> argument set to <code class="docutils literal notranslate"><span class="pre">True</span></code> (the default):</p>
+<p>當以 <em>blocking</em> 引數設為 <code class="docutils literal notranslate"><span class="pre">True</span></code>（預設值）來調用：</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>If no thread owns the lock, acquire the lock and return immediately.</p></li>
-<li><p>If another thread owns the lock, block until we are able to acquire
-lock, or <em>timeout</em>, if set to a positive float value.</p></li>
-<li><p>If the same thread owns the lock, acquire the lock again, and
-return immediately. This is the difference between <a class="reference internal" href="#threading.Lock" title="threading.Lock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lock</span></code></a> and
-<code class="xref py py-class docutils literal notranslate"><span class="pre">RLock</span></code>; <a class="reference internal" href="#threading.Lock" title="threading.Lock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lock</span></code></a> handles this case the same as the previous,
-blocking until the lock can be acquired.</p></li>
+<li><p>如果沒有執行緒擁有鎖，則獲得鎖並立即回傳。</p></li>
+<li><p>如果另一個執行緒擁有鎖，則阻塞直到能夠取得鎖，或者達到 <em>timeout</em>（如果設定為正浮點值）。</p></li>
+<li><p>如果同一個執行緒擁有鎖，則再次取得鎖，並立即回傳。這就是 <a class="reference internal" href="#threading.Lock" title="threading.Lock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lock</span></code></a> 和 <code class="xref py py-class docutils literal notranslate"><span class="pre">RLock</span></code> 之間的差別；<a class="reference internal" href="#threading.Lock" title="threading.Lock"><code class="xref py py-class docutils literal notranslate"><span class="pre">Lock</span></code></a> 處理方式與上一種情況相同，會阻塞直到能夠取得鎖。</p></li>
 </ul>
 </div></blockquote>
-<p>When invoked with the <em>blocking</em> argument set to <code class="docutils literal notranslate"><span class="pre">False</span></code>:</p>
+<p>當以 <em>blocking</em> 引數設為 <code class="docutils literal notranslate"><span class="pre">False</span></code> 來調用：</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>If no thread owns the lock, acquire the lock and return immediately.</p></li>
-<li><p>If another thread owns the lock, return immediately.</p></li>
-<li><p>If the same thread owns the lock, acquire the lock again and return
-immediately.</p></li>
+<li><p>如果沒有執行緒擁有鎖，則獲得鎖並立即回傳。</p></li>
+<li><p>如果另一個執行緒擁有該鎖，則立即回傳。</p></li>
+<li><p>如果同一個執行緒擁有鎖，則再次取得鎖並立即回傳。</p></li>
 </ul>
 </div></blockquote>
-<p>In all cases, if the thread was able to acquire the lock, return <code class="docutils literal notranslate"><span class="pre">True</span></code>.
-If the thread was unable to acquire the lock (i.e. if not blocking or
-the timeout was reached) return <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
-<p>If called multiple times, failing to call <a class="reference internal" href="#threading.RLock.release" title="threading.RLock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a> as many times
-may lead to deadlock. Consider using <code class="xref py py-class docutils literal notranslate"><span class="pre">RLock</span></code> as a context manager rather than
-calling acquire/release directly.</p>
+<p>在所有情況下，如果執行緒能夠取得鎖則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。如果執行緒無法取得鎖（即沒有阻塞或已達超時限制）則回傳 <code class="docutils literal notranslate"><span class="pre">False</span></code>。</p>
+<p>如果多次呼叫，又未能呼叫相同次數的 <a class="reference internal" href="#threading.RLock.release" title="threading.RLock.release"><code class="xref py py-meth docutils literal notranslate"><span class="pre">release()</span></code></a>，則可能會導致死鎖。考慮將 <code class="xref py py-class docutils literal notranslate"><span class="pre">RLock</span></code> 作為情境管理器使用，而不是直接呼叫 acquire/release。</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.2 版的變更: </span>The <em>timeout</em> parameter is new.</p>
+<p><span class="versionmodified changed">在 3.2 版的變更: </span>新的 <em>timeout</em> 參數。</p>
 </div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="threading.RLock.release">
 <span class="sig-name descname"><span class="pre">release</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#threading.RLock.release" title="連結到這個定義">¶</a></dt>
-<dd><p>Release a lock, decrementing the recursion level.  If after the decrement it is
-zero, reset the lock to unlocked (not owned by any thread), and if any other
-threads are blocked waiting for the lock to become unlocked, allow exactly one
-of them to proceed.  If after the decrement the recursion level is still
-nonzero, the lock remains locked and owned by the calling thread.</p>
-<p>Only call this method when the calling thread owns the lock. A
-<a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a> is raised if this method is called when the lock is
-not acquired.</p>
-<p>There is no return value.</p>
+<dd><p>釋放鎖並減少遞迴等級。如果被減至零，則將鎖重置為未鎖定（不屬於任何執行緒），並且如果任何其他執行緒被阻塞以等待鎖變成未鎖定狀態，則僅允許其中一個執行緒繼續進行。如果遞減後遞迴等級仍然非零，則鎖會保持鎖定並由呼叫它的執行緒所擁有。</p>
+<p>僅當呼叫的執行緒擁有鎖時才能呼叫此方法。如果在未取得鎖時呼叫此方法則會引發 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>。</p>
+<p>沒有回傳值。</p>
 </dd></dl>
 
 </dd></dl>
@@ -1072,7 +1006,7 @@ the same thing as when called without arguments, and return <code class="docutil
 most <em>timeout</em> seconds.  If acquire does not complete successfully in
 that interval, return <code class="docutils literal notranslate"><span class="pre">False</span></code>.  Return <code class="docutils literal notranslate"><span class="pre">True</span></code> otherwise.</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.2 版的變更: </span>The <em>timeout</em> parameter is new.</p>
+<p><span class="versionmodified changed">在 3.2 版的變更: </span>新的 <em>timeout</em> 參數。</p>
 </div>
 </dd></dl>
 
@@ -1371,7 +1305,7 @@ the following snippet:</p>
 <li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> --- 基於執行緒的平行性</a><ul>
 <li><a class="reference internal" href="#thread-local-data">Thread-Local Data</a></li>
 <li><a class="reference internal" href="#thread-objects">Thread Objects</a></li>
-<li><a class="reference internal" href="#lock-objects">Lock Objects</a></li>
+<li><a class="reference internal" href="#lock-objects">Lock 物件</a></li>
 <li><a class="reference internal" href="#rlock-objects">RLock 物件</a></li>
 <li><a class="reference internal" href="#condition-objects">Condition Objects</a></li>
 <li><a class="reference internal" href="#semaphore-objects">Semaphore Objects</a><ul>
@@ -1494,7 +1428,7 @@ the following snippet:</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Oct 07, 2024 (18:16 UTC)。
+      最後更新於 Oct 08, 2024 (03:35 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     

@@ -668,7 +668,8 @@ batch is shorter than <em>n</em>.</p>
 <span class="sig-prename descclassname"><span class="pre">itertools.</span></span><span class="sig-name descname"><span class="pre">islice</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span></em><span class="optional">[</span>, <em class="sig-param"><span class="n"><span class="pre">step</span></span></em><span class="optional">]</span><span class="sig-paren">)</span></dt>
 <dd><p>建立一個疊代器，回傳從 iterable 中選取的元素。其作用類似於序列切片 (sequence slicing)，但不支援負數的 <em>start</em>、<em>stop</em> 或 <em>step</em> 的值。</p>
 <p>如果 <em>start</em> 為零或 <code class="docutils literal notranslate"><span class="pre">None</span></code>，則從零開始疊代。否則在達到 <em>start</em> 之前，會跳過 iterable 中的元素。</p>
-<p>如果 <em>stop</em> 為 <code class="docutils literal notranslate"><span class="pre">None</span></code>，則疊代將繼續前進直到疊代器耗盡。如果指定了 <em>stop</em>，則在達到指定位置時停止。</p>
+<p>If <em>stop</em> is <code class="docutils literal notranslate"><span class="pre">None</span></code>, iteration continues until the iterable is
+exhausted, if at all.  Otherwise, it stops at the specified position.</p>
 <p>如果 <em>step</em> 為 <code class="docutils literal notranslate"><span class="pre">None</span></code>，則步長 (step) 預設為一。元素會連續回傳，除非將 <em>step</em> 設定為大於一，這會導致一些項目被跳過。</p>
 <p>大致等價於：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">islice</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
@@ -692,6 +693,9 @@ batch is shorter than <em>n</em>.</p>
             <span class="n">next_i</span> <span class="o">+=</span> <span class="n">step</span>
 </pre></div>
 </div>
+<p>If the input is an iterator, then fully consuming the <em>islice</em>
+advances the input iterator by <code class="docutils literal notranslate"><span class="pre">max(start,</span> <span class="pre">stop)</span></code> steps regardless
+of the <em>step</em> value.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -766,6 +770,8 @@ batch is shorter than <em>n</em>.</p>
     <span class="c1"># product(&#39;ABCD&#39;, &#39;xy&#39;) → Ax Ay Bx By Cx Cy Dx Dy</span>
     <span class="c1"># product(range(2), repeat=3) → 000 001 010 011 100 101 110 111</span>
 
+    <span class="k">if</span> <span class="n">repeat</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;repeat argument cannot be negative&#39;</span><span class="p">)</span>
     <span class="n">pools</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">pool</span><span class="p">)</span> <span class="k">for</span> <span class="n">pool</span> <span class="ow">in</span> <span class="n">iterables</span><span class="p">]</span> <span class="o">*</span> <span class="n">repeat</span>
 
     <span class="n">result</span> <span class="o">=</span> <span class="p">[[]]</span>
@@ -835,6 +841,8 @@ batch is shorter than <em>n</em>.</p>
 <dd><p>從一個 iterable 中回傳 <em>n</em> 個獨立的疊代器。</p>
 <p>大致等價於：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">tee</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;n must be &gt;= 0&#39;</span><span class="p">)</span>
     <span class="n">iterator</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
     <span class="n">shared_link</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_tee</span><span class="p">(</span><span class="n">iterator</span><span class="p">,</span> <span class="n">shared_link</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
@@ -852,6 +860,11 @@ batch is shorter than <em>n</em>.</p>
 </pre></div>
 </div>
 <p>一旦建立了 <a class="reference internal" href="#itertools.tee" title="itertools.tee"><code class="xref py py-func docutils literal notranslate"><span class="pre">tee()</span></code></a>，原始的 <em>iterable</em> 不應在其他地方使用；否則，<em>iterable</em> 可能會在 tee 物件未被通知的情況下前進。</p>
+<p>When the input <em>iterable</em> is already a tee iterator object, all
+members of the return tuple are constructed as if they had been
+produced by the upstream <a class="reference internal" href="#itertools.tee" title="itertools.tee"><code class="xref py py-func docutils literal notranslate"><span class="pre">tee()</span></code></a> call.  This &quot;flattening step&quot;
+allows nested <a class="reference internal" href="#itertools.tee" title="itertools.tee"><code class="xref py py-func docutils literal notranslate"><span class="pre">tee()</span></code></a> calls to share the same underlying data
+chain and to have a single update step rather than a chain of calls.</p>
 <p><code class="docutils literal notranslate"><span class="pre">tee</span></code> 疊代器不是執行緒安全 (threadsafe) 的。當同時使用由同一個 <a class="reference internal" href="#itertools.tee" title="itertools.tee"><code class="xref py py-func docutils literal notranslate"><span class="pre">tee()</span></code></a> 呼叫所回傳的疊代器時，即使原始的 <em>iterable</em> 是執行緒安全的，也可能引發 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>。</p>
 <p>此 itertool 可能需要大量的輔助儲存空間（取決於需要儲存多少臨時資料）。通常如果一個疊代器在另一個疊代器開始之前使用了大部分或全部的資料，使用 <a class="reference internal" href="stdtypes.html#list" title="list"><code class="xref py py-func docutils literal notranslate"><span class="pre">list()</span></code></a> 會比 <a class="reference internal" href="#itertools.tee" title="itertools.tee"><code class="xref py py-func docutils literal notranslate"><span class="pre">tee()</span></code></a> 更快。</p>
 </dd></dl>
@@ -1313,7 +1326,7 @@ batch is shorter than <em>n</em>.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Oct 07, 2024 (18:16 UTC)。
+      最後更新於 Oct 08, 2024 (03:35 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
