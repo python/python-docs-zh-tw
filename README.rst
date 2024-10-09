@@ -52,8 +52,8 @@ the PSF for inclusion in the documentation.
 請注意此予翻譯專案的授權：Python 的說明文件是以全球的志工社群來維護。透過張貼\
 此專案在 Transifex、GitHub 以及其他公眾場合，以及邀請你參與，我們向你提出一個\
 協議：你必須將你對於 Python 說明文件或是 Python 說明文件翻譯的貢獻以 CC0\
-（請參考 https://creativecommons.org/publicdomain/zero/1.0/legalcode）的方式\
-授權給 PSF 使用。你可以公開地聲明你所貢獻翻譯的部分，並且如果你的翻譯被 PSF
+（請參考 https://creativecommons.org/publicdomain/zero/1.0/legalcode/ 
+）的方式授權給 PSF 使用。你可以公開地聲明你所貢獻翻譯的部分，並且如果你的翻譯被 PSF
 採用，你可以（但並不須要）送出一個修改，其包含在 Misc/ACKS 或是 TRANSLATORS
 檔案裡增加合適的注釋。雖然這個說明文件貢獻協議並沒有說明 PSF 有義務納入你的\
 文本貢獻，你在 Python 社群的參與是受歡迎且受感激的。
@@ -75,6 +75,7 @@ the PSF for inclusion in the documentation.
 
 **請注意**: 以下基於 ``make`` 的便捷指令僅能運作於 Unix 系統上（無法使用並不影響主要翻譯流程），\
 其他作業系統的使用者在翻譯後可考慮改於 `GitHub Codespace <https://github.com/features/codespaces>`_ 上呼叫 ``make`` 指令。
+（參考 `project wiki 頁面 <https://github.com/python/python-docs-zh-tw/wiki/使用-Codespace-開發與預覽頁面>`_）
 
 事先需要有
 ~~~~~~~~~~
@@ -84,23 +85,25 @@ the PSF for inclusion in the documentation.
   上請參考 https://gitforwindows.org/）
 - 一個 ``.po`` 檔的編輯器。推薦使用 `Poedit <https://poedit.net>`_，若熟悉 po 檔用一般文字編輯器亦可。
 - macOS 的使用者還需要先利用 `homebrew <https://brew.sh/index_zh-tw>`_ 安裝 gettext，屆時 Sphinx 會使用到。
-.. code-block:: bash
 
-  brew install gettext
+  .. code-block:: bash
 
-  brew link gettext --force
+    brew install gettext
+    brew link gettext --force
+
 - 安裝 pre-commit 自動在 commit 時檢查 ``.po`` 檔格式。
-.. code-block:: bash
 
-  pip install pre-commit
-  pre-commit install
+  .. code-block:: bash
+
+    pip install pre-commit
+    pre-commit install
 
 在進行任何動作以前，你必須在 GitHub 上 fork 此專案（按下右上角的 ``Fork``
 按鈕），這樣會把整個專案複製一份到你的 GitHub 帳號底下，你可以對這個 fork
 進行修改。
 
 第一次貢獻以前（還沒有 clone 過）
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 請在 terminal 裡依照以下步驟：
 
@@ -121,84 +124,113 @@ the PSF for inclusion in the documentation.
 請遵照以下步驟（`GitHub Flow`_）：
 
 .. _GitHub Flow: https://guides.github.com/introduction/flow/
+.. _GitHub PR 文件: https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request#creating-the-pull-request
 
 首先，`新增一個 issue <https://github.com/python/python-docs-zh-tw/issues>`_\
-，如：「翻譯 tutorial/introduction.po」，讓大家知道你正在翻譯這個檔案。可以使用 ``make todo`` 列出尚待翻譯的檔案。
+，如：「翻譯 library/math.po」，讓大家知道你正在翻譯這個檔案。待翻譯文件清單請參考\
+`此頁面 <https://github.com/python/python-docs-zh-tw/wiki/各檔案翻譯進度清單>`_。
 
 接著在 terminal 裡按照以下步驟：
 
-1. 基於最新版本的 ``upstream/3.12`` 開啟一個 branch，現在假設我們想要翻譯 Glossary \
-   所以把這個 branch 叫做 ``glossary`` ::
+1. 基於最新版本的 ``upstream/3.12`` 開啟一個 branch，現在假設我們想要翻譯 library/math.po \
+   所以把這個 branch 叫做 ``library/math``：
 
-    git fetch upstream
-    git checkout -b glossary upstream/3.12
+   .. code-block:: bash
 
-2. 接著就可以開始翻譯（翻譯時可參考 `翻譯守則`_），你可以手動開啟 Poedit 應用程式再選檔案或用以下指令請 Poedit 將檔案\
-   打開，翻譯不同檔案時將 glossary 換成別的檔名） ::
+      git fetch upstream
+      git checkout -b library/math upstream/3.12
 
-    poedit glossary.po
+2. 接著就可以開始翻譯（翻譯時可參考\ `翻譯守則`_），你可以手動開啟 Poedit 應用程式再選 \
+   library/math.po 檔案打開
 
-3. 存檔以後，執行以下列指令編譯輸出完整文件，以確保你的修改沒有 reST 的語法錯誤或警告 ::
+3. 填入中譯內容並存檔以後，執行以下列指令編譯輸出完整文件，以確保你的修改沒有 reST 的語法錯誤或警告：
 
-    VERSION=3.12 make all
 
-   或者只想快速檢查是否有 reST 語法錯誤 ::
+   .. code-block:: bash
 
-    VERSION=3.12 make lint
+       make all
 
-   確保輸出中沒有任何關於正在翻譯的檔案的警告訊息。
 
-   如果你還沒有執行 `維護、預覽`_ 的 clone CPython 的動作，此指令會自動幫你 clone CPython，\
+   或者只想快速檢查是否有 reST 語法錯誤：
+
+   .. code-block:: bash
+
+       make lint
+
+
+   確保輸出中沒有任何警告訊息。
+
+   在 ``make all`` 後，可以使用 ``make build`` 來只對單一 po 檔進行編譯，可以節省較多的時間：
+
+   .. code-block:: bash
+
+       make build library/math.po
+
+   如果你還沒有執行\ `維護、預覽`_\ 的 clone CPython 的動作，此指令會自動幫你 clone CPython，\
    並且會使用 Sphinx 幫你檢查 reST 語法錯誤，我們盡量保持沒有 warning \
    的狀態，因此如果有出現 warning 的話請修復它。另外也記得檢查是否符合\
    `翻譯守則`_
 
-4. 輸出的文件會被放置在你的本地端 CPython clone（見 `維護、預覽`_ 段落的圖示）\
-   底下的 ``Doc/build/html``，切換到該目錄再使用 ``python3 -m http.server`` \
-   或類似的靜態網頁伺服器即可以預覽成果。你可以執行下列指令請瀏覽器打開編譯出來的文件\
-   以確認整份文件的語意通暢（翻譯別的檔案時將 glossary 換成別的檔名） ::
+4. 輸出的文件會被放置在你的本地端 CPython clone（見\ `維護、預覽`_\ 段落的圖示）\
+   底下的 ``Doc/build/html``，可以使用 `http.server` 或其他靜態網頁伺服器即可以預覽成果。
 
-    open ../cpython/Doc/build/html/glossary.html
+   .. code-block:: bash
 
-5. 檢查完畢後，即可以將你的翻譯 commit 起來，請使用明確的 commit message ::
+       cd ../cpython/Doc/build/html
+       python3 -m http.server
 
-    git add glossary.po
-    git commit -m "Working on glossary."
+   你也可以執行下列指令請瀏覽器打開編譯出來的文件\
+   以確認整份文件的語意通暢（翻譯別的檔案時將 library/math 換成別的檔名）：
+
+   .. code-block:: bash
+
+       open ../cpython/Doc/build/html/library/math.html
+
+5. 檢查完畢後，即可以將你的翻譯 commit 起來，請使用明確的 commit message：
+
+   .. code-block:: bash
+
+       git add library/math.po
+       git commit -m "Working on library/math.po"
 
 6. 將你的修改 push 到你的 GitHub clone 上。為了簡單，我們可以用 ``origin HEAD``
-   來告訴 git 我們將修改 push 到 origin，branch 則和本機端的 branch 名稱一樣 ::
+   來告訴 git 我們將修改 push 到 origin，branch 則和本機端的 branch 名稱一樣：
 
-    git push origin HEAD
+   .. code-block:: bash
 
-7. 這時候你就可以打開一個 pull request 了，請打開
-   https://github.com/python/python-docs-zh-tw，你會看到一個「Compare & Pull
-   Request」按鈕，按下它就可以對此專案發送一個 pull request。
+       git push origin HEAD
+
+7. 這時候你就可以打開一個 pull request 了：請打開\ `此專案的 GitHub 頁面 <https://github.com/python/python-docs-zh-tw>`_，\
+   你會看到一個「Compare & Pull Request」按鈕，按下它就可以對此專案發送一個 pull request（參考 `GitHub PR 文件`_）。
 
 8. 如果有人在 GitHub 上 review 了你的 pull request，並且你想要修改你的內容，\
-   那麼（如果你切換到了別的 branch 上）你要先切換回到你的 branch 上 ::
+   那麼（如果你切換到了別的 branch 上）你要先切換回到你的 branch 上：
 
-    git checkout glossary
+   .. code-block:: bash
 
-   接著修改你要修正的問題，並再次 commit、push ::
+       git checkout library/math
 
-    git add glossary.po
-    git commit -m "glossary: small fixes"
-    git push origin HEAD
+   接著修改你要修正的問題，並再次 commit、push：
+
+   .. code-block:: bash
+
+       git add library/math.po
+       git commit -m "fix(library/math): resolve review comments"
+       git push origin HEAD
 
 這整個流程裡有幾件事情值得注意：
 
 - 從 upstream（我們的主要 GitHub repo）做 fetch 的動作
 - 對 origin（你的 fork）做 push
-- 永遠不對 ``3.12`` branch 進行修改，請保持讓這個 branch 唯讀，可以避免\
-  掉很多問題。
+- 永遠不對 ``3.12`` branch 進行修改，請保持讓這個 branch 唯讀，可以避免掉很多問題。
 
 要翻譯哪些東西
 --------------
 
 主要是填入翻譯字串 (*msgstr*) 以及更新有標記為 ``#, fuzzy`` 的字串。
 
-其中最簡單的貢獻方式就是更新 *fuzzy entries*，讓曾經翻譯的內容保持與最新版本的文件\
-同步。請參考 `尋找有翻譯過但需校閱的 fuzzy entries`_ 段落。
+其中最簡單的貢獻方式就是更新 *fuzzy entries*，讓曾經翻譯的內容保持與最新版本的文件
+同步。請參考\ `尋找有翻譯過但需校閱的 fuzzy entries`_ 段落。
 
 此外，當前的目標為完成 **Tutorial** 的翻譯，因此在 ``tutorial/`` 底下的所有
 po 檔皆為首要的翻譯對象。你也可以幫忙校對已經翻譯過的內容。
@@ -219,7 +251,7 @@ po 檔皆為首要的翻譯對象。你也可以幫忙校對已經翻譯過的�
 
    例如：使用 CPU 運算、使用「CPU」運算
 
-#. 專有名詞應該參考 `術語表 Glossary`_ 裡翻譯方式。
+#. 專有名詞應該參考\ `術語表 Glossary`_ 裡的翻譯方式。
 
 #. 專有名詞可以選擇不翻譯。
 
@@ -235,8 +267,9 @@ po 檔皆為首要的翻譯對象。你也可以幫忙校對已經翻譯過的�
 
 #. 務必保留 reStructuredText 格式（如：超連結名稱）
 
-#. po 檔單行不應超過 79 字元寬度（Poedit 會處理，但也可以使用 `poindent
-   <https://pypi.org/project/poindent/>`_ 來確保格式）
+#. po 檔單行不應超過 79 字元寬度（Poedit 會處理，但也可以使用 `powrap
+   <https://github.com/python/python-docs-zh-tw/wiki/%E5%90%84%E7%A8%AE-CLI-%E5%B0%8F%E5%B7%A5%E5%85%B7#powrap>`_
+   來確保格式）
 
 #. 高頻詞保留原文。因為翻譯後不一定能較好理解市面上 Python 的文章。 這些高頻詞\
    在 Glossary 中的譯文仍保持原文，並加註市面上的翻譯。
@@ -259,13 +292,26 @@ po 檔皆為首要的翻譯對象。你也可以幫忙校對已經翻譯過的�
 - 在超文件標示語言 (HTML) 中應注意跳脫符號。
 
 reST 語法注意事項
-----------------
+---------------------
 
 - ``:xxx:`...``` 即為 reST 的語法，應該在譯文中保留。
-- reST 諸多語法需要保留前後的空白。在中文裡，該空白可以用 :literal:`\\\  \ `
-  來取代，製造一個沒有寬度的分隔符號。
 
   例如：
+
+  .. code-block:: rst
+
+    Avoids tests using :func:`type` or :func:`isinstance`.
+
+  翻譯為
+
+  .. code-block:: rst
+
+    避免使用 :func:`type` 或 :func:`isinstance` 進行測試。
+
+- reST 諸多語法需要保留前後的空白。在中文裡，該空白可以用 :literal:`\\\\\  \ ` \
+  來取代，製造一個沒有寬度的分隔符號。
+
+  例如當 ``:ref:`detail-instruction`` 部分會被編譯為中文時：
 
   .. code-block:: rst
 
@@ -275,7 +321,7 @@ reST 語法注意事項
 
   .. code-block:: rst
 
-    更多資訊請參考\ :ref:`detail-instruction`\ 。
+    更多資訊請參考\\ :ref:`detail-instruction`。
 
 - 超連結語法該要在譯文中保留原字串。
 
@@ -285,19 +331,19 @@ reST 語法注意事項
 
     `Documentation bugs`_ on the Python issue tracker
 
-  應更改為
+  應翻譯為
 
   .. code-block:: rst
 
-    Python issue tracker 上\ `文件相關的錯誤 <Documentation bugs_>`_
+    Python issue tracker 上\\ `文件的錯誤 <Documentation bugs_>`_
 
-  才能正確顯示為「Python issue tracker 上\ `文件相關的錯誤 <#>`_」，連結與\
+  才能正確顯示為「Python issue tracker 上\ `文件的錯誤 <#>`_」，並帶有正確連結且與\
   前文才不會有多餘的空白。
 
 - 舉例中有程式碼時，前一段經常為 ``::`` 結尾，此記號\ `具有特殊意義
-  <http://www.sphinx-doc.org/en/stable/rest.html#source-code>`_，除了該段落\
-  結尾為冒號外，也代表下段縮排為程式碼。翻譯時應改為全型冒號，並\ **增加以**
-  ``::`` **開頭的新段落**。
+  <https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#literal-blocks>`_，\
+  除了該段落結尾為冒號外，也代表下段縮排為程式碼。翻譯時應改為 ``： ::``\
+  （參考 `#568 <https://github.com/python/python-docs-zh-tw/discussions/568>`_）。
 
   例如：
 
@@ -323,8 +369,8 @@ reST 語法注意事項
 術語表 Glossary
 ===============
 
-為了讓翻譯保持統一，我們整理了一份 \
-`術語列表 <https://github.com/python/python-docs-zh-tw/wiki/%E8%A1%93%E8%AA%9E%E5%88%97%E8%A1%A8>`_ \
+為了讓翻譯保持統一，我們整理了一份\
+`術語列表 <https://github.com/python/python-docs-zh-tw/wiki/%E8%A1%93%E8%AA%9E%E5%88%97%E8%A1%A8>`_\
 如果翻譯過程中你覺得需要術語列表有所缺漏，請至 `Discussion \
 <https://github.com/python/python-docs-zh-tw/discussions>`_ 開啟新的討論補充術語。\
 新增的術語，將會於每次 Sprint 中共同討論是否合併進術語列表。

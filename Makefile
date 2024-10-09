@@ -3,6 +3,7 @@
 # Here is what you can do:
 #
 # - make all # Automatically build an html local version
+# - make build <po-file>  # To build a single .po file
 # - make todo  # To list remaining tasks
 # - make merge  # To merge pot from upstream
 # - make fuzzy  # To find fuzzy strings
@@ -36,35 +37,59 @@ print('\n'.join(output))
 endef
 export PRINT_HELP_PYSCRIPT # End of python section
 
-CPYTHON_CLONE := ../cpython/
+CPYTHON_CLONE := ../cpython
+VERSION := $(or $(VERSION), 3.12)
 SPHINX_CONF := $(CPYTHON_CLONE)/Doc/conf.py
 LANGUAGE := zh_TW
 LC_MESSAGES := $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/LC_MESSAGES
 VENV := ~/.venvs/python-docs-i18n/
-PYTHON := $(shell which python3)
 MODE := autobuild-dev-html
-BRANCH := $(or $(VERSION), $(shell git describe --contains --all HEAD))
 JOBS := 4
 
 .PHONY: all
-all: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb clone ## Automatically build an html local version
-	mkdir -p $(LC_MESSAGES)
+all: prepare_deps ## Automatically build an html local version
 	for dirname in $$(find . -name '*.po' | xargs -n1 dirname | sort -u | grep -v '^\.$$'); do mkdir -p $(LC_MESSAGES)/$$dirname; done
 	for file in *.po */*.po; do ln -f $$file $(LC_MESSAGES)/$$file; done
 	. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D locale_dirs=locales -D language=$(LANGUAGE) -D gettext_compact=0' $(MODE)
 
+.PHONY: build
+build: prepare_deps ## Automatically build an html local version for a single file
+	@$(eval target=$(filter-out $@,$(MAKECMDGOALS)))
+	@if [ -z $(target) ]; then \
+		echo "\x1B[1;31m""Please provide a file argument.""\x1B[m"; \
+		exit 1; \
+	fi
+	@if [ "$(suffix $(target))" != ".po" ]; then \
+		echo "\x1B[1;31m""Incorrect file extension. Only '.po' files are allowed.""\x1B[m"; \
+		exit 1; \
+	fi
+	@if [[ ! -f "$(target)" ]] ; then \
+		echo "\x1B[1;31m""ERROR: $(target) not exist.""\x1B[m"; \
+		exit 1; \
+	fi
+
+	@$(eval dir=`echo $(target) | xargs -n1 dirname`) ## Get dir
+	@mkdir -p $(LC_MESSAGES)/$(dir)
+	@ln -f ./$(target) $(LC_MESSAGES)/$(target)
+
+	@. $(VENV)/bin/activate; $(MAKE) -C $(CPYTHON_CLONE)/Doc/ SPHINXOPTS='-j$(JOBS) -D language=$(LANGUAGE) -D locale_dirs=locales -D gettext_compact=0' SOURCES='$(basename $(target)).rst' html
+
+
 help:
 	@python3 -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
 
-clone: ## Clone latest cpython repository to `../cpython/` if it doesn't exist
+.PHONY: prepare_deps
+prepare_deps: $(VENV)/bin/sphinx-build $(VENV)/bin/blurb upgrade_venv prepare_cpython  ## Prepare dependencies
+
+.PHONY: prepare_cpython
+prepare_cpython:  ## Prepare CPython clone at `../cpython/`.
 	git clone --depth 1 --no-single-branch https://github.com/python/cpython.git $(CPYTHON_CLONE)  || echo "cpython exists"
-	cd $(CPYTHON_CLONE) && git checkout $(BRANCH)
+	cd $(CPYTHON_CLONE) && git checkout $(VERSION) && git pull origin $(VERSION)
+	mkdir -p $(LC_MESSAGES)
 
 
 $(VENV)/bin/activate:
-	mkdir -p $(VENV)
-	$(PYTHON) -m venv $(VENV)
-
+	python3 -m venv $(VENV)
 
 $(VENV)/bin/sphinx-build: $(VENV)/bin/activate
 	. $(VENV)/bin/activate; python3 -m pip install sphinx python-docs-theme
@@ -78,7 +103,7 @@ $(VENV)/bin/blurb: $(VENV)/bin/activate
 
 .PHONY: upgrade_venv
 upgrade_venv: $(VENV)/bin/activate ## Upgrade the venv that compiles the doc
-	. $(VENV)/bin/activate; python3 -m pip install --upgrade sphinx python-docs-theme blurb sphinx-lint
+	@. $(VENV)/bin/activate; python3 -m pip install -q --upgrade sphinx python-docs-theme blurb sphinx-lint
 
 
 .PHONY: progress
@@ -94,10 +119,7 @@ todo: ## List remaining tasks
 
 
 .PHONY: merge
-merge: upgrade_venv ## To merge pot from upstream
-ifneq "$(shell cd $(CPYTHON_CLONE) 2>/dev/null && git describe --contains --all HEAD)" "$(BRANCH)"
-	$(error "You're merging from a different branch")
-endif
+merge: prepare_deps  ## To merge pot from upstream
 	(cd $(CPYTHON_CLONE)/Doc; rm -f build/NEWS)
 	(cd $(CPYTHON_CLONE)/Doc; $(VENV)/bin/sphinx-build -Q -b gettext -D gettext_compact=0 . locales/pot/)
 	find $(CPYTHON_CLONE)/Doc/locales/pot/ -name '*.pot' |\
@@ -116,7 +138,7 @@ endif
 
 .PHONY: update_txconfig
 update_txconfig:
-	curl -L https://rawgit.com/python-doc-ja/cpython-doc-catalog/catalog-$(BRANCH)/Doc/locales/.tx/config |\
+	curl -L https://rawgit.com/python-doc-ja/cpython-doc-catalog/catalog-$(VERSION)/Doc/locales/.tx/config |\
 		grep --invert-match '^file_filter = *' |\
 		sed -e 's/source_file = pot\/\(.*\)\.pot/trans.zh_TW = \1.po/' |\
 		sed -n 'w .tx/config'
@@ -133,3 +155,7 @@ rm_cpython: ## Remove cloned cpython repo
 .PHONY: lint
 lint:  $(VENV)/bin/sphinx-lint  ## Run sphinx-lint
 	$(VENV)/bin/sphinx-lint --enable default-role
+
+# This allows us to accept extra arguments (by doing nothing when we get a job that doesn't match, rather than throwing an error)
+%:
+	@:
