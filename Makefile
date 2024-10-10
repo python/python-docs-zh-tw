@@ -43,8 +43,8 @@ SPHINX_CONF := $(CPYTHON_CLONE)/Doc/conf.py
 LANGUAGE := zh_TW
 LC_MESSAGES := $(CPYTHON_CLONE)/Doc/locales/$(LANGUAGE)/LC_MESSAGES
 VENV := ~/.venvs/python-docs-i18n/
-MODE := autobuild-dev-html
-JOBS := 4
+MODE := $(or $(MODE), autobuild-dev-html)
+JOBS := $(or $(JOBS), auto)
 
 .PHONY: all
 all: prepare_deps ## Automatically build an html local version
