@@ -12,9 +12,9 @@
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=b20cc3f5" />
     
     <script src="../_static/documentation_options.js?v=bfa52fbd"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/translations.js?v=f1e884e3"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
     
     <script src="../_static/sidebar.js"></script>
     
@@ -105,11 +105,10 @@
 <li><a class="reference internal" href="#loading">5.4. Loading</a><ul>
 <li><a class="reference internal" href="#loaders">5.4.1. Loaders</a></li>
 <li><a class="reference internal" href="#submodules">5.4.2. 子模組</a></li>
-<li><a class="reference internal" href="#module-spec">5.4.3. Module spec</a></li>
-<li><a class="reference internal" href="#import-related-module-attributes">5.4.4. Import-related module attributes</a></li>
-<li><a class="reference internal" href="#module-path">5.4.5. module.__path__</a></li>
-<li><a class="reference internal" href="#module-reprs">5.4.6. Module reprs</a></li>
-<li><a class="reference internal" href="#cached-bytecode-invalidation">5.4.7. Cached bytecode invalidation</a></li>
+<li><a class="reference internal" href="#module-specs">5.4.3. Module specs</a></li>
+<li><a class="reference internal" href="#path-attributes-on-modules">5.4.4. __path__ attributes on modules</a></li>
+<li><a class="reference internal" href="#module-reprs">5.4.5. Module reprs</a></li>
+<li><a class="reference internal" href="#cached-bytecode-invalidation">5.4.6. Cached bytecode invalidation</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#the-path-based-finder">5.5. The Path Based Finder</a><ul>
@@ -223,7 +222,7 @@
 <p>當執行 <a class="reference internal" href="simple_stmts.html#import"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">import</span></code></a> 陳述式時，會呼叫內建的 <a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a> 函式。其他調用引入系統的機制（如 <a class="reference internal" href="../library/importlib.html#importlib.import_module" title="importlib.import_module"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.import_module()</span></code></a>）可以選擇略過 <a class="reference internal" href="../library/functions.html#import__" title="__import__"><code class="xref py py-func docutils literal notranslate"><span class="pre">__import__()</span></code></a>，並使用它們自己的解決方案來實作引入語意。</p>
 <p>當模組首次被引入時，Python 會搜尋該模組，若找到則會建立一個模組物件 <a class="footnote-reference brackets" href="#fnmo" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>，並對其進行初始化。如果找不到指定的模組，則會引發 <a class="reference internal" href="../library/exceptions.html#ModuleNotFoundError" title="ModuleNotFoundError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ModuleNotFoundError</span></code></a>。當引入機制被調用時，Python 會實作各種策略來搜尋指定的模組。這些策略可以透過使用以下章節描述的各種 hook（掛鉤）來修改和擴展。</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.3 版的變更: </span>引入系統已被更新，以完全實作 <span class="target" id="index-31"></span><a class="pep reference external" href="https://peps.python.org/pep-0302/"><strong>PEP 302</strong></a> 的第二階段。不再有隱式引入機制——完整的引入系統已透過 <a class="reference internal" href="../library/sys.html#sys.meta_path" title="sys.meta_path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.meta_path</span></code></a> 公開。此外，原生命名空間套件支援（請參閱 <span class="target" id="index-32"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a>）也已被實作。</p>
+<p><span class="versionmodified changed">在 3.3 版的變更: </span>引入系統已被更新，以完全實作 <span class="target" id="index-28"></span><a class="pep reference external" href="https://peps.python.org/pep-0302/"><strong>PEP 302</strong></a> 的第二階段。不再有隱式引入機制——完整的引入系統已透過 <a class="reference internal" href="../library/sys.html#sys.meta_path" title="sys.meta_path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.meta_path</span></code></a> 公開。此外，原生命名空間套件支援（請參閱 <span class="target" id="index-29"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a>）也已被實作。</p>
 </div>
 <section id="importlib">
 <h2><span class="section-number">5.1. </span><a class="reference internal" href="../library/importlib.html#module-importlib" title="importlib: The implementation of the import machinery."><code class="xref py py-mod docutils literal notranslate"><span class="pre">importlib</span></code></a><a class="headerlink" href="#importlib" title="連結到這個標頭">¶</a></h2>
@@ -256,7 +255,7 @@
 <p id="index-5">命名空間套件是由不同的<a class="reference internal" href="../glossary.html#term-portion"><span class="xref std std-term">部分</span></a> 組成的，每個部分都為父套件提供一個子套件。這些部分可以位於檔案系統上的不同位置。部分可能也存在於壓縮檔案中、網路上，或 Python 在引入時搜尋的任何其他地方。命名空間套件不一定直接對應於檔案系統中的對象；它們可能是沒有具體表示的虛擬模組。</p>
 <p>命名空間套件的 <code class="docutils literal notranslate"><span class="pre">__path__</span></code> 屬性不使用普通的串列。它們使用自定義的可疊代型別，當父套件的路徑（或頂層套件的 <a class="reference internal" href="../library/sys.html#sys.path" title="sys.path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a>）發生變化時，會在下一次引入嘗試時自動執行新一輪的套件部分搜尋。</p>
 <p>在命名空間套件中，不存在 <code class="docutils literal notranslate"><span class="pre">parent/__init__.py</span></code> 檔案。實際上，在引入搜尋過程中可能會找到多個 <code class="docutils literal notranslate"><span class="pre">parent</span></code> 目錄，每個目錄由不同的部分提供。因此，<code class="docutils literal notranslate"><span class="pre">parent/one</span></code> 可能與 <code class="docutils literal notranslate"><span class="pre">parent/two</span></code> 不會實際位於一起。在這種情況下，每當引入頂層 <code class="docutils literal notranslate"><span class="pre">parent</span></code> 套件或其子套件之一時，Python 會為頂層 <code class="docutils literal notranslate"><span class="pre">parent</span></code> 套件建立一個命名空間套件。</p>
-<p>有關命名空間套件的規範，請參見 <span class="target" id="index-33"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a>。</p>
+<p>有關命名空間套件的規範，請參見 <span class="target" id="index-30"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a>。</p>
 </section>
 </section>
 <section id="searching">
@@ -358,7 +357,7 @@ reloading where even the failing module is left in <a class="reference internal"
 <li><p>After the module is created but before execution, the import machinery
 sets the import-related module attributes (&quot;_init_module_attrs&quot; in
 the pseudo-code example above), as summarized in a
-<a class="reference internal" href="#import-mod-attrs"><span class="std std-ref">later section</span></a>.</p></li>
+<a class="reference internal" href="datamodel.html#import-mod-attrs"><span class="std std-ref">later section</span></a>.</p></li>
 <li><p>Module execution is the key moment of loading in which the module's
 namespace gets populated.  Execution is entirely delegated to the
 loader, which gets to decide what gets populated and how.</p></li>
@@ -467,8 +466,8 @@ holding is that if you have <code class="docutils literal notranslate"><span cla
 <code class="docutils literal notranslate"><span class="pre">sys.modules['spam.foo']</span></code> (as you would after the above import), the latter
 must appear as the <code class="docutils literal notranslate"><span class="pre">foo</span></code> attribute of the former.</p>
 </section>
-<section id="module-spec">
-<h3><span class="section-number">5.4.3. </span>Module spec<a class="headerlink" href="#module-spec" title="連結到這個標頭">¶</a></h3>
+<section id="module-specs">
+<span id="id4"></span><h3><span class="section-number">5.4.3. </span>Module specs<a class="headerlink" href="#module-specs" title="連結到這個標頭">¶</a></h3>
 <p>The import machinery uses a variety of information about each module
 during import, especially before loading.  Most of the information is
 common to all modules.  The purpose of a module's spec is to encapsulate
@@ -478,166 +477,42 @@ system components, e.g. between the finder that creates the module spec
 and the loader that executes it.  Most importantly, it allows the
 import machinery to perform the boilerplate operations of loading,
 whereas without a module spec the loader had that responsibility.</p>
-<p>The module's spec is exposed as the <code class="docutils literal notranslate"><span class="pre">__spec__</span></code> attribute on a module object.
-See <a class="reference internal" href="../library/importlib.html#importlib.machinery.ModuleSpec" title="importlib.machinery.ModuleSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSpec</span></code></a> for details on the contents of
+<p>The module's spec is exposed as <a class="reference internal" href="datamodel.html#module.__spec__" title="module.__spec__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">module.__spec__</span></code></a>. Setting
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">__spec__</span></code> appropriately applies equally to
+<a class="reference internal" href="toplevel_components.html#programs"><span class="std std-ref">modules initialized during interpreter startup</span></a>.
+The one exception is <code class="docutils literal notranslate"><span class="pre">__main__</span></code>, where <code class="xref py py-attr docutils literal notranslate"><span class="pre">__spec__</span></code> is
+<a class="reference internal" href="#main-spec"><span class="std std-ref">set to None in some cases</span></a>.</p>
+<p>See <a class="reference internal" href="../library/importlib.html#importlib.machinery.ModuleSpec" title="importlib.machinery.ModuleSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSpec</span></code></a> for details on the contents of
 the module spec.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.4 版被加入.</span></p>
 </div>
 </section>
-<section id="import-related-module-attributes">
-<span id="import-mod-attrs"></span><h3><span class="section-number">5.4.4. </span>Import-related module attributes<a class="headerlink" href="#import-related-module-attributes" title="連結到這個標頭">¶</a></h3>
-<p>The import machinery fills in these attributes on each module object
-during loading, based on the module's spec, before the loader executes
-the module.</p>
-<p>It is <strong>strongly</strong> recommended that you rely on <a class="reference internal" href="#spec__" title="__spec__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__spec__</span></code></a> and
-its attributes instead of any of the other individual attributes
-listed below.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="name__">
-<span class="sig-name descname"><span class="pre">__name__</span></span><a class="headerlink" href="#name__" title="連結到這個定義">¶</a></dt>
-<dd><p>The <code class="docutils literal notranslate"><span class="pre">__name__</span></code> attribute must be set to the fully qualified name of
-the module.  This name is used to uniquely identify the module in
-the import system.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="loader__">
-<span class="sig-name descname"><span class="pre">__loader__</span></span><a class="headerlink" href="#loader__" title="連結到這個定義">¶</a></dt>
-<dd><p>The <code class="docutils literal notranslate"><span class="pre">__loader__</span></code> attribute must be set to the loader object that
-the import machinery used when loading the module.  This is mostly
-for introspection, but can be used for additional loader-specific
-functionality, for example getting data associated with a loader.</p>
-<p>It is <strong>strongly</strong> recommended that you rely on <a class="reference internal" href="#spec__" title="__spec__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__spec__</span></code></a>
-instead of this attribute.</p>
-<div class="versionchanged">
-<p><span class="versionmodified changed">在 3.12 版的變更: </span>The value of <code class="docutils literal notranslate"><span class="pre">__loader__</span></code> is expected to be the same as
-<code class="docutils literal notranslate"><span class="pre">__spec__.loader</span></code>.  The use of <code class="docutils literal notranslate"><span class="pre">__loader__</span></code> is deprecated and slated
-for removal in Python 3.14.</p>
-</div>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="package__">
-<span class="sig-name descname"><span class="pre">__package__</span></span><a class="headerlink" href="#package__" title="連結到這個定義">¶</a></dt>
-<dd><p>The module's <code class="docutils literal notranslate"><span class="pre">__package__</span></code> attribute may be set.  Its value must
-be a string, but it can be the same value as its <code class="docutils literal notranslate"><span class="pre">__name__</span></code>.  When
-the module is a package, its <code class="docutils literal notranslate"><span class="pre">__package__</span></code> value should be set to
-its <code class="docutils literal notranslate"><span class="pre">__name__</span></code>.  When the module is not a package, <code class="docutils literal notranslate"><span class="pre">__package__</span></code>
-should be set to the empty string for top-level modules, or for
-submodules, to the parent package's name.  See <span class="target" id="index-11"></span><a class="pep reference external" href="https://peps.python.org/pep-0366/"><strong>PEP 366</strong></a> for further
-details.</p>
-<p>This attribute is used instead of <code class="docutils literal notranslate"><span class="pre">__name__</span></code> to calculate explicit
-relative imports for main modules, as defined in <span class="target" id="index-12"></span><a class="pep reference external" href="https://peps.python.org/pep-0366/"><strong>PEP 366</strong></a>.</p>
-<p>It is <strong>strongly</strong> recommended that you rely on <a class="reference internal" href="#spec__" title="__spec__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__spec__</span></code></a>
-instead of this attribute.</p>
-<div class="versionchanged">
-<p><span class="versionmodified changed">在 3.6 版的變更: </span>The value of <code class="docutils literal notranslate"><span class="pre">__package__</span></code> is expected to be the same as
-<code class="docutils literal notranslate"><span class="pre">__spec__.parent</span></code>.</p>
-</div>
-<div class="versionchanged">
-<p><span class="versionmodified changed">在 3.10 版的變更: </span><a class="reference internal" href="../library/exceptions.html#ImportWarning" title="ImportWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportWarning</span></code></a> is raised if import falls back to
-<code class="docutils literal notranslate"><span class="pre">__package__</span></code> instead of
-<a class="reference internal" href="../library/importlib.html#importlib.machinery.ModuleSpec.parent" title="importlib.machinery.ModuleSpec.parent"><code class="xref py py-attr docutils literal notranslate"><span class="pre">parent</span></code></a>.</p>
-</div>
-<div class="versionchanged">
-<p><span class="versionmodified changed">在 3.12 版的變更: </span>Raise <a class="reference internal" href="../library/exceptions.html#DeprecationWarning" title="DeprecationWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DeprecationWarning</span></code></a> instead of <a class="reference internal" href="../library/exceptions.html#ImportWarning" title="ImportWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportWarning</span></code></a>
-when falling back to <code class="docutils literal notranslate"><span class="pre">__package__</span></code>.</p>
-</div>
-<div class="deprecated-removed">
-<p><span class="versionmodified deprecated">Deprecated since version 3.13, will be removed in version 3.15: </span><code class="docutils literal notranslate"><span class="pre">__package__</span></code> will cease to be set or taken into consideration
-by the import system or standard library.</p>
-</div>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="spec__">
-<span class="sig-name descname"><span class="pre">__spec__</span></span><a class="headerlink" href="#spec__" title="連結到這個定義">¶</a></dt>
-<dd><p>The <code class="docutils literal notranslate"><span class="pre">__spec__</span></code> attribute must be set to the module spec that was
-used when importing the module. Setting <code class="docutils literal notranslate"><span class="pre">__spec__</span></code>
-appropriately applies equally to <a class="reference internal" href="toplevel_components.html#programs"><span class="std std-ref">modules initialized during
-interpreter startup</span></a>.  The one exception is <code class="docutils literal notranslate"><span class="pre">__main__</span></code>,
-where <code class="docutils literal notranslate"><span class="pre">__spec__</span></code> is <a class="reference internal" href="#main-spec"><span class="std std-ref">set to None in some cases</span></a>.</p>
-<p>When <code class="docutils literal notranslate"><span class="pre">__spec__.parent</span></code> is not set, <code class="docutils literal notranslate"><span class="pre">__package__</span></code> is used as
-a fallback.</p>
-<div class="versionadded">
-<p><span class="versionmodified added">在 3.4 版被加入.</span></p>
-</div>
-<div class="versionchanged">
-<p><span class="versionmodified changed">在 3.6 版的變更: </span><code class="docutils literal notranslate"><span class="pre">__spec__.parent</span></code> is used as a fallback when <code class="docutils literal notranslate"><span class="pre">__package__</span></code> is
-not defined.</p>
-</div>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="path__">
-<span class="sig-name descname"><span class="pre">__path__</span></span><a class="headerlink" href="#path__" title="連結到這個定義">¶</a></dt>
-<dd><p>If the module is a package (either regular or namespace), the module
-object's <code class="docutils literal notranslate"><span class="pre">__path__</span></code> attribute must be set.  The value must be
-iterable, but may be empty if <code class="docutils literal notranslate"><span class="pre">__path__</span></code> has no further significance.
-If <code class="docutils literal notranslate"><span class="pre">__path__</span></code> is not empty, it must produce strings when iterated
-over. More details on the semantics of <code class="docutils literal notranslate"><span class="pre">__path__</span></code> are given
-<a class="reference internal" href="#package-path-rules"><span class="std std-ref">below</span></a>.</p>
-<p>Non-package modules should not have a <code class="docutils literal notranslate"><span class="pre">__path__</span></code> attribute.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="file__">
-<span class="sig-name descname"><span class="pre">__file__</span></span><a class="headerlink" href="#file__" title="連結到這個定義">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="cached__">
-<span class="sig-name descname"><span class="pre">__cached__</span></span><a class="headerlink" href="#cached__" title="連結到這個定義">¶</a></dt>
-<dd><p><code class="docutils literal notranslate"><span class="pre">__file__</span></code> is optional (if set, value must be a string). It indicates
-the pathname of the file from which the module was loaded (if
-loaded from a file), or the pathname of the shared library file
-for extension modules loaded dynamically from a shared library.
-It might be missing for certain types of modules, such as C
-modules that are statically linked into the interpreter, and the
-import system may opt to leave it unset if it has no semantic
-meaning (e.g. a module loaded from a database).</p>
-<p>If <code class="docutils literal notranslate"><span class="pre">__file__</span></code> is set then the <code class="docutils literal notranslate"><span class="pre">__cached__</span></code> attribute might also
-be set,  which is the path to any compiled version of
-the code (e.g. byte-compiled file). The file does not need to exist
-to set this attribute; the path can simply point to where the
-compiled file would exist (see <span class="target" id="index-13"></span><a class="pep reference external" href="https://peps.python.org/pep-3147/"><strong>PEP 3147</strong></a>).</p>
-<p>Note that <code class="docutils literal notranslate"><span class="pre">__cached__</span></code> may be set even if <code class="docutils literal notranslate"><span class="pre">__file__</span></code> is not
-set.  However, that scenario is quite atypical.  Ultimately, the
-loader is what makes use of the module spec provided by the finder
-(from which <code class="docutils literal notranslate"><span class="pre">__file__</span></code> and <code class="docutils literal notranslate"><span class="pre">__cached__</span></code> are derived).  So
-if a loader can load from a cached module but otherwise does not load
-from a file, that atypical scenario may be appropriate.</p>
-<p>It is <strong>strongly</strong> recommended that you rely on <a class="reference internal" href="#spec__" title="__spec__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__spec__</span></code></a>
-instead of <code class="docutils literal notranslate"><span class="pre">__cached__</span></code>.</p>
-<div class="deprecated-removed">
-<p><span class="versionmodified deprecated">Deprecated since version 3.13, will be removed in version 3.15: </span><code class="docutils literal notranslate"><span class="pre">__cached__</span></code> will cease to be set or taken into consideration
-by the import system or standard library.</p>
-</div>
-</dd></dl>
-
-</section>
-<section id="module-path">
-<span id="package-path-rules"></span><h3><span class="section-number">5.4.5. </span>module.__path__<a class="headerlink" href="#module-path" title="連結到這個標頭">¶</a></h3>
-<p>By definition, if a module has a <code class="docutils literal notranslate"><span class="pre">__path__</span></code> attribute, it is a package.</p>
-<p>A package's <code class="docutils literal notranslate"><span class="pre">__path__</span></code> attribute is used during imports of its subpackages.
+<section id="path-attributes-on-modules">
+<span id="package-path-rules"></span><h3><span class="section-number">5.4.4. </span>__path__ attributes on modules<a class="headerlink" href="#path-attributes-on-modules" title="連結到這個標頭">¶</a></h3>
+<p>The <a class="reference internal" href="datamodel.html#module.__path__" title="module.__path__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__path__</span></code></a> attribute should be a (possibly empty)
+<a class="reference internal" href="../glossary.html#term-sequence"><span class="xref std std-term">sequence</span></a> of strings enumerating the locations where the package's
+submodules will be found. By definition, if a module has a <code class="xref py py-attr docutils literal notranslate"><span class="pre">__path__</span></code>
+attribute, it is a <a class="reference internal" href="../glossary.html#term-package"><span class="xref std std-term">package</span></a>.</p>
+<p>A package's <a class="reference internal" href="datamodel.html#module.__path__" title="module.__path__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__path__</span></code></a> attribute is used during imports of its
+subpackages.
 Within the import machinery, it functions much the same as <a class="reference internal" href="../library/sys.html#sys.path" title="sys.path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a>,
 i.e. providing a list of locations to search for modules during import.
-However, <code class="docutils literal notranslate"><span class="pre">__path__</span></code> is typically much more constrained than
-<a class="reference internal" href="../library/sys.html#sys.path" title="sys.path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a>.</p>
-<p><code class="docutils literal notranslate"><span class="pre">__path__</span></code> must be an iterable of strings, but it may be empty.
-The same rules used for <a class="reference internal" href="../library/sys.html#sys.path" title="sys.path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a> also apply to a package's
-<code class="docutils literal notranslate"><span class="pre">__path__</span></code>, and <a class="reference internal" href="../library/sys.html#sys.path_hooks" title="sys.path_hooks"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path_hooks</span></code></a> (described below) are
-consulted when traversing a package's <code class="docutils literal notranslate"><span class="pre">__path__</span></code>.</p>
-<p>A package's <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file may set or alter the package's <code class="docutils literal notranslate"><span class="pre">__path__</span></code>
+However, <code class="xref py py-attr docutils literal notranslate"><span class="pre">__path__</span></code> is typically much more constrained than
+<code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code>.</p>
+<p>The same rules used for <a class="reference internal" href="../library/sys.html#sys.path" title="sys.path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a> also apply to a package's
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">__path__</span></code>. <a class="reference internal" href="../library/sys.html#sys.path_hooks" title="sys.path_hooks"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path_hooks</span></code></a> (described below) are
+consulted when traversing a package's <code class="xref py py-attr docutils literal notranslate"><span class="pre">__path__</span></code>.</p>
+<p>A package's <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file may set or alter the package's
+<a class="reference internal" href="datamodel.html#module.__path__" title="module.__path__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__path__</span></code></a>
 attribute, and this was typically the way namespace packages were implemented
-prior to <span class="target" id="index-14"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a>.  With the adoption of <span class="target" id="index-15"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a>, namespace packages no
-longer need to supply <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> files containing only <code class="docutils literal notranslate"><span class="pre">__path__</span></code>
-manipulation code; the import machinery automatically sets <code class="docutils literal notranslate"><span class="pre">__path__</span></code>
+prior to <span class="target" id="index-11"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a>.  With the adoption of <span class="target" id="index-12"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a>, namespace packages no
+longer need to supply <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> files containing only <code class="xref py py-attr docutils literal notranslate"><span class="pre">__path__</span></code>
+manipulation code; the import machinery automatically sets <code class="xref py py-attr docutils literal notranslate"><span class="pre">__path__</span></code>
 correctly for the namespace package.</p>
 </section>
 <section id="module-reprs">
-<h3><span class="section-number">5.4.6. </span>Module reprs<a class="headerlink" href="#module-reprs" title="連結到這個標頭">¶</a></h3>
+<h3><span class="section-number">5.4.5. </span>Module reprs<a class="headerlink" href="#module-reprs" title="連結到這個標頭">¶</a></h3>
 <p>By default, all modules have a usable repr, however depending on the
 attributes set above, and in the module's spec, you can more explicitly
 control the repr of module objects.</p>
@@ -665,7 +540,7 @@ module's repr.</p>
 </div>
 </section>
 <section id="cached-bytecode-invalidation">
-<span id="pyc-invalidation"></span><h3><span class="section-number">5.4.7. </span>Cached bytecode invalidation<a class="headerlink" href="#cached-bytecode-invalidation" title="連結到這個標頭">¶</a></h3>
+<span id="pyc-invalidation"></span><h3><span class="section-number">5.4.6. </span>Cached bytecode invalidation<a class="headerlink" href="#cached-bytecode-invalidation" title="連結到這個標頭">¶</a></h3>
 <p>Before Python loads cached bytecode from a <code class="docutils literal notranslate"><span class="pre">.pyc</span></code> file, it checks whether the
 cache is up-to-date with the source <code class="docutils literal notranslate"><span class="pre">.py</span></code> file. By default, Python does this
 by storing the source's last-modified timestamp and size in the cache file when
@@ -690,7 +565,7 @@ timestamp-based invalidation of bytecode caches.</p>
 </section>
 <section id="the-path-based-finder">
 <h2><span class="section-number">5.5. </span>The Path Based Finder<a class="headerlink" href="#the-path-based-finder" title="連結到這個標頭">¶</a></h2>
-<p id="index-16">As mentioned previously, Python comes with several default meta path finders.
+<p id="index-13">As mentioned previously, Python comes with several default meta path finders.
 One of these, called the <a class="reference internal" href="../glossary.html#term-path-based-finder"><span class="xref std std-term">path based finder</span></a>
 (<a class="reference internal" href="../library/importlib.html#importlib.machinery.PathFinder" title="importlib.machinery.PathFinder"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathFinder</span></code></a>), searches an <a class="reference internal" href="../glossary.html#term-import-path"><span class="xref std std-term">import path</span></a>,
 which contains a list of <a class="reference internal" href="../glossary.html#term-path-entry"><span class="xref std std-term">path entries</span></a>.  Each path
@@ -727,7 +602,7 @@ removed from <a class="reference internal" href="../library/sys.html#sys.meta_pa
 would be invoked.</p>
 <section id="path-entry-finders">
 <h3><span class="section-number">5.5.1. </span>Path entry finders<a class="headerlink" href="#path-entry-finders" title="連結到這個標頭">¶</a></h3>
-<p id="index-17">The <a class="reference internal" href="../glossary.html#term-path-based-finder"><span class="xref std std-term">path based finder</span></a> is responsible for finding and loading
+<p id="index-14">The <a class="reference internal" href="../glossary.html#term-path-based-finder"><span class="xref std std-term">path based finder</span></a> is responsible for finding and loading
 Python modules and packages whose location is specified with a string
 <a class="reference internal" href="../glossary.html#term-path-entry"><span class="xref std std-term">path entry</span></a>.  Most path entries name locations in the file system,
 but they need not be limited to this.</p>
@@ -740,7 +615,7 @@ customize how modules are found and loaded from the <a class="reference internal
 attributes on package objects are also used.  These provide additional ways
 that the import machinery can be customized.</p>
 <p><a class="reference internal" href="../library/sys.html#sys.path" title="sys.path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a> contains a list of strings providing search locations for
-modules and packages.  It is initialized from the <span class="target" id="index-18"></span><a class="reference internal" href="../using/cmdline.html#envvar-PYTHONPATH"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a>
+modules and packages.  It is initialized from the <span class="target" id="index-15"></span><a class="reference internal" href="../using/cmdline.html#envvar-PYTHONPATH"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a>
 environment variable and various other installation- and
 implementation-specific defaults.  Entries in <a class="reference internal" href="../library/sys.html#sys.path" title="sys.path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a> can name
 directories on the file system, zip files, and potentially other &quot;locations&quot;
@@ -910,7 +785,7 @@ qualify as a built-in module.  This is because the manner in which
 <code class="docutils literal notranslate"><span class="pre">__main__</span></code> is initialized depends on the flags and other options with
 which the interpreter is invoked.</p>
 <section id="main-spec">
-<span id="id4"></span><h3><span class="section-number">5.8.1. </span>__main__.__spec__<a class="headerlink" href="#main-spec" title="連結到這個標頭">¶</a></h3>
+<span id="id5"></span><h3><span class="section-number">5.8.1. </span>__main__.__spec__<a class="headerlink" href="#main-spec" title="連結到這個標頭">¶</a></h3>
 <p>Depending on how <a class="reference internal" href="../library/__main__.html#module-__main__" title="__main__: The environment where top-level code is run. Covers command-line interfaces, import-time behavior, and ``__name__ == '__main__'``."><code class="xref py py-mod docutils literal notranslate"><span class="pre">__main__</span></code></a> is initialized, <code class="docutils literal notranslate"><span class="pre">__main__.__spec__</span></code>
 gets set appropriately or to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 <p>When Python is started with the <a class="reference internal" href="../using/cmdline.html#cmdoption-m"><code class="xref std std-option docutils literal notranslate"><span class="pre">-m</span></code></a> option, <code class="docutils literal notranslate"><span class="pre">__spec__</span></code> is set
@@ -942,18 +817,18 @@ to populate the <code class="docutils literal notranslate"><span class="pre">__m
 <p>The import machinery has evolved considerably since Python's early days.  The
 original <a class="reference external" href="https://www.python.org/doc/essays/packages/">specification for packages</a> is still available to read,
 although some details have changed since the writing of that document.</p>
-<p>The original specification for <a class="reference internal" href="../library/sys.html#sys.meta_path" title="sys.meta_path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.meta_path</span></code></a> was <span class="target" id="index-19"></span><a class="pep reference external" href="https://peps.python.org/pep-0302/"><strong>PEP 302</strong></a>, with
-subsequent extension in <span class="target" id="index-20"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a>.</p>
-<p><span class="target" id="index-21"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a> introduced <a class="reference internal" href="../glossary.html#term-namespace-package"><span class="xref std std-term">namespace packages</span></a> for
-Python 3.3.  <span class="target" id="index-22"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a> also introduced the <code class="xref py py-meth docutils literal notranslate"><span class="pre">find_loader()</span></code> protocol as an
+<p>The original specification for <a class="reference internal" href="../library/sys.html#sys.meta_path" title="sys.meta_path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.meta_path</span></code></a> was <span class="target" id="index-16"></span><a class="pep reference external" href="https://peps.python.org/pep-0302/"><strong>PEP 302</strong></a>, with
+subsequent extension in <span class="target" id="index-17"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a>.</p>
+<p><span class="target" id="index-18"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a> introduced <a class="reference internal" href="../glossary.html#term-namespace-package"><span class="xref std std-term">namespace packages</span></a> for
+Python 3.3.  <span class="target" id="index-19"></span><a class="pep reference external" href="https://peps.python.org/pep-0420/"><strong>PEP 420</strong></a> also introduced the <code class="xref py py-meth docutils literal notranslate"><span class="pre">find_loader()</span></code> protocol as an
 alternative to <code class="xref py py-meth docutils literal notranslate"><span class="pre">find_module()</span></code>.</p>
-<p><span class="target" id="index-23"></span><a class="pep reference external" href="https://peps.python.org/pep-0366/"><strong>PEP 366</strong></a> describes the addition of the <code class="docutils literal notranslate"><span class="pre">__package__</span></code> attribute for
+<p><span class="target" id="index-20"></span><a class="pep reference external" href="https://peps.python.org/pep-0366/"><strong>PEP 366</strong></a> describes the addition of the <code class="docutils literal notranslate"><span class="pre">__package__</span></code> attribute for
 explicit relative imports in main modules.</p>
-<p><span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0328/"><strong>PEP 328</strong></a> introduced absolute and explicit relative imports and initially
-proposed <code class="docutils literal notranslate"><span class="pre">__name__</span></code> for semantics <span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0366/"><strong>PEP 366</strong></a> would eventually specify for
+<p><span class="target" id="index-21"></span><a class="pep reference external" href="https://peps.python.org/pep-0328/"><strong>PEP 328</strong></a> introduced absolute and explicit relative imports and initially
+proposed <code class="docutils literal notranslate"><span class="pre">__name__</span></code> for semantics <span class="target" id="index-22"></span><a class="pep reference external" href="https://peps.python.org/pep-0366/"><strong>PEP 366</strong></a> would eventually specify for
 <code class="docutils literal notranslate"><span class="pre">__package__</span></code>.</p>
-<p><span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0338/"><strong>PEP 338</strong></a> defines executing modules as scripts.</p>
-<p><span class="target" id="index-27"></span><a class="pep reference external" href="https://peps.python.org/pep-0451/"><strong>PEP 451</strong></a> adds the encapsulation of per-module import state in spec
+<p><span class="target" id="index-23"></span><a class="pep reference external" href="https://peps.python.org/pep-0338/"><strong>PEP 338</strong></a> defines executing modules as scripts.</p>
+<p><span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0451/"><strong>PEP 451</strong></a> adds the encapsulation of per-module import state in spec
 objects.  It also off-loads most of the boilerplate responsibilities of
 loaders back onto the import machinery.  These changes allow the
 deprecation of several APIs in the import system and also addition of new
@@ -1004,11 +879,10 @@ Python implementations.</p>
 <li><a class="reference internal" href="#loading">5.4. Loading</a><ul>
 <li><a class="reference internal" href="#loaders">5.4.1. Loaders</a></li>
 <li><a class="reference internal" href="#submodules">5.4.2. 子模組</a></li>
-<li><a class="reference internal" href="#module-spec">5.4.3. Module spec</a></li>
-<li><a class="reference internal" href="#import-related-module-attributes">5.4.4. Import-related module attributes</a></li>
-<li><a class="reference internal" href="#module-path">5.4.5. module.__path__</a></li>
-<li><a class="reference internal" href="#module-reprs">5.4.6. Module reprs</a></li>
-<li><a class="reference internal" href="#cached-bytecode-invalidation">5.4.7. Cached bytecode invalidation</a></li>
+<li><a class="reference internal" href="#module-specs">5.4.3. Module specs</a></li>
+<li><a class="reference internal" href="#path-attributes-on-modules">5.4.4. __path__ attributes on modules</a></li>
+<li><a class="reference internal" href="#module-reprs">5.4.5. Module reprs</a></li>
+<li><a class="reference internal" href="#cached-bytecode-invalidation">5.4.6. Cached bytecode invalidation</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#the-path-based-finder">5.5. The Path Based Finder</a><ul>
@@ -1134,13 +1008,13 @@ Python implementations.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Oct 08, 2024 (03:35 UTC)。
+      最後更新於 10月 12, 2024 (01:09 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
     <br />
 
-    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.0.2 建立。
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.1 建立。
     </div>
 
   </body>

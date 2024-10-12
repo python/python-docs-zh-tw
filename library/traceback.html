@@ -12,9 +12,9 @@
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=b20cc3f5" />
     
     <script src="../_static/documentation_options.js?v=bfa52fbd"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/translations.js?v=f1e884e3"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
     
     <script src="../_static/sidebar.js"></script>
     
@@ -89,10 +89,12 @@
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">traceback</span></code> --- 列印或取得堆疊回溯 (stack traceback)</a><ul>
+<li><a class="reference internal" href="#module-level-functions">Module-Level Functions</a></li>
 <li><a class="reference internal" href="#tracebackexception-objects"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackException</span></code> 物件</a></li>
 <li><a class="reference internal" href="#stacksummary-objects"><code class="xref py py-class docutils literal notranslate"><span class="pre">StackSummary</span></code> 物件</a></li>
 <li><a class="reference internal" href="#framesummary-objects"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrameSummary</span></code> 物件</a></li>
-<li><a class="reference internal" href="#traceback-examples">Traceback Examples</a></li>
+<li><a class="reference internal" href="#examples-of-using-the-module-level-functions">Examples of Using the Module-Level Functions</a></li>
+<li><a class="reference internal" href="#examples-of-using-tracebackexception">Examples of Using <code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackException</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -189,11 +191,15 @@
 <span id="traceback-print-or-retrieve-a-stack-traceback"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">traceback</span></code> --- 列印或取得堆疊回溯 (stack traceback)<a class="headerlink" href="#module-traceback" title="連結到這個標頭">¶</a></h1>
 <p><strong>原始碼：</strong><a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.13/Lib/traceback.py">Lib/traceback.py</a></p>
 <hr class="docutils" />
-<p>This module provides a standard interface to extract, format and print stack
-traces of Python programs.  It exactly mimics the behavior of the Python
-interpreter when it prints a stack trace.  This is useful when you want to print
-stack traces under program control, such as in a &quot;wrapper&quot; around the
-interpreter.</p>
+<p>This module provides a standard interface to extract, format and print
+stack traces of Python programs. It is more flexible than the
+interpreter's default traceback display, and therefore makes it
+possible to configure certain aspects of the output. Finally,
+it contains a utility for capturing enough information about an
+exception to print it later, without the need to save a reference
+to the actual exception. Since exceptions can be the roots of large
+objects graph, this utility can significantly improve
+memory management.</p>
 <p id="index-0">The module uses <a class="reference internal" href="../reference/datamodel.html#traceback-objects"><span class="std std-ref">traceback objects</span></a> --- these are
 objects of type <a class="reference internal" href="types.html#types.TracebackType" title="types.TracebackType"><code class="xref py py-class docutils literal notranslate"><span class="pre">types.TracebackType</span></code></a>,
 which are assigned to the <a class="reference internal" href="exceptions.html#BaseException.__traceback__" title="BaseException.__traceback__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__traceback__</span></code></a> field of
@@ -207,7 +213,18 @@ which are assigned to the <a class="reference internal" href="exceptions.html#Ba
 </dd>
 </dl>
 </div>
-<p>此模組定義了以下函式：</p>
+<p>The module's API can be divided into two parts:</p>
+<ul class="simple">
+<li><p>Module-level functions offering basic functionality, which are useful for interactive
+inspection of exceptions and tracebacks.</p></li>
+<li><p><a class="reference internal" href="#traceback.TracebackException" title="traceback.TracebackException"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackException</span></code></a> class and its helper classes
+<a class="reference internal" href="#traceback.StackSummary" title="traceback.StackSummary"><code class="xref py py-class docutils literal notranslate"><span class="pre">StackSummary</span></code></a> and <a class="reference internal" href="#traceback.FrameSummary" title="traceback.FrameSummary"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrameSummary</span></code></a>. These offer both more
+flexibility in the output generated and the ability to store the information
+necessary for later formatting without holding references to actual exception
+and traceback objects.</p></li>
+</ul>
+<section id="module-level-functions">
+<h2>Module-Level Functions<a class="headerlink" href="#module-level-functions" title="連結到這個標頭">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="traceback.print_tb">
 <span class="sig-prename descclassname"><span class="pre">traceback.</span></span><span class="sig-name descname"><span class="pre">print_tb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#traceback.print_tb" title="連結到這個定義">¶</a></dt>
@@ -431,19 +448,24 @@ for each frame. This helper is used with <a class="reference internal" href="#tr
 </div>
 </dd></dl>
 
-<p>The module also defines the following classes:</p>
+</section>
 <section id="tracebackexception-objects">
 <h2><code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackException</span></code> 物件<a class="headerlink" href="#tracebackexception-objects" title="連結到這個標頭">¶</a></h2>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.5 版被加入.</span></p>
 </div>
 <p><code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackException</span></code> objects are created from actual exceptions to
-capture data for later printing in a lightweight fashion.</p>
+capture data for later printing.  They offer a more lightweight method of
+storing this information by avoiding holding references to
+<a class="reference internal" href="../reference/datamodel.html#traceback-objects"><span class="std std-ref">traceback</span></a> and <a class="reference internal" href="../reference/datamodel.html#frame-objects"><span class="std std-ref">frame</span></a> objects
+In addition, they expose more options to configure the output compared to
+the module-level functions described above.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="traceback.TracebackException">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">traceback.</span></span><span class="sig-name descname"><span class="pre">TracebackException</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_traceback</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lookup_lines</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">capture_locals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compact</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_group_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_group_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#traceback.TracebackException" title="連結到這個定義">¶</a></dt>
-<dd><p>Capture an exception for later rendering. <em>limit</em>, <em>lookup_lines</em> and
-<em>capture_locals</em> are as for the <a class="reference internal" href="#traceback.StackSummary" title="traceback.StackSummary"><code class="xref py py-class docutils literal notranslate"><span class="pre">StackSummary</span></code></a> class.</p>
+<dd><p>Capture an exception for later rendering. The meaning of <em>limit</em>,
+<em>lookup_lines</em> and <em>capture_locals</em> are as for the <a class="reference internal" href="#traceback.StackSummary" title="traceback.StackSummary"><code class="xref py py-class docutils literal notranslate"><span class="pre">StackSummary</span></code></a>
+class.</p>
 <p>If <em>compact</em> is true, only data that is required by
 <code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackException</span></code>'s <a class="reference internal" href="functions.html#format" title="format"><code class="xref py py-meth docutils literal notranslate"><span class="pre">format()</span></code></a> method
 is saved in the class attributes. In particular, the
@@ -755,8 +777,8 @@ If the source is not available, it is <code class="docutils literal notranslate"
 </dd></dl>
 
 </section>
-<section id="traceback-examples">
-<span id="traceback-example"></span><h2>Traceback Examples<a class="headerlink" href="#traceback-examples" title="連結到這個標頭">¶</a></h2>
+<section id="examples-of-using-the-module-level-functions">
+<span id="traceback-example"></span><h2>Examples of Using the Module-Level Functions<a class="headerlink" href="#examples-of-using-the-module-level-functions" title="連結到這個標頭">¶</a></h2>
 <p>This simple example implements a basic read-eval-print loop, similar to (but
 less useful than) the standard Python interactive interpreter loop.  For a more
 complete implementation of the interpreter loop, refer to the <a class="reference internal" href="code.html#module-code" title="code: Facilities to implement read-eval-print loops."><code class="xref py py-mod docutils literal notranslate"><span class="pre">code</span></code></a>
@@ -790,8 +812,7 @@ exception and traceback:</p>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="n">lumberjack</span><span class="p">()</span>
-<span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
-    <span class="n">exc</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">exception</span><span class="p">()</span>
+<span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;*** print_tb:&quot;</span><span class="p">)</span>
     <span class="n">traceback</span><span class="o">.</span><span class="n">print_tb</span><span class="p">(</span><span class="n">exc</span><span class="o">.</span><span class="n">__traceback__</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;*** print_exception:&quot;</span><span class="p">)</span>
@@ -886,8 +907,89 @@ IndexError: tuple index out of range
 <span class="go">[&#39;  File &quot;spam.py&quot;, line 3, in &lt;module&gt;\n    spam.eggs()\n&#39;,</span>
 <span class="go"> &#39;  File &quot;eggs.py&quot;, line 42, in eggs\n    return &quot;bacon&quot;\n&#39;]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">an_error</span> <span class="o">=</span> <span class="ne">IndexError</span><span class="p">(</span><span class="s1">&#39;tuple index out of range&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exception_only</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">an_error</span><span class="p">),</span> <span class="n">an_error</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exception_only</span><span class="p">(</span><span class="n">an_error</span><span class="p">)</span>
 <span class="go">[&#39;IndexError: tuple index out of range\n&#39;]</span>
+</pre></div>
+</div>
+</section>
+<section id="examples-of-using-tracebackexception">
+<h2>Examples of Using <a class="reference internal" href="#traceback.TracebackException" title="traceback.TracebackException"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackException</span></code></a><a class="headerlink" href="#examples-of-using-tracebackexception" title="連結到這個標頭">¶</a></h2>
+<p>With the helper class, we have more options:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">sys</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">traceback</span> <span class="kn">import</span> <span class="n">TracebackException</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">lumberjack</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="n">bright_side_of_life</span><span class="p">()</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">bright_side_of_life</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="n">t</span> <span class="o">=</span> <span class="s2">&quot;bright&quot;</span><span class="p">,</span> <span class="s2">&quot;side&quot;</span><span class="p">,</span> <span class="s2">&quot;of&quot;</span><span class="p">,</span> <span class="s2">&quot;life&quot;</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="n">t</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">lumberjack</span><span class="p">()</span>
+<span class="gp">... </span><span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="k">try</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="n">lumberjack</span><span class="p">()</span>
+<span class="gp">... </span>    <span class="k">except</span><span class="p">:</span>
+<span class="gp">... </span>        <span class="mi">1</span><span class="o">/</span><span class="mi">0</span>
+<span class="gp">... </span><span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<span class="gp">... </span>    <span class="n">chained_exc</span> <span class="o">=</span> <span class="n">e</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># limit works as with the module-level functions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TracebackException</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="n">limit</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;python-input-1&gt;&quot;</span>, line <span class="m">6</span>, in <span class="n">lumberjack</span>
+<span class="w">    </span><span class="n">bright_side_of_life</span><span class="p">()</span>
+<span class="w">    </span><span class="pm">~~~~~~~~~~~~~~~~~~~^^</span>
+  File <span class="nb">&quot;&lt;python-input-1&gt;&quot;</span>, line <span class="m">10</span>, in <span class="n">bright_side_of_life</span>
+<span class="w">    </span><span class="k">return</span> <span class="n">t</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+<span class="w">           </span><span class="pm">~^^^</span>
+<span class="gr">IndexError</span>: <span class="n">tuple index out of range</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># capture_locals adds local variables in frames</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TracebackException</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="n">limit</span><span class="o">=-</span><span class="mi">2</span><span class="p">,</span> <span class="n">capture_locals</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;python-input-1&gt;&quot;</span>, line <span class="m">6</span>, in <span class="n">lumberjack</span>
+<span class="w">    </span><span class="n">bright_side_of_life</span><span class="p">()</span>
+<span class="w">    </span><span class="pm">~~~~~~~~~~~~~~~~~~~^^</span>
+  File <span class="nb">&quot;&lt;python-input-1&gt;&quot;</span>, line <span class="m">10</span>, in <span class="n">bright_side_of_life</span>
+<span class="w">    </span><span class="k">return</span> <span class="n">t</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+<span class="w">           </span><span class="pm">~^^^</span>
+<span class="w">    </span><span class="n">t</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;bright&quot;</span><span class="p">,</span> <span class="s2">&quot;side&quot;</span><span class="p">,</span> <span class="s2">&quot;of&quot;</span><span class="p">,</span> <span class="s2">&quot;life&quot;</span><span class="p">)</span>
+<span class="gr">IndexError</span>: <span class="n">tuple index out of range</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># The *chain* kwarg to print() controls whether chained</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># exceptions are displayed</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TracebackException</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">chained_exc</span><span class="p">)</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;python-input-19&gt;&quot;</span>, line <span class="m">4</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="n">lumberjack</span><span class="p">()</span>
+<span class="w">    </span><span class="pm">~~~~~~~~~~^^</span>
+  File <span class="nb">&quot;&lt;python-input-8&gt;&quot;</span>, line <span class="m">7</span>, in <span class="n">lumberjack</span>
+<span class="w">    </span><span class="n">bright_side_of_life</span><span class="p">()</span>
+<span class="w">    </span><span class="pm">~~~~~~~~~~~~~~~~~~~^^</span>
+  File <span class="nb">&quot;&lt;python-input-8&gt;&quot;</span>, line <span class="m">11</span>, in <span class="n">bright_side_of_life</span>
+<span class="w">    </span><span class="k">return</span> <span class="n">t</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>
+<span class="w">           </span><span class="pm">~^^^</span>
+<span class="gr">IndexError</span>: <span class="n">tuple index out of range</span>
+
+<span class="gt">During handling of the above exception, another exception occurred:</span>
+
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;python-input-19&gt;&quot;</span>, line <span class="m">6</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="mi">1</span><span class="o">/</span><span class="mi">0</span>
+<span class="w">    </span><span class="pm">~^~</span>
+<span class="gr">ZeroDivisionError</span>: <span class="n">division by zero</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">TracebackException</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">chained_exc</span><span class="p">)</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="n">chain</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="gt">Traceback (most recent call last):</span>
+  File <span class="nb">&quot;&lt;python-input-19&gt;&quot;</span>, line <span class="m">6</span>, in <span class="n">&lt;module&gt;</span>
+<span class="w">    </span><span class="mi">1</span><span class="o">/</span><span class="mi">0</span>
+<span class="w">    </span><span class="pm">~^~</span>
+<span class="gr">ZeroDivisionError</span>: <span class="n">division by zero</span>
 </pre></div>
 </div>
 </section>
@@ -904,10 +1006,12 @@ IndexError: tuple index out of range
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">traceback</span></code> --- 列印或取得堆疊回溯 (stack traceback)</a><ul>
+<li><a class="reference internal" href="#module-level-functions">Module-Level Functions</a></li>
 <li><a class="reference internal" href="#tracebackexception-objects"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackException</span></code> 物件</a></li>
 <li><a class="reference internal" href="#stacksummary-objects"><code class="xref py py-class docutils literal notranslate"><span class="pre">StackSummary</span></code> 物件</a></li>
 <li><a class="reference internal" href="#framesummary-objects"><code class="xref py py-class docutils literal notranslate"><span class="pre">FrameSummary</span></code> 物件</a></li>
-<li><a class="reference internal" href="#traceback-examples">Traceback Examples</a></li>
+<li><a class="reference internal" href="#examples-of-using-the-module-level-functions">Examples of Using the Module-Level Functions</a></li>
+<li><a class="reference internal" href="#examples-of-using-tracebackexception">Examples of Using <code class="xref py py-class docutils literal notranslate"><span class="pre">TracebackException</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1020,13 +1124,13 @@ IndexError: tuple index out of range
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 Oct 08, 2024 (03:35 UTC)。
+      最後更新於 10月 12, 2024 (01:09 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
     <br />
 
-    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.0.2 建立。
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.1 建立。
     </div>
 
   </body>
