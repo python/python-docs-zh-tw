@@ -103,6 +103,7 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#how-to-translate-the-argparse-output">如何翻譯 argparse 輸出</a></li>
+<li><a class="reference internal" href="#custom-type-converters">Custom type converters</a></li>
 <li><a class="reference internal" href="#conclusion">結論</a></li>
 </ul>
 </li>
@@ -848,6 +849,47 @@
 <p>一旦翻譯了 <code class="docutils literal notranslate"><span class="pre">.po</span></code> 檔案中的訊息並使用 <a class="reference internal" href="../library/gettext.html#module-gettext" title="gettext: Multilingual internationalization services."><code class="xref py py-mod docutils literal notranslate"><span class="pre">gettext</span></code></a> 安裝了翻譯，<a class="reference internal" href="../library/argparse.html#module-argparse" title="argparse: Command-line option and argument parsing library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a> 將能夠顯示翻譯後的訊息。</p>
 <p>若要在 <a class="reference internal" href="../library/argparse.html#module-argparse" title="argparse: Command-line option and argument parsing library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a> 輸出中翻譯你自己的字串，請使用 <a class="reference internal" href="../library/gettext.html#module-gettext" title="gettext: Multilingual internationalization services."><code class="xref py py-mod docutils literal notranslate"><span class="pre">gettext</span></code></a>。</p>
 </section>
+<section id="custom-type-converters">
+<h2>Custom type converters<a class="headerlink" href="#custom-type-converters" title="連結到這個標頭">¶</a></h2>
+<p>The <a class="reference internal" href="../library/argparse.html#module-argparse" title="argparse: Command-line option and argument parsing library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a> module allows you to specify custom type converters for
+your command-line arguments. This allows you to modify user input before it's
+stored in the <a class="reference internal" href="../library/argparse.html#argparse.Namespace" title="argparse.Namespace"><code class="xref py py-class docutils literal notranslate"><span class="pre">argparse.Namespace</span></code></a>. This can be useful when you need to
+pre-process the input before it is used in your program.</p>
+<p>When using a custom type converter, you can use any callable that takes a
+single string argument (the argument value) and returns the converted value.
+However, if you need to handle more complex scenarios, you can use a custom
+action class with the <strong>action</strong> parameter instead.</p>
+<p>For example, let's say you want to handle arguments with different prefixes and
+process them accordingly:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
+
+<span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">prefix_chars</span><span class="o">=</span><span class="s1">&#39;-+&#39;</span><span class="p">)</span>
+
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-a&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;&lt;value&gt;&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;append&#39;</span><span class="p">,</span>
+                    <span class="nb">type</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+<span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;+a&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s1">&#39;&lt;value&gt;&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;append&#39;</span><span class="p">,</span>
+                    <span class="nb">type</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span>
+
+<span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>結果：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>prog.py<span class="w"> </span>-a<span class="w"> </span>value1<span class="w"> </span>+a<span class="w"> </span>value2
+<span class="go">Namespace(a=[(&#39;-&#39;, &#39;value1&#39;), (&#39;+&#39;, &#39;value2&#39;)])</span>
+</pre></div>
+</div>
+<p>在這個範例當中，我們：</p>
+<ul class="simple">
+<li><p>Created a parser with custom prefix characters using the <code class="docutils literal notranslate"><span class="pre">prefix_chars</span></code>
+parameter.</p></li>
+<li><p>Defined two arguments, <code class="docutils literal notranslate"><span class="pre">-a</span></code> and <code class="docutils literal notranslate"><span class="pre">+a</span></code>, which used the <code class="docutils literal notranslate"><span class="pre">type</span></code> parameter to
+create custom type converters to store the value in a tuple with the prefix.</p></li>
+</ul>
+<p>Without the custom type converters, the arguments would have treated the <code class="docutils literal notranslate"><span class="pre">-a</span></code>
+and <code class="docutils literal notranslate"><span class="pre">+a</span></code> as the same argument, which would have been undesirable. By using custom
+type converters, we were able to differentiate between the two arguments.</p>
+</section>
 <section id="conclusion">
 <h2>結論<a class="headerlink" href="#conclusion" title="連結到這個標頭">¶</a></h2>
 <p><a class="reference internal" href="../library/argparse.html#module-argparse" title="argparse: Command-line option and argument parsing library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a> 模組提供的功能比此篇內容的要多得多。它的文件非常詳細與透徹並有很多範例。讀完本教學後，你應該可以輕鬆消化它們，而不會感到不知所措。</p>
@@ -879,6 +921,7 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#how-to-translate-the-argparse-output">如何翻譯 argparse 輸出</a></li>
+<li><a class="reference internal" href="#custom-type-converters">Custom type converters</a></li>
 <li><a class="reference internal" href="#conclusion">結論</a></li>
 </ul>
 </li>
@@ -993,13 +1036,13 @@
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 10月 12, 2024 (01:09 UTC)。
+      最後更新於 10月 18, 2024 (18:37 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
     <br />
 
-    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.1 建立。
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3 建立。
     </div>
 
   </body>
