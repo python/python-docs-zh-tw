@@ -103,10 +103,10 @@
 <li><a class="reference internal" href="#the-meta-path">5.3.4. 元路徑</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#loading">5.4. Loading</a><ul>
-<li><a class="reference internal" href="#loaders">5.4.1. Loaders</a></li>
+<li><a class="reference internal" href="#loading">5.4. 載入</a><ul>
+<li><a class="reference internal" href="#loaders">5.4.1. 載入器</a></li>
 <li><a class="reference internal" href="#submodules">5.4.2. 子模組</a></li>
-<li><a class="reference internal" href="#module-specs">5.4.3. Module specs</a></li>
+<li><a class="reference internal" href="#module-specs">5.4.3. 模組規格</a></li>
 <li><a class="reference internal" href="#path-attributes-on-modules">5.4.4. __path__ attributes on modules</a></li>
 <li><a class="reference internal" href="#module-reprs">5.4.5. Module reprs</a></li>
 <li><a class="reference internal" href="#cached-bytecode-invalidation">5.4.6. Cached bytecode invalidation</a></li>
@@ -307,24 +307,22 @@
 </section>
 </section>
 <section id="loading">
-<h2><span class="section-number">5.4. </span>Loading<a class="headerlink" href="#loading" title="連結到這個標頭">¶</a></h2>
-<p>If and when a module spec is found, the import machinery will use it (and
-the loader it contains) when loading the module.  Here is an approximation
-of what happens during the loading portion of import:</p>
+<h2><span class="section-number">5.4. </span>載入<a class="headerlink" href="#loading" title="連結到這個標頭">¶</a></h2>
+<p>如果找到模組規格，引入機制會在載入模組時使用該規格（以及它包含的載入器）。以下是引入過程中載入部分的大致情況：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">module</span> <span class="o">=</span> <span class="kc">None</span>
 <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">loader</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">loader</span><span class="p">,</span> <span class="s1">&#39;create_module&#39;</span><span class="p">):</span>
-    <span class="c1"># It is assumed &#39;exec_module&#39; will also be defined on the loader.</span>
+    <span class="c1"># 這裡假設載入器上也會定義 &#39;exec_module&#39;</span>
     <span class="n">module</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">create_module</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
 <span class="k">if</span> <span class="n">module</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">module</span> <span class="o">=</span> <span class="n">ModuleType</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<span class="c1"># The import-related module attributes get set here:</span>
+<span class="c1"># 與引入相關的模組屬性會在此處設定：</span>
 <span class="n">_init_module_attrs</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">module</span><span class="p">)</span>
 
 <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">loader</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="c1"># unsupported</span>
+    <span class="c1"># 不支援</span>
     <span class="k">raise</span> <span class="ne">ImportError</span>
 <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">origin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">spec</span><span class="o">.</span><span class="n">submodule_search_locations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="c1"># namespace package</span>
+    <span class="c1"># 命名空間套件</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">module</span>
 <span class="k">elif</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">loader</span><span class="p">,</span> <span class="s1">&#39;exec_module&#39;</span><span class="p">):</span>
     <span class="n">module</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">load_module</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -341,119 +339,64 @@ of what happens during the loading portion of import:</p>
 <span class="k">return</span> <span class="n">sys</span><span class="o">.</span><span class="n">modules</span><span class="p">[</span><span class="n">spec</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>Note the following details:</p>
+<p>請注意下列細節：</p>
 <ul class="simple">
-<li><p>If there is an existing module object with the given name in
-<a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>, import will have already returned it.</p></li>
-<li><p>The module will exist in <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> before the loader
-executes the module code.  This is crucial because the module code may
-(directly or indirectly) import itself; adding it to <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>
-beforehand prevents unbounded recursion in the worst case and multiple
-loading in the best.</p></li>
-<li><p>If loading fails, the failing module -- and only the failing module --
-gets removed from <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>.  Any module already in the
-<a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> cache, and any module that was successfully loaded
-as a side-effect, must remain in the cache.  This contrasts with
-reloading where even the failing module is left in <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>.</p></li>
-<li><p>After the module is created but before execution, the import machinery
-sets the import-related module attributes (&quot;_init_module_attrs&quot; in
-the pseudo-code example above), as summarized in a
-<a class="reference internal" href="datamodel.html#import-mod-attrs"><span class="std std-ref">later section</span></a>.</p></li>
-<li><p>Module execution is the key moment of loading in which the module's
-namespace gets populated.  Execution is entirely delegated to the
-loader, which gets to decide what gets populated and how.</p></li>
-<li><p>The module created during loading and passed to exec_module() may
-not be the one returned at the end of import <a class="footnote-reference brackets" href="#fnlo" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>.</p></li>
+<li><p>如果 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 中已存在具有給定名稱的模組物件，引入會已回傳該物件。</p></li>
+<li><p>在載入器執行模組程式碼之前，模組將已存在於 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 中。這一點至關重要，因為模組程式碼可能會（直接或間接）引入自己；事先將其增加到 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 可以預防類似無限遞迴以及多次重覆載入等情形。</p></li>
+<li><p>如果載入失敗，只有載入失敗的模組會從 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 中刪除。任何已存在於 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 快取中的模組，以及任何在載入失敗前成功載入的模組，都必須保留在快取中。此情形與重新載入不同，在重新載入時，即使載入失敗的模組也會保留在 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 中。</p></li>
+<li><p>模組建立後、在執行之前，引入機制會設置與引入相關的模組屬性（在上面的偽程式碼範例中為 &quot;_init_module_attrs&quot;），具體內容在<a class="reference internal" href="datamodel.html#import-mod-attrs"><span class="std std-ref">之後的段落</span></a>會總結。</p></li>
+<li><p>模組執行是載入過程中的關鍵時刻，此時模組的命名空間會被新增名稱。執行過程完全交由載入器處理，由其決定如何新增以及新增什麼。</p></li>
+<li><p>在載入過程中建立並傳遞給 exec_module() 的模組，可能不會是引入結束時回傳的模組 <a class="footnote-reference brackets" href="#fnlo" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>。</p></li>
 </ul>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.4 版的變更: </span>The import system has taken over the boilerplate responsibilities of
-loaders.  These were previously performed by the
-<a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.load_module" title="importlib.abc.Loader.load_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">importlib.abc.Loader.load_module()</span></code></a> method.</p>
+<p><span class="versionmodified changed">在 3.4 版的變更: </span>引入系統已接管載入器的模板 (boilerplate) 責任。之前是由 <a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.load_module" title="importlib.abc.Loader.load_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">importlib.abc.Loader.load_module()</span></code></a> 方法執行的。</p>
 </div>
 <section id="loaders">
-<h3><span class="section-number">5.4.1. </span>Loaders<a class="headerlink" href="#loaders" title="連結到這個標頭">¶</a></h3>
-<p>Module loaders provide the critical function of loading: module execution.
-The import machinery calls the <a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.exec_module" title="importlib.abc.Loader.exec_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">importlib.abc.Loader.exec_module()</span></code></a>
-method with a single argument, the module object to execute.  Any value
-returned from <a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.exec_module" title="importlib.abc.Loader.exec_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">exec_module()</span></code></a> is ignored.</p>
-<p>Loaders must satisfy the following requirements:</p>
+<h3><span class="section-number">5.4.1. </span>載入器<a class="headerlink" href="#loaders" title="連結到這個標頭">¶</a></h3>
+<p>模組載入器提供了載入的關鍵功能：模組執行。引入機制會以單一引數（即要執行的模組物件）呼叫 <a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.exec_module" title="importlib.abc.Loader.exec_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">importlib.abc.Loader.exec_module()</span></code></a> 方法。任何從 <a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.exec_module" title="importlib.abc.Loader.exec_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">exec_module()</span></code></a> 回傳的值都會被忽略。</p>
+<p>載入器必須滿足以下要求：</p>
 <ul class="simple">
-<li><p>If the module is a Python module (as opposed to a built-in module or a
-dynamically loaded extension), the loader should execute the module's code
-in the module's global name space (<code class="docutils literal notranslate"><span class="pre">module.__dict__</span></code>).</p></li>
-<li><p>If the loader cannot execute the module, it should raise an
-<a class="reference internal" href="../library/exceptions.html#ImportError" title="ImportError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportError</span></code></a>, although any other exception raised during
-<a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.exec_module" title="importlib.abc.Loader.exec_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">exec_module()</span></code></a> will be propagated.</p></li>
+<li><p>如果模組是 Python 模組（而非內建模組或動態載入的擴充），載入器應在模組的全域命名空間 (<code class="docutils literal notranslate"><span class="pre">module.__dict__</span></code>) 中執行該模組的程式碼。</p></li>
+<li><p>如果載入器無法執行該模組，應引發 <a class="reference internal" href="../library/exceptions.html#ImportError" title="ImportError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportError</span></code></a>。不過，在 <a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.exec_module" title="importlib.abc.Loader.exec_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">exec_module()</span></code></a> 中引發的任何其他例外也會被傳播。</p></li>
 </ul>
-<p>In many cases, the finder and loader can be the same object; in such cases the
-<a class="reference internal" href="../library/importlib.html#importlib.abc.MetaPathFinder.find_spec" title="importlib.abc.MetaPathFinder.find_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_spec()</span></code></a> method would just return a
-spec with the loader set to <code class="docutils literal notranslate"><span class="pre">self</span></code>.</p>
-<p>Module loaders may opt in to creating the module object during loading
-by implementing a <a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.create_module" title="importlib.abc.Loader.create_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_module()</span></code></a> method.
-It takes one argument, the module spec, and returns the new module object
-to use during loading.  <code class="docutils literal notranslate"><span class="pre">create_module()</span></code> does not need to set any attributes
-on the module object.  If the method returns <code class="docutils literal notranslate"><span class="pre">None</span></code>, the
-import machinery will create the new module itself.</p>
+<p>在許多情況下，尋檢器和載入器可以是同一個物件；在這種情況下，<a class="reference internal" href="../library/importlib.html#importlib.abc.MetaPathFinder.find_spec" title="importlib.abc.MetaPathFinder.find_spec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find_spec()</span></code></a> 方法只需回傳一個載入器設為 <code class="docutils literal notranslate"><span class="pre">self</span></code> 的規格即可。</p>
+<p>模組載入器可以選擇透過實作 <a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.create_module" title="importlib.abc.Loader.create_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_module()</span></code></a> 方法，在載入過程中建立模組物件。該方法接受一個引數，即模組規格，並回傳在載入過程中要使用的新的模組物件。<code class="docutils literal notranslate"><span class="pre">create_module()</span></code> 不需要在模組物件上設定任何屬性。如果該方法回傳 <code class="docutils literal notranslate"><span class="pre">None</span></code>，引入機制將自行建立新的模組。</p>
 <div class="versionadded">
-<p><span class="versionmodified added">在 3.4 版被加入: </span>The <a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.create_module" title="importlib.abc.Loader.create_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_module()</span></code></a> method of loaders.</p>
+<p><span class="versionmodified added">在 3.4 版被加入: </span>載入器的 <a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.create_module" title="importlib.abc.Loader.create_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">create_module()</span></code></a> 方法。</p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.4 版的變更: </span>The <a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.load_module" title="importlib.abc.Loader.load_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_module()</span></code></a> method was replaced by
-<a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.exec_module" title="importlib.abc.Loader.exec_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">exec_module()</span></code></a> and the import
-machinery assumed all the boilerplate responsibilities of loading.</p>
-<p>For compatibility with existing loaders, the import machinery will use
-the <code class="docutils literal notranslate"><span class="pre">load_module()</span></code> method of loaders if it exists and the loader does
-not also implement <code class="docutils literal notranslate"><span class="pre">exec_module()</span></code>.  However, <code class="docutils literal notranslate"><span class="pre">load_module()</span></code> has been
-deprecated and loaders should implement <code class="docutils literal notranslate"><span class="pre">exec_module()</span></code> instead.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">load_module()</span></code> method must implement all the boilerplate loading
-functionality described above in addition to executing the module.  All
-the same constraints apply, with some additional clarification:</p>
+<p><span class="versionmodified changed">在 3.4 版的變更: </span><a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.load_module" title="importlib.abc.Loader.load_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_module()</span></code></a> 方法已被 <a class="reference internal" href="../library/importlib.html#importlib.abc.Loader.exec_module" title="importlib.abc.Loader.exec_module"><code class="xref py py-meth docutils literal notranslate"><span class="pre">exec_module()</span></code></a> 取代，引入機制已承擔所有載入的模板責任。</p>
+<p>為了與現有的載入器相容，引入機制會在載入器未實作 <code class="docutils literal notranslate"><span class="pre">exec_module()</span></code> 且存在 <code class="docutils literal notranslate"><span class="pre">load_module()</span></code> 方法時使用該方法。然而，<code class="docutils literal notranslate"><span class="pre">load_module()</span></code> 已被棄用，載入器應改為實作 <code class="docutils literal notranslate"><span class="pre">exec_module()</span></code>。</p>
+<p><code class="docutils literal notranslate"><span class="pre">load_module()</span></code> 方法除了執行模組外，還必須實作上述全部的模板載入功能。所有相同的限制依然適用，並且還有一些額外的說明：</p>
 <ul class="simple">
-<li><p>If there is an existing module object with the given name in
-<a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>, the loader must use that existing module.
-(Otherwise, <a class="reference internal" href="../library/importlib.html#importlib.reload" title="importlib.reload"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.reload()</span></code></a> will not work correctly.)  If the
-named module does not exist in <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>, the loader
-must create a new module object and add it to <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>.</p></li>
-<li><p>The module <em>must</em> exist in <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> before the loader
-executes the module code, to prevent unbounded recursion or multiple
-loading.</p></li>
-<li><p>If loading fails, the loader must remove any modules it has inserted
-into <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>, but it must remove <strong>only</strong> the failing
-module(s), and only if the loader itself has loaded the module(s)
-explicitly.</p></li>
+<li><p>如果 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 中已存在具有給定名稱的模組物件，載入器必須使用該模組（否則 <a class="reference internal" href="../library/importlib.html#importlib.reload" title="importlib.reload"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.reload()</span></code></a> 將無法正常運作）。如果命名模組不存在於 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 中，載入器必須建立一個新的模組物件並將其新增至 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>。</p></li>
+<li><p>在載入器執行模組程式碼之前，該模組<em>必須</em>已存在於 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 中，以防止無限遞迴或多次載入。</p></li>
+<li><p>如果載入失敗，載入器必須移除已經插入到 <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 中的任何模組，但<strong>只能</strong>移除失敗的模組（們），且僅在載入器本身明確載入這些模組時才需移除。</p></li>
 </ul>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.5 版的變更: </span>A <a class="reference internal" href="../library/exceptions.html#DeprecationWarning" title="DeprecationWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DeprecationWarning</span></code></a> is raised when <code class="docutils literal notranslate"><span class="pre">exec_module()</span></code> is defined but
-<code class="docutils literal notranslate"><span class="pre">create_module()</span></code> is not.</p>
+<p><span class="versionmodified changed">在 3.5 版的變更: </span>當 <code class="docutils literal notranslate"><span class="pre">exec_module()</span></code> 已定義但未定義 <code class="docutils literal notranslate"><span class="pre">create_module()</span></code> 時，將引發 <a class="reference internal" href="../library/exceptions.html#DeprecationWarning" title="DeprecationWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DeprecationWarning</span></code></a>。</p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.6 版的變更: </span>An <a class="reference internal" href="../library/exceptions.html#ImportError" title="ImportError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportError</span></code></a> is raised when <code class="docutils literal notranslate"><span class="pre">exec_module()</span></code> is defined but
-<code class="docutils literal notranslate"><span class="pre">create_module()</span></code> is not.</p>
+<p><span class="versionmodified changed">在 3.6 版的變更: </span>當 <code class="docutils literal notranslate"><span class="pre">exec_module()</span></code> 已定義但未定義 <code class="docutils literal notranslate"><span class="pre">create_module()</span></code> 時，將引發 <a class="reference internal" href="../library/exceptions.html#ImportError" title="ImportError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportError</span></code></a>。</p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.10 版的變更: </span>Use of <code class="docutils literal notranslate"><span class="pre">load_module()</span></code> will raise <a class="reference internal" href="../library/exceptions.html#ImportWarning" title="ImportWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportWarning</span></code></a>.</p>
+<p><span class="versionmodified changed">在 3.10 版的變更: </span>使用 <code class="docutils literal notranslate"><span class="pre">load_module()</span></code> 將引發 <a class="reference internal" href="../library/exceptions.html#ImportWarning" title="ImportWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportWarning</span></code></a>。</p>
 </div>
 </section>
 <section id="submodules">
 <h3><span class="section-number">5.4.2. </span>子模組<a class="headerlink" href="#submodules" title="連結到這個標頭">¶</a></h3>
-<p>When a submodule is loaded using any mechanism (e.g. <code class="docutils literal notranslate"><span class="pre">importlib</span></code> APIs, the
-<code class="docutils literal notranslate"><span class="pre">import</span></code> or <code class="docutils literal notranslate"><span class="pre">import-from</span></code> statements, or built-in <code class="docutils literal notranslate"><span class="pre">__import__()</span></code>) a
-binding is placed in the parent module's namespace to the submodule object.
-For example, if package <code class="docutils literal notranslate"><span class="pre">spam</span></code> has a submodule <code class="docutils literal notranslate"><span class="pre">foo</span></code>, after importing
-<code class="docutils literal notranslate"><span class="pre">spam.foo</span></code>, <code class="docutils literal notranslate"><span class="pre">spam</span></code> will have an attribute <code class="docutils literal notranslate"><span class="pre">foo</span></code> which is bound to the
-submodule.  Let's say you have the following directory structure:</p>
+<p>當使用任何機制（例如 <code class="docutils literal notranslate"><span class="pre">importlib</span></code> APIs、<code class="docutils literal notranslate"><span class="pre">import</span></code> 或 <code class="docutils literal notranslate"><span class="pre">import-from</span></code> 陳述式，或內建的 <code class="docutils literal notranslate"><span class="pre">__import__()</span></code>）載入子模組時，會將子模組物件繫結到父模組的命名空間中。例如，如果套件 <code class="docutils literal notranslate"><span class="pre">spam</span></code> 有一個子模組 <code class="docutils literal notranslate"><span class="pre">foo</span></code>，則在引入 <code class="docutils literal notranslate"><span class="pre">spam.foo</span></code> 之後，<code class="docutils literal notranslate"><span class="pre">spam</span></code> 將擁有一個名為 <code class="docutils literal notranslate"><span class="pre">foo</span></code> 的屬性，該屬性繫結到子模組。我們假設你有以下的目錄結構：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">spam</span><span class="o">/</span>
     <span class="fm">__init__</span><span class="o">.</span><span class="n">py</span>
     <span class="n">foo</span><span class="o">.</span><span class="n">py</span>
 </pre></div>
 </div>
-<p>and <code class="docutils literal notranslate"><span class="pre">spam/__init__.py</span></code> has the following line in it:</p>
+<p>並且 <code class="docutils literal notranslate"><span class="pre">spam/__init__.py</span></code> 中包含以下程式碼：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">.foo</span> <span class="kn">import</span> <span class="n">Foo</span>
 </pre></div>
 </div>
-<p>then executing the following puts name bindings for <code class="docutils literal notranslate"><span class="pre">foo</span></code> and <code class="docutils literal notranslate"><span class="pre">Foo</span></code> in the
-<code class="docutils literal notranslate"><span class="pre">spam</span></code> module:</p>
+<p>那麼執行以下程式碼會將 <code class="docutils literal notranslate"><span class="pre">foo</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Foo</span></code> 的名稱繫結到 <code class="docutils literal notranslate"><span class="pre">spam</span></code> 模組中：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">spam</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">spam</span><span class="o">.</span><span class="n">foo</span>
 <span class="go">&lt;module &#39;spam.foo&#39; from &#39;/tmp/imports/spam/foo.py&#39;&gt;</span>
@@ -461,30 +404,14 @@ submodule.  Let's say you have the following directory structure:</p>
 <span class="go">&lt;class &#39;spam.foo.Foo&#39;&gt;</span>
 </pre></div>
 </div>
-<p>Given Python's familiar name binding rules this might seem surprising, but
-it's actually a fundamental feature of the import system.  The invariant
-holding is that if you have <code class="docutils literal notranslate"><span class="pre">sys.modules['spam']</span></code> and
-<code class="docutils literal notranslate"><span class="pre">sys.modules['spam.foo']</span></code> (as you would after the above import), the latter
-must appear as the <code class="docutils literal notranslate"><span class="pre">foo</span></code> attribute of the former.</p>
+<p>鑑於 Python 相似的名稱繫結規則，這可能看起來有些出人意料，但這實際上是引入系統的一個基本特性。不變的是如果你擁有 <code class="docutils literal notranslate"><span class="pre">sys.modules['spam']</span></code> 和 <code class="docutils literal notranslate"><span class="pre">sys.modules['spam.foo']``（就像上述引入後那樣），那麼後者必須作為前者的</span> <span class="pre">``foo</span></code> 屬性出現。</p>
 </section>
 <section id="module-specs">
-<span id="id4"></span><h3><span class="section-number">5.4.3. </span>Module specs<a class="headerlink" href="#module-specs" title="連結到這個標頭">¶</a></h3>
-<p>The import machinery uses a variety of information about each module
-during import, especially before loading.  Most of the information is
-common to all modules.  The purpose of a module's spec is to encapsulate
-this import-related information on a per-module basis.</p>
-<p>Using a spec during import allows state to be transferred between import
-system components, e.g. between the finder that creates the module spec
-and the loader that executes it.  Most importantly, it allows the
-import machinery to perform the boilerplate operations of loading,
-whereas without a module spec the loader had that responsibility.</p>
-<p>The module's spec is exposed as <a class="reference internal" href="datamodel.html#module.__spec__" title="module.__spec__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">module.__spec__</span></code></a>. Setting
-<code class="xref py py-attr docutils literal notranslate"><span class="pre">__spec__</span></code> appropriately applies equally to
-<a class="reference internal" href="toplevel_components.html#programs"><span class="std std-ref">modules initialized during interpreter startup</span></a>.
-The one exception is <code class="docutils literal notranslate"><span class="pre">__main__</span></code>, where <code class="xref py py-attr docutils literal notranslate"><span class="pre">__spec__</span></code> is
-<a class="reference internal" href="#main-spec"><span class="std std-ref">set to None in some cases</span></a>.</p>
-<p>See <a class="reference internal" href="../library/importlib.html#importlib.machinery.ModuleSpec" title="importlib.machinery.ModuleSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSpec</span></code></a> for details on the contents of
-the module spec.</p>
+<span id="id4"></span><h3><span class="section-number">5.4.3. </span>模組規格<a class="headerlink" href="#module-specs" title="連結到這個標頭">¶</a></h3>
+<p>引入機制在引入過程中使用有關每個模組的各種資訊，尤其是在載入之前。大多數資訊對所有模組來說都是通用的。模組規格的目的是以每個模組為基礎封裝這些與引入相關的資訊。</p>
+<p>在引入過程中使用規格允許在引入系統的各個組件之間傳遞狀態，例如在建立模組規格的尋檢器和執行該規格的載入器之間傳遞。最重要的是，這允許引入機制執行載入的模板操作，而在沒有模組規格的情況下，這些操作則是載入器的責任。</p>
+<p>模組的規格以 <a class="reference internal" href="datamodel.html#module.__spec__" title="module.__spec__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">module.__spec__</span></code></a> 的形式公開。適當地設定 <code class="xref py py-attr docutils literal notranslate"><span class="pre">__spec__</span></code> 同樣適用於<a class="reference internal" href="toplevel_components.html#programs"><span class="std std-ref">在直譯器啟動期間初始化的模組</span></a>。唯一的例外是 <code class="docutils literal notranslate"><span class="pre">__main__</span></code>，其中 <code class="xref py py-attr docutils literal notranslate"><span class="pre">__spec__</span></code> 會<a class="reference internal" href="#main-spec"><span class="std std-ref">在某些情況下被設定成 None</span></a>。</p>
+<p>有關模組規格內容的詳細資訊，請參閱 <a class="reference internal" href="../library/importlib.html#importlib.machinery.ModuleSpec" title="importlib.machinery.ModuleSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSpec</span></code></a>。</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.4 版被加入.</span></p>
 </div>
@@ -877,10 +804,10 @@ Python implementations.</p>
 <li><a class="reference internal" href="#the-meta-path">5.3.4. 元路徑</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#loading">5.4. Loading</a><ul>
-<li><a class="reference internal" href="#loaders">5.4.1. Loaders</a></li>
+<li><a class="reference internal" href="#loading">5.4. 載入</a><ul>
+<li><a class="reference internal" href="#loaders">5.4.1. 載入器</a></li>
 <li><a class="reference internal" href="#submodules">5.4.2. 子模組</a></li>
-<li><a class="reference internal" href="#module-specs">5.4.3. Module specs</a></li>
+<li><a class="reference internal" href="#module-specs">5.4.3. 模組規格</a></li>
 <li><a class="reference internal" href="#path-attributes-on-modules">5.4.4. __path__ attributes on modules</a></li>
 <li><a class="reference internal" href="#module-reprs">5.4.5. Module reprs</a></li>
 <li><a class="reference internal" href="#cached-bytecode-invalidation">5.4.6. Cached bytecode invalidation</a></li>
@@ -1009,7 +936,7 @@ Python implementations.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 11月 11, 2024 (06:17 UTC)。
+      最後更新於 11月 11, 2024 (06:21 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
