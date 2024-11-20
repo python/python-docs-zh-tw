@@ -7,8 +7,8 @@ msgstr ""
 "Project-Id-Version: Python 3.13\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2024-09-03 11:11+0800\n"
-"PO-Revision-Date: 2024-10-07 21:14+0800\n"
-"Last-Translator: Adrian Liaw <adrianliaw2000@gmail.com>\n"
+"PO-Revision-Date: 2024-11-06 14:55+0800\n"
+"Last-Translator: Ken Cheng <ken71301@gmail.com>\n"
 "Language-Team: Chinese - TAIWAN (https://github.com/python/python-docs-zh-"
 "tw)\n"
 "Language: zh_TW\n"
@@ -599,7 +599,7 @@ msgstr ""
 
 #: ../../reference/import.rst:342
 msgid "Loading"
-msgstr ""
+msgstr "載入"
 
 #: ../../reference/import.rst:344
 msgid ""
@@ -607,6 +607,8 @@ msgid ""
 "the loader it contains) when loading the module.  Here is an approximation "
 "of what happens during the loading portion of import::"
 msgstr ""
+"如果找到模組規格，引入機制會在載入模組時使用該規格（以及它包含的載入器）。以"
+"下是引入過程中載入部分的大致情況： ::"
 
 #: ../../reference/import.rst:348
 msgid ""
@@ -639,16 +641,45 @@ msgid ""
 "        raise\n"
 "return sys.modules[spec.name]"
 msgstr ""
+"module = None\n"
+"if spec.loader is not None and hasattr(spec.loader, 'create_module'):\n"
+"    # 這裡假設載入器上也會定義 'exec_module'\n"
+"    module = spec.loader.create_module(spec)\n"
+"if module is None:\n"
+"    module = ModuleType(spec.name)\n"
+"# 與引入相關的模組屬性會在此處設定：\n"
+"_init_module_attrs(spec, module)\n"
+"\n"
+"if spec.loader is None:\n"
+"    # 不支援\n"
+"    raise ImportError\n"
+"if spec.origin is None and spec.submodule_search_locations is not None:\n"
+"    # 命名空間套件\n"
+"    sys.modules[spec.name] = module\n"
+"elif not hasattr(spec.loader, 'exec_module'):\n"
+"    module = spec.loader.load_module(spec.name)\n"
+"else:\n"
+"    sys.modules[spec.name] = module\n"
+"    try:\n"
+"        spec.loader.exec_module(module)\n"
+"    except BaseException:\n"
+"        try:\n"
+"            del sys.modules[spec.name]\n"
+"        except KeyError:\n"
+"            pass\n"
+"        raise\n"
+"return sys.modules[spec.name]"
 
 #: ../../reference/import.rst:377
 msgid "Note the following details:"
-msgstr ""
+msgstr "請注意下列細節："
 
 #: ../../reference/import.rst:379
 msgid ""
 "If there is an existing module object with the given name in :data:`sys."
 "modules`, import will have already returned it."
 msgstr ""
+"如果 :data:`sys.modules` 中已存在具有給定名稱的模組物件，引入會已回傳該物件。"
 
 #: ../../reference/import.rst:382
 msgid ""
@@ -658,6 +689,9 @@ msgid ""
 "prevents unbounded recursion in the worst case and multiple loading in the "
 "best."
 msgstr ""
+"在載入器執行模組程式碼之前，模組將已存在於 :data:`sys.modules` 中。這一點至關"
+"重要，因為模組程式碼可能會（直接或間接）引入自己；事先將其增加到 :data:`sys."
+"modules` 可以預防類似無限遞迴以及多次重覆載入等情形。"
 
 #: ../../reference/import.rst:388
 msgid ""
@@ -667,6 +701,10 @@ msgid ""
 "effect, must remain in the cache.  This contrasts with reloading where even "
 "the failing module is left in :data:`sys.modules`."
 msgstr ""
+"如果載入失敗，只有載入失敗的模組會從 :data:`sys.modules` 中刪除。任何已存在"
+"於 :data:`sys.modules` 快取中的模組，以及任何在載入失敗前成功載入的模組，都必"
+"須保留在快取中。此情形與重新載入不同，在重新載入時，即使載入失敗的模組也會保"
+"留在 :data:`sys.modules` 中。"
 
 #: ../../reference/import.rst:394
 msgid ""
@@ -675,6 +713,9 @@ msgid ""
 "code example above), as summarized in a :ref:`later section <import-mod-"
 "attrs>`."
 msgstr ""
+"模組建立後、在執行之前，引入機制會設置與引入相關的模組屬性（在上面的偽程式碼"
+"範例中為 \"_init_module_attrs\"），具體內容在\\ :ref:`之後的段落<import-mod-"
+"attrs>`\\ 會總結。"
 
 #: ../../reference/import.rst:399
 msgid ""
@@ -682,12 +723,16 @@ msgid ""
 "namespace gets populated.  Execution is entirely delegated to the loader, "
 "which gets to decide what gets populated and how."
 msgstr ""
+"模組執行是載入過程中的關鍵時刻，此時模組的命名空間會被新增名稱。執行過程完全"
+"交由載入器處理，由其決定如何新增以及新增什麼。"
 
 #: ../../reference/import.rst:403
 msgid ""
 "The module created during loading and passed to exec_module() may not be the "
 "one returned at the end of import [#fnlo]_."
 msgstr ""
+"在載入過程中建立並傳遞給 exec_module() 的模組，可能不會是引入結束時回傳的模"
+"組 [#fnlo]_。"
 
 #: ../../reference/import.rst:406
 msgid ""
@@ -695,10 +740,12 @@ msgid ""
 "loaders.  These were previously performed by the :meth:`importlib.abc.Loader."
 "load_module` method."
 msgstr ""
+"引入系統已接管載入器的模板 (boilerplate) 責任。之前是由 :meth:`importlib.abc."
+"Loader.load_module` 方法執行的。"
 
 #: ../../reference/import.rst:412
 msgid "Loaders"
-msgstr ""
+msgstr "載入器"
 
 #: ../../reference/import.rst:414
 msgid ""
@@ -707,10 +754,13 @@ msgid ""
 "method with a single argument, the module object to execute.  Any value "
 "returned from :meth:`~importlib.abc.Loader.exec_module` is ignored."
 msgstr ""
+"模組載入器提供了載入的關鍵功能：模組執行。引入機制會以單一引數（即要執行的模"
+"組物件）呼叫 :meth:`importlib.abc.Loader.exec_module` 方法。任何從 :meth:"
+"`~importlib.abc.Loader.exec_module` 回傳的值都會被忽略。"
 
 #: ../../reference/import.rst:419
 msgid "Loaders must satisfy the following requirements:"
-msgstr ""
+msgstr "載入器必須滿足以下要求："
 
 #: ../../reference/import.rst:421
 msgid ""
@@ -718,6 +768,8 @@ msgid ""
 "dynamically loaded extension), the loader should execute the module's code "
 "in the module's global name space (``module.__dict__``)."
 msgstr ""
+"如果模組是 Python 模組（而非內建模組或動態載入的擴充），載入器應在模組的全域"
+"命名空間 (``module.__dict__``\\ ) 中執行該模組的程式碼。"
 
 #: ../../reference/import.rst:425
 msgid ""
@@ -725,6 +777,8 @@ msgid ""
 "`ImportError`, although any other exception raised during :meth:`~importlib."
 "abc.Loader.exec_module` will be propagated."
 msgstr ""
+"如果載入器無法執行該模組，應引發 :exc:`ImportError`。不過，在 :meth:"
+"`~importlib.abc.Loader.exec_module` 中引發的任何其他例外也會被傳播。"
 
 #: ../../reference/import.rst:429
 msgid ""
@@ -732,6 +786,9 @@ msgid ""
 "the :meth:`~importlib.abc.MetaPathFinder.find_spec` method would just return "
 "a spec with the loader set to ``self``."
 msgstr ""
+"在許多情況下，尋檢器和載入器可以是同一個物件；在這種情況下，:meth:"
+"`~importlib.abc.MetaPathFinder.find_spec` 方法只需回傳一個載入器設為 "
+"``self`` 的規格即可。"
 
 #: ../../reference/import.rst:433
 msgid ""
@@ -742,10 +799,14 @@ msgid ""
 "the module object.  If the method returns ``None``, the import machinery "
 "will create the new module itself."
 msgstr ""
+"模組載入器可以選擇透過實作 :meth:`~importlib.abc.Loader.create_module` 方法，"
+"在載入過程中建立模組物件。該方法接受一個引數，即模組規格，並回傳在載入過程中"
+"要使用的新的模組物件。``create_module()`` 不需要在模組物件上設定任何屬性。如"
+"果該方法回傳 ``None``，引入機制將自行建立新的模組。"
 
 #: ../../reference/import.rst:440
 msgid "The :meth:`~importlib.abc.Loader.create_module` method of loaders."
-msgstr ""
+msgstr "載入器的 :meth:`~importlib.abc.Loader.create_module` 方法。"
 
 #: ../../reference/import.rst:443
 msgid ""
@@ -753,6 +814,8 @@ msgid ""
 "`~importlib.abc.Loader.exec_module` and the import machinery assumed all the "
 "boilerplate responsibilities of loading."
 msgstr ""
+":meth:`~importlib.abc.Loader.load_module` 方法已被 :meth:`~importlib.abc."
+"Loader.exec_module` 取代，引入機制已承擔所有載入的模板責任。"
 
 #: ../../reference/import.rst:448
 msgid ""
@@ -761,6 +824,9 @@ msgid ""
 "also implement ``exec_module()``.  However, ``load_module()`` has been "
 "deprecated and loaders should implement ``exec_module()`` instead."
 msgstr ""
+"為了與現有的載入器相容，引入機制會在載入器未實作 ``exec_module()`` 且存在 "
+"``load_module()`` 方法時使用該方法。然而，``load_module()`` 已被棄用，載入器"
+"應改為實作 ``exec_module()``。"
 
 #: ../../reference/import.rst:453
 msgid ""
@@ -768,6 +834,8 @@ msgid ""
 "functionality described above in addition to executing the module.  All the "
 "same constraints apply, with some additional clarification:"
 msgstr ""
+"``load_module()`` 方法除了執行模組外，還必須實作上述全部的模板載入功能。所有"
+"相同的限制依然適用，並且還有一些額外的說明："
 
 #: ../../reference/import.rst:457
 msgid ""
@@ -777,12 +845,18 @@ msgid ""
 "exist in :data:`sys.modules`, the loader must create a new module object and "
 "add it to :data:`sys.modules`."
 msgstr ""
+"如果 :data:`sys.modules` 中已存在具有給定名稱的模組物件，載入器必須使用該模組"
+"（否則 :func:`importlib.reload` 將無法正常運作）。如果命名模組不存在於 :data:"
+"`sys.modules` 中，載入器必須建立一個新的模組物件並將其新增至 :data:`sys."
+"modules`。"
 
 #: ../../reference/import.rst:463
 msgid ""
 "The module *must* exist in :data:`sys.modules` before the loader executes "
 "the module code, to prevent unbounded recursion or multiple loading."
 msgstr ""
+"在載入器執行模組程式碼之前，該模組\\ *必須*\\ 已存在於 :data:`sys.modules` "
+"中，以防止無限遞迴或多次載入。"
 
 #: ../../reference/import.rst:467
 msgid ""
@@ -790,22 +864,29 @@ msgid ""
 "data:`sys.modules`, but it must remove **only** the failing module(s), and "
 "only if the loader itself has loaded the module(s) explicitly."
 msgstr ""
+"如果載入失敗，載入器必須移除已經插入到 :data:`sys.modules` 中的任何模組，但"
+"\\ **只能**\\ 移除失敗的模組（們），且僅在載入器本身明確載入這些模組時才需移"
+"除。"
 
 #: ../../reference/import.rst:472
 msgid ""
 "A :exc:`DeprecationWarning` is raised when ``exec_module()`` is defined but "
 "``create_module()`` is not."
 msgstr ""
+"當 ``exec_module()`` 已定義但未定義 ``create_module()`` 時，將引發 :exc:"
+"`DeprecationWarning`。"
 
 #: ../../reference/import.rst:476
 msgid ""
 "An :exc:`ImportError` is raised when ``exec_module()`` is defined but "
 "``create_module()`` is not."
 msgstr ""
+"當 ``exec_module()`` 已定義但未定義 ``create_module()`` 時，將引發 :exc:"
+"`ImportError`。"
 
 #: ../../reference/import.rst:480
 msgid "Use of ``load_module()`` will raise :exc:`ImportWarning`."
-msgstr ""
+msgstr "使用 ``load_module()`` 將引發 :exc:`ImportWarning`。"
 
 #: ../../reference/import.rst:484
 msgid "Submodules"
@@ -820,6 +901,11 @@ msgid ""
 "``spam.foo``, ``spam`` will have an attribute ``foo`` which is bound to the "
 "submodule.  Let's say you have the following directory structure::"
 msgstr ""
+"當使用任何機制（例如 ``importlib`` APIs、``import`` 或 ``import-from`` 陳述"
+"式，或內建的 ``__import__()``\\ ）載入子模組時，會將子模組物件繫結到父模組的"
+"命名空間中。例如，如果套件 ``spam`` 有一個子模組 ``foo``，則在引入 ``spam."
+"foo`` 之後，``spam`` 將擁有一個名為 ``foo`` 的屬性，該屬性繫結到子模組。我們"
+"假設你有以下的目錄結構： ::"
 
 #: ../../reference/import.rst:493
 msgid ""
@@ -833,7 +919,7 @@ msgstr ""
 
 #: ../../reference/import.rst:497
 msgid "and ``spam/__init__.py`` has the following line in it::"
-msgstr ""
+msgstr "並且 ``spam/__init__.py`` 中包含以下程式碼： ::"
 
 #: ../../reference/import.rst:499
 msgid "from .foo import Foo"
@@ -844,6 +930,7 @@ msgid ""
 "then executing the following puts name bindings for ``foo`` and ``Foo`` in "
 "the ``spam`` module::"
 msgstr ""
+"那麼執行以下程式碼會將 ``foo`` 和 ``Foo`` 的名稱繫結到 ``spam`` 模組中： ::"
 
 #: ../../reference/import.rst:504
 msgid ""
@@ -867,10 +954,14 @@ msgid ""
 "foo']`` (as you would after the above import), the latter must appear as the "
 "``foo`` attribute of the former."
 msgstr ""
+"鑑於 Python 相似的名稱繫結規則，這可能看起來有些出人意料，但這實際上是引入系"
+"統的一個基本特性。不變的是如果你擁有 ``sys.modules['spam']`` 和 ``sys."
+"modules['spam.foo']``（就像上述引入後那樣），那麼後者必須作為前者的 ``foo`` "
+"屬性出現。"
 
 #: ../../reference/import.rst:519
 msgid "Module specs"
-msgstr ""
+msgstr "模組規格"
 
 #: ../../reference/import.rst:521
 msgid ""
@@ -879,6 +970,9 @@ msgid ""
 "modules.  The purpose of a module's spec is to encapsulate this import-"
 "related information on a per-module basis."
 msgstr ""
+"引入機制在引入過程中使用有關每個模組的各種資訊，尤其是在載入之前。大多數資訊"
+"對所有模組來說都是通用的。模組規格的目的是以每個模組為基礎封裝這些與引入相關"
+"的資訊。"
 
 #: ../../reference/import.rst:526
 msgid ""
@@ -888,6 +982,9 @@ msgid ""
 "machinery to perform the boilerplate operations of loading, whereas without "
 "a module spec the loader had that responsibility."
 msgstr ""
+"在引入過程中使用規格允許在引入系統的各個組件之間傳遞狀態，例如在建立模組規格"
+"的尋檢器和執行該規格的載入器之間傳遞。最重要的是，這允許引入機制執行載入的模"
+"板操作，而在沒有模組規格的情況下，這些操作則是載入器的責任。"
 
 #: ../../reference/import.rst:532
 msgid ""
@@ -896,12 +993,17 @@ msgid ""
 "interpreter startup <programs>`. The one exception is ``__main__``, where :"
 "attr:`!__spec__` is :ref:`set to None in some cases <main_spec>`."
 msgstr ""
+"模組的規格以 :attr:`module.__spec__` 的形式公開。適當地設定 :attr:`!"
+"__spec__` 同樣適用於\\ :ref:`在直譯器啟動期間初始化的模組 <programs>`。唯一的"
+"例外是 ``__main__``，其中 :attr:`!__spec__` 會\\ :ref:`在某些情況下被設定成 "
+"None <main_spec>`。"
 
 #: ../../reference/import.rst:538
 msgid ""
 "See :class:`~importlib.machinery.ModuleSpec` for details on the contents of "
 "the module spec."
 msgstr ""
+"有關模組規格內容的詳細資訊，請參閱 :class:`~importlib.machinery.ModuleSpec`。"
 
 #: ../../reference/import.rst:546
 msgid "__path__ attributes on modules"
