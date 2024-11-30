@@ -1458,7 +1458,7 @@ must be held.</p>
 Previously, that happened in <a class="reference internal" href="#c.PyThreadState_Delete" title="PyThreadState_Delete"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_Delete()</span></code></a>.</p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.13 版的變更: </span>The <code class="xref c c-member docutils literal notranslate"><span class="pre">PyThreadState.on_delete</span></code> callback was removed.</p>
+<p><span class="versionmodified changed">在 3.13 版的變更: </span><code class="xref c c-member docutils literal notranslate"><span class="pre">PyThreadState.on_delete</span></code> 回呼已被移除。</p>
 </div>
 </dd></dl>
 
@@ -1828,7 +1828,11 @@ with certain functionality restricted:</p>
 <span class="w">    </span><span class="p">.</span><span class="n">check_multi_interp_extensions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
 <span class="w">    </span><span class="p">.</span><span class="n">gil</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyInterpreterConfig_OWN_GIL</span><span class="p">,</span>
 <span class="p">};</span>
-<span class="n">PyThreadState</span><span class="w"> </span><span class="o">*</span><span class="n">tstate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Py_NewInterpreterFromConfig</span><span class="p">(</span><span class="o">&amp;</span><span class="n">config</span><span class="p">);</span>
+<span class="n">PyThreadState</span><span class="w"> </span><span class="o">*</span><span class="n">tstate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="n">PyStatus</span><span class="w"> </span><span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Py_NewInterpreterFromConfig</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tstate</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">config</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PyStatus_Exception</span><span class="p">(</span><span class="n">status</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">Py_ExitStatusException</span><span class="p">(</span><span class="n">status</span><span class="p">);</span>
+<span class="p">}</span>
 </pre></div>
 </div>
 <p>Note that the config is used only briefly and does not get modified.
@@ -2580,7 +2584,7 @@ address first) to avoid lock ordering deadlocks.</p>
 <p>In the free-threaded build, this macro expands to:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">    </span><span class="n">PyCriticalSection2</span><span class="w"> </span><span class="n">_py_cs2</span><span class="p">;</span>
-<span class="w">    </span><span class="n">PyCriticalSection_Begin2</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_py_cs2</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">PyObject</span><span class="o">*</span><span class="p">)(</span><span class="n">a</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="n">PyObject</span><span class="o">*</span><span class="p">)(</span><span class="n">b</span><span class="p">))</span>
+<span class="w">    </span><span class="n">PyCriticalSection2_Begin</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_py_cs2</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">PyObject</span><span class="o">*</span><span class="p">)(</span><span class="n">a</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="n">PyObject</span><span class="o">*</span><span class="p">)(</span><span class="n">b</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>In the default build, this macro expands to <code class="docutils literal notranslate"><span class="pre">{</span></code>.</p>
@@ -2594,7 +2598,7 @@ address first) to avoid lock ordering deadlocks.</p>
 <span class="sig-name descname"><span class="n"><span class="pre">Py_END_CRITICAL_SECTION2</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_END_CRITICAL_SECTION2" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Ends the critical section and releases the per-object locks.</p>
 <p>In the free-threaded build, this macro expands to:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="n">PyCriticalSection_End2</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_py_cs2</span><span class="p">);</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="n">PyCriticalSection2_End</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_py_cs2</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -2764,7 +2768,7 @@ address first) to avoid lock ordering deadlocks.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 11月 22, 2024 (07:51 UTC)。
+      最後更新於 11月 30, 2024 (23:08 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     

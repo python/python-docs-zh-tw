@@ -200,6 +200,10 @@
 <li><a class="reference internal" href="#argparse.ArgumentParser.parse_known_intermixed_args"><code class="docutils literal notranslate"><span class="pre">parse_known_intermixed_args()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#registering-custom-types-or-actions">Registering custom types or actions</a><ul>
+<li><a class="reference internal" href="#argparse.ArgumentParser.register"><code class="docutils literal notranslate"><span class="pre">register()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#exceptions">例外</a><ul>
@@ -989,7 +993,8 @@ is available in <code class="xref py py-mod docutils literal notranslate"><span 
 
 <p>The recommended way to create a custom action is to extend <a class="reference internal" href="#argparse.Action" title="argparse.Action"><code class="xref py py-class docutils literal notranslate"><span class="pre">Action</span></code></a>,
 overriding the <code class="xref py py-meth docutils literal notranslate"><span class="pre">__call__()</span></code> method and optionally the <code class="xref py py-meth docutils literal notranslate"><span class="pre">__init__()</span></code> and
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">format_usage()</span></code> methods.</p>
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">format_usage()</span></code> methods. You can also register custom actions using the
+<a class="reference internal" href="#argparse.ArgumentParser.register" title="argparse.ArgumentParser.register"><code class="xref py py-meth docutils literal notranslate"><span class="pre">register()</span></code></a> method and reference them by their registered name.</p>
 <p>An example of a custom action:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">FooAction</span><span class="p">(</span><span class="n">argparse</span><span class="o">.</span><span class="n">Action</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">option_strings</span><span class="p">,</span> <span class="n">dest</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -1195,10 +1200,11 @@ interpreted as another type, such as a <a class="reference internal" href="funct
 necessary type-checking and type conversions to be performed.</p>
 <p>If the <a class="reference internal" href="#type">type</a> keyword is used with the <a class="reference internal" href="#default">default</a> keyword, the type converter
 is only applied if the default is a string.</p>
-<p>The argument to <code class="docutils literal notranslate"><span class="pre">type</span></code> can be any callable that accepts a single string.
+<p>The argument to <code class="docutils literal notranslate"><span class="pre">type</span></code> can be a callable that accepts a single string or
+the name of a registered type (see <a class="reference internal" href="#argparse.ArgumentParser.register" title="argparse.ArgumentParser.register"><code class="xref py py-meth docutils literal notranslate"><span class="pre">register()</span></code></a>)
 If the function raises <a class="reference internal" href="#argparse.ArgumentTypeError" title="argparse.ArgumentTypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ArgumentTypeError</span></code></a>, <a class="reference internal" href="exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a>, or
 <a class="reference internal" href="exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a>, the exception is caught and a nicely formatted error
-message is displayed.  No other exception types are handled.</p>
+message is displayed. Other exception types are not handled.</p>
 <p>Common built-in types and functions can be used as type converters:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">argparse</span>
 <span class="kn">import</span> <span class="nn">pathlib</span>
@@ -2288,6 +2294,35 @@ remaining unparsed argument strings.</p>
 </dd></dl>
 
 </section>
+<section id="registering-custom-types-or-actions">
+<h3>Registering custom types or actions<a class="headerlink" href="#registering-custom-types-or-actions" title="連結到這個標頭">¶</a></h3>
+<dl class="py method">
+<dt class="sig sig-object py" id="argparse.ArgumentParser.register">
+<span class="sig-prename descclassname"><span class="pre">ArgumentParser.</span></span><span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">registry_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#argparse.ArgumentParser.register" title="連結到這個定義">¶</a></dt>
+<dd><p>Sometimes it's desirable to use a custom string in error messages to provide
+more user-friendly output. In these cases, <code class="xref py py-meth docutils literal notranslate"><span class="pre">register()</span></code> can be used to
+register custom actions or types with a parser and allow you to reference the
+type by their registered name instead of their callable name.</p>
+<p>The <code class="xref py py-meth docutils literal notranslate"><span class="pre">register()</span></code> method accepts three arguments - a <em>registry_name</em>,
+specifying the internal registry where the object will be stored (e.g.,
+<code class="docutils literal notranslate"><span class="pre">action</span></code>, <code class="docutils literal notranslate"><span class="pre">type</span></code>), <em>value</em>, which is the key under which the object will
+be registered, and object, the callable to be registered.</p>
+<p>The following example shows how to register a custom type with a parser:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">argparse</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s1">&#39;type&#39;</span><span class="p">,</span> <span class="s1">&#39;hexadecimal integer&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">s</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--foo&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="s1">&#39;hexadecimal integer&#39;</span><span class="p">)</span>
+<span class="go">_StoreAction(option_strings=[&#39;--foo&#39;], dest=&#39;foo&#39;, nargs=None, const=None, default=None, type=&#39;hexadecimal integer&#39;, choices=None, required=False, help=None, metavar=None, deprecated=False)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s1">&#39;--foo&#39;</span><span class="p">,</span> <span class="s1">&#39;0xFA&#39;</span><span class="p">])</span>
+<span class="go">Namespace(foo=250)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s1">&#39;--foo&#39;</span><span class="p">,</span> <span class="s1">&#39;1.2&#39;</span><span class="p">])</span>
+<span class="go">usage: PROG [-h] [--foo FOO]</span>
+<span class="go">PROG: error: argument --foo: invalid &#39;hexadecimal integer&#39; value: &#39;1.2&#39;</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
 </section>
 <section id="exceptions">
 <h2>例外<a class="headerlink" href="#exceptions" title="連結到這個標頭">¶</a></h2>
@@ -2309,7 +2344,7 @@ information about the argument that caused it.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../howto/argparse.html">Argparse 教學</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../howto/argparse-optparse.html">Upgrading optparse code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../howto/argparse-optparse.html">升級 optparse 程式碼</a></li>
 </ul>
 </div>
 </section>
@@ -2436,6 +2471,10 @@ information about the argument that caused it.</p>
 <li><a class="reference internal" href="#argparse.ArgumentParser.parse_known_intermixed_args"><code class="docutils literal notranslate"><span class="pre">parse_known_intermixed_args()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#registering-custom-types-or-actions">Registering custom types or actions</a><ul>
+<li><a class="reference internal" href="#argparse.ArgumentParser.register"><code class="docutils literal notranslate"><span class="pre">register()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#exceptions">例外</a><ul>
@@ -2555,7 +2594,7 @@ information about the argument that caused it.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 11月 22, 2024 (07:51 UTC)。
+      最後更新於 11月 30, 2024 (23:08 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
