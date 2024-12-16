@@ -100,6 +100,9 @@ $(VENV)/bin/sphinx-lint: $(VENV)/bin/activate
 $(VENV)/bin/blurb: $(VENV)/bin/activate
 	. $(VENV)/bin/activate; python3 -m pip install blurb
 
+$(VENV)/bin/aider: $(VENV)/bin/activate
+	. $(VENV)/bin/activate; python3 -m pip install aider-chat
+
 
 .PHONY: upgrade_venv
 upgrade_venv: $(VENV)/bin/activate ## Upgrade the venv that compiles the doc
@@ -155,6 +158,16 @@ rm_cpython: ## Remove cloned cpython repo
 .PHONY: lint
 lint:  $(VENV)/bin/sphinx-lint  ## Run sphinx-lint
 	$(VENV)/bin/sphinx-lint --enable default-role
+
+.PHONY: translate
+translate:  $(VENV)/bin/aider  ## Run translation with aider. Usage: make translate FILE=path/to/file.po LINE=number
+	@if [ -z "$(FILE)" ] || [ -z "$(LINE)" ]; then \
+		echo "\x1B[1;31mError: Both FILE and LINE arguments are required.\x1B[0m"; \
+		echo "Usage: make translate FILE=path/to/file.po LINE=number"; \
+		exit 1; \
+	fi
+	$(eval MESSAGE=$(shell python3 .scripts/intercept.py $(FILE) -n $(LINE)))
+	aider --no-auto-commits --message 'Translate the following Python documentation into Tranditional Chinese for $(FILE):$(LINE) with message $(MESSAGE). Ensure that the translation is accurate and uses appropriate technical terminology. The output must be in Traditional Chinese. Pay careful attention to context, idiomatic expressions, and any specialized vocabulary related to Python programming. Maintain the structure and format of the original documentation as much as possible to ensure clarity and usability for readers.' $(FILE)
 
 # This allows us to accept extra arguments (by doing nothing when we get a job that doesn't match, rather than throwing an error)
 %:
