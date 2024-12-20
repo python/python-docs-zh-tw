@@ -213,7 +213,6 @@
 <p>這個模組實作了許多 <a class="reference internal" href="../glossary.html#term-iterator"><span class="xref std std-term">疊代器 (iterator)</span></a> 構建塊 (building block)，其靈感來自 APL、Haskell 和 SML 的結構。每個構建塊都以適合 Python 的形式來重新設計。</p>
 <p>這個模組標準化了快速且高效率利用記憶體的核心工具集，這些工具本身或組合使用都很有用。它們共同構成了一個「疊代器代數 (iterator algebra)」，使得在純 Python 中簡潔且高效地建構專用工具成為可能。</p>
 <p>例如，SML 提供了一個造表工具：<code class="docutils literal notranslate"><span class="pre">tabulate(f)</span></code>，它產生一個序列 <code class="docutils literal notranslate"><span class="pre">f(0),</span> <span class="pre">f(1),</span> <span class="pre">...</span></code>。在 Python 中，可以透過結合 <a class="reference internal" href="functions.html#map" title="map"><code class="xref py py-func docutils literal notranslate"><span class="pre">map()</span></code></a> 和 <a class="reference internal" href="#itertools.count" title="itertools.count"><code class="xref py py-func docutils literal notranslate"><span class="pre">count()</span></code></a> 組成 <code class="docutils literal notranslate"><span class="pre">map(f,</span> <span class="pre">count())</span></code> 以達到同樣的效果。</p>
-<p>這些工具及其內建的對等部分 (counterpart) 也可以很好地與 <a class="reference internal" href="operator.html#module-operator" title="operator: Functions corresponding to the standard operators."><code class="xref py py-mod docutils literal notranslate"><span class="pre">operator</span></code></a> 模組中的高速函式配合使用。例如，乘法運算子可以對映到兩個向量上以組成高效率的內積：<code class="docutils literal notranslate"><span class="pre">sum(starmap(operator.mul,</span> <span class="pre">zip(vec1,</span> <span class="pre">vec2,</span> <span class="pre">strict=True)))</span></code>。</p>
 <p><strong>無限疊代器：</strong></p>
 <table class="docutils align-default">
 <thead>
@@ -862,7 +861,12 @@ of the input iterables.</p>
         <span class="k">yield</span> <span class="n">x</span>
 </pre></div>
 </div>
-<p>注意，第一個不符合條件判斷的元素將從輸入疊代器中被消耗，且無法再存取它。如果應用程式希望在 <em>takewhile</em> 耗盡後進一步消耗輸入疊代器，這可能會是個問題。為了解決這個問題，可以考慮使用 <a class="reference external" href="https://more-itertools.readthedocs.io/en/stable/api.html#more_itertools.before_and_after">more-itertools 中的 before_and_after()</a> 作為替代。</p>
+<p>Note, the element that first fails the predicate condition is
+consumed from the input iterator and there is no way to access it.
+This could be an issue if an application wants to further consume the
+input iterator after <em>takewhile</em> has been run to exhaustion.  To work
+around this problem, consider using <a class="reference external" href="https://more-itertools.readthedocs.io/en/stable/api.html#more_itertools.before_and_after">more-itertools before_and_after()</a>
+instead.</p>
 </dd></dl>
 
 <dl class="py function">
@@ -974,12 +978,11 @@ chain and to have a single update step rather than a chain of calls.</p>
 </pre></div>
 </div>
 <p>許多應用技巧提供了與底層工具集相同的高性能。透過一次處理一個元素而不是將整個可疊代物件一次性引入記憶體，能保持優異的記憶體性能。以<a class="reference external" href="https://www.cs.kent.ac.uk/people/staff/dat/miranda/whyfp90.pdf">函式風格 (functional style)</a> 將工具連接在一起，能將程式碼的數量維持在較少的情況。透過優先使用「向量化 (vectorized)」的構建塊而不是使用會造成直譯器負擔的 for 迴圈和<a class="reference internal" href="../glossary.html#term-generator"><span class="xref std std-term">產生器</span></a>，則能保持高速度。</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">collections</span>
-<span class="kn">import</span> <span class="nn">contextlib</span>
-<span class="kn">import</span> <span class="nn">functools</span>
-<span class="kn">import</span> <span class="nn">math</span>
-<span class="kn">import</span> <span class="nn">operator</span>
-<span class="kn">import</span> <span class="nn">random</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">suppress</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">reduce</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">sumprod</span><span class="p">,</span> <span class="n">isqrt</span>
+<span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">itemgetter</span><span class="p">,</span> <span class="n">getitem</span><span class="p">,</span> <span class="n">mul</span><span class="p">,</span> <span class="n">neg</span>
 
 <span class="k">def</span> <span class="nf">take</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">iterable</span><span class="p">):</span>
     <span class="s2">&quot;Return first n items of the iterable as a list.&quot;</span>
@@ -994,11 +997,11 @@ chain and to have a single update step rather than a chain of calls.</p>
     <span class="s2">&quot;Return function(0), function(1), ...&quot;</span>
     <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">count</span><span class="p">(</span><span class="n">start</span><span class="p">))</span>
 
-<span class="k">def</span> <span class="nf">repeatfunc</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-    <span class="s2">&quot;Repeat calls to func with specified arguments.&quot;</span>
+<span class="k">def</span> <span class="nf">repeatfunc</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">times</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+    <span class="s2">&quot;Repeat calls to a function with specified arguments.&quot;</span>
     <span class="k">if</span> <span class="n">times</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">starmap</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">repeat</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">starmap</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">repeat</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">times</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">starmap</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">repeat</span><span class="p">(</span><span class="n">args</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">starmap</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">repeat</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">times</span><span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">flatten</span><span class="p">(</span><span class="n">list_of_lists</span><span class="p">):</span>
     <span class="s2">&quot;Flatten one level of nesting.&quot;</span>
@@ -1016,13 +1019,13 @@ chain and to have a single update step rather than a chain of calls.</p>
 <span class="k">def</span> <span class="nf">tail</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">iterable</span><span class="p">):</span>
     <span class="s2">&quot;Return an iterator over the last n items.&quot;</span>
     <span class="c1"># tail(3, &#39;ABCDEFG&#39;) → E F G</span>
-    <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="n">collections</span><span class="o">.</span><span class="n">deque</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">n</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="n">deque</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">n</span><span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">consume</span><span class="p">(</span><span class="n">iterator</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="s2">&quot;Advance the iterator n-steps ahead. If n is None, consume entirely.&quot;</span>
     <span class="c1"># Use functions that consume iterators at C speed.</span>
     <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">collections</span><span class="o">.</span><span class="n">deque</span><span class="p">(</span><span class="n">iterator</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">deque</span><span class="p">(</span><span class="n">iterator</span><span class="p">,</span> <span class="n">maxlen</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="nb">next</span><span class="p">(</span><span class="n">islice</span><span class="p">(</span><span class="n">iterator</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span>
 
@@ -1050,8 +1053,8 @@ chain and to have a single update step rather than a chain of calls.</p>
     <span class="c1"># unique_justseen(&#39;AAAABBBCCDAABBB&#39;) → A B C D A B</span>
     <span class="c1"># unique_justseen(&#39;ABBcCAD&#39;, str.casefold) → A B c A D</span>
     <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">groupby</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
-    <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="nb">next</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">groupby</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">key</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">groupby</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="nb">next</span><span class="p">,</span> <span class="nb">map</span><span class="p">(</span><span class="n">itemgetter</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">groupby</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">key</span><span class="p">)))</span>
 
 <span class="k">def</span> <span class="nf">unique_everseen</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="s2">&quot;Yield unique elements, preserving order. Remember all elements ever seen.&quot;</span>
@@ -1072,13 +1075,14 @@ chain and to have a single update step rather than a chain of calls.</p>
 <span class="k">def</span> <span class="nf">unique</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
    <span class="s2">&quot;Yield unique elements in sorted order. Supports unhashable inputs.&quot;</span>
    <span class="c1"># unique([[1, 2], [3, 4], [1, 2]]) → [1, 2] [3, 4]</span>
-   <span class="k">return</span> <span class="n">unique_justseen</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="n">reverse</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
+   <span class="n">sequenced</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="n">reverse</span><span class="p">)</span>
+   <span class="k">return</span> <span class="n">unique_justseen</span><span class="p">(</span><span class="n">sequenced</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">sliding_window</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
     <span class="s2">&quot;Collect data into overlapping fixed-length chunks or blocks.&quot;</span>
     <span class="c1"># sliding_window(&#39;ABCDEFG&#39;, 4) → ABCD BCDE CDEF DEFG</span>
     <span class="n">iterator</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
-    <span class="n">window</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">deque</span><span class="p">(</span><span class="n">islice</span><span class="p">(</span><span class="n">iterator</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">window</span> <span class="o">=</span> <span class="n">deque</span><span class="p">(</span><span class="n">islice</span><span class="p">(</span><span class="n">iterator</span><span class="p">,</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="n">maxlen</span><span class="o">=</span><span class="n">n</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">iterator</span><span class="p">:</span>
         <span class="n">window</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
         <span class="k">yield</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">window</span><span class="p">)</span>
@@ -1112,7 +1116,7 @@ chain and to have a single update step rather than a chain of calls.</p>
     <span class="s2">&quot;Return all contiguous non-empty subslices of a sequence.&quot;</span>
     <span class="c1"># subslices(&#39;ABCD&#39;) → A AB ABC ABCD B BC BCD C CD D</span>
     <span class="n">slices</span> <span class="o">=</span> <span class="n">starmap</span><span class="p">(</span><span class="nb">slice</span><span class="p">,</span> <span class="n">combinations</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">seq</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">2</span><span class="p">))</span>
-    <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">getitem</span><span class="p">,</span> <span class="n">repeat</span><span class="p">(</span><span class="n">seq</span><span class="p">),</span> <span class="n">slices</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">getitem</span><span class="p">,</span> <span class="n">repeat</span><span class="p">(</span><span class="n">seq</span><span class="p">),</span> <span class="n">slices</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">iter_index</span><span class="p">(</span><span class="n">iterable</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="s2">&quot;Return indices where a value occurs in a sequence or iterable.&quot;</span>
@@ -1126,36 +1130,37 @@ chain and to have a single update step rather than a chain of calls.</p>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">stop</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span> <span class="k">if</span> <span class="n">stop</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">stop</span>
         <span class="n">i</span> <span class="o">=</span> <span class="n">start</span>
-        <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">suppress</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">suppress</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
             <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
                 <span class="k">yield</span> <span class="p">(</span><span class="n">i</span> <span class="o">:=</span> <span class="n">seq_index</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">stop</span><span class="p">))</span>
                 <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
 
-<span class="k">def</span> <span class="nf">iter_except</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="n">exception</span><span class="p">,</span> <span class="n">first</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">iter_except</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">exception</span><span class="p">,</span> <span class="n">first</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="s2">&quot;Convert a call-until-exception interface to an iterator interface.&quot;</span>
     <span class="c1"># iter_except(d.popitem, KeyError) → non-blocking dictionary iterator</span>
-    <span class="k">with</span> <span class="n">contextlib</span><span class="o">.</span><span class="n">suppress</span><span class="p">(</span><span class="n">exception</span><span class="p">):</span>
+    <span class="k">with</span> <span class="n">suppress</span><span class="p">(</span><span class="n">exception</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">first</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">yield</span> <span class="n">first</span><span class="p">()</span>
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-            <span class="k">yield</span> <span class="n">func</span><span class="p">()</span>
+            <span class="k">yield</span> <span class="n">function</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>以下的應用技巧具有更多的數學風格：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">powerset</span><span class="p">(</span><span class="n">iterable</span><span class="p">):</span>
-    <span class="s2">&quot;powerset([1,2,3]) → () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)&quot;</span>
+    <span class="s2">&quot;Subsequences of the iterable from shortest to longest.&quot;</span>
+    <span class="c1"># powerset([1,2,3]) → () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)</span>
     <span class="n">s</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">combinations</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">s</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">sum_of_squares</span><span class="p">(</span><span class="n">iterable</span><span class="p">):</span>
     <span class="s2">&quot;Add up the squares of the input values.&quot;</span>
     <span class="c1"># sum_of_squares([10, 20, 30]) → 1400</span>
-    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sumprod</span><span class="p">(</span><span class="o">*</span><span class="n">tee</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">sumprod</span><span class="p">(</span><span class="o">*</span><span class="n">tee</span><span class="p">(</span><span class="n">iterable</span><span class="p">))</span>
 
-<span class="k">def</span> <span class="nf">reshape</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">cols</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">reshape</span><span class="p">(</span><span class="n">matrix</span><span class="p">,</span> <span class="n">columns</span><span class="p">):</span>
     <span class="s2">&quot;Reshape a 2-D matrix to have a given number of columns.&quot;</span>
     <span class="c1"># reshape([(0, 1), (2, 3), (4, 5)], 3) →  (0, 1, 2), (3, 4, 5)</span>
-    <span class="k">return</span> <span class="n">batched</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span> <span class="n">cols</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">batched</span><span class="p">(</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span> <span class="n">columns</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">transpose</span><span class="p">(</span><span class="n">matrix</span><span class="p">):</span>
     <span class="s2">&quot;Swap the rows and columns of a 2-D matrix.&quot;</span>
@@ -1166,7 +1171,7 @@ chain and to have a single update step rather than a chain of calls.</p>
     <span class="s2">&quot;Multiply two matrices.&quot;</span>
     <span class="c1"># matmul([(7, 5), (3, 5)], [(2, 5), (7, 9)]) → (49, 80), (41, 60)</span>
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">m2</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="k">return</span> <span class="n">batched</span><span class="p">(</span><span class="n">starmap</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sumprod</span><span class="p">,</span> <span class="n">product</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="n">transpose</span><span class="p">(</span><span class="n">m2</span><span class="p">))),</span> <span class="n">n</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">batched</span><span class="p">(</span><span class="n">starmap</span><span class="p">(</span><span class="n">sumprod</span><span class="p">,</span> <span class="n">product</span><span class="p">(</span><span class="n">m1</span><span class="p">,</span> <span class="n">transpose</span><span class="p">(</span><span class="n">m2</span><span class="p">))),</span> <span class="n">n</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">convolve</span><span class="p">(</span><span class="n">signal</span><span class="p">,</span> <span class="n">kernel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Discrete linear convolution of two iterables.</span>
@@ -1187,7 +1192,7 @@ chain and to have a single update step rather than a chain of calls.</p>
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">kernel</span><span class="p">)</span>
     <span class="n">padded_signal</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="n">repeat</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">signal</span><span class="p">,</span> <span class="n">repeat</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
     <span class="n">windowed_signal</span> <span class="o">=</span> <span class="n">sliding_window</span><span class="p">(</span><span class="n">padded_signal</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
-    <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">sumprod</span><span class="p">,</span> <span class="n">repeat</span><span class="p">(</span><span class="n">kernel</span><span class="p">),</span> <span class="n">windowed_signal</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="n">sumprod</span><span class="p">,</span> <span class="n">repeat</span><span class="p">(</span><span class="n">kernel</span><span class="p">),</span> <span class="n">windowed_signal</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">polynomial_from_roots</span><span class="p">(</span><span class="n">roots</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute a polynomial&#39;s coefficients from its roots.</span>
@@ -1195,8 +1200,8 @@ chain and to have a single update step rather than a chain of calls.</p>
 <span class="sd">       (x - 5) (x + 4) (x - 3)  expands to:   x³ -4x² -17x + 60</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># polynomial_from_roots([5, -4, 3]) → [1, -4, -17, 60]</span>
-    <span class="n">factors</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="nb">map</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">neg</span><span class="p">,</span> <span class="n">roots</span><span class="p">))</span>
-    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">functools</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">convolve</span><span class="p">,</span> <span class="n">factors</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">factors</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="nb">map</span><span class="p">(</span><span class="n">neg</span><span class="p">,</span> <span class="n">roots</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">reduce</span><span class="p">(</span><span class="n">convolve</span><span class="p">,</span> <span class="n">factors</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
 
 <span class="k">def</span> <span class="nf">polynomial_eval</span><span class="p">(</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate a polynomial at a specific value.</span>
@@ -1209,7 +1214,7 @@ chain and to have a single update step rather than a chain of calls.</p>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)(</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">powers</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">pow</span><span class="p">,</span> <span class="n">repeat</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)))</span>
-    <span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">sumprod</span><span class="p">(</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">powers</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sumprod</span><span class="p">(</span><span class="n">coefficients</span><span class="p">,</span> <span class="n">powers</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">polynomial_derivative</span><span class="p">(</span><span class="n">coefficients</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the first derivative of a polynomial.</span>
@@ -1220,7 +1225,7 @@ chain and to have a single update step rather than a chain of calls.</p>
     <span class="c1"># polynomial_derivative([1, -4, -17, 60]) → [3, -8, -17]</span>
     <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">coefficients</span><span class="p">)</span>
     <span class="n">powers</span> <span class="o">=</span> <span class="nb">reversed</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
-    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">mul</span><span class="p">,</span> <span class="n">coefficients</span><span class="p">,</span> <span class="n">powers</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="n">mul</span><span class="p">,</span> <span class="n">coefficients</span><span class="p">,</span> <span class="n">powers</span><span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">sieve</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
     <span class="s2">&quot;Primes less than n.&quot;</span>
@@ -1228,21 +1233,16 @@ chain and to have a single update step rather than a chain of calls.</p>
     <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
         <span class="k">yield</span> <span class="mi">2</span>
     <span class="n">data</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">iter_index</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">math</span><span class="o">.</span><span class="n">isqrt</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">iter_index</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="n">isqrt</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
         <span class="n">data</span><span class="p">[</span><span class="n">p</span><span class="o">*</span><span class="n">p</span> <span class="p">:</span> <span class="n">n</span> <span class="p">:</span> <span class="n">p</span><span class="o">+</span><span class="n">p</span><span class="p">]</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">p</span><span class="o">*</span><span class="n">p</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">p</span><span class="o">+</span><span class="n">p</span><span class="p">)))</span>
     <span class="k">yield from</span> <span class="n">iter_index</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
-
-<span class="k">def</span> <span class="nf">is_prime</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
-    <span class="s2">&quot;Return True if n is prime.&quot;</span>
-    <span class="c1"># is_prime(1_000_000_000_000_403) → True</span>
-    <span class="k">return</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">n</span> <span class="o">%</span> <span class="n">p</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">sieve</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isqrt</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">factor</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
     <span class="s2">&quot;Prime factors of n.&quot;</span>
     <span class="c1"># factor(99) → 3 3 11</span>
     <span class="c1"># factor(1_000_000_000_000_007) → 47 59 360620266859</span>
     <span class="c1"># factor(1_000_000_000_000_403) → 1000000000000403</span>
-    <span class="k">for</span> <span class="n">prime</span> <span class="ow">in</span> <span class="n">sieve</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">isqrt</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">prime</span> <span class="ow">in</span> <span class="n">sieve</span><span class="p">(</span><span class="n">isqrt</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
         <span class="k">while</span> <span class="ow">not</span> <span class="n">n</span> <span class="o">%</span> <span class="n">prime</span><span class="p">:</span>
             <span class="k">yield</span> <span class="n">prime</span>
             <span class="n">n</span> <span class="o">//=</span> <span class="n">prime</span>
@@ -1250,6 +1250,11 @@ chain and to have a single update step rather than a chain of calls.</p>
                 <span class="k">return</span>
     <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">yield</span> <span class="n">n</span>
+
+<span class="k">def</span> <span class="nf">is_prime</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="s2">&quot;Return True if n is prime.&quot;</span>
+    <span class="c1"># is_prime(1_000_000_000_000_403) → True</span>
+    <span class="k">return</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">next</span><span class="p">(</span><span class="n">factor</span><span class="p">(</span><span class="n">n</span><span class="p">))</span> <span class="o">==</span> <span class="n">n</span>
 
 <span class="k">def</span> <span class="nf">totient</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
     <span class="s2">&quot;Count of natural numbers up to n that are coprime to n.&quot;</span>
@@ -1411,7 +1416,7 @@ chain and to have a single update step rather than a chain of calls.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 12月 15, 2024 (18:08 UTC)。
+      最後更新於 12月 20, 2024 (14:36 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
