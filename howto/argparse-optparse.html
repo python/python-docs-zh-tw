@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>升級 optparse 程式碼 &#8212; Python 3.13.1 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migrating optparse code to argparse &#8212; Python 3.13.1 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=08c2cdb3" />
@@ -26,7 +26,7 @@
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜尋" href="../search.html" />
     <link rel="copyright" title="版權" href="../copyright.html" />
-    <link rel="next" title="logging --- Python 的日誌記錄工具" href="../library/logging.html" />
+    <link rel="next" title="optparse --- 命令列選項剖析器" href="../library/optparse.html" />
     <link rel="prev" title="Argparse 教學" href="argparse.html" />
     
     <link rel="canonical" href="https://docs.python.org/3/howto/argparse-optparse.html" />
@@ -93,8 +93,8 @@
   </div>
   <div>
     <h4>下個主題</h4>
-    <p class="topless"><a href="../library/logging.html"
-                          title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code> --- Python 的日誌記錄工具</a></p>
+    <p class="topless"><a href="../library/optparse.html"
+                          title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">optparse</span></code> --- 命令列選項剖析器</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>此頁面</h3>
@@ -122,7 +122,7 @@
           <a href="../py-modindex.html" title="Python 模組索引"
              >模組</a> |</li>
         <li class="right" >
-          <a href="../library/logging.html" title="logging --- Python 的日誌記錄工具"
+          <a href="../library/optparse.html" title="optparse --- 命令列選項剖析器"
              accesskey="N">下一頁</a> |</li>
         <li class="right" >
           <a href="argparse.html" title="Argparse 教學"
@@ -142,9 +142,9 @@
     </li>
 
           <li class="nav-item nav-item-1"><a href="../library/index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
-          <li class="nav-item nav-item-2"><a href="../library/allos.html" >通用作業系統服務</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../library/cmdlinelibs.html" >Command Line Interface Libraries</a> &#187;</li>
           <li class="nav-item nav-item-3"><a href="../library/argparse.html" accesskey="U"><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code> --- Parser for command-line options, arguments and subcommands</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">升級 optparse 程式碼</a></li>
+        <li class="nav-item nav-item-this"><a href="">Migrating <code class="docutils literal notranslate"><span class="pre">optparse</span></code> code to <code class="docutils literal notranslate"><span class="pre">argparse</span></code></a></li>
                 <li class="right">
                     
 
@@ -174,16 +174,10 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <section id="upgrading-optparse-code">
-<span id="id1"></span><h1>升級 optparse 程式碼<a class="headerlink" href="#upgrading-optparse-code" title="連結到這個標頭">¶</a></h1>
-<p>Originally, the <a class="reference internal" href="../library/argparse.html#module-argparse" title="argparse: Command-line option and argument parsing library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a> module had attempted to maintain compatibility
-with <a class="reference internal" href="../library/optparse.html#module-optparse" title="optparse: Command-line option parsing library.（已棄用）"><code class="xref py py-mod docutils literal notranslate"><span class="pre">optparse</span></code></a>.  However, <a class="reference internal" href="../library/optparse.html#module-optparse" title="optparse: Command-line option parsing library.（已棄用）"><code class="xref py py-mod docutils literal notranslate"><span class="pre">optparse</span></code></a> was difficult to extend
-transparently, particularly with the changes required to support
-<code class="docutils literal notranslate"><span class="pre">nargs=</span></code> specifiers and better usage messages.  When most everything in
-<a class="reference internal" href="../library/optparse.html#module-optparse" title="optparse: Command-line option parsing library.（已棄用）"><code class="xref py py-mod docutils literal notranslate"><span class="pre">optparse</span></code></a> had either been copy-pasted over or monkey-patched, it no
-longer seemed practical to try to maintain the backwards compatibility.</p>
-<p>The <a class="reference internal" href="../library/argparse.html#module-argparse" title="argparse: Command-line option and argument parsing library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a> module improves on the <a class="reference internal" href="../library/optparse.html#module-optparse" title="optparse: Command-line option parsing library.（已棄用）"><code class="xref py py-mod docutils literal notranslate"><span class="pre">optparse</span></code></a>
-module in a number of ways including:</p>
+  <section id="migrating-optparse-code-to-argparse">
+<span id="migrating-optparse-code"></span><span id="upgrading-optparse-code"></span><h1>Migrating <code class="docutils literal notranslate"><span class="pre">optparse</span></code> code to <code class="docutils literal notranslate"><span class="pre">argparse</span></code><a class="headerlink" href="#migrating-optparse-code-to-argparse" title="連結到這個標頭">¶</a></h1>
+<p>The <a class="reference internal" href="../library/argparse.html#module-argparse" title="argparse: Command-line option and argument parsing library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a> module offers several higher level features not natively
+provided by the <a class="reference internal" href="../library/optparse.html#module-optparse" title="optparse: Command-line option parsing library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">optparse</span></code></a> module, including:</p>
 <ul class="simple">
 <li><p>Handling positional arguments.</p></li>
 <li><p>Supporting subcommands.</p></li>
@@ -192,7 +186,20 @@ module in a number of ways including:</p>
 <li><p>Producing more informative usage messages.</p></li>
 <li><p>Providing a much simpler interface for custom <code class="docutils literal notranslate"><span class="pre">type</span></code> and <code class="docutils literal notranslate"><span class="pre">action</span></code>.</p></li>
 </ul>
-<p>A partial upgrade path from <a class="reference internal" href="../library/optparse.html#module-optparse" title="optparse: Command-line option parsing library.（已棄用）"><code class="xref py py-mod docutils literal notranslate"><span class="pre">optparse</span></code></a> to <a class="reference internal" href="../library/argparse.html#module-argparse" title="argparse: Command-line option and argument parsing library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a>:</p>
+<p>Originally, the <a class="reference internal" href="../library/argparse.html#module-argparse" title="argparse: Command-line option and argument parsing library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a> module attempted to maintain compatibility
+with <a class="reference internal" href="../library/optparse.html#module-optparse" title="optparse: Command-line option parsing library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">optparse</span></code></a>.  However, the fundamental design differences between
+supporting declarative command line option processing (while leaving positional
+argument processing to application code), and supporting both named options
+and positional arguments in the declarative interface mean that the
+API has diverged from that of <code class="docutils literal notranslate"><span class="pre">optparse</span></code> over time.</p>
+<p>As described in <a class="reference internal" href="../library/optparse.html#choosing-an-argument-parser"><span class="std std-ref">Choosing an argument parsing library</span></a>, applications that are
+currently using <a class="reference internal" href="../library/optparse.html#module-optparse" title="optparse: Command-line option parsing library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">optparse</span></code></a> and are happy with the way it works can
+just continue to use <code class="docutils literal notranslate"><span class="pre">optparse</span></code>.</p>
+<p>Application developers that are considering migrating should also review
+the list of intrinsic behavioural differences described in that section
+before deciding whether or not migration is desirable.</p>
+<p>For applications that do choose to migrate from <a class="reference internal" href="../library/optparse.html#module-optparse" title="optparse: Command-line option parsing library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">optparse</span></code></a> to <a class="reference internal" href="../library/argparse.html#module-argparse" title="argparse: Command-line option and argument parsing library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code></a>,
+the following suggestions should be helpful:</p>
 <ul class="simple">
 <li><p>Replace all <a class="reference internal" href="../library/optparse.html#optparse.OptionParser.add_option" title="optparse.OptionParser.add_option"><code class="xref py py-meth docutils literal notranslate"><span class="pre">optparse.OptionParser.add_option()</span></code></a> calls with
 <a class="reference internal" href="../library/argparse.html#argparse.ArgumentParser.add_argument" title="argparse.ArgumentParser.add_argument"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ArgumentParser.add_argument()</span></code></a> calls.</p></li>
@@ -232,8 +239,8 @@ the standard Python syntax to use dictionaries to format strings, that is,
   </div>
   <div>
     <h4>下個主題</h4>
-    <p class="topless"><a href="../library/logging.html"
-                          title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code> --- Python 的日誌記錄工具</a></p>
+    <p class="topless"><a href="../library/optparse.html"
+                          title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">optparse</span></code> --- 命令列選項剖析器</a></p>
   </div>
   <div role="note" aria-label="source link">
     <h3>此頁面</h3>
@@ -264,7 +271,7 @@ the standard Python syntax to use dictionaries to format strings, that is,
           <a href="../py-modindex.html" title="Python 模組索引"
              >模組</a> |</li>
         <li class="right" >
-          <a href="../library/logging.html" title="logging --- Python 的日誌記錄工具"
+          <a href="../library/optparse.html" title="optparse --- 命令列選項剖析器"
              >下一頁</a> |</li>
         <li class="right" >
           <a href="argparse.html" title="Argparse 教學"
@@ -284,9 +291,9 @@ the standard Python syntax to use dictionaries to format strings, that is,
     </li>
 
           <li class="nav-item nav-item-1"><a href="../library/index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
-          <li class="nav-item nav-item-2"><a href="../library/allos.html" >通用作業系統服務</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../library/cmdlinelibs.html" >Command Line Interface Libraries</a> &#187;</li>
           <li class="nav-item nav-item-3"><a href="../library/argparse.html" ><code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code> --- Parser for command-line options, arguments and subcommands</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">升級 optparse 程式碼</a></li>
+        <li class="nav-item nav-item-this"><a href="">Migrating <code class="docutils literal notranslate"><span class="pre">optparse</span></code> code to <code class="docutils literal notranslate"><span class="pre">argparse</span></code></a></li>
                 <li class="right">
                     
 
@@ -333,7 +340,7 @@ the standard Python syntax to use dictionaries to format strings, that is,
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 12月 20, 2024 (14:36 UTC)。
+      最後更新於 12月 23, 2024 (12:47 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
