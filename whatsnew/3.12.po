@@ -521,6 +521,16 @@ msgid ""
 "}\n"
 "/* The new interpreter is now active in the current thread. */"
 msgstr ""
+"PyInterpreterConfig config = {\n"
+"    .check_multi_interp_extensions = 1,\n"
+"    .gil = PyInterpreterConfig_OWN_GIL,\n"
+"};\n"
+"PyThreadState *tstate = NULL;\n"
+"PyStatus status = Py_NewInterpreterFromConfig(&tstate, &config);\n"
+"if (PyStatus_Exception(status)) {\n"
+"    return -1;\n"
+"}\n"
+"/* 新的直譯器現在會在當前執行緒中啟用。 */"
 
 #: ../../whatsnew/3.12.rst:361
 msgid ""
@@ -1021,12 +1031,16 @@ msgid ""
 ":func:`importlib.resources.as_file` now supports resource directories. "
 "(Contributed by Jason R. Coombs in :gh:`97930`.)"
 msgstr ""
+":func:`importlib.resources.as_file` 現在支援資源目錄。（由 Jason R. Coombs "
+"於 :gh:`97930` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:721
 msgid ""
 "Rename first parameter of :func:`importlib.resources.files` to *anchor*. "
 "(Contributed by Jason R. Coombs in :gh:`100598`.)"
 msgstr ""
+"將 :func:`importlib.resources.files` 的第一個參數重新命名為 *anchor*。（由 "
+"Jason R. Coombs 於 :gh:`100598` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:725
 msgid "inspect"
@@ -1038,6 +1052,9 @@ msgid ""
 "a :term:`coroutine` for use with :func:`inspect.iscoroutinefunction`. "
 "(Contributed by Carlton Gibson in :gh:`99247`.)"
 msgstr ""
+"新增 :func:`inspect.markcoroutinefunction` 以標記會回傳 :term:`coroutine` 的"
+"同步函式，以供 :func:`inspect.iscoroutinefunction` 使用。（由 Carlton Gibson "
+"於 :gh:`99247` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:731
 msgid ""
@@ -1045,6 +1062,9 @@ msgid ""
 "for determining the current state of asynchronous generators. (Contributed "
 "by Thomas Krennwallner in :gh:`79940`.)"
 msgstr ""
+"新增 :func:`inspect.getasyncgenstate` 和 :func:`inspect.getasyncgenlocals` 以"
+"確定非同步產生器的當前狀態。（由 Thomas Krennwallner 於 :gh:`79940` 中貢"
+"獻。）"
 
 #: ../../whatsnew/3.12.rst:735
 msgid ""
@@ -1052,6 +1072,8 @@ msgid ""
 "improved. Most calls to the function should be at least 2x faster than they "
 "were in Python 3.11. (Contributed by Alex Waygood in :gh:`103193`.)"
 msgstr ""
+":func:`inspect.getattr_static` 的效能已大幅改善。大多數對該函式的呼叫應該比 "
+"Python 3.11 中快至少 2 倍。（由 Alex Waygood 於 :gh:`103193` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:740
 msgid "itertools"
@@ -1063,6 +1085,8 @@ msgid ""
 "the last batch may be shorter than the rest. (Contributed by Raymond "
 "Hettinger in :gh:`98363`.)"
 msgstr ""
+"新增 :func:`itertools.batched` 以將元素收集到大小均等的元組中，其中最後一批次"
+"可能比其他的少。（由 Raymond Hettinger 於 :gh:`98363` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:747
 msgid "math"
@@ -1130,12 +1154,16 @@ msgid ""
 "Add :func:`os.path.isjunction` to check if a given path is a junction. "
 "(Contributed by Charles Machalow in :gh:`99547`.)"
 msgstr ""
+"新增 :func:`os.path.isjunction` 以檢查給定路徑是否為連結點 (junction)。（由 "
+"Charles Machalow 於 :gh:`99547` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:787
 msgid ""
 "Add :func:`os.path.splitroot` to split a path into a triad ``(drive, root, "
 "tail)``. (Contributed by Barney Gale in :gh:`101000`.)"
 msgstr ""
+"新增 :func:`os.path.splitroot` 以將路徑分割為三元組 ``(drive, root, tail)``。"
+"（由 Barney Gale 於 :gh:`101000` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:791
 msgid "pathlib"
@@ -1455,6 +1483,22 @@ msgid ""
 "attribute\n"
 "True"
 msgstr ""
+">>> from typing import Protocol, runtime_checkable\n"
+">>> @runtime_checkable\n"
+"... class HasX(Protocol):\n"
+"...     x = 1\n"
+"...\n"
+">>> class Foo: ...\n"
+"...\n"
+">>> f = Foo()\n"
+">>> isinstance(f, HasX)\n"
+"False\n"
+">>> f.x = 1\n"
+">>> isinstance(f, HasX)\n"
+"True\n"
+">>> HasX.y = 2\n"
+">>> isinstance(f, HasX)  # 沒有改變，即便 HasX 現在有 \"y\" 屬性\n"
+"True"
 
 #: ../../whatsnew/3.12.rst:1001
 msgid ""
@@ -1584,6 +1628,8 @@ msgid ""
 "Speed up :class:`asyncio.Task` creation by deferring expensive string "
 "formatting. (Contributed by Itamar Oren in :gh:`103793`.)"
 msgstr ""
+"透過延遲運算較繁重的字串格式化來加速 :class:`asyncio.Task` 的建立。（由 "
+"Itamar Oren 於 :gh:`103793` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:1072
 msgid ""
@@ -1611,6 +1657,9 @@ msgid ""
 "`!LOAD_METHOD` instruction if the low bit of its oparg is set. (Contributed "
 "by Ken Jin in :gh:`93429`.)"
 msgstr ""
+"移除 :opcode:`!LOAD_METHOD` 指令。它已經合併至 :opcode:`LOAD_ATTR`。:opcode:"
+"`LOAD_ATTR` 現在會像舊的 :opcode:`!LOAD_METHOD` 指令一樣行為，如果其 oparg 的"
+"低位元 (low bit) 有被設定。（由 Ken Jin 於 :gh:`93429` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:1090
 msgid ""
@@ -1618,54 +1667,70 @@ msgid ""
 "JUMP_IF_TRUE_OR_POP` instructions. (Contributed by Irit Katriel in :gh:"
 "`102859`.)"
 msgstr ""
+"移除 :opcode:`!JUMP_IF_FALSE_OR_POP` 和 :opcode:`!JUMP_IF_TRUE_OR_POP` 指令。"
+"（由 Irit Katriel 於 :gh:`102859` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:1093
 msgid ""
 "Remove the :opcode:`!PRECALL` instruction. (Contributed by Mark Shannon in :"
 "gh:`92925`.)"
 msgstr ""
+"移除 :opcode:`!PRECALL` 指令。（由 Mark Shannon 於 :gh:`92925` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:1096
 msgid ""
 "Add the :opcode:`BINARY_SLICE` and :opcode:`STORE_SLICE` instructions. "
 "(Contributed by Mark Shannon in :gh:`94163`.)"
 msgstr ""
+"新增 :opcode:`BINARY_SLICE` 和 :opcode:`STORE_SLICE` 指令。（由 Mark Shannon "
+"於 :gh:`94163` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:1099
 msgid ""
 "Add the :opcode:`CALL_INTRINSIC_1` instructions. (Contributed by Mark "
 "Shannon in :gh:`99005`.)"
 msgstr ""
+"新增 :opcode:`CALL_INTRINSIC_1` 指令。（由 Mark Shannon 於 :gh:`99005` 中貢"
+"獻。）"
 
 #: ../../whatsnew/3.12.rst:1102
 msgid ""
 "Add the :opcode:`CALL_INTRINSIC_2` instruction. (Contributed by Irit Katriel "
 "in :gh:`101799`.)"
 msgstr ""
+"新增 :opcode:`CALL_INTRINSIC_2` 指令。（由 Irit Katriel 於 :gh:`101799` 中貢"
+"獻。）"
 
 #: ../../whatsnew/3.12.rst:1105
 msgid ""
 "Add the :opcode:`CLEANUP_THROW` instruction. (Contributed by Brandt Bucher "
 "in :gh:`90997`.)"
 msgstr ""
+"新增 :opcode:`CLEANUP_THROW` 指令。（由 Brandt Bucher 於 :gh:`90997` 中貢"
+"獻。）"
 
 #: ../../whatsnew/3.12.rst:1108
 msgid ""
 "Add the :opcode:`!END_SEND` instruction. (Contributed by Mark Shannon in :gh:"
 "`103082`.)"
 msgstr ""
+"新增 :opcode:`!END_SEND` 指令。（由 Mark Shannon 於 :gh:`103082` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:1111
 msgid ""
 "Add the :opcode:`LOAD_FAST_AND_CLEAR` instruction as part of the "
 "implementation of :pep:`709`. (Contributed by Carl Meyer in :gh:`101441`.)"
 msgstr ""
+"新增 :opcode:`LOAD_FAST_AND_CLEAR` 指令作為 :pep:`709` 實作的一部分。（由 "
+"Carl Meyer 於 :gh:`101441` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:1114
 msgid ""
 "Add the :opcode:`LOAD_FAST_CHECK` instruction. (Contributed by Dennis "
 "Sweeney in :gh:`93143`.)"
 msgstr ""
+"新增 :opcode:`LOAD_FAST_CHECK` 指令。（由 Dennis Sweeney 於 :gh:`93143` 中貢"
+"獻。）"
 
 #: ../../whatsnew/3.12.rst:1117
 msgid ""
@@ -1675,18 +1740,27 @@ msgid ""
 "opcode, which can be replaced with :opcode:`LOAD_LOCALS` plus :opcode:"
 "`LOAD_FROM_DICT_OR_DEREF`. (Contributed by Jelle Zijlstra in :gh:`103764`.)"
 msgstr ""
+"新增 :opcode:`LOAD_FROM_DICT_OR_DEREF`、:opcode:`LOAD_FROM_DICT_OR_GLOBALS` "
+"和 :opcode:`LOAD_LOCALS` 操作碼作為 :pep:`695` 實作的一部分。移除 :opcode:`!"
+"LOAD_CLASSDEREF` 操作碼，可以用 :opcode:`LOAD_LOCALS` 加上 :opcode:"
+"`LOAD_FROM_DICT_OR_DEREF` 來取代。（由 Jelle Zijlstra 於 :gh:`103764` 中貢"
+"獻。）"
 
 #: ../../whatsnew/3.12.rst:1123
 msgid ""
 "Add the :opcode:`LOAD_SUPER_ATTR` instruction. (Contributed by Carl Meyer "
 "and Vladimir Matveev in :gh:`103497`.)"
 msgstr ""
+"新增 :opcode:`LOAD_SUPER_ATTR` 指令。（由 Carl Meyer 和 Vladimir Matveev 於 :"
+"gh:`103497` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:1126
 msgid ""
 "Add the :opcode:`RETURN_CONST` instruction. (Contributed by Wenyang Wang in :"
 "gh:`101632`.)"
 msgstr ""
+"新增 :opcode:`RETURN_CONST` 指令。（由 Wenyang Wang 於 :gh:`101632` 中貢"
+"獻。）"
 
 #: ../../whatsnew/3.12.rst:1129
 msgid "Demos and Tools"
@@ -1728,6 +1802,9 @@ msgid ""
 "emitted at runtime when they are accessed or used, and will be removed in "
 "Python 3.14:"
 msgstr ""
+":mod:`ast`：以下 :mod:`ast` 功能自 Python 3.8 起已在文件中被棄用，現在在存取"
+"或使用時會在 runtime 發出 :exc:`DeprecationWarning`，並將在 Python 3.14 中移"
+"除："
 
 #: ../../whatsnew/3.12.rst:1154
 #: ../../deprecations/pending-removal-in-3.14.rst:13
@@ -3096,6 +3173,7 @@ msgid ""
 "Several names deprecated in the :mod:`configparser` way back in 3.2 have "
 "been removed per :gh:`89336`:"
 msgstr ""
+"根據 :gh:`89336`，已移除了在 3.2 中被 :mod:`configparser` 棄用的幾個名稱："
 
 #: ../../whatsnew/3.12.rst:1364
 msgid ""
@@ -3110,12 +3188,16 @@ msgid ""
 ":mod:`configparser` no longer has a ``SafeConfigParser`` class. Use the "
 "shorter :class:`~configparser.ConfigParser` name instead."
 msgstr ""
+":mod:`configparser` 不再具有 ``SafeConfigParser`` 類別。請改用較短的 :class:"
+"`~configparser.ConfigParser` 名稱。"
 
 #: ../../whatsnew/3.12.rst:1368
 msgid ""
 ":class:`configparser.ConfigParser` no longer has a ``readfp`` method. Use :"
 "meth:`~configparser.ConfigParser.read_file` instead."
 msgstr ""
+":class:`configparser.ConfigParser` 不再具有 ``readfp`` 方法。請改用 :meth:"
+"`~configparser.ConfigParser.read_file`。"
 
 #: ../../whatsnew/3.12.rst:1374
 msgid "distutils"
@@ -3171,6 +3253,8 @@ msgid ""
 "Remove :mod:`enum`'s ``EnumMeta.__getattr__``, which is no longer needed for "
 "enum attribute access. (Contributed by Ethan Furman in :gh:`95083`.)"
 msgstr ""
+"移除 :mod:`enum` 的 ``EnumMeta.__getattr__``，對於列舉屬性的訪問不再會需要"
+"它。"
 
 #: ../../whatsnew/3.12.rst:1411
 msgid "ftplib"
@@ -3255,11 +3339,11 @@ msgstr "imp"
 msgid ""
 "The :mod:`!imp` module has been removed.  (Contributed by Barry Warsaw in :"
 "gh:`98040`.)"
-msgstr ""
+msgstr ":mod:`!imp` 模組已被移除。（由 Barry Warsaw 在 :gh:`98040` 中貢獻。）"
 
 #: ../../whatsnew/3.12.rst:1462
 msgid "To migrate, consult the following correspondence table:"
-msgstr ""
+msgstr "要遷移的話請參考以下對應表："
 
 #: ../../whatsnew/3.12.rst:1467
 msgid "``imp.NullImporter``"
@@ -3302,6 +3386,8 @@ msgid ""
 ":attr:`importlib.machinery.SOURCE_SUFFIXES`, :attr:`importlib.machinery."
 "EXTENSION_SUFFIXES`, and :attr:`importlib.machinery.BYTECODE_SUFFIXES`"
 msgstr ""
+":attr:`importlib.machinery.SOURCE_SUFFIXES`、:attr:`importlib.machinery."
+"EXTENSION_SUFFIXES` 和 :attr:`importlib.machinery.BYTECODE_SUFFIXES`"
 
 #: ../../whatsnew/3.12.rst:1472
 msgid "``imp.get_tag()``"
@@ -3371,6 +3457,19 @@ msgid ""
 "    loader.exec_module(module)\n"
 "    return module"
 msgstr ""
+"import importlib.util\n"
+"import importlib.machinery\n"
+"\n"
+"def load_source(modname, filename):\n"
+"    loader = importlib.machinery.SourceFileLoader(modname, filename)\n"
+"    spec = importlib.util.spec_from_file_location(modname, filename, "
+"loader=loader)\n"
+"    module = importlib.util.module_from_spec(spec)\n"
+"    # 此模組都會被執行且不會被快取於 sys.modules。\n"
+"    # 要快取模組的話可以把下面一行取消註解\n"
+"    # sys.modules[module.__name__] = module\n"
+"    loader.exec_module(module)\n"
+"    return module"
 
 #: ../../whatsnew/3.12.rst:1495
 msgid "Remove :mod:`!imp` functions and attributes with no replacements:"
@@ -3672,6 +3771,8 @@ msgid ""
 "An alias of the :class:`~unittest.TextTestResult` class: ``_TextTestResult`` "
 "(deprecated in Python 3.2)."
 msgstr ""
+"對 :class:`~unittest.TextTestResult` 類別的別名：``_TextTestResult``\\ （自 "
+"Python 3.2 起已棄用）。"
 
 #: ../../whatsnew/3.12.rst:1617
 msgid "(Contributed by Serhiy Storchaka in :gh:`89325`.)"
@@ -4802,6 +4903,9 @@ msgid ""
 "func:`PyType_FromModuleAndSpec` to create a class whose metaclass overrides :"
 "c:member:`~PyTypeObject.tp_new` is deprecated. Call the metaclass instead."
 msgstr ""
+"使用 :c:func:`PyType_FromSpec`、:c:func:`PyType_FromSpecWithBases` 或 :c:"
+"func:`PyType_FromModuleAndSpec` 建立一個其元類別覆寫 :c:member:"
+"`~PyTypeObject.tp_new` 的類別已被棄用。請改為呼叫元類別。"
 
 #: ../../deprecations/c-api-pending-removal-in-3.14.rst:4
 msgid ""
