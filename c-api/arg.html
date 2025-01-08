@@ -7,10 +7,9 @@
 
     <title>剖析引數與建置數值 &#8212; Python 3.13.1 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=08c2cdb3" />
-    <link rel="stylesheet" type="text/css" href="../_static/sidebar-wrap.css?v=65806c5a" />
-    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=b20cc3f5" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
     
     <script src="../_static/documentation_options.js?v=ad6313a7"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
@@ -378,11 +377,21 @@ encoding passed in as parameter.</p>
 </section>
 <section id="numbers">
 <h3>數字<a class="headerlink" href="#numbers" title="連結到這個標頭">¶</a></h3>
+<p>These formats allow representing Python numbers or single characters as C numbers.
+Formats that require <a class="reference internal" href="../library/functions.html#int" title="int"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference internal" href="../library/functions.html#float" title="float"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> or <a class="reference internal" href="../library/functions.html#complex" title="complex"><code class="xref py py-class docutils literal notranslate"><span class="pre">complex</span></code></a> can
+also use the corresponding special methods <a class="reference internal" href="../reference/datamodel.html#object.__index__" title="object.__index__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__index__()</span></code></a>,
+<a class="reference internal" href="../reference/datamodel.html#object.__float__" title="object.__float__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__float__()</span></code></a> or <a class="reference internal" href="../reference/datamodel.html#object.__complex__" title="object.__complex__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__complex__()</span></code></a> to convert
+the Python object to the required type.</p>
+<p>For signed integer formats, <a class="reference internal" href="../library/exceptions.html#OverflowError" title="OverflowError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">OverflowError</span></code></a> is raised if the value
+is out of range for the C type.
+For unsigned integer formats, no range checking is done --- the
+most significant bits are silently truncated when the receiving field is too
+small to receive the value.</p>
 <dl>
-<dt><code class="docutils literal notranslate"><span class="pre">b</span></code> (<a class="reference internal" href="../library/functions.html#int" title="int"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) [unsigned char]</dt><dd><p>Convert a nonnegative Python integer to an unsigned tiny int, stored in a C
+<dt><code class="docutils literal notranslate"><span class="pre">b</span></code> (<a class="reference internal" href="../library/functions.html#int" title="int"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) [unsigned char]</dt><dd><p>Convert a nonnegative Python integer to an unsigned tiny integer, stored in a C
 <span class="c-expr sig sig-inline c"><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span></span>.</p>
 </dd>
-<dt><code class="docutils literal notranslate"><span class="pre">B</span></code> (<a class="reference internal" href="../library/functions.html#int" title="int"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) [unsigned char]</dt><dd><p>Convert a Python integer to a tiny int without overflow checking, stored in a C
+<dt><code class="docutils literal notranslate"><span class="pre">B</span></code> (<a class="reference internal" href="../library/functions.html#int" title="int"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) [unsigned char]</dt><dd><p>Convert a Python integer to a tiny integer without overflow checking, stored in a C
 <span class="c-expr sig sig-inline c"><span class="kt">unsigned</span><span class="w"> </span><span class="kt">char</span></span>.</p>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">h</span></code> (<a class="reference internal" href="../library/functions.html#int" title="int"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>) [short int]</dt><dd><p>將一個 Python 整數轉換成 C 的 <span class="c-expr sig sig-inline c"><span class="kt">short</span><span class="w"> </span><span class="kt">int</span></span>。</p>
@@ -437,7 +446,7 @@ type, <a class="reference internal" href="../library/exceptions.html#TypeError" 
 </dd>
 </dl>
 <dl id="o-ampersand">
-<dt><code class="docutils literal notranslate"><span class="pre">O&amp;</span></code>（物件）[<em>converter</em>, <em>anything</em>]</dt><dd><p>Convert a Python object to a C variable through a <em>converter</em> function.  This
+<dt><code class="docutils literal notranslate"><span class="pre">O&amp;</span></code> (object) [<em>converter</em>, <em>address</em>]</dt><dd><p>Convert a Python object to a C variable through a <em>converter</em> function.  This
 takes two arguments: the first is a function, the second is the address of a C
 variable (of arbitrary type), converted to <span class="c-expr sig sig-inline c"><span class="kt">void</span><span class="p">*</span></span>.  The <em>converter</em>
 function in turn is called as follows:</p>
@@ -449,13 +458,15 @@ function in turn is called as follows:</p>
 The returned <em>status</em> should be <code class="docutils literal notranslate"><span class="pre">1</span></code> for a successful conversion and <code class="docutils literal notranslate"><span class="pre">0</span></code> if
 the conversion has failed.  When the conversion fails, the <em>converter</em> function
 should raise an exception and leave the content of <em>address</em> unmodified.</p>
-<p>If the <em>converter</em> returns <code class="docutils literal notranslate"><span class="pre">Py_CLEANUP_SUPPORTED</span></code>, it may get called a
+<p id="c.Py_CLEANUP_SUPPORTED">If the <em>converter</em> returns <code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_CLEANUP_SUPPORTED</span></code>, it may get called a
 second time if the argument parsing eventually fails, giving the converter a
 chance to release any memory that it had already allocated. In this second
 call, the <em>object</em> parameter will be <code class="docutils literal notranslate"><span class="pre">NULL</span></code>; <em>address</em> will have the same value
 as in the original call.</p>
+<p>Examples of converters: <a class="reference internal" href="unicode.html#c.PyUnicode_FSConverter" title="PyUnicode_FSConverter"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_FSConverter()</span></code></a> and
+<a class="reference internal" href="unicode.html#c.PyUnicode_FSDecoder" title="PyUnicode_FSDecoder"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_FSDecoder()</span></code></a>.</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.1 版的變更: </span>加入 <code class="docutils literal notranslate"><span class="pre">Py_CLEANUP_SUPPORTED</span></code>。</p>
+<p><span class="versionmodified changed">在 3.1 版的變更: </span><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_CLEANUP_SUPPORTED</span></code> was added.</p>
 </div>
 </dd>
 <dt><code class="docutils literal notranslate"><span class="pre">p</span></code> (<a class="reference internal" href="../library/functions.html#bool" title="bool"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) [int]</dt><dd><p>Tests the value passed in for truth (a boolean <strong>p</strong>redicate) and converts
@@ -472,11 +483,6 @@ in <em>items</em>.  The C arguments must correspond to the individual format uni
 <em>items</em>.  Format units for sequences may be nested.</p>
 </dd>
 </dl>
-<p>It is possible to pass &quot;long&quot; integers (integers whose value exceeds the
-platform's <code class="xref c c-macro docutils literal notranslate"><span class="pre">LONG_MAX</span></code>) however no proper range checking is done --- the
-most significant bits are silently truncated when the receiving field is too
-small to receive the value (actually, the semantics are inherited from downcasts
-in C --- your mileage may vary).</p>
 <p>A few other characters have a meaning in a format string.  These may not occur
 inside nested parentheses.  They are:</p>
 <dl>
@@ -924,7 +930,7 @@ rather than a variable number of arguments.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 1月 01, 2025 (12:00 UTC)。
+      最後更新於 1月 08, 2025 (08:43 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
