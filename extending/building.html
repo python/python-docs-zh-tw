@@ -89,7 +89,7 @@
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#">4. 建立 C 與 C++ 擴充套件</a><ul>
-<li><a class="reference internal" href="#building-c-and-c-extensions-with-setuptools">4.1. Building C and C++ Extensions with setuptools</a></li>
+<li><a class="reference internal" href="#building-c-and-c-extensions-with-setuptools">4.1. 用 setuptools 建置 C 與 C++ 擴充套件</a></li>
 </ul>
 </li>
 </ul>
@@ -184,23 +184,15 @@
   <section id="building-c-and-c-extensions">
 <span id="building"></span><h1><span class="section-number">4. </span>建立 C 與 C++ 擴充套件<a class="headerlink" href="#building-c-and-c-extensions" title="連結到這個標頭">¶</a></h1>
 <p>一個 CPython 的 C 擴充套件是一個共用函式庫（例如在 Linux 上的 <code class="docutils literal notranslate"><span class="pre">.so</span></code> 檔案，在 Windows 上的 <code class="docutils literal notranslate"><span class="pre">.pyd</span></code>），會匯出一個<em>初始化函式</em>。</p>
-<p>To be importable, the shared library must be available on <span class="target" id="index-0"></span><a class="reference internal" href="../using/cmdline.html#envvar-PYTHONPATH"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a>,
-and must be named after the module name, with an appropriate extension.
-When using setuptools, the correct filename is generated automatically.</p>
-<p>The initialization function has the signature:</p>
+<p>要能夠被引入，共用函式庫必須在 <span class="target" id="index-4"></span><a class="reference internal" href="../using/cmdline.html#envvar-PYTHONPATH"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a> 上可用，並且必須以模組名稱命名，並且必須有適當的副檔名。使用 setuptools 時，正確的檔名會自動產生。</p>
+<p>初始化函式具有簽名：</p>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.PyInit_modulename">
 <a class="reference internal" href="../c-api/structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyInit_modulename</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyInit_modulename" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
-<p>It returns either a fully initialized module, or a <a class="reference internal" href="../c-api/module.html#c.PyModuleDef" title="PyModuleDef"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyModuleDef</span></code></a>
-instance. See <a class="reference internal" href="../c-api/module.html#initializing-modules"><span class="std std-ref">初始化 C 模組</span></a> for details.</p>
-<p>For modules with ASCII-only names, the function must be named
-<code class="docutils literal notranslate"><span class="pre">PyInit_&lt;modulename&gt;</span></code>, with <code class="docutils literal notranslate"><span class="pre">&lt;modulename&gt;</span></code> replaced by the name of the
-module. When using <a class="reference internal" href="../c-api/module.html#multi-phase-initialization"><span class="std std-ref">Multi-phase initialization</span></a>, non-ASCII module names
-are allowed. In this case, the initialization function name is
-<code class="docutils literal notranslate"><span class="pre">PyInitU_&lt;modulename&gt;</span></code>, with <code class="docutils literal notranslate"><span class="pre">&lt;modulename&gt;</span></code> encoded using Python's
-<em>punycode</em> encoding with hyphens replaced by underscores. In Python:</p>
+<p>它回傳一個完全初始化的模組，或一個 <a class="reference internal" href="../c-api/module.html#c.PyModuleDef" title="PyModuleDef"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyModuleDef</span></code></a> 實例。詳細資訊請參見 <a class="reference internal" href="../c-api/module.html#initializing-modules"><span class="std std-ref">初始化 C 模組</span></a>。</p>
+<p>對於僅包含 ASCII 名稱的模組，函式必須以 <code class="docutils literal notranslate"><span class="pre">PyInit_&lt;modulename&gt;</span></code> 命名，其中 <code class="docutils literal notranslate"><span class="pre">&lt;modulename&gt;</span></code> 要替換為模組的名稱。當使用 <a class="reference internal" href="../c-api/module.html#multi-phase-initialization"><span class="std std-ref">Multi-phase initialization</span></a> 時，允許非 ASCII 模組名稱。在這種情況下，初始化函式名稱是 <code class="docutils literal notranslate"><span class="pre">PyInitU_&lt;modulename&gt;</span></code>，其中 <code class="docutils literal notranslate"><span class="pre">&lt;modulename&gt;</span></code> 使用 Python 的 <em>punycode</em> 編碼，並將連字符號替換為底線。在 Python 中：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">initfunc_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">suffix</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="n">name</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">)</span>
@@ -209,17 +201,10 @@ are allowed. In this case, the initialization function name is
     <span class="k">return</span> <span class="sa">b</span><span class="s1">&#39;PyInit&#39;</span> <span class="o">+</span> <span class="n">suffix</span>
 </pre></div>
 </div>
-<p>It is possible to export multiple modules from a single shared library by
-defining multiple initialization functions. However, importing them requires
-using symbolic links or a custom importer, because by default only the
-function corresponding to the filename is found.
-See the <em>&quot;Multiple modules in one library&quot;</em> section in <span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0489/"><strong>PEP 489</strong></a> for details.</p>
+<p>可以透過定義多個初始化函式，來從單一共用函式庫中匯出多個模組。然而要引入它們需要使用符號連結或自訂引入器，因為預設只會找到對應於檔名的函式。詳細資訊請參見 <span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0489/"><strong>PEP 489</strong></a> 中的 <em>&quot;Multiple modules in one library&quot;</em> 部分。</p>
 <section id="building-c-and-c-extensions-with-setuptools">
-<span id="setuptools-index"></span><span id="install-index"></span><h2><span class="section-number">4.1. </span>Building C and C++ Extensions with setuptools<a class="headerlink" href="#building-c-and-c-extensions-with-setuptools" title="連結到這個標頭">¶</a></h2>
-<p>Python 3.12 and newer no longer come with distutils. Please refer to the
-<code class="docutils literal notranslate"><span class="pre">setuptools</span></code> documentation at
-<a class="reference external" href="https://setuptools.readthedocs.io/en/latest/setuptools.html">https://setuptools.readthedocs.io/en/latest/setuptools.html</a>
-to learn more about how build and distribute C/C++ extensions with setuptools.</p>
+<span id="setuptools-index"></span><span id="install-index"></span><h2><span class="section-number">4.1. </span>用 setuptools 建置 C 與 C++ 擴充套件<a class="headerlink" href="#building-c-and-c-extensions-with-setuptools" title="連結到這個標頭">¶</a></h2>
+<p>Python 3.12 與之後的版本不再帶有 distutils。請在 <a class="reference external" href="https://setuptools.readthedocs.io/en/latest/setuptools.html">https://setuptools.readthedocs.io/en/latest/setuptools.html</a> 上參閱 <code class="docutils literal notranslate"><span class="pre">setuptools</span></code> 文件，以了解如何使用 setuptools 建置和發佈 C/C++ 擴充套件。</p>
 </section>
 </section>
 
@@ -234,7 +219,7 @@ to learn more about how build and distribute C/C++ extensions with setuptools.</
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#">4. 建立 C 與 C++ 擴充套件</a><ul>
-<li><a class="reference internal" href="#building-c-and-c-extensions-with-setuptools">4.1. Building C and C++ Extensions with setuptools</a></li>
+<li><a class="reference internal" href="#building-c-and-c-extensions-with-setuptools">4.1. 用 setuptools 建置 C 與 C++ 擴充套件</a></li>
 </ul>
 </li>
 </ul>
@@ -346,7 +331,7 @@ to learn more about how build and distribute C/C++ extensions with setuptools.</
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 2月 07, 2025 (08:47 UTC)。
+      最後更新於 2月 08, 2025 (17:17 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
