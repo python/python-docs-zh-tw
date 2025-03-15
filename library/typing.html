@@ -1320,49 +1320,38 @@ type annotations if you were doing range analysis:</p>
 <span class="n">T2</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">T1</span><span class="p">,</span> <span class="n">ValueRange</span><span class="p">(</span><span class="o">-</span><span class="mi">20</span><span class="p">,</span> <span class="mi">3</span><span class="p">)]</span>
 </pre></div>
 </div>
-<p>Details of the syntax:</p>
-<ul>
-<li><p>The first argument to <code class="docutils literal notranslate"><span class="pre">Annotated</span></code> must be a valid type</p></li>
-<li><p>Multiple metadata elements can be supplied (<code class="docutils literal notranslate"><span class="pre">Annotated</span></code> supports variadic
-arguments):</p>
+<p>The first argument to <code class="docutils literal notranslate"><span class="pre">Annotated</span></code> must be a valid type. Multiple metadata
+elements can be supplied as <code class="docutils literal notranslate"><span class="pre">Annotated</span></code> supports variadic arguments. The
+order of the metadata elements is preserved and matters for equality checks:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">ctype</span><span class="p">:</span>
-    <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span>
+     <span class="n">kind</span><span class="p">:</span> <span class="nb">str</span>
 
-<span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ValueRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">ctype</span><span class="p">(</span><span class="s2">&quot;char&quot;</span><span class="p">)]</span>
+<span class="n">a1</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ValueRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">ctype</span><span class="p">(</span><span class="s2">&quot;char&quot;</span><span class="p">)]</span>
+<span class="n">a2</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ctype</span><span class="p">(</span><span class="s2">&quot;char&quot;</span><span class="p">),</span> <span class="n">ValueRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">)]</span>
+
+<span class="k">assert</span> <span class="n">a1</span> <span class="o">!=</span> <span class="n">a2</span>  <span class="c1"># Order matters</span>
 </pre></div>
 </div>
 <p>It is up to the tool consuming the annotations to decide whether the
 client is allowed to add multiple metadata elements to one annotation and how to
 merge those annotations.</p>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Annotated</span></code> must be subscripted with at least two arguments (
-<code class="docutils literal notranslate"><span class="pre">Annotated[int]</span></code> is not valid)</p></li>
-<li><p>The order of the metadata elements is preserved and matters for equality
-checks:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">assert</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ValueRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">ctype</span><span class="p">(</span><span class="s2">&quot;char&quot;</span><span class="p">)]</span> <span class="o">!=</span> <span class="n">Annotated</span><span class="p">[</span>
-    <span class="nb">int</span><span class="p">,</span> <span class="n">ctype</span><span class="p">(</span><span class="s2">&quot;char&quot;</span><span class="p">),</span> <span class="n">ValueRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-<span class="p">]</span>
-</pre></div>
-</div>
-</li>
-<li><p>Nested <code class="docutils literal notranslate"><span class="pre">Annotated</span></code> types are flattened. The order of the metadata elements
+<p>Nested <code class="docutils literal notranslate"><span class="pre">Annotated</span></code> types are flattened. The order of the metadata elements
 starts with the innermost annotation:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">assert</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ValueRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">)],</span> <span class="n">ctype</span><span class="p">(</span><span class="s2">&quot;char&quot;</span><span class="p">)]</span> <span class="o">==</span> <span class="n">Annotated</span><span class="p">[</span>
     <span class="nb">int</span><span class="p">,</span> <span class="n">ValueRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">ctype</span><span class="p">(</span><span class="s2">&quot;char&quot;</span><span class="p">)</span>
 <span class="p">]</span>
 </pre></div>
 </div>
-</li>
-<li><p>Duplicated metadata elements are not removed:</p>
+<p>Duplicated metadata elements are not removed:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">assert</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ValueRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">)]</span> <span class="o">!=</span> <span class="n">Annotated</span><span class="p">[</span>
     <span class="nb">int</span><span class="p">,</span> <span class="n">ValueRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">ValueRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 <span class="p">]</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Annotated</span></code> can be used with nested and generic aliases:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@dataclass</span>
+<p><code class="docutils literal notranslate"><span class="pre">Annotated</span></code> can be used with nested and generic aliases:</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@dataclass</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MaxLen</span><span class="p">:</span>
     <span class="n">value</span><span class="p">:</span> <span class="nb">int</span>
 
@@ -1373,21 +1362,17 @@ starts with the innermost annotation:</p>
 <span class="nb">type</span> <span class="n">V</span> <span class="o">=</span> <span class="n">Vec</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span>
 </pre></div>
 </div>
-</li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Annotated</span></code> cannot be used with an unpacked <a class="reference internal" href="#typing.TypeVarTuple" title="typing.TypeVarTuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVarTuple</span></code></a>:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="nb">type</span> <span class="n">Variadic</span><span class="p">[</span><span class="o">*</span><span class="n">Ts</span><span class="p">]</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="o">*</span><span class="n">Ts</span><span class="p">,</span> <span class="n">Ann1</span><span class="p">]</span>  <span class="c1"># NOT valid</span>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">Annotated</span></code> cannot be used with an unpacked <a class="reference internal" href="#typing.TypeVarTuple" title="typing.TypeVarTuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVarTuple</span></code></a>:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="nb">type</span> <span class="n">Variadic</span><span class="p">[</span><span class="o">*</span><span class="n">Ts</span><span class="p">]</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="o">*</span><span class="n">Ts</span><span class="p">,</span> <span class="n">Ann1</span><span class="p">]</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">T1</span><span class="p">,</span> <span class="n">T2</span><span class="p">,</span> <span class="n">T3</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">Ann1</span><span class="p">]</span>  <span class="c1"># NOT valid</span>
 </pre></div>
 </div>
-<p>這會等價於：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">Annotated</span><span class="p">[</span><span class="n">T1</span><span class="p">,</span> <span class="n">T2</span><span class="p">,</span> <span class="n">T3</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">Ann1</span><span class="p">]</span>
-</pre></div>
-</div>
-<p>where <code class="docutils literal notranslate"><span class="pre">T1</span></code>, <code class="docutils literal notranslate"><span class="pre">T2</span></code>, etc. are <a class="reference internal" href="#typing.TypeVar" title="typing.TypeVar"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVars</span></code></a>. This would be
-invalid: only one type should be passed to Annotated.</p>
-</li>
-<li><p>By default, <a class="reference internal" href="#typing.get_type_hints" title="typing.get_type_hints"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_type_hints()</span></code></a> strips the metadata from annotations.
+<p>where <code class="docutils literal notranslate"><span class="pre">T1</span></code>, <code class="docutils literal notranslate"><span class="pre">T2</span></code>, ... are <a class="reference internal" href="#typing.TypeVar" title="typing.TypeVar"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVars</span></code></a>. This is invalid as
+only one type should be passed to Annotated.</p>
+<p>By default, <a class="reference internal" href="#typing.get_type_hints" title="typing.get_type_hints"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_type_hints()</span></code></a> strips the metadata from annotations.
 Pass <code class="docutils literal notranslate"><span class="pre">include_extras=True</span></code> to have the metadata preserved:</p>
-<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">get_type_hints</span>
+<blockquote>
+<div><div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">get_type_hints</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">func</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;metadata&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="k">pass</span>
 <span class="gp">...</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_type_hints</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
@@ -1396,10 +1381,11 @@ Pass <code class="docutils literal notranslate"><span class="pre">include_extras
 <span class="go">{&#39;x&#39;: typing.Annotated[int, &#39;metadata&#39;], &#39;return&#39;: &lt;class &#39;NoneType&#39;&gt;}</span>
 </pre></div>
 </div>
-</li>
-<li><p>At runtime, the metadata associated with an <code class="docutils literal notranslate"><span class="pre">Annotated</span></code> type can be
+</div></blockquote>
+<p>At runtime, the metadata associated with an <code class="docutils literal notranslate"><span class="pre">Annotated</span></code> type can be
 retrieved via the <code class="xref py py-attr docutils literal notranslate"><span class="pre">__metadata__</span></code> attribute:</p>
-<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
+<blockquote>
+<div><div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">X</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="s2">&quot;very&quot;</span><span class="p">,</span> <span class="s2">&quot;important&quot;</span><span class="p">,</span> <span class="s2">&quot;metadata&quot;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">X</span>
 <span class="go">typing.Annotated[int, &#39;very&#39;, &#39;important&#39;, &#39;metadata&#39;]</span>
@@ -1407,22 +1393,24 @@ retrieved via the <code class="xref py py-attr docutils literal notranslate"><sp
 <span class="go">(&#39;very&#39;, &#39;important&#39;, &#39;metadata&#39;)</span>
 </pre></div>
 </div>
-</li>
-<li><p>At runtime, if you want to retrieve the original
-type wrapped by <code class="docutils literal notranslate"><span class="pre">Annotated</span></code>, use the <code class="xref py py-attr docutils literal notranslate"><span class="pre">__origin__</span></code> attribute:</p>
-<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">get_origin</span>
+</div></blockquote>
+<p>If you want to retrieve the original type wrapped by <code class="docutils literal notranslate"><span class="pre">Annotated</span></code>, use the
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">__origin__</span></code> attribute:</p>
+<blockquote>
+<div><div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">get_origin</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Password</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;secret&quot;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">Password</span><span class="o">.</span><span class="n">__origin__</span>
 <span class="go">&lt;class &#39;str&#39;&gt;</span>
 </pre></div>
 </div>
+</div></blockquote>
 <p>Note that using <a class="reference internal" href="#typing.get_origin" title="typing.get_origin"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_origin()</span></code></a> will return <code class="docutils literal notranslate"><span class="pre">Annotated</span></code> itself:</p>
-<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_origin</span><span class="p">(</span><span class="n">Password</span><span class="p">)</span>
+<blockquote>
+<div><div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_origin</span><span class="p">(</span><span class="n">Password</span><span class="p">)</span>
 <span class="go">typing.Annotated</span>
 </pre></div>
 </div>
-</li>
-</ul>
+</div></blockquote>
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
 <dl class="simple">
@@ -4187,7 +4175,7 @@ convenience. This is subject to change, and not all deprecations are listed.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br />
     <br />
-      最後更新於 3月 11, 2025 (03:28 UTC)。
+      最後更新於 3月 15, 2025 (05:47 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
