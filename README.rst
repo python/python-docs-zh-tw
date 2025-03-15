@@ -84,6 +84,7 @@ the PSF for inclusion in the documentation.
 - `安裝好 git <https://help.github.com/articles/set-up-git/>`_\ （Windows
   上請參考 https://gitforwindows.org/）
 - 一個 ``.po`` 檔的編輯器。推薦使用 `Poedit <https://poedit.net>`_，若熟悉 po 檔用一般文字編輯器亦可。
+- 參考 `uv Installation <https://docs.astral.sh/uv/getting-started/installation/>`_ 安裝 uv，以便在本機端預覽翻譯成果。
 - macOS 的使用者還需要先利用 `homebrew <https://brew.sh/index_zh-tw>`_ 安裝 gettext，屆時 Sphinx 會使用到。
 
   .. code-block:: bash
