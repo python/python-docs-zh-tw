@@ -25,13 +25,12 @@ def get_pofile_from_path(path: Path) -> polib.POFile:
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "path",
-        help="the path of a PO file",
-    )
-    parser.add_argument("-n", '--occurrence_number', type=int, default=1)
+    parser.add_argument("path", type=Path,
+                        help="the path of a PO file")
+    parser.add_argument("-n", '--occurrence_number',
+                        type=int, default=1)
     args = parser.parse_args()
-    path = Path(args.path).resolve()
+    path = args.path.resolve()
     pofile = get_pofile_from_path(path)
     occurrence_number = args.occurrence_number
 
