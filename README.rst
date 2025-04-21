@@ -233,7 +233,7 @@ the PSF for inclusion in the documentation.
 其中最簡單的貢獻方式就是更新 *fuzzy entries*，讓曾經翻譯的內容保持與最新版本的文件
 同步。請參考\ `尋找有翻譯過但需校閱的 fuzzy entries`_ 段落。
 
-此外，當前的目標為完成 **Tutorial** 的翻譯，因此在 ``tutorial/`` 底下的所有
+此外，目前的目標為完成 **Tutorial** 的翻譯，因此在 ``tutorial/`` 底下的所有
 po 檔皆為首要的翻譯對象。你也可以幫忙校對已經翻譯過的內容。
 
 
