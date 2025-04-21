@@ -84,6 +84,7 @@ the PSF for inclusion in the documentation.
 - `安裝好 git <https://help.github.com/articles/set-up-git/>`_\ （Windows
   上請參考 https://gitforwindows.org/）
 - 一個 ``.po`` 檔的編輯器。推薦使用 `Poedit <https://poedit.net>`_，若熟悉 po 檔用一般文字編輯器亦可。
+- 參考 `uv Installation <https://docs.astral.sh/uv/getting-started/installation/>`_ 安裝 uv，以便在本機端預覽翻譯成果。
 - macOS 的使用者還需要先利用 `homebrew <https://brew.sh/index_zh-tw>`_ 安裝 gettext，屆時 Sphinx 會使用到。
 
   .. code-block:: bash
@@ -232,7 +233,7 @@ the PSF for inclusion in the documentation.
 其中最簡單的貢獻方式就是更新 *fuzzy entries*，讓曾經翻譯的內容保持與最新版本的文件
 同步。請參考\ `尋找有翻譯過但需校閱的 fuzzy entries`_ 段落。
 
-此外，當前的目標為完成 **Tutorial** 的翻譯，因此在 ``tutorial/`` 底下的所有
+此外，目前的目標為完成 **Tutorial** 的翻譯，因此在 ``tutorial/`` 底下的所有
 po 檔皆為首要的翻譯對象。你也可以幫忙校對已經翻譯過的內容。
 
 
