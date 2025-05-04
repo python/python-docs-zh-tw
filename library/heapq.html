@@ -289,7 +289,7 @@
 <li><p>當一個 heap 中 task 的 priority 改變時，如何將它移到 heap 正確的位置上?</p></li>
 <li><p>或者一個還沒被解決的 task 需要被刪除時，要如何從佇列中找到並刪除指定的 task?</p></li>
 </ul>
-<p>一個針對前兩個問題的解法是：儲存一個包含 priority 、 entry count 和 task 三個元素的 tuple 。兩個 task 有相同 priority 時， entry count 會讓兩個 task 能根據加入的順序排序。因為沒有任何兩個 task 擁有相同的 entry count ，所以永遠不會直接使用 task 做比較。</p>
+<p>一個針對前兩個問題的解法是：儲存一個包含 priority、entry count 和 task 三個元素的 tuple 。兩個 task 有相同 priority 時，entry count 會讓兩個 task 能根據加入的順序排序。因為沒有任何兩個 task 擁有相同的 entry count，所以永遠不會直接使用 task 做比較。</p>
 <p>task 無法比較的另一個解決方案是建立一個包裝器類別，該類別忽略 task 項目，只比較優先等級：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
@@ -302,13 +302,13 @@
 </div>
 <p>剩下的問題可以藉由找到要刪除的 task 並更改它的 priority 或者直接將它移除。尋找一個 task 可以使用一個 dictionary 指向佇列當中的 entry 。</p>
 <p>移除 entry 或更改它的 priority 更為困難，因為這會破壞 heap 的性質。所以一個可行的方案是將原本的 entry 做一個標記表示它已經被刪除，並新增一個擁有新的 priority 的 entry：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">pq</span> <span class="o">=</span> <span class="p">[]</span>                         <span class="c1"># list of entries arranged in a heap</span>
-<span class="n">entry_finder</span> <span class="o">=</span> <span class="p">{}</span>               <span class="c1"># mapping of tasks to entries</span>
-<span class="n">REMOVED</span> <span class="o">=</span> <span class="s1">&#39;&lt;removed-task&gt;&#39;</span>      <span class="c1"># placeholder for a removed task</span>
-<span class="n">counter</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>     <span class="c1"># unique sequence count</span>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">pq</span> <span class="o">=</span> <span class="p">[]</span>                         <span class="c1"># 在 heap 中的 entry 串列</span>
+<span class="n">entry_finder</span> <span class="o">=</span> <span class="p">{}</span>               <span class="c1"># task 對應到 entry 的對映</span>
+<span class="n">REMOVED</span> <span class="o">=</span> <span class="s1">&#39;&lt;removed-task&gt;&#39;</span>      <span class="c1"># 被刪除的 task 的佔位器</span>
+<span class="n">counter</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>     <span class="c1"># 唯一的序列計數</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">add_task</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">priority</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
-    <span class="s1">&#39;Add a new task or update the priority of an existing task&#39;</span>
+    <span class="s1">&#39;新增一個 task 或更新一個已存在 task 的 priority&#39;</span>
     <span class="k">if</span> <span class="n">task</span> <span class="ow">in</span> <span class="n">entry_finder</span><span class="p">:</span>
         <span class="n">remove_task</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
     <span class="n">count</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">counter</span><span class="p">)</span>
@@ -317,18 +317,18 @@
     <span class="n">heappush</span><span class="p">(</span><span class="n">pq</span><span class="p">,</span> <span class="n">entry</span><span class="p">)</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">remove_task</span><span class="p">(</span><span class="n">task</span><span class="p">):</span>
-    <span class="s1">&#39;Mark an existing task as REMOVED.  Raise KeyError if not found.&#39;</span>
+    <span class="s1">&#39;將一個已存在的 task 標記為 REMOVED。如果找不到會引發 KeyError。&#39;</span>
     <span class="n">entry</span> <span class="o">=</span> <span class="n">entry_finder</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">task</span><span class="p">)</span>
     <span class="n">entry</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">REMOVED</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">pop_task</span><span class="p">():</span>
-    <span class="s1">&#39;Remove and return the lowest priority task. Raise KeyError if empty.&#39;</span>
+    <span class="s1">&#39;移除並回傳最低 priority 的 task。如果 heap 是空的會引發 KeyError。&#39;</span>
     <span class="k">while</span> <span class="n">pq</span><span class="p">:</span>
         <span class="n">priority</span><span class="p">,</span> <span class="n">count</span><span class="p">,</span> <span class="n">task</span> <span class="o">=</span> <span class="n">heappop</span><span class="p">(</span><span class="n">pq</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">task</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">REMOVED</span><span class="p">:</span>
             <span class="k">del</span> <span class="n">entry_finder</span><span class="p">[</span><span class="n">task</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">task</span>
-    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;pop from an empty priority queue&#39;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;從空的優先佇列中 pop 出元素&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -490,7 +490,7 @@
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br>
     <br>
-      最後更新於 5月 04, 2025 (06:45 UTC)。
+      最後更新於 5月 04, 2025 (08:31 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
