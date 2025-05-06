@@ -156,6 +156,10 @@ rm_cpython: ## Remove cloned cpython repo
 lint:  $(VENV)/bin/sphinx-lint  ## Run sphinx-lint
 	$(VENV)/bin/sphinx-lint --enable default-role
 
+.PHONY: wrap
+wrap:  ## Run powrap on modified po files
+	uvx powrap --modified
+
 # This allows us to accept extra arguments (by doing nothing when we get a job that doesn't match, rather than throwing an error)
 %:
 	@:
