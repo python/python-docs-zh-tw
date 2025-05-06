@@ -454,20 +454,129 @@ when implemented, are mapped to module-level functions.</p>
 <p>All of the methods described below are executed atomically.</p>
 <section id="thread-local-data">
 <h2>Thread-Local Data<a class="headerlink" href="#thread-local-data" title="連結到這個標頭">¶</a></h2>
-<p>Thread-local data is data whose values are thread specific.  To manage
-thread-local data, just create an instance of <a class="reference internal" href="#threading.local" title="threading.local"><code class="xref py py-class docutils literal notranslate"><span class="pre">local</span></code></a> (or a
-subclass) and store attributes on it:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">mydata</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">local</span><span class="p">()</span>
-<span class="n">mydata</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>
+<p>Thread-local data is data whose values are thread specific. If you
+have data that you want to be local to a thread, create a
+<a class="reference internal" href="#threading.local" title="threading.local"><code class="xref py py-class docutils literal notranslate"><span class="pre">local</span></code></a> object and use its attributes:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span> <span class="o">=</span> <span class="n">local</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span><span class="o">.</span><span class="n">number</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span><span class="o">.</span><span class="n">number</span>
+<span class="go">42</span>
 </pre></div>
 </div>
-<p>The instance's values will be different for separate threads.</p>
+<p>You can also access the <a class="reference internal" href="#threading.local" title="threading.local"><code class="xref py py-class docutils literal notranslate"><span class="pre">local</span></code></a>-object's dictionary:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span><span class="o">.</span><span class="vm">__dict__</span>
+<span class="go">{&#39;number&#39;: 42}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;widgets&#39;</span><span class="p">,</span> <span class="p">[])</span>
+<span class="go">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span><span class="o">.</span><span class="n">widgets</span>
+<span class="go">[]</span>
+</pre></div>
+</div>
+<p>If we access the data in a different thread:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="n">items</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">mydata</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+<span class="gp">... </span>    <span class="n">log</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="n">mydata</span><span class="o">.</span><span class="n">number</span> <span class="o">=</span> <span class="mi">11</span>
+<span class="gp">... </span>    <span class="n">log</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mydata</span><span class="o">.</span><span class="n">number</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span>
+<span class="go">[[], 11]</span>
+</pre></div>
+</div>
+<p>we get different data.  Furthermore, changes made in the other thread
+don't affect data seen in this thread:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span><span class="o">.</span><span class="n">number</span>
+<span class="go">42</span>
+</pre></div>
+</div>
+<p>Of course, values you get from a <a class="reference internal" href="#threading.local" title="threading.local"><code class="xref py py-class docutils literal notranslate"><span class="pre">local</span></code></a> object, including their
+<a class="reference internal" href="../reference/datamodel.html#object.__dict__" title="object.__dict__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__dict__</span></code></a> attribute, are for whatever thread was current
+at the time the attribute was read.  For that reason, you generally
+don't want to save these values across threads, as they apply only to
+the thread they came from.</p>
+<p>You can create custom <a class="reference internal" href="#threading.local" title="threading.local"><code class="xref py py-class docutils literal notranslate"><span class="pre">local</span></code></a> objects by subclassing the
+<a class="reference internal" href="#threading.local" title="threading.local"><code class="xref py py-class docutils literal notranslate"><span class="pre">local</span></code></a> class:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">MyLocal</span><span class="p">(</span><span class="n">local</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">number</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="gp">... </span>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kw</span><span class="p">)</span>
+<span class="gp">... </span>    <span class="k">def</span><span class="w"> </span><span class="nf">squared</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="gp">... </span>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">number</span> <span class="o">**</span> <span class="mi">2</span>
+</pre></div>
+</div>
+<p>This can be useful to support default values, methods and
+initialization.  Note that if you define an <a class="reference internal" href="../reference/datamodel.html#object.__init__" title="object.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__init__()</span></code></a>
+method, it will be called each time the <a class="reference internal" href="#threading.local" title="threading.local"><code class="xref py py-class docutils literal notranslate"><span class="pre">local</span></code></a> object is used
+in a separate thread.  This is necessary to initialize each thread's
+dictionary.</p>
+<p>Now if we create a <a class="reference internal" href="#threading.local" title="threading.local"><code class="xref py py-class docutils literal notranslate"><span class="pre">local</span></code></a> object:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span> <span class="o">=</span> <span class="n">MyLocal</span><span class="p">(</span><span class="n">color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>we have a default number:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span><span class="o">.</span><span class="n">number</span>
+<span class="go">2</span>
+</pre></div>
+</div>
+<p>an initial color:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span><span class="o">.</span><span class="n">color</span>
+<span class="go">&#39;red&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">del</span> <span class="n">mydata</span><span class="o">.</span><span class="n">color</span>
+</pre></div>
+</div>
+<p>And a method that operates on the data:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span><span class="o">.</span><span class="n">squared</span><span class="p">()</span>
+<span class="go">4</span>
+</pre></div>
+</div>
+<p>As before, we can access the data in a separate thread:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">log</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">log</span>
+<span class="go">[[(&#39;color&#39;, &#39;red&#39;)], 11]</span>
+</pre></div>
+</div>
+<p>without affecting this thread's data:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span><span class="o">.</span><span class="n">number</span>
+<span class="go">2</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span><span class="o">.</span><span class="n">color</span>
+<span class="gt">Traceback (most recent call last):</span>
+<span class="c">...</span>
+<span class="gr">AttributeError</span>: <span class="n">&#39;MyLocal&#39; object has no attribute &#39;color&#39;</span>
+</pre></div>
+</div>
+<p>Note that subclasses can define <a class="reference internal" href="../glossary.html#term-__slots__"><span class="xref std std-term">__slots__</span></a>, but they are not
+thread local. They are shared across threads:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">MyLocal</span><span class="p">(</span><span class="n">local</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="vm">__slots__</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span> <span class="o">=</span> <span class="n">MyLocal</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span><span class="o">.</span><span class="n">number</span> <span class="o">=</span> <span class="mi">42</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="s1">&#39;red&#39;</span>
+</pre></div>
+</div>
+<p>So, the separate thread:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">f</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>affects what we see:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">mydata</span><span class="o">.</span><span class="n">number</span>
+<span class="go">11</span>
+</pre></div>
+</div>
 <dl class="py class">
 <dt class="sig sig-object py" id="threading.local">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">threading.</span></span><span class="sig-name descname"><span class="pre">local</span></span><a class="headerlink" href="#threading.local" title="連結到這個定義">¶</a></dt>
 <dd><p>A class that represents thread-local data.</p>
-<p>For more details and extensive examples, see the documentation string of the
-<code class="xref py py-mod docutils literal notranslate"><span class="pre">_threading_local</span></code> module: <a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.13/Lib/_threading_local.py">Lib/_threading_local.py</a>.</p>
 </dd></dl>
 
 </section>
@@ -1429,7 +1538,7 @@ the following snippet:</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br>
     <br>
-      最後更新於 5月 04, 2025 (08:31 UTC)。
+      最後更新於 5月 06, 2025 (02:42 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     

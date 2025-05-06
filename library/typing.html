@@ -1073,6 +1073,12 @@ in Python 3.18.</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">Union</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="nb">float</span><span class="p">]</span> <span class="o">==</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
 </pre></div>
 </div>
+<p>However, this does not apply to unions referenced through a type
+alias, to avoid forcing evaluation of the underlying <a class="reference internal" href="#typing.TypeAliasType" title="typing.TypeAliasType"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeAliasType</span></code></a>:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="nb">type</span> <span class="n">A</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+<span class="n">Union</span><span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span> <span class="o">!=</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]</span>
+</pre></div>
+</div>
 </li>
 <li><p>單一引數的聯集會消失不見，舉例來說：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">==</span> <span class="nb">int</span>  <span class="c1"># The constructor actually returns int</span>
@@ -1181,6 +1187,33 @@ in Python 3.18.</p>
 </pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">Literal[...]</span></code> 不可以進行子類別化。在 runtime 之中，任意的值是允許作為 <code class="docutils literal notranslate"><span class="pre">Literal[...]</span></code> 的型別引數，但型別檢查器可能會加強限制。更多有關文本型別的詳細資訊請看 <span class="target" id="index-111"></span><a class="pep reference external" href="https://peps.python.org/pep-0586/"><strong>PEP 586</strong></a>。</p>
+<p>Additional details:</p>
+<ul>
+<li><p>The arguments must be literal values and there must be at least one.</p></li>
+<li><p>Nested <code class="docutils literal notranslate"><span class="pre">Literal</span></code> types are flattened, e.g.:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">assert</span> <span class="n">Literal</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="mi">3</span><span class="p">]</span> <span class="o">==</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>However, this does not apply to <code class="docutils literal notranslate"><span class="pre">Literal</span></code> types referenced through a type
+alias, to avoid forcing evaluation of the underlying <a class="reference internal" href="#typing.TypeAliasType" title="typing.TypeAliasType"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeAliasType</span></code></a>:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="nb">type</span> <span class="n">A</span> <span class="o">=</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<span class="k">assert</span> <span class="n">Literal</span><span class="p">[</span><span class="n">A</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span> <span class="o">!=</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]</span>
+</pre></div>
+</div>
+</li>
+<li><p>多餘的引數會被略過，舉例來說：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">assert</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+</pre></div>
+</div>
+</li>
+<li><p>When comparing literals, the argument order is ignored, e.g.:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">assert</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">Literal</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+</li>
+<li><p>You cannot subclass or instantiate a <code class="docutils literal notranslate"><span class="pre">Literal</span></code>.</p></li>
+<li><p>You cannot write <code class="docutils literal notranslate"><span class="pre">Literal[X][Y]</span></code>.</p></li>
+</ul>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.8 版被加入.</span></p>
 </div>
@@ -1340,6 +1373,14 @@ merge those annotations.</p>
 starts with the innermost annotation:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">assert</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">ValueRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">)],</span> <span class="n">ctype</span><span class="p">(</span><span class="s2">&quot;char&quot;</span><span class="p">)]</span> <span class="o">==</span> <span class="n">Annotated</span><span class="p">[</span>
     <span class="nb">int</span><span class="p">,</span> <span class="n">ValueRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">ctype</span><span class="p">(</span><span class="s2">&quot;char&quot;</span><span class="p">)</span>
+<span class="p">]</span>
+</pre></div>
+</div>
+<p>However, this does not apply to <code class="docutils literal notranslate"><span class="pre">Annotated</span></code> types referenced through a type
+alias, to avoid forcing evaluation of the underlying <a class="reference internal" href="#typing.TypeAliasType" title="typing.TypeAliasType"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeAliasType</span></code></a>:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="nb">type</span> <span class="n">From3To10</span><span class="p">[</span><span class="n">T</span><span class="p">]</span> <span class="o">=</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">T</span><span class="p">,</span> <span class="n">ValueRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">)]</span>
+<span class="k">assert</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">From3To10</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">ctype</span><span class="p">(</span><span class="s2">&quot;char&quot;</span><span class="p">)]</span> <span class="o">!=</span> <span class="n">Annotated</span><span class="p">[</span>
+   <span class="nb">int</span><span class="p">,</span> <span class="n">ValueRange</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">ctype</span><span class="p">(</span><span class="s2">&quot;char&quot;</span><span class="p">)</span>
 <span class="p">]</span>
 </pre></div>
 </div>
@@ -4176,7 +4217,7 @@ convenience. This is subject to change, and not all deprecations are listed.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br>
     <br>
-      最後更新於 5月 04, 2025 (08:31 UTC)。
+      最後更新於 5月 06, 2025 (02:42 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
