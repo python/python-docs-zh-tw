@@ -142,12 +142,12 @@
                           title="下一章">timer file descriptor HOWTO</a></p>
   </div>
   <div role="note" aria-label="source link">
-    <h3>此頁面</h3>
+    <h3>This page</h3>
     <ul class="this-page-menu">
-      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a href="../bugs.html">Report a bug</a></li>
       <li>
         <a href="https://github.com/python/cpython/blob/main/Doc/howto/isolating-extensions.rst"
-            rel="nofollow">顯示原始碼
+            rel="nofollow">Show source
         </a>
       </li>
     </ul>
@@ -394,21 +394,34 @@ example module initialization shown at the bottom of the file.</p>
 multiple interpreters correctly. If this is not yet the case for your
 module, you can explicitly make your module loadable only once per
 process. For example:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">loaded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">// A process-wide flag</span>
+<span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">loaded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+
+<span class="c1">// Mutex to provide thread safety (only needed for free-threaded Python)</span>
+<span class="k">static</span><span class="w"> </span><span class="n">PyMutex</span><span class="w"> </span><span class="n">modinit_mutex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
 
 <span class="k">static</span><span class="w"> </span><span class="kt">int</span>
 <span class="nf">exec_module</span><span class="p">(</span><span class="n">PyObject</span><span class="o">*</span><span class="w"> </span><span class="n">module</span><span class="p">)</span>
 <span class="p">{</span>
+<span class="w">    </span><span class="n">PyMutex_Lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">modinit_mutex</span><span class="p">);</span>
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">loaded</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">PyMutex_Unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">modinit_mutex</span><span class="p">);</span>
 <span class="w">        </span><span class="n">PyErr_SetString</span><span class="p">(</span><span class="n">PyExc_ImportError</span><span class="p">,</span>
 <span class="w">                        </span><span class="s">&quot;cannot load module more than once per process&quot;</span><span class="p">);</span>
 <span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="n">loaded</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">1</span><span class="p">;</span>
+<span class="w">    </span><span class="n">PyMutex_Unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">modinit_mutex</span><span class="p">);</span>
 <span class="w">    </span><span class="c1">// ... rest of initialization</span>
 <span class="p">}</span>
 </pre></div>
 </div>
+<p>If your module's <a class="reference internal" href="../c-api/module.html#c.PyModuleDef.m_clear" title="PyModuleDef.m_clear"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyModuleDef.m_clear</span></code></a> function is able to prepare
+for future re-initialization, it should clear the <code class="docutils literal notranslate"><span class="pre">loaded</span></code> flag.
+In this case, your module won't support multiple instances existing
+<em>concurrently</em>, but it will, for example, support being loaded after
+Python runtime shutdown (<a class="reference internal" href="../c-api/init.html#c.Py_FinalizeEx" title="Py_FinalizeEx"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_FinalizeEx()</span></code></a>) and re-initialization
+(<a class="reference internal" href="../c-api/init.html#c.Py_Initialize" title="Py_Initialize"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_Initialize()</span></code></a>).</p>
 </section>
 <section id="module-state-access-from-functions">
 <h3>Module State Access from Functions<a class="headerlink" href="#module-state-access-from-functions" title="連結到這個標頭">¶</a></h3>
@@ -828,12 +841,12 @@ that is, creating a type that works exactly like a given static type.</p>
                           title="下一章">timer file descriptor HOWTO</a></p>
   </div>
   <div role="note" aria-label="source link">
-    <h3>此頁面</h3>
+    <h3>This page</h3>
     <ul class="this-page-menu">
-      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a href="../bugs.html">Report a bug</a></li>
       <li>
         <a href="https://github.com/python/cpython/blob/main/Doc/howto/isolating-extensions.rst"
-            rel="nofollow">顯示原始碼
+            rel="nofollow">Show source
         </a>
       </li>
     </ul>
@@ -923,7 +936,7 @@ that is, creating a type that works exactly like a given static type.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br>
     <br>
-      最後更新於 5月 20, 2025 (03:13 UTC)。
+      最後更新於 5月 26, 2025 (03:33 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
