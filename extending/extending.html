@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>1. 以 C 或 C++ 擴充 Python &#8212; Python 3.13.3 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1. 以 C 或 C++ 擴充 Python &#8212; Python 3.13.5 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
-    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=9f571ed1" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=5ff89526" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
     
-    <script src="../_static/documentation_options.js?v=88ef6b93"></script>
+    <script src="../_static/documentation_options.js?v=e67be3cf"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,7 +20,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.13.3 說明文件 中搜尋"
+          title="在 Python 3.13.5 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -165,7 +165,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.13.3 Documentation</a> &#187;
+      <a href="../index.html">3.13.5 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">擴充和嵌入 Python 直譯器</a> &#187;</li>
@@ -261,33 +261,64 @@
 <p>還要注意的是，有 <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTuple" title="PyArg_ParseTuple"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code></a> 及同系列函式的這些重要例外，回傳整數狀態的函式通常會回傳一個正值或 0 表示成功、回傳 <code class="docutils literal notranslate"><span class="pre">-1</span></code> 表示失敗，就像 Unix 系統呼叫一樣。</p>
 <p>最後，在回傳錯誤指示器時要注意垃圾清理（透過對你已經建立的物件呼叫 <a class="reference internal" href="../c-api/refcounting.html#c.Py_XDECREF" title="Py_XDECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_XDECREF()</span></code></a> 或 <a class="reference internal" href="../c-api/refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a>）！</p>
 <p>你完全可以自行選擇要產生的例外。有一些預先宣告的 C 物件會對應到所有內建的 Python 例外，例如 <code class="xref c c-data docutils literal notranslate"><span class="pre">PyExc_ZeroDivisionError</span></code>，你可以直接使用它們。當然，你應該明智地選擇例外，像是不要使用 <code class="xref c c-data docutils literal notranslate"><span class="pre">PyExc_TypeError</span></code> 來表示檔案無法打開（應該是 <code class="xref c c-data docutils literal notranslate"><span class="pre">PyExc_OSError</span></code>）。如果引數串列有問題，<a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTuple" title="PyArg_ParseTuple"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code></a> 函式通常會引發 <code class="xref c c-data docutils literal notranslate"><span class="pre">PyExc_TypeError</span></code>。如果你有一個引數的值必須在一個特定的範圍內或必須滿足其他條件，則可以使用 <code class="xref c c-data docutils literal notranslate"><span class="pre">PyExc_ValueError</span></code>。</p>
-<p>你也可以定義一個你的模組特有的新例外。為此你通常會在檔案開頭宣告一個靜態物件變數：</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">SpamError</span><span class="p">;</span>
+<p>You can also define a new exception that is unique to your module.
+The simplest way to do this is to declare a static global object variable at
+the beginning of the file:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">SpamError</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>並在你的模組初始化函式中使用一個例外物件來初始化它 (<code class="xref c c-func docutils literal notranslate"><span class="pre">PyInit_spam()</span></code>)：</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyMODINIT_FUNC</span>
-<span class="nf">PyInit_spam</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<p>and initialize it by calling <a class="reference internal" href="../c-api/exceptions.html#c.PyErr_NewException" title="PyErr_NewException"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_NewException()</span></code></a> in the module's
+<a class="reference internal" href="../c-api/module.html#c.Py_mod_exec" title="Py_mod_exec"><code class="xref c c-data docutils literal notranslate"><span class="pre">Py_mod_exec</span></code></a> function (<code class="xref c c-func docutils literal notranslate"><span class="pre">spam_module_exec()</span></code>):</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">SpamError</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyErr_NewException</span><span class="p">(</span><span class="s">&quot;spam.error&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Since <code class="xref c c-data docutils literal notranslate"><span class="pre">SpamError</span></code> is a global variable, it will be overwitten every time
+the module is reinitialized, when the <a class="reference internal" href="../c-api/module.html#c.Py_mod_exec" title="Py_mod_exec"><code class="xref c c-data docutils literal notranslate"><span class="pre">Py_mod_exec</span></code></a> function is called.</p>
+<p>For now, let's avoid the issue: we will block repeated initialization by raising an
+<a class="reference internal" href="../library/exceptions.html#ImportError" title="ImportError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportError</span></code></a>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">SpamError</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+
+<span class="k">static</span><span class="w"> </span><span class="kt">int</span>
+<span class="nf">spam_module_exec</span><span class="p">(</span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">m</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">m</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyModule_Create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">spammodule</span><span class="p">);</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">SpamError</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">PyErr_SetString</span><span class="p">(</span><span class="n">PyExc_ImportError</span><span class="p">,</span>
+<span class="w">                        </span><span class="s">&quot;cannot initialize spam module more than once&quot;</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="n">SpamError</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyErr_NewException</span><span class="p">(</span><span class="s">&quot;spam.error&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PyModule_AddObjectRef</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;error&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">SpamError</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">Py_CLEAR</span><span class="p">(</span><span class="n">SpamError</span><span class="p">);</span>
-<span class="w">        </span><span class="n">Py_DECREF</span><span class="p">(</span><span class="n">m</span><span class="p">);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PyModule_AddObjectRef</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;SpamError&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">SpamError</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">static</span><span class="w"> </span><span class="n">PyModuleDef_Slot</span><span class="w"> </span><span class="n">spam_module_slots</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">{</span><span class="n">Py_mod_exec</span><span class="p">,</span><span class="w"> </span><span class="n">spam_module_exec</span><span class="p">},</span>
+<span class="w">    </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">}</span>
+<span class="p">};</span>
+
+<span class="k">static</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">PyModuleDef</span><span class="w"> </span><span class="n">spam_module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">.</span><span class="n">m_base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyModuleDef_HEAD_INIT</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">m_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;spam&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">m_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w">  </span><span class="c1">// non-negative</span>
+<span class="w">    </span><span class="p">.</span><span class="n">m_slots</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">spam_module_slots</span><span class="p">,</span>
+<span class="p">};</span>
+
+<span class="n">PyMODINIT_FUNC</span>
+<span class="nf">PyInit_spam</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">PyModuleDef_Init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">spam_module</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>請注意，例外物件的 Python 名稱是 <code class="xref py py-exc docutils literal notranslate"><span class="pre">spam.error</span></code>。如同<a class="reference internal" href="../library/exceptions.html#bltin-exceptions"><span class="std std-ref">內建的例外</span></a>所述，<a class="reference internal" href="../c-api/exceptions.html#c.PyErr_NewException" title="PyErr_NewException"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_NewException()</span></code></a> 函式可能會建立一個基底類別為 <a class="reference internal" href="../library/exceptions.html#Exception" title="Exception"><code class="xref py py-exc docutils literal notranslate"><span class="pre">Exception</span></code></a> 的類別（除非傳入另一個類別來代替 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>）。</p>
 <p>請注意，<code class="xref c c-data docutils literal notranslate"><span class="pre">SpamError</span></code> 變數保留了對新建立的例外類別的參照；這是故意的！因為外部程式碼可能會從模組中移除這個例外，所以需要一個對這個類別的參照來確保它不會被丟棄而導致 <code class="xref c c-data docutils literal notranslate"><span class="pre">SpamError</span></code> 變成一個迷途指標 (dangling pointer)。如果它變成迷途指標，那產生例外的 C 程式碼可能會導致核心轉儲 (core dump) 或其他不預期的 side effect。</p>
+<p>For now, the <a class="reference internal" href="../c-api/refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> call to remove this reference is missing.
+Even when the Python interpreter shuts down, the global <code class="xref c c-data docutils literal notranslate"><span class="pre">SpamError</span></code>
+variable will not be garbage-collected. It will &quot;leak&quot;.
+We did, however, ensure that this will happen at most once per process.</p>
 <p>我們稍後會討論 <a class="reference internal" href="../c-api/intro.html#c.PyMODINIT_FUNC" title="PyMODINIT_FUNC"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PyMODINIT_FUNC</span></code></a> 作為函式回傳型別的用法。</p>
 <p>可以在你的擴充模組中呼叫 <a class="reference internal" href="../c-api/exceptions.html#c.PyErr_SetString" title="PyErr_SetString"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_SetString()</span></code></a> 來引發 <code class="xref py py-exc docutils literal notranslate"><span class="pre">spam.error</span></code> 例外，如下所示：</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span>
@@ -335,7 +366,7 @@
 <section id="the-module-s-method-table-and-initialization-function">
 <span id="methodtable"></span><h2><span class="section-number">1.4. </span>模組的方法表和初始化函式<a class="headerlink" href="#the-module-s-method-table-and-initialization-function" title="連結到這個標頭">¶</a></h2>
 <p>我承諾過要展示 <code class="xref c c-func docutils literal notranslate"><span class="pre">spam_system()</span></code> 是如何從 Python 程式中呼叫的。首先，我們需要在「方法表」中列出它的名稱和位址：</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">PyMethodDef</span><span class="w"> </span><span class="n">SpamMethods</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">PyMethodDef</span><span class="w"> </span><span class="n">spam_methods</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="p">...</span>
 <span class="w">    </span><span class="p">{</span><span class="s">&quot;system&quot;</span><span class="p">,</span><span class="w">  </span><span class="n">spam_system</span><span class="p">,</span><span class="w"> </span><span class="n">METH_VARARGS</span><span class="p">,</span>
 <span class="w">     </span><span class="s">&quot;Execute a shell command.&quot;</span><span class="p">},</span>
@@ -348,13 +379,10 @@
 <p>當只使用 <code class="docutils literal notranslate"><span class="pre">METH_VARARGS</span></code> 時，函式應預期 Python 層級的參數是以元組形式傳入且能夠接受以 <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTuple" title="PyArg_ParseTuple"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code></a> 進行剖析；有關此函式的更多資訊將在下面提供。</p>
 <p>如果要將關鍵字引數傳給函式，可以在第三個欄位設定 <a class="reference internal" href="../c-api/structures.html#c.METH_KEYWORDS" title="METH_KEYWORDS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">METH_KEYWORDS</span></code></a> 位元。在這種情況下，C 函式應該要能接受第三個 <code class="docutils literal notranslate"><span class="pre">PyObject</span> <span class="pre">*</span></code> 參數，這個參數將會是關鍵字的字典。可使用 <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTupleAndKeywords" title="PyArg_ParseTupleAndKeywords"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTupleAndKeywords()</span></code></a> 來剖析這種函式的引數。</p>
 <p>方法表必須在模組定義結構中被參照：</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">PyModuleDef</span><span class="w"> </span><span class="n">spammodule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">PyModuleDef_HEAD_INIT</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;spam&quot;</span><span class="p">,</span><span class="w">   </span><span class="cm">/* 模組名稱 */</span>
-<span class="w">    </span><span class="n">spam_doc</span><span class="p">,</span><span class="w"> </span><span class="cm">/* 模組文件，可能為 NULL */</span>
-<span class="w">    </span><span class="mi">-1</span><span class="p">,</span><span class="w">       </span><span class="cm">/* 模組的個別直譯器狀態的大小，</span>
-<span class="cm">                 如果模組將狀態保存在全域變數中則為 -1 */</span>
-<span class="w">    </span><span class="n">SpamMethods</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">PyModuleDef</span><span class="w"> </span><span class="n">spam_module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="w">    </span><span class="p">.</span><span class="n">m_methods</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">spam_methods</span><span class="p">,</span>
+<span class="w">    </span><span class="p">...</span>
 <span class="p">};</span>
 </pre></div>
 </div>
@@ -362,12 +390,15 @@
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyMODINIT_FUNC</span>
 <span class="nf">PyInit_spam</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">PyModule_Create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">spammodule</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">PyModuleDef_Init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">spam_module</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </div>
 <p>請注意，<a class="reference internal" href="../c-api/intro.html#c.PyMODINIT_FUNC" title="PyMODINIT_FUNC"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PyMODINIT_FUNC</span></code></a> 宣告函式的回傳型別為 <code class="docutils literal notranslate"><span class="pre">PyObject</span> <span class="pre">*</span></code>、宣告平台所需的任何特殊連結宣告、並針對 C++ 宣告函式為 <code class="docutils literal notranslate"><span class="pre">extern</span> <span class="pre">&quot;C&quot;</span></code>。</p>
-<p>當 Python 程式第一次引入模組 <code class="xref py py-mod docutils literal notranslate"><span class="pre">spam</span></code> 時，<code class="xref c c-func docutils literal notranslate"><span class="pre">PyInit_spam()</span></code> 會被呼叫。（有關嵌入 Python 的註解請參見下文。）它會呼叫回傳一個模組物件的 <a class="reference internal" href="../c-api/module.html#c.PyModule_Create" title="PyModule_Create"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_Create()</span></code></a>，並根據在模組定義中所找到的表（一個 <a class="reference internal" href="../c-api/structures.html#c.PyMethodDef" title="PyMethodDef"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMethodDef</span></code></a> 結構的陣列）將內建的函式物件插入到新建立的模組中。<a class="reference internal" href="../c-api/module.html#c.PyModule_Create" title="PyModule_Create"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_Create()</span></code></a> 會回傳一個指向它建立之模組物件的指標。對於某些錯誤情況，它可能會以嚴重錯誤的形式來中止；如果模組無法令人滿意地被初始化，它也會回傳 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>。初始化函式必須把模組物件回傳給它的呼叫者，這樣它才會被插入到 <code class="docutils literal notranslate"><span class="pre">sys.modules</span></code> 中。</p>
+<p><code class="xref c c-func docutils literal notranslate"><span class="pre">PyInit_spam()</span></code> is called when each interpreter imports its module
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">spam</span></code> for the first time.  (See below for comments about embedding Python.)
+A pointer to the module definition must be returned via <a class="reference internal" href="../c-api/module.html#c.PyModuleDef_Init" title="PyModuleDef_Init"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModuleDef_Init()</span></code></a>,
+so that the import machinery can create the module and store it in <code class="docutils literal notranslate"><span class="pre">sys.modules</span></code>.</p>
 <p>嵌入 Python 時，除非在 <code class="xref c c-data docutils literal notranslate"><span class="pre">PyImport_Inittab</span></code> 表中有相關條目，否則不會自動呼叫 <code class="xref c c-func docutils literal notranslate"><span class="pre">PyInit_spam()</span></code> 函式。要將模組加入初始化表，請使用 <a class="reference internal" href="../c-api/import.html#c.PyImport_AppendInittab" title="PyImport_AppendInittab"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyImport_AppendInittab()</span></code></a> 並在隨後選擇性地將該模組引入：</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#define PY_SSIZE_T_CLEAN</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;Python.h&gt;</span>
@@ -420,13 +451,18 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>從 <code class="docutils literal notranslate"><span class="pre">sys.modules</span></code> 中移除項目，或在一個行程中將已編譯模組引入到多個直譯器中（或在沒有 <code class="xref c c-func docutils literal notranslate"><span class="pre">exec()</span></code> 介入的情況下使用 <code class="xref c c-func docutils literal notranslate"><span class="pre">fork()</span></code>）可能會對某些擴充模組造成問題。擴充模組作者在初始化內部資料結構時應特別小心。</p>
+<p>If you declare a global variable or a local static one, the module may
+experience unintended side-effects on re-initialisation, for example when
+removing entries from <code class="docutils literal notranslate"><span class="pre">sys.modules</span></code> or importing compiled modules into
+multiple interpreters within a process
+(or following a <code class="xref c c-func docutils literal notranslate"><span class="pre">fork()</span></code> without an intervening <code class="xref c c-func docutils literal notranslate"><span class="pre">exec()</span></code>).
+If module state is not yet fully <a class="reference internal" href="../howto/isolating-extensions.html#isolating-extensions-howto"><span class="std std-ref">isolated</span></a>,
+authors should consider marking the module as having no support for subinterpreters
+(via <a class="reference internal" href="../c-api/module.html#c.Py_MOD_MULTIPLE_INTERPRETERS_NOT_SUPPORTED" title="Py_MOD_MULTIPLE_INTERPRETERS_NOT_SUPPORTED"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_MOD_MULTIPLE_INTERPRETERS_NOT_SUPPORTED</span></code></a>).</p>
 </div>
-<p>Python 原始碼發行版本中包含了一個更實質的範例模組 <code class="file docutils literal notranslate"><span class="pre">Modules/xxmodule.c</span></code>。這個檔案可以當作模板使用，也可以簡單地當作範例來閱讀。</p>
-<div class="admonition note">
-<p class="admonition-title">備註</p>
-<p>不像我們的 <code class="docutils literal notranslate"><span class="pre">spam</span></code> 範例，<code class="docutils literal notranslate"><span class="pre">xxmodule</span></code> 使用了<em>多階段初始化 (multi-phase initialization)</em>（Python 3.5 新增），其中的 PyModuleDef 結構會從 <code class="docutils literal notranslate"><span class="pre">PyInit_spam</span></code> 回傳，而模組的建立則交由引入機制來完成。關於多階段初始化的詳細資訊請參閱 <span class="target" id="index-6"></span><a class="pep reference external" href="https://peps.python.org/pep-0489/"><strong>PEP 489</strong></a>。</p>
-</div>
+<p>A more substantial example module is included in the Python source distribution
+as <code class="file docutils literal notranslate"><span class="pre">Modules/xxlimited.c</span></code>.  This file may be used as a template or simply
+read as an example.</p>
 </section>
 <section id="compilation-and-linkage">
 <span id="compilation"></span><h2><span class="section-number">1.5. </span>Compilation and Linkage<a class="headerlink" href="#compilation-and-linkage" title="連結到這個標頭">¶</a></h2>
@@ -508,7 +544,7 @@ be part of a module definition:</p>
 reference count of an object and are safe in the presence of <code class="docutils literal notranslate"><span class="pre">NULL</span></code> pointers
 (but note that <em>temp</em> will not be  <code class="docutils literal notranslate"><span class="pre">NULL</span></code> in this context).  More info on them
 in section <a class="reference internal" href="#refcounts"><span class="std std-ref">Reference Counts</span></a>.</p>
-<p id="index-1">Later, when it is time to call the function, you call the C function
+<p id="index-0">Later, when it is time to call the function, you call the C function
 <a class="reference internal" href="../c-api/call.html#c.PyObject_CallObject" title="PyObject_CallObject"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_CallObject()</span></code></a>.  This function has two arguments, both pointers to
 arbitrary Python objects: the Python function, and the argument list.  The
 argument list must always be a tuple object, whose length is the number of
@@ -591,7 +627,7 @@ the above example, we use <a class="reference internal" href="../c-api/arg.html#
 </section>
 <section id="extracting-parameters-in-extension-functions">
 <span id="parsetuple"></span><h2><span class="section-number">1.7. </span>Extracting Parameters in Extension Functions<a class="headerlink" href="#extracting-parameters-in-extension-functions" title="連結到這個標頭">¶</a></h2>
-<p id="index-2">The <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTuple" title="PyArg_ParseTuple"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code></a> function is declared as follows:</p>
+<p id="index-1">The <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTuple" title="PyArg_ParseTuple"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code></a> function is declared as follows:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">PyArg_ParseTuple</span><span class="p">(</span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">format</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span>
 </pre></div>
 </div>
@@ -668,7 +704,7 @@ at least overwrite random bits in memory.  So be careful!</p>
 </section>
 <section id="keyword-parameters-for-extension-functions">
 <span id="parsetupleandkeywords"></span><h2><span class="section-number">1.8. </span>Keyword Parameters for Extension Functions<a class="headerlink" href="#keyword-parameters-for-extension-functions" title="連結到這個標頭">¶</a></h2>
-<p id="index-3">The <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTupleAndKeywords" title="PyArg_ParseTupleAndKeywords"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTupleAndKeywords()</span></code></a> function is declared as follows:</p>
+<p id="index-2">The <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTupleAndKeywords" title="PyArg_ParseTupleAndKeywords"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTupleAndKeywords()</span></code></a> function is declared as follows:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="nf">PyArg_ParseTupleAndKeywords</span><span class="p">(</span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">,</span><span class="w"> </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">kwdict</span><span class="p">,</span>
 <span class="w">                                </span><span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">format</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">*</span><span class="n">kwlist</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span>
 </pre></div>
@@ -686,7 +722,7 @@ it returns false and raises an appropriate exception.</p>
 passed in which are not present in the <em>kwlist</em> will cause <a class="reference internal" href="../library/exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a> to
 be raised.</p>
 </div>
-<p id="index-4">Here is an example module which uses keywords, based on an example by Geoff
+<p id="index-3">Here is an example module which uses keywords, based on an example by Geoff
 Philbrick (<a class="reference external" href="mailto:philbrick&#37;&#52;&#48;hks&#46;com">philbrick<span>&#64;</span>hks<span>&#46;</span>com</a>):</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#define PY_SSIZE_T_CLEAN</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;Python.h&gt;</span>
@@ -722,18 +758,17 @@ Philbrick (<a class="reference external" href="mailto:philbrick&#37;&#52;&#48;hk
 <span class="w">    </span><span class="p">{</span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">}</span><span class="w">   </span><span class="cm">/* sentinel */</span>
 <span class="p">};</span>
 
-<span class="k">static</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">PyModuleDef</span><span class="w"> </span><span class="n">keywdargmodule</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">PyModuleDef_HEAD_INIT</span><span class="p">,</span>
-<span class="w">    </span><span class="s">&quot;keywdarg&quot;</span><span class="p">,</span>
-<span class="w">    </span><span class="nb">NULL</span><span class="p">,</span>
-<span class="w">    </span><span class="mi">-1</span><span class="p">,</span>
-<span class="w">    </span><span class="n">keywdarg_methods</span>
+<span class="k">static</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">PyModuleDef</span><span class="w"> </span><span class="n">keywdarg_module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">.</span><span class="n">m_base</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyModuleDef_HEAD_INIT</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">m_name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;keywdarg&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">m_size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">m_methods</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">keywdarg_methods</span><span class="p">,</span>
 <span class="p">};</span>
 
 <span class="n">PyMODINIT_FUNC</span>
 <span class="nf">PyInit_keywdarg</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">PyModule_Create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">keywdargmodule</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">PyModuleDef_Init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">keywdarg_module</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -961,8 +996,9 @@ and someone spent a considerable amount of time in a C debugger to figure out
 why his <code class="xref py py-meth docutils literal notranslate"><span class="pre">__del__()</span></code> methods would fail...</p>
 <p>The second case of problems with a borrowed reference is a variant involving
 threads.  Normally, multiple threads in the Python interpreter can't get in each
-other's way, because there is a global lock protecting Python's entire object
-space.  However, it is possible to temporarily release this lock using the macro
+other's way, because there is a <a class="reference internal" href="../glossary.html#term-global-interpreter-lock"><span class="xref std std-term">global lock</span></a>
+protecting Python's entire object space.
+However, it is possible to temporarily release this lock using the macro
 <a class="reference internal" href="../c-api/init.html#c.Py_BEGIN_ALLOW_THREADS" title="Py_BEGIN_ALLOW_THREADS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_BEGIN_ALLOW_THREADS</span></code></a>, and to re-acquire it using
 <a class="reference internal" href="../c-api/init.html#c.Py_END_ALLOW_THREADS" title="Py_END_ALLOW_THREADS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_END_ALLOW_THREADS</span></code></a>.  This is common around blocking I/O calls, to
 let other threads use the processor while waiting for the I/O to complete.
@@ -1116,18 +1152,12 @@ reality (such as adding &quot;spam&quot; to every command). This function
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">#define</span></code> is used to tell the header file that it is being included in the
-exporting module, not a client module. Finally, the module's initialization
-function must take care of initializing the C API pointer array:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyMODINIT_FUNC</span>
-<span class="nf">PyInit_spam</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+exporting module, not a client module. Finally, the module's <a class="reference internal" href="../c-api/module.html#c.Py_mod_exec" title="Py_mod_exec"><code class="xref c c-data docutils literal notranslate"><span class="pre">mod_exec</span></code></a> function must take care of initializing the C API pointer array:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span>
+<span class="nf">spam_module_exec</span><span class="p">(</span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">m</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">m</span><span class="p">;</span>
 <span class="w">    </span><span class="k">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">PySpam_API</span><span class="p">[</span><span class="n">PySpam_API_pointers</span><span class="p">];</span>
 <span class="w">    </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">c_api_object</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyModule_Create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">spammodule</span><span class="p">);</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
 <span class="w">    </span><span class="cm">/* Initialize the C API pointer array */</span>
 <span class="w">    </span><span class="n">PySpam_API</span><span class="p">[</span><span class="n">PySpam_System_NUM</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">PySpam_System</span><span class="p">;</span>
@@ -1136,11 +1166,10 @@ function must take care of initializing the C API pointer array:</p>
 <span class="w">    </span><span class="n">c_api_object</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyCapsule_New</span><span class="p">((</span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="n">PySpam_API</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;spam._C_API&quot;</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
 
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PyModule_Add</span><span class="p">(</span><span class="n">m</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;_C_API&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">c_api_object</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">        </span><span class="n">Py_DECREF</span><span class="p">(</span><span class="n">m</span><span class="p">);</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
 <span class="w">    </span><span class="p">}</span>
 
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -1199,19 +1228,15 @@ like this:</p>
 </div>
 <p>All that a client module must do in order to have access to the function
 <code class="xref c c-func docutils literal notranslate"><span class="pre">PySpam_System()</span></code> is to call the function (or rather macro)
-<code class="xref c c-func docutils literal notranslate"><span class="pre">import_spam()</span></code> in its initialization function:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyMODINIT_FUNC</span>
-<span class="nf">PyInit_client</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<code class="xref c c-func docutils literal notranslate"><span class="pre">import_spam()</span></code> in its <a class="reference internal" href="../c-api/module.html#c.Py_mod_exec" title="Py_mod_exec"><code class="xref c c-data docutils literal notranslate"><span class="pre">mod_exec</span></code></a> function:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span>
+<span class="nf">client_module_exec</span><span class="p">(</span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">m</span><span class="p">)</span>
 <span class="p">{</span>
-<span class="w">    </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">m</span><span class="p">;</span>
-
-<span class="w">    </span><span class="n">m</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyModule_Create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">clientmodule</span><span class="p">);</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">m</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">import_spam</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span>
-<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">import_spam</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
 <span class="w">    </span><span class="cm">/* additional initialization can happen here */</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">m</span><span class="p">;</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
 </div>
@@ -1340,7 +1365,7 @@ this is still found in much existing code.</p>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.13.3 Documentation</a> &#187;
+      <a href="../index.html">3.13.5 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >擴充和嵌入 Python 直譯器</a> &#187;</li>
@@ -1391,7 +1416,7 @@ this is still found in much existing code.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br>
     <br>
-      最後更新於 5月 26, 2025 (03:33 UTC)。
+      最後更新於 6月 22, 2025 (07:36 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
