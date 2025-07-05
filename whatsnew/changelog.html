@@ -1360,6 +1360,31 @@ with --enable-optimizations.</p></li>
 <section id="security">
 <h3>Security<a class="headerlink" href="#security" title="連結到這個標頭">¶</a></h3>
 <ul class="simple">
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/135661">gh-135661</a>: Fix parsing start and end tags in
+<a class="reference internal" href="../library/html.parser.html#html.parser.HTMLParser" title="html.parser.HTMLParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">html.parser.HTMLParser</span></code></a> according to the HTML5 standard.</p>
+<ul>
+<li><p>Whitespaces no longer accepted between <code class="docutils literal notranslate"><span class="pre">&lt;/</span></code> and the tag name.
+E.g. <code class="docutils literal notranslate"><span class="pre">&lt;/</span> <span class="pre">script&gt;</span></code> does not end the script section.</p></li>
+<li><p>Vertical tabulation (<code class="docutils literal notranslate"><span class="pre">\v</span></code>) and non-ASCII whitespaces no longer recognized
+as whitespaces. The only whitespaces are <code class="docutils literal notranslate"><span class="pre">\t\n\r\f</span></code> and space.</p></li>
+<li><p>Null character (U+0000) no longer ends the tag name.</p></li>
+<li><p>Attributes and slashes after the tag name in end tags are now ignored,
+instead of terminating after the first <code class="docutils literal notranslate"><span class="pre">&gt;</span></code> in quoted attribute value.
+E.g. <code class="docutils literal notranslate"><span class="pre">&lt;/script/foo=&quot;&gt;&quot;/&gt;</span></code>.</p></li>
+<li><p>Multiple slashes and whitespaces between the last attribute and closing <code class="docutils literal notranslate"><span class="pre">&gt;</span></code>
+are now ignored in both start and end tags. E.g. <code class="docutils literal notranslate"><span class="pre">&lt;a</span> <span class="pre">foo=bar/</span> <span class="pre">//&gt;</span></code>.</p></li>
+<li><p>Multiple <code class="docutils literal notranslate"><span class="pre">=</span></code> between attribute name and value are no longer collapsed.
+E.g. <code class="docutils literal notranslate"><span class="pre">&lt;a</span> <span class="pre">foo==bar&gt;</span></code> produces attribute &quot;foo&quot; with value &quot;=bar&quot;.</p></li>
+<li><p>Whitespaces between the <code class="docutils literal notranslate"><span class="pre">=</span></code> separator and attribute name or value are no
+longer ignored. E.g. <code class="docutils literal notranslate"><span class="pre">&lt;a</span> <span class="pre">foo</span> <span class="pre">=bar&gt;</span></code> produces two attributes &quot;foo&quot; and
+&quot;=bar&quot;, both with value None; <code class="docutils literal notranslate"><span class="pre">&lt;a</span> <span class="pre">foo=</span> <span class="pre">bar&gt;</span></code> produces two attributes:
+&quot;foo&quot; with value &quot;&quot; and &quot;bar&quot; with value None.</p></li>
+</ul>
+</li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/102555">gh-102555</a>: Fix comment parsing in <a class="reference internal" href="../library/html.parser.html#html.parser.HTMLParser" title="html.parser.HTMLParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">html.parser.HTMLParser</span></code></a>
+according to the HTML5 standard. <code class="docutils literal notranslate"><span class="pre">--!&gt;</span></code> now ends the comment. <code class="docutils literal notranslate"><span class="pre">--</span> <span class="pre">&gt;</span></code>
+no longer ends the comment. Support abnormally ended empty comments
+<code class="docutils literal notranslate"><span class="pre">&lt;--&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">&lt;---&gt;</span></code>.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/135462">gh-135462</a>: Fix quadratic complexity in processing specially crafted input
 in <a class="reference internal" href="../library/html.parser.html#html.parser.HTMLParser" title="html.parser.HTMLParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">html.parser.HTMLParser</span></code></a>. End-of-file errors are now handled
 according to the HTML5 specs -- comments and declarations are
@@ -1387,11 +1412,21 @@ before 3.13.4.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/135878">gh-135878</a>: Fixes a crash of <a class="reference internal" href="../library/types.html#types.SimpleNamespace" title="types.SimpleNamespace"><code class="xref py py-class docutils literal notranslate"><span class="pre">types.SimpleNamespace</span></code></a> on <a class="reference internal" href="../glossary.html#term-free-threading"><span class="xref std std-term">free
 threading</span></a> builds, when several threads were calling its
 <a class="reference internal" href="../reference/datamodel.html#object.__repr__" title="object.__repr__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__repr__()</span></code></a> method at the same time.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/135836">gh-135836</a>: Fix <a class="reference internal" href="../library/exceptions.html#IndexError" title="IndexError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">IndexError</span></code></a> in <a class="reference internal" href="../library/asyncio-eventloop.html#asyncio.loop.create_connection" title="asyncio.loop.create_connection"><code class="xref py py-meth docutils literal notranslate"><span class="pre">asyncio.loop.create_connection()</span></code></a>
+that could occur when non-<a class="reference internal" href="../library/exceptions.html#OSError" title="OSError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code></a> exception is raised during
+connection and socket's <code class="docutils literal notranslate"><span class="pre">close()</span></code> raises <code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code>.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/135836">gh-135836</a>: Fix <a class="reference internal" href="../library/exceptions.html#IndexError" title="IndexError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">IndexError</span></code></a> in <a class="reference internal" href="../library/asyncio-eventloop.html#asyncio.loop.create_connection" title="asyncio.loop.create_connection"><code class="xref py py-meth docutils literal notranslate"><span class="pre">asyncio.loop.create_connection()</span></code></a>
+that could occur when the Happy Eyeballs algorithm resulted in an empty
+exceptions list during connection attempts.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/135855">gh-135855</a>: Raise <a class="reference internal" href="../library/exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a> instead of <a class="reference internal" href="../library/exceptions.html#SystemError" title="SystemError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">SystemError</span></code></a> when
 <code class="xref py py-func docutils literal notranslate"><span class="pre">_interpreters.set___main___attrs()</span></code> is passed a non-dict object.
 Patch by Brian Schubert.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/135815">gh-135815</a>: <a class="reference internal" href="../library/netrc.html#module-netrc" title="netrc: Loading of .netrc files."><code class="xref py py-mod docutils literal notranslate"><span class="pre">netrc</span></code></a>: skip security checks if <a class="reference internal" href="../library/os.html#os.getuid" title="os.getuid"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.getuid()</span></code></a> is
 missing. Patch by Bénédikt Tran.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/135640">gh-135640</a>: Address bug where it was possible to call
+<a class="reference internal" href="../library/xml.etree.elementtree.html#xml.etree.ElementTree.ElementTree.write" title="xml.etree.ElementTree.ElementTree.write"><code class="xref py py-func docutils literal notranslate"><span class="pre">xml.etree.ElementTree.ElementTree.write()</span></code></a> on an ElementTree object
+with an invalid root element. This behavior blanked the file passed to
+<code class="docutils literal notranslate"><span class="pre">write</span></code> if it already existed.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/135497">gh-135497</a>: Fix <a class="reference internal" href="../library/os.html#os.getlogin" title="os.getlogin"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.getlogin()</span></code></a> failing for longer usernames on
 BSD-based platforms.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/135487">gh-135487</a>: Fix <code class="xref py py-meth docutils literal notranslate"><span class="pre">reprlib.Repr.repr_int()</span></code> when given integers with
@@ -1399,6 +1434,9 @@ more than <a class="reference internal" href="../library/sys.html#sys.get_int_ma
 Tran.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/135335">gh-135335</a>: <a class="reference internal" href="../library/multiprocessing.html#module-multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">multiprocessing</span></code></a>: Flush <code class="docutils literal notranslate"><span class="pre">stdout</span></code> and <code class="docutils literal notranslate"><span class="pre">stderr</span></code> after
 preloading modules in the <code class="docutils literal notranslate"><span class="pre">forkserver</span></code>.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/135069">gh-135069</a>: Fix the &quot;Invalid error handling&quot; exception in
+<code class="xref py py-class docutils literal notranslate"><span class="pre">encodings.idna.IncrementalDecoder</span></code> to correctly replace the
+'errors' parameter.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/133439">gh-133439</a>: Fix dot commands with trailing spaces are mistaken for
 multi-line SQL statements in the sqlite3 command-line interface.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/132969">gh-132969</a>: Prevent the <a class="reference internal" href="../library/concurrent.futures.html#concurrent.futures.ProcessPoolExecutor" title="concurrent.futures.ProcessPoolExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessPoolExecutor</span></code></a>
@@ -1411,6 +1449,10 @@ within the pool.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/85702">gh-85702</a>: If <code class="docutils literal notranslate"><span class="pre">zoneinfo._common.load_tzdata</span></code> is given a package without a
 resource a <code class="docutils literal notranslate"><span class="pre">ZoneInfoNotFoundError</span></code> is raised rather than a
 <a class="reference internal" href="../library/exceptions.html#IsADirectoryError" title="IsADirectoryError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">IsADirectoryError</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/130664">gh-130664</a>: Handle corner-case for <a class="reference internal" href="../library/fractions.html#fractions.Fraction" title="fractions.Fraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">Fraction</span></code></a>'s
+formatting: treat zero-padding (preceding the width field by a zero
+(<code class="docutils literal notranslate"><span class="pre">'0'</span></code>) character) as an equivalent to a fill character of <code class="docutils literal notranslate"><span class="pre">'0'</span></code> with
+an alignment type of <code class="docutils literal notranslate"><span class="pre">'='</span></code>, just as in case of <a class="reference internal" href="../library/functions.html#float" title="float"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>'s.</p></li>
 </ul>
 </section>
 <section id="documentation">
@@ -39699,7 +39741,7 @@ Kilburn.</p></li>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br>
     <br>
-      最後更新於 7月 01, 2025 (10:10 UTC)。
+      最後更新於 7月 05, 2025 (13:04 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
