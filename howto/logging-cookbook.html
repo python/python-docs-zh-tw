@@ -151,6 +151,7 @@
 <li><a class="reference internal" href="#a-qt-gui-for-logging">A Qt GUI for logging</a></li>
 <li><a class="reference internal" href="#logging-to-syslog-with-rfc5424-support">Logging to syslog with RFC5424 support</a></li>
 <li><a class="reference internal" href="#how-to-treat-a-logger-like-an-output-stream">How to treat a logger like an output stream</a></li>
+<li><a class="reference internal" href="#how-to-uniformly-handle-newlines-in-logging-output">How to uniformly handle newlines in logging output</a></li>
 <li><a class="reference internal" href="#patterns-to-avoid">Patterns to avoid</a><ul>
 <li><a class="reference internal" href="#opening-the-same-log-file-multiple-times">Opening the same log file multiple times</a></li>
 <li><a class="reference internal" href="#using-loggers-as-attributes-in-a-class-or-passing-them-as-parameters">Using loggers as attributes in a class or passing them as parameters</a></li>
@@ -4035,6 +4036,62 @@ WARNING:demo:ZeroDivisionError: division by zero
 </pre></div>
 </div>
 </section>
+<section id="how-to-uniformly-handle-newlines-in-logging-output">
+<h2>How to uniformly handle newlines in logging output<a class="headerlink" href="#how-to-uniformly-handle-newlines-in-logging-output" title="連結到這個標頭">¶</a></h2>
+<p>Usually, messages that are logged (say to console or file) consist of a single
+line of text. However, sometimes there is a need to handle messages with
+multiple lines - whether because a logging format string contains newlines, or
+logged data contains newlines. If you want to handle such messages uniformly, so
+that each line in the logged message appears uniformly formatted as if it was
+logged separately, you can do this using a handler mixin, as in the following
+snippet:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Assume this is in a module mymixins.py</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">MultilineMixin</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">getMessage</span><span class="p">()</span>
+        <span class="k">if</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">s</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+            <span class="n">rec</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+            <span class="n">rec</span><span class="o">.</span><span class="n">args</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">:</span>
+                <span class="n">rec</span><span class="o">.</span><span class="n">msg</span> <span class="o">=</span> <span class="n">line</span>
+                <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">rec</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can use the mixin as in the following script:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">mymixins</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultilineMixin</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">StreamHandler</span><span class="p">(</span><span class="n">MultilineMixin</span><span class="p">,</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1"> </span><span class="si">%(levelname)-9s</span><span class="s1"> </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">,</span>
+                        <span class="n">handlers</span> <span class="o">=</span> <span class="p">[</span><span class="n">StreamHandler</span><span class="p">()])</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Single line&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Multiple lines:</span><span class="se">\n</span><span class="s1">fool me once ...&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Another single line&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Multiple lines:</span><span class="se">\n</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;fool me ...</span><span class="se">\n</span><span class="s1">can</span><span class="se">\&#39;</span><span class="s1">t get fooled again&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The script, when run, prints something like:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2025-07-02 13:54:47,234 DEBUG     Single line
+2025-07-02 13:54:47,234 DEBUG     Multiple lines:
+2025-07-02 13:54:47,234 DEBUG     fool me once ...
+2025-07-02 13:54:47,234 DEBUG     Another single line
+2025-07-02 13:54:47,234 DEBUG     Multiple lines:
+2025-07-02 13:54:47,234 DEBUG     fool me ...
+2025-07-02 13:54:47,234 DEBUG     can&#39;t get fooled again
+</pre></div>
+</div>
+</section>
 <section id="patterns-to-avoid">
 <h2>Patterns to avoid<a class="headerlink" href="#patterns-to-avoid" title="連結到這個標頭">¶</a></h2>
 <p>Although the preceding sections have described ways of doing things you might
@@ -4192,6 +4249,7 @@ more fine-grained than that).</p>
 <li><a class="reference internal" href="#a-qt-gui-for-logging">A Qt GUI for logging</a></li>
 <li><a class="reference internal" href="#logging-to-syslog-with-rfc5424-support">Logging to syslog with RFC5424 support</a></li>
 <li><a class="reference internal" href="#how-to-treat-a-logger-like-an-output-stream">How to treat a logger like an output stream</a></li>
+<li><a class="reference internal" href="#how-to-uniformly-handle-newlines-in-logging-output">How to uniformly handle newlines in logging output</a></li>
 <li><a class="reference internal" href="#patterns-to-avoid">Patterns to avoid</a><ul>
 <li><a class="reference internal" href="#opening-the-same-log-file-multiple-times">Opening the same log file multiple times</a></li>
 <li><a class="reference internal" href="#using-loggers-as-attributes-in-a-class-or-passing-them-as-parameters">Using loggers as attributes in a class or passing them as parameters</a></li>
@@ -4311,7 +4369,7 @@ more fine-grained than that).</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br>
     <br>
-      最後更新於 7月 07, 2025 (01:59 UTC)。
+      最後更新於 7月 07, 2025 (10:51 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
