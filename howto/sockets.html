@@ -267,7 +267,7 @@
 <p>現在有兩組可供通訊使用的動詞。你可以使用 <code class="docutils literal notranslate"><span class="pre">send</span></code> 和 <code class="docutils literal notranslate"><span class="pre">recv</span></code>，或者可以將用戶端 socket 轉換成類似檔案的形式，並使用 <code class="docutils literal notranslate"><span class="pre">read</span></code> 和 <code class="docutils literal notranslate"><span class="pre">write</span></code>。後者是 Java 中呈現 socket 的方式。我不打算在這裡討論它，只是提醒你需要在 socket 上使用 <code class="docutils literal notranslate"><span class="pre">flush</span></code>。這些是緩衝的「檔案」，一個常見的錯誤是使用 <code class="docutils literal notranslate"><span class="pre">write</span></code> 寫入某些內容，然後直接 <code class="docutils literal notranslate"><span class="pre">read</span></code> 回覆。如果不使用 <code class="docutils literal notranslate"><span class="pre">flush</span></code>，你可能會一直等待這個回覆，因為請求可能還在你的輸出緩衝中。</p>
 <p>現在我們來到 sockets 的主要障礙 - <code class="docutils literal notranslate"><span class="pre">send</span></code> 和 <code class="docutils literal notranslate"><span class="pre">recv</span></code> 操作的是網路緩衝區。他們不一定會處理你提供給它們的所有位元組（或者是你期望它處理的位元組），因為它們主要的重點是處理網路緩衝區。一般來說，它們會在關聯的網路衝區已滿 (<code class="docutils literal notranslate"><span class="pre">send</span></code>) 或已清空 (<code class="docutils literal notranslate"><span class="pre">recv</span></code>) 時回傳，然後告訴你它們處理了多少位元組。<em>你</em> 的責任是一直呼叫它們直到你所有的訊息處理完成。</p>
 <p>當 <code class="docutils literal notranslate"><span class="pre">recv</span></code> 回傳「零位元組 (0 bytes)」時，就表示另一端已經關閉（或著正在關閉）連線。你再也不能從這個連線上取得任何資料了。你可能還是可以成功發送資料；我稍後會對此進行更詳細的解釋。</p>
-<p>像 HTTP 這樣的協議只使用一個 socket 進行一次傳輸，用戶端發送一個請求，然後讀取一個回覆。就這樣，然後這個 socket 就會被銷毀。這表示者用戶端可以通過接收「零位元組」來檢測回覆的結束。</p>
+<p>像 HTTP 這樣的協定只使用一個 socket 進行一次傳輸，用戶端發送一個請求，然後讀取一個回覆。就這樣，然後這個 socket 就會被銷毀。這表示者用戶端可以通過接收「零位元組」來檢測回覆的結束。</p>
 <p>但是如果你打算在之後的傳輸中重新利用 socket 的話，你需要明白<em>socket 中是不存在</em> <abbr>EOT （傳輸結束）</abbr>。重申一次：如果一個 socket 的 <code class="docutils literal notranslate"><span class="pre">send</span></code> 或 <code class="docutils literal notranslate"><span class="pre">recv</span></code> 處理了「零位元組」後回傳，表示連線已經斷開。如果連線<em>沒有</em> 斷開，你可能會永遠處於等待 <code class="docutils literal notranslate"><span class="pre">recv</span></code> 的狀態，因為（就目前來說）socket <em>不會</em> 告訴你沒有更多資料可以讀取了。現在，如果你稍微思考一下，你就會意識到 socket 的一個基本事實：<em>訊息要麼是一個固定的長度（不好的做法），要麼是可以被分隔的（普通的做法），要麼是指定其長度（更好地做法），要麼通過關閉連線來結束。</em>完全由你來決定要使用哪種方式（但有些方法比其他方法來的更好）。</p>
 <p>假設你不想結束連線，最簡單的方式就是使用固定長度的訊息：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">MySocket</span><span class="p">:</span>
@@ -307,7 +307,7 @@
 </div>
 <p>發送部分的程式碼幾乎可用於任何訊息的傳送方式 - 在 Python 中你發送一個字串，可以用 <code class="docutils literal notranslate"><span class="pre">len()</span></code> 來確認他的長度（即使字串包含了 <code class="docutils literal notranslate"><span class="pre">\0</span></code> 字元）。在這裡，主要是接收的程式碼變得更複雜一些。（在 C 語言中，情況沒有變得更糟，只是如果訊息中包含了 <code class="docutils literal notranslate"><span class="pre">\0</span></code> 字元，你就不能使用 <code class="docutils literal notranslate"><span class="pre">strlen</span></code> 函式。）</p>
 <p>最簡單的改進方法是將訊息的第一個字元表示訊息的類型，並根據訊息的類型來決定訊息的長度。現在你需要使用兩次 <code class="docutils literal notranslate"><span class="pre">recv</span></code> - 第一次用於接收（至少）第一個字元來得知長度，第二次用於在迴圈中接收剩下的訊息。如果你決定使用分隔符號的方式，你將會以某個任意的區塊大小進行接收（4096 或 8192 通常是網路緩衝區大小的良好選擇），並在收到的內容中掃描分隔符號。</p>
-<p>需要注意的一個複雜情況是，如果你的通訊協議允許連續發送多個訊息（沒有任何回應），並且你傳遞給 <code class="docutils literal notranslate"><span class="pre">recv</span></code> 函式一個任意的區塊大小，最後有可能讀取到下一條訊息的開頭。你需要將其放在一旁並保留下來，直到需要使用的時候。</p>
+<p>需要注意的一個複雜情況是，如果你的通訊協定允許連續發送多個訊息（沒有任何回應），並且你傳遞給 <code class="docutils literal notranslate"><span class="pre">recv</span></code> 函式一個任意的區塊大小，最後有可能讀取到下一條訊息的開頭。你需要將其放在一旁並保留下來，直到需要使用的時候。</p>
 <p>使用長度作為訊息的前綴（例如，使用 5 個數字字元表示）會變得更複雜，因為（信不信由你）你可能無法在一次 <code class="docutils literal notranslate"><span class="pre">recv</span></code> 中獲得所有 5 個字元。在一般使用下，可能不會有這個狀況，但在高負載的網路下，除非使用兩個 <code class="docutils literal notranslate"><span class="pre">recv</span></code> （第一個用於確定長度，第二個用於取得訊息的資料部分），否則你的程式碼很快就會出現錯誤。這令人非常頭痛。同樣的情況也會讓你發現 <code class="docutils literal notranslate"><span class="pre">send</span></code> 並不總能在一次傳輸中完全清除所有內容。儘管已經閱讀了這篇文章，但最終還是無法解決！</p>
 <p>為了節省篇幅、培養你的技能（並保持我的競爭優勢），這些改進方法留給讀者自行練習。現在讓我們開始進行清理工作。</p>
 <section id="binary-data">
@@ -324,7 +324,7 @@
 <p>Python 更進一步地採取自動關閉的步驟，並且當 socket 被垃圾回收機制回收時，如果需要的話，他會自動執行 <code class="docutils literal notranslate"><span class="pre">close</span></code>。但依賴這個機制是一個非常不好的習慣，如果你的 socket 在沒有 <code class="docutils literal notranslate"><span class="pre">close</span></code> 的情況下消失了，那麼另一端的 socket 可能會認為你只是慢了一步，而無期限的等待。<em>請務必</em> 在使用完畢後使用 <code class="docutils literal notranslate"><span class="pre">close</span></code> 關閉你的 sockets。</p>
 <section id="when-sockets-die">
 <h3>Sockets 何時銷毀<a class="headerlink" href="#when-sockets-die" title="連結到這個標頭">¶</a></h3>
-<p>使用阻塞式 socket 最糟糕的地方可能是在另一端突然強制關閉（未執行 <code class="docutils literal notranslate"><span class="pre">close</span></code>）的情況下會發生什麼？你的 socket 很可能會處於阻塞狀態。TCP 是一種可靠的協議，它在放棄連線之前會等待很長很長的時間。如果你正在使用執行緒，整個執行緒基本上已經無法使用。在這方面，你無法做太多事情。只要你不做一些愚蠢的事情，比如在執行阻塞式讀取時持有一個鎖，那麼執行緒並不會消耗太多資源。<em>不要</em>試圖終止執行緒 - 執行緒比行程更有效的部分原因是它們避免了與自動回收資源相關的開銷。換句話說，如果你確實設法終止了執行緒，整個行程可能會出現問題。</p>
+<p>使用阻塞式 socket 最糟糕的地方可能是在另一端突然強制關閉（未執行 <code class="docutils literal notranslate"><span class="pre">close</span></code>）的情況下會發生什麼？你的 socket 很可能會處於阻塞狀態。TCP 是一種可靠的協定，它在放棄連線之前會等待很長很長的時間。如果你正在使用執行緒，整個執行緒基本上已經無法使用。在這方面，你無法做太多事情。只要你不做一些愚蠢的事情，比如在執行阻塞式讀取時持有一個鎖，那麼執行緒並不會消耗太多資源。<em>不要</em>試圖終止執行緒 - 執行緒比行程更有效的部分原因是它們避免了與自動回收資源相關的開銷。換句話說，如果你確實設法終止了執行緒，整個行程可能會出現問題。</p>
 </section>
 </section>
 <section id="non-blocking-sockets">
@@ -490,7 +490,7 @@
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br>
     <br>
-      最後更新於 7月 07, 2025 (16:48 UTC)。
+      最後更新於 7月 07, 2025 (17:49 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
