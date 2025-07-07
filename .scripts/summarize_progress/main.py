@@ -98,7 +98,7 @@ def format_issue_link(url: str) -> str:
 
 
 def format_line_file(dirname: str, filename: str, data: dict) -> str:
-    return f"|[`{filename}`](https://github.com/python/python-docs-zh-tw/tree/3.13/{dirname}/{filename})"
+    return f"|[`{filename}`](https://github.com/python/python-docs-zh-tw/tree/3.13/{dirname}/{filename})" + \
     f"|{data['progress']}|{format_issue_link(data['issue'])}|{data['assignee']}|\r\n"
 
 
