@@ -4091,6 +4091,37 @@ snippet:</p>
 2025-07-02 13:54:47,234 DEBUG     can&#39;t get fooled again
 </pre></div>
 </div>
+<p>If, on the other hand, you are concerned about <a class="reference external" href="https://owasp.org/www-community/attacks/Log_Injection">log injection</a>, you can use a
+formatter which escapes newlines, as per the following example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">EscapingFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="sa">r</span><span class="s1">&#39;\n&#39;</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">StreamHandler</span><span class="p">()</span>
+    <span class="n">h</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">EscapingFormatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1"> </span><span class="si">%(levelname)-9s</span><span class="s1"> </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">))</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">,</span> <span class="n">handlers</span> <span class="o">=</span> <span class="p">[</span><span class="n">h</span><span class="p">])</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Single line&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Multiple lines:</span><span class="se">\n</span><span class="s1">fool me once ...&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Another single line&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Multiple lines:</span><span class="se">\n</span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;fool me ...</span><span class="se">\n</span><span class="s1">can</span><span class="se">\&#39;</span><span class="s1">t get fooled again&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can, of course, use whatever escaping scheme makes the most sense for you.
+The script, when run, should produce output like this:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>2025-07-09 06:47:33,783 DEBUG     Single line
+2025-07-09 06:47:33,783 DEBUG     Multiple lines:\nfool me once ...
+2025-07-09 06:47:33,783 DEBUG     Another single line
+2025-07-09 06:47:33,783 DEBUG     Multiple lines:\nfool me ...\ncan&#39;t get fooled again
+</pre></div>
+</div>
+<p>Escaping behaviour can't be the stdlib default , as it would break backwards
+compatibility.</p>
 </section>
 <section id="patterns-to-avoid">
 <h2>Patterns to avoid<a class="headerlink" href="#patterns-to-avoid" title="連結到這個標頭">¶</a></h2>
@@ -4369,7 +4400,7 @@ more fine-grained than that).</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br>
     <br>
-      最後更新於 7月 07, 2025 (17:49 UTC)。
+      最後更新於 7月 11, 2025 (10:18 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
