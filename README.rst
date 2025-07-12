@@ -52,7 +52,7 @@ the PSF for inclusion in the documentation.
 請注意此予翻譯專案的授權：Python 的說明文件是以全球的志工社群來維護。透過張貼\
 此專案在 Transifex、GitHub 以及其他公眾場合，以及邀請你參與，我們向你提出一個\
 協議：你必須將你對於 Python 說明文件或是 Python 說明文件翻譯的貢獻以 CC0\
-（請參考 https://creativecommons.org/publicdomain/zero/1.0/legalcode/ 
+（請參考 https://creativecommons.org/publicdomain/zero/1.0/legalcode/
 ）的方式授權給 PSF 使用。你可以公開地聲明你所貢獻翻譯的部分，並且如果你的翻譯被 PSF
 採用，你可以（但並不須要）送出一個修改，其包含在 Misc/ACKS 或是 TRANSLATORS
 檔案裡增加合適的注釋。雖然這個說明文件貢獻協議並沒有說明 PSF 有義務納入你的\
