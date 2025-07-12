@@ -2,29 +2,11 @@
 
 Useful scripts for the translation.
 
-## Translation Dictionary Generation
+## Translation Dictionary
 
-Extract and build a translation dictionary for terminologies across different .po files to maintain consistency.
+The repository includes terminology dictionaries (`terminology_dictionary.csv` and `focused_terminology_dictionary.csv`) that provide standard translations for important Python terms to maintain consistency across documents. These dictionaries are maintained using LLM knowledge and can be referenced by translators.
 
-### extract_terminology.py
-Main script that processes all .po files and extracts terminology:
-
-```sh
-python3 .scripts/extract_terminology.py
-```
-
-Generates `terminology_dictionary.csv` with all extracted terms and their translations.
-
-### create_focused_dictionary.py
-Creates a curated dictionary focusing on the most important Python terminology:
-
-```sh
-python3 .scripts/create_focused_dictionary.py
-```
-
-Generates `focused_terminology_dictionary.csv` with categorized high-priority terms.
-
-See the terminology documentation for detailed usage and integration with translation workflow.
+See `TERMINOLOGY_DICTIONARY.md` for detailed usage and integration with translation workflow.
 
 ## From Google Translation
 
