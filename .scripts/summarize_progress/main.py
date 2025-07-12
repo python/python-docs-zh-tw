@@ -97,8 +97,9 @@ def format_issue_link(url: str) -> str:
     return f"[{url.split('/')[-1]}]({url})" if len(url) > 0 else ''
 
 
-def format_line_file(filename: str, data: dict) -> str:
-    return f"|`{filename}`|{data['progress']}|{format_issue_link(data['issue'])}|{data['assignee']}|\r\n"
+def format_line_file(dirname: str, filename: str, data: dict) -> str:
+    return f"|[`{filename}`](https://github.com/python/python-docs-zh-tw/tree/3.13/{dirname}/{filename})" + \
+    f"|{data['progress']}|{format_issue_link(data['issue'])}|{data['assignee']}|\r\n"
 
 
 def format_line_directory(dirname: str) -> str:
@@ -152,7 +153,7 @@ if __name__ == "__main__":
 
         filedict_sorted = dict(sorted(filedict.items()))
         for filename, filedata in filedict_sorted.items():
-            writeliner.append(format_line_file(filename, filedata))
+            writeliner.append(format_line_file(dirname, filename, filedata))
 
     with open(
         f"summarize_progress/result.md",
