@@ -18,20 +18,20 @@ The complete terminology dictionary containing important terms identified from P
 - **directory**: Directory of the source file
 - **example_files**: List of up to 5 files containing this term
 
-Total entries: ~14,700 unique terms
+Total entries: ~196 essential Python terms
 
 ### focused_terminology_dictionary.csv
-A curated subset of ~2,900 terms focusing on the most important Python terminology. Includes additional columns:
+A curated subset of ~118 terms focusing on the most important Python terminology. Includes additional columns:
 - **priority**: High/Medium priority classification
 - **category**: Term classification
 
 #### Categories:
 - **Core Concepts** (7 terms): class, function, method, module, package, object, type
 - **Built-in Types** (9 terms): int, str, list, dict, tuple, set, float, bool, complex  
-- **Keywords/Constants** (8 terms): None, True, False, return, import, def, async, await
-- **Exceptions** (690 terms): All *Error and *Exception terms
-- **Code Elements** (825 terms): Terms in backticks, magic methods
-- **Common Terms** (1,365 terms): Frequently used technical terms
+- **Keywords/Constants** (25 terms): None, True, False, return, import, def, async, await, and other Python keywords
+- **Exceptions** (29 terms): Common *Error and *Exception classes
+- **Code Elements** (14 terms): Magic methods like __init__, __str__, etc.
+- **Common Terms** (34 terms): Important technical concepts like decorator, generator, iterator
 
 ## Maintenance
 
@@ -59,23 +59,21 @@ CSV files use UTF-8 encoding to properly handle Chinese characters. Compatible w
 
 ## Maintenance
 
-### Adding New Patterns
-To extend pattern recognition, modify `extract_key_terms()` function in `extract_terminology.py`:
+### Adding New Terms
+New terms can be identified and added based on:
+- Frequency of appearance in documentation
+- Importance to Python concepts
+- Consistency needs across translation files
 
-```python
-# Add new technical patterns
-tech_patterns = [
-    r'\b(?:new_pattern_here)\b',
-    # existing patterns...
-]
-```
+### Manual Curation Process
+The dictionaries are maintained through careful analysis of:
+- Core Python terminology in official documentation
+- Existing translation patterns in .po files
+- Category-based organization for translator efficiency
 
-### Adjusting Filters
-Modify filtering criteria in `is_significant_term()` and `create_focused_dictionary()` functions.
-
-### Performance Optimization
-- Current processing: ~509 files in 2-3 minutes
-- Memory usage: ~50MB peak
-- Scalable to larger repositories
+### Quality Assurance
+- Regular review of term translations for consistency
+- Cross-reference with official Python terminology
+- Validation against established translation conventions
 
 This documentation provides comprehensive guidance for maintaining and using the translation dictionary system to ensure consistent, high-quality Python documentation translation.
