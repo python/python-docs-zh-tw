@@ -46,6 +46,7 @@ MAPPING_ZH_TW_COMMON_TRANSLATION_ERROR = {
     '變量': '變數',  # variable
     '常量': '常數',  # constant
     '添加': '新增',  # add
+    '轉義': '跳脫',  # escape
     '基類': '基底類別',  # base class
 }
 
