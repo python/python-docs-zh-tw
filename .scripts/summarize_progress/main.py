@@ -159,7 +159,7 @@ if __name__ == "__main__":
 
         filedict_sorted = dict(sorted(filedict.items()))
         for filename, filedata in filedict_sorted.items():
-            file_path = f"{dirname}/{filename}"
+            file_path = f"{dirname}/{filename}" if dirname else filename
             po_link = f"https://github.com/python/python-docs-zh-tw/tree/3.13/{file_path}"
             issue_link = filedata['issue']
             issue_number = f"#{issue_link.split('/')[-1]}"
