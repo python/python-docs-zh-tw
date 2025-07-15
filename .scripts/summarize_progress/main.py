@@ -6,7 +6,7 @@ import requests
 from pathlib import Path
 
 
-def entry_check(pofile: polib.POFile) -> str:
+def get_progress(pofile: polib.POFile) -> float:
     '''
     Check the po file with how many entries are translated or not.
     '''
@@ -14,17 +14,15 @@ def entry_check(pofile: polib.POFile) -> str:
     lines_tranlated = len(pofile.translated_entries())
     lines_untranlated = len(pofile.untranslated_entries())
 
-    if lines_tranlated == 0:
-        result = "❌"
-    elif lines_untranlated == 0:
-        result = "✅"
-    else:
-        lines_all = lines_tranlated + lines_untranlated
-        progress = lines_tranlated / lines_all
-        progress_percentage = round(progress * 100, 2)
-        result = f"{progress_percentage} %"
-
-    return result
+    # if lines_tranlated == 0:
+    #     result = "❌"
+    # elif lines_untranlated == 0:
+    #     result = "✅"
+    # else:
+    lines_all = lines_tranlated + lines_untranlated
+    progress = lines_tranlated / lines_all
+    progress_percentage = round(progress * 100, 2)
+    return progress_percentage
 
 
 def get_open_issues_count() -> int:
@@ -93,13 +91,21 @@ def format_line_table_header() -> list:
             f"|-------:|:-------|:----|:-------|\r\n"]
 
 
-def format_issue_link(url: str) -> str:
-    return f"[{url.split('/')[-1]}]({url})" if len(url) > 0 else ''
+def format_line_po_issue_display(issue_link: str, issue_number: str, create_issue_link: str, progress: float) -> str:
+    if issue_link:
+        return f"[{issue_number}]({issue_link})"
+    if progress != 100:
+        return f"[create issue]({create_issue_link})"
+    return ""
 
 
-def format_line_file(dirname: str, filename: str, data: dict) -> str:
-    return f"|[`{filename}`](https://github.com/python/python-docs-zh-tw/tree/3.13/{dirname}/{filename})" + \
-    f"|{data['progress']}|{format_issue_link(data['issue'])}|{data['assignee']}|\r\n"
+def format_line_po(filename: str, po_link: str, progress: str, issue_display: str, assignee: str) -> str:
+    progress_display = f"{progress} %"
+    if progress == 0:
+        progress_display = "❌"
+    elif progress == 100:
+        progress_display = "✅"
+    return f"|[`{filename}`]({po_link})|{progress_display}|{issue_display}|{assignee}|\r\n"
 
 
 def format_line_directory(dirname: str) -> str:
@@ -122,7 +128,7 @@ if __name__ == "__main__":
         po = polib.pofile(filepath)
 
         summary.setdefault(dirname, {})[filename] = {
-            'progress': entry_check(po),
+            'progress': get_progress(po),
             'issue': '',
             'assignee': '',
         }
@@ -153,7 +159,14 @@ if __name__ == "__main__":
 
         filedict_sorted = dict(sorted(filedict.items()))
         for filename, filedata in filedict_sorted.items():
-            writeliner.append(format_line_file(dirname, filename, filedata))
+            file_path = f"{dirname}/{filename}"
+            po_link = f"https://github.com/python/python-docs-zh-tw/tree/3.13/{file_path}"
+            issue_link = filedata['issue']
+            issue_number = f"#{issue_link.split('/')[-1]}"
+            create_issue_link = f"https://github.com/python/python-docs-zh-tw/issues/new?title=Translate `{file_path}`"
+            issue_display = format_line_po_issue_display(issue_link, issue_number, filedata['progress'], create_issue_link)
+            line_po = format_line_po(filename, po_link, filedata['progress'], issue_display, filedata['assignee'])
+            writeliner.append(line_po)
 
     with open(
         f"summarize_progress/result.md",
