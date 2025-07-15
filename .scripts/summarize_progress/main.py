@@ -91,10 +91,10 @@ def format_line_table_header() -> list:
             f"|-------:|:-------|:----|:-------|\r\n"]
 
 
-def format_line_po_issue_display(issue_link: str, issue_number: str, create_issue_link: str, progress: float) -> str:
+def format_line_po_issue_display(issue_link: str, issue_number: str, progress: float, create_issue_link: str) -> str:
     if issue_link:
         return f"[{issue_number}]({issue_link})"
-    if progress != 100:
+    if progress != 100.:
         return f"[create issue]({create_issue_link})"
     return ""
 
