@@ -141,7 +141,7 @@ if __name__ == "__main__":
             issue_link = filedata['issue']
             issue_number = f"#{issue_link.split('/')[-1]}"
             create_issue_link = f"https://github.com/python/python-docs-zh-tw/issues/new?title=Translate%20`{file_path}`"
-            issue_display = format_line_po_issue_display(issue_link, issue_number, filedata['progress'], create_issue_link)
+            issue_display = format_line_po_issue_display(issue_link, issue_number, filedata['po_info']['progress'], create_issue_link)
             line_po = format_line_po(
                 filename,
                 po_link,
