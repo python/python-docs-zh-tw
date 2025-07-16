@@ -102,7 +102,7 @@ if __name__ == "__main__":
         dirname = path.parent.name if path.parent.name != BASE_DIR.name else 'root'
         po = polib.pofile(filepath)
 
-        num_entries = len(list(filter(lambda e: not e.obsolete(), po)))
+        num_entries = len(list(filter(lambda e: not e.obsolete, po)))
         num_translated = len(po.translated_entries())
         summary.setdefault(dirname, {})[filename] = {
             'po_info': {
