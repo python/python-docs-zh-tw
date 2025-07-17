@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>使用 GDB 來為 C API 擴充功能和 CPython 內部偵錯 &#8212; Python 3.13.5 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=5ff89526" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
+    
+    <script src="../_static/documentation_options.js?v=e67be3cf"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.13.5 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權" href="../copyright.html" />
+    <link rel="next" title="Enum HOWTO" href="enum.html" />
+    <link rel="prev" title="描述器 (Descriptor) 指南" href="descriptor.html" />
+    
+      
+      <link rel="canonical" href="https://docs.python.org/3/howto/gdb_helpers.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="../_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="../_static/py.svg">
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script>
+            <script type="text/javascript" src="../_static/search-focus.js"></script>
+            <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="Menu">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="../_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"></span>
+            <form role="search" class="search" action="../search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="快速搜尋" aria-label="快速搜尋" type="search" name="q">
+                <input type="submit" value="前往">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+            
+<label class="theme-selector-label">
+    Theme
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>Auto</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+    </select>
+</label>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">使用 GDB 來為 C API 擴充功能和 CPython 內部偵錯</a><ul>
+<li><a class="reference internal" href="#prerequisites">先決條件</a><ul>
+<li><a class="reference internal" href="#setup-with-python-built-from-source">使用從原始碼建置的 Python 進行設定</a></li>
+<li><a class="reference internal" href="#setup-for-python-from-a-linux-distro">從 Linux 發行版設定 Python</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-the-debug-build-and-development-mode">使用偵錯建置與使用開發模式</a></li>
+<li><a class="reference internal" href="#using-the-python-gdb-extension">使用 <code class="docutils literal notranslate"><span class="pre">python-gdb</span></code> 擴充功能</a><ul>
+<li><a class="reference internal" href="#pretty-printers">漂亮列印器</a></li>
+<li><a class="reference internal" href="#py-list"><code class="docutils literal notranslate"><span class="pre">py-list</span></code></a></li>
+<li><a class="reference internal" href="#py-up-and-py-down"><code class="docutils literal notranslate"><span class="pre">py-up</span></code> 和 <code class="docutils literal notranslate"><span class="pre">py-down</span></code></a></li>
+<li><a class="reference internal" href="#py-bt"><code class="docutils literal notranslate"><span class="pre">py-bt</span></code></a></li>
+<li><a class="reference internal" href="#py-print"><code class="docutils literal notranslate"><span class="pre">py-print</span></code></a></li>
+<li><a class="reference internal" href="#py-locals"><code class="docutils literal notranslate"><span class="pre">py-locals</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#use-with-gdb-commands">與 GDB 指令一起使用</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="descriptor.html"
+                          title="上一章">描述器 (Descriptor) 指南</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="enum.html"
+                          title="下一章">Enum HOWTO</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/gdb_helpers.rst"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="enum.html" title="Enum HOWTO"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="descriptor.html" title="描述器 (Descriptor) 指南"
+             accesskey="P">上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.13.5 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 如何達成任務</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">使用 GDB 來為 C API 擴充功能和 CPython 內部偵錯</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜尋" aria-label="快速搜尋" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    Theme
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>Auto</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="debugging-c-api-extensions-and-cpython-internals-with-gdb">
+<span id="gdb"></span><h1>使用 GDB 來為 C API 擴充功能和 CPython 內部偵錯<a class="headerlink" href="#debugging-c-api-extensions-and-cpython-internals-with-gdb" title="連結到這個標頭">¶</a></h1>
+<p>本文件解釋如何將 Python GDB 擴充功能 <code class="docutils literal notranslate"><span class="pre">python-gdb.py</span></code> 與 GDB 偵錯器一起使用來為 CPython 擴充功能和 CPython 直譯器本身偵錯。</p>
+<p>在為崩潰或死鎖等低階問題幀錯時，低階偵錯器（例如 GDB）對於診斷和修正問題非常有用。預設情況下，GDB（或其任何前端）不支援特定於 CPython 直譯器的高階資訊。</p>
+<p><code class="docutils literal notranslate"><span class="pre">python-gdb.py</span></code> 擴充功能將 CPython 直譯器資訊新增至 GDB。此擴充有助於內省 (introspect) 目前執行的 Python 函式的堆疊。給定一個由 <span class="c-expr sig sig-inline c"><a class="reference internal" href="../c-api/structures.html#c.PyObject" title="PyObject"><span class="n">PyObject</span></a><span class="p">*</span></span> 指標表示的 Python 物件，擴充功能會顯示該物件的型別和值。</p>
+<p>正在開發 CPython 擴充功能或修補用 C 編寫之 CPython 部分的開發人員可以使用本文件來學習如何將 <code class="docutils literal notranslate"><span class="pre">python-gdb.py</span></code> 擴充功能與 GDB 一起使用。</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>本文件假設你熟悉 GDB 和 CPython C API 的基礎知識。它整合了 <a class="reference external" href="https://devguide.python.org">devguide</a> 和 <a class="reference external" href="https://wiki.python.org/moin/DebuggingWithGdb">Python wiki</a> 的指引。</p>
+</div>
+<section id="prerequisites">
+<h2>先決條件<a class="headerlink" href="#prerequisites" title="連結到這個標頭">¶</a></h2>
+<p>你需要有：</p>
+<ul class="simple">
+<li><p>GDB 7 或更之後的版本。（對於早期版本的 GDB，請參閱 Python 3.11 或更早版本的原始程式碼中的 <code class="docutils literal notranslate"><span class="pre">Misc/gdbinit</span></code>。）</p></li>
+<li><p>對 Python 和你在偵錯的任何擴充功能來說的與 GDB 相容的偵錯資訊。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">python-gdb.py</span></code> 擴充。</p></li>
+</ul>
+<p>該擴充功能是用 Python 建置的，但可能會單獨發布或根本不發布。以下我們將一些常見系統的提示作為範例。請注意，即使說明與你的系統匹配，它們也可能已過時。</p>
+<section id="setup-with-python-built-from-source">
+<h3>使用從原始碼建置的 Python 進行設定<a class="headerlink" href="#setup-with-python-built-from-source" title="連結到這個標頭">¶</a></h3>
+<p>當你從原始程式碼建立 CPython 時，偵錯資訊應該可用，並且建置應該將 <code class="docutils literal notranslate"><span class="pre">python-gdb.py</span></code> 檔案新增至儲存庫的根目錄中。</p>
+<p>若要啟用支援，你必須將包含 <code class="docutils literal notranslate"><span class="pre">python-gdb.py</span></code> 的目錄新增至 GDB 的 &quot;auto-load-safe-path&quot;。如果你還沒有這樣做，最新版本的 GDB 將列印警告，其中包含有關如何執行此操作的說明。</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>如果你沒有看到適合你的 GDB 版本的說明，請將其放入你的設定檔中（<code class="docutils literal notranslate"><span class="pre">~/.gdbinit</span></code> 或 <code class="docutils literal notranslate"><span class="pre">~/.config/gdb/gdbinit</span></code>）：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>add-auto-load-safe-path /path/to/cpython
+</pre></div>
+</div>
+<p>你也可以新增多個路徑，要以 <code class="docutils literal notranslate"><span class="pre">:</span></code> 分隔。</p>
+</div>
+</section>
+<section id="setup-for-python-from-a-linux-distro">
+<h3>從 Linux 發行版設定 Python<a class="headerlink" href="#setup-for-python-from-a-linux-distro" title="連結到這個標頭">¶</a></h3>
+<p>大多數 Linux 系統在名為 <code class="docutils literal notranslate"><span class="pre">python-debuginfo</span></code>、<code class="docutils literal notranslate"><span class="pre">python-dbg</span></code> 或類似的套件中提供系統 Python 的偵錯資訊。例如：</p>
+<ul>
+<li><p>Fedora：</p>
+<blockquote>
+<div><div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>dnf<span class="w"> </span>install<span class="w"> </span>gdb
+sudo<span class="w"> </span>dnf<span class="w"> </span>debuginfo-install<span class="w"> </span>python3
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p>Ubuntu：</p>
+<blockquote>
+<div><div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>gdb<span class="w"> </span>python3-dbg
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+</ul>
+<p>在最近的幾個 Linux 系統上，GDB 可以使用 <em>debuginfod</em> 自動下載偵錯符號。但是這不會安裝 <code class="docutils literal notranslate"><span class="pre">python-gdb.py</span></code> 擴充功能；你通常需要另外安裝偵錯資訊套件。</p>
+</section>
+</section>
+<section id="using-the-debug-build-and-development-mode">
+<h2>使用偵錯建置與使用開發模式<a class="headerlink" href="#using-the-debug-build-and-development-mode" title="連結到這個標頭">¶</a></h2>
+<p>為了更輕鬆地進行偵錯，你可能需要：</p>
+<ul class="simple">
+<li><p>使用 Python 的<a class="reference internal" href="../using/configure.html#debug-build"><span class="std std-ref">偵錯建置</span></a>。（從原始碼建置時，請使用 <code class="docutils literal notranslate"><span class="pre">configure</span> <span class="pre">--with-pydebug</span></code>。在 Linux 發行版上，安裝並執行諸如 <code class="docutils literal notranslate"><span class="pre">python-debug</span></code> 或 <code class="docutils literal notranslate"><span class="pre">python-dbg</span></code> 之類的套件（如果可用））。</p></li>
+<li><p>使用 runtime <a class="reference internal" href="../library/devmode.html#devmode"><span class="std std-ref">開發模式</span></a> (<code class="docutils literal notranslate"><span class="pre">-X</span> <span class="pre">dev</span></code>)。</p></li>
+</ul>
+<p>兩者都啟用額外的斷言 (assertion) 並停用一些最佳化。有時這會隱藏你試圖想尋找的錯誤，但在大多數情況下，它們會使過程變得更容易。</p>
+</section>
+<section id="using-the-python-gdb-extension">
+<h2>使用 <code class="docutils literal notranslate"><span class="pre">python-gdb</span></code> 擴充功能<a class="headerlink" href="#using-the-python-gdb-extension" title="連結到這個標頭">¶</a></h2>
+<p>載入擴充功能後，它提供兩個主要功能：Python 值的漂亮列印器和附加命令。</p>
+<section id="pretty-printers">
+<h3>漂亮列印器<a class="headerlink" href="#pretty-printers" title="連結到這個標頭">¶</a></h3>
+<p>這是啟用此擴充功能時 GDB 回溯 (backtrace) 的樣子（有被截斷）：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>#0  0x000000000041a6b1 in PyObject_Malloc (nbytes=Cannot access memory at address 0x7fffff7fefe8
+) at Objects/obmalloc.c:748
+#1  0x000000000041b7c0 in _PyObject_DebugMallocApi (id=111 &#39;o&#39;, nbytes=24) at Objects/obmalloc.c:1445
+#2  0x000000000041b717 in _PyObject_DebugMalloc (nbytes=24) at Objects/obmalloc.c:1412
+#3  0x000000000044060a in _PyUnicode_New (length=11) at Objects/unicodeobject.c:346
+#4  0x00000000004466aa in PyUnicodeUCS2_DecodeUTF8Stateful (s=0x5c2b8d &quot;__lltrace__&quot;, size=11, errors=0x0, consumed=
+    0x0) at Objects/unicodeobject.c:2531
+#5  0x0000000000446647 in PyUnicodeUCS2_DecodeUTF8 (s=0x5c2b8d &quot;__lltrace__&quot;, size=11, errors=0x0)
+    at Objects/unicodeobject.c:2495
+#6  0x0000000000440d1b in PyUnicodeUCS2_FromStringAndSize (u=0x5c2b8d &quot;__lltrace__&quot;, size=11)
+    at Objects/unicodeobject.c:551
+#7  0x0000000000440d94 in PyUnicodeUCS2_FromString (u=0x5c2b8d &quot;__lltrace__&quot;) at Objects/unicodeobject.c:569
+#8  0x0000000000584abd in PyDict_GetItemString (v=
+    {&#39;Yuck&#39;: &lt;type at remote 0xad4730&gt;, &#39;__builtins__&#39;: &lt;module at remote 0x7ffff7fd5ee8&gt;, &#39;__file__&#39;: &#39;Lib/test/crashers/nasty_eq_vs_dict.py&#39;, &#39;__package__&#39;: None, &#39;y&#39;: &lt;Yuck(i=0) at remote 0xaacd80&gt;, &#39;dict&#39;: {0: 0, 1: 1, 2: 2, 3: 3}, &#39;__cached__&#39;: None, &#39;__name__&#39;: &#39;__main__&#39;, &#39;z&#39;: &lt;Yuck(i=0) at remote 0xaace60&gt;, &#39;__doc__&#39;: None}, key=
+    0x5c2b8d &quot;__lltrace__&quot;) at Objects/dictobject.c:2171
+</pre></div>
+</div>
+<p>請注意 <code class="docutils literal notranslate"><span class="pre">PyDict_GetItemString</span></code> 的字典引數如何顯示為其 <code class="docutils literal notranslate"><span class="pre">repr()</span></code>，而不是不透明的 <code class="docutils literal notranslate"><span class="pre">PyObject</span> <span class="pre">*</span></code> 指標。</p>
+<p>該擴充功能透過為 <code class="docutils literal notranslate"><span class="pre">PyObject</span> <span class="pre">*</span></code> 型別的值提供自訂列印例程來運作。如果需要存取物件較低階的詳細資訊，請將值轉換為適當型別的指標。例如：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) p globals
+$1 = {&#39;__builtins__&#39;: &lt;module at remote 0x7ffff7fb1868&gt;, &#39;__name__&#39;:
+&#39;__main__&#39;, &#39;ctypes&#39;: &lt;module at remote 0x7ffff7f14360&gt;, &#39;__doc__&#39;: None,
+&#39;__package__&#39;: None}
+
+(gdb) p *(PyDictObject*)globals
+$2 = {ob_refcnt = 3, ob_type = 0x3dbdf85820, ma_fill = 5, ma_used = 5,
+ma_mask = 7, ma_table = 0x63d0f8, ma_lookup = 0x3dbdc7ea70
+&lt;lookdict_string&gt;, ma_smalltable = {{me_hash = 7065186196740147912,
+me_key = &#39;__builtins__&#39;, me_value = &lt;module at remote 0x7ffff7fb1868&gt;},
+{me_hash = -368181376027291943, me_key = &#39;__name__&#39;,
+me_value =&#39;__main__&#39;}, {me_hash = 0, me_key = 0x0, me_value = 0x0},
+{me_hash = 0, me_key = 0x0, me_value = 0x0},
+{me_hash = -9177857982131165996, me_key = &#39;ctypes&#39;,
+me_value = &lt;module at remote 0x7ffff7f14360&gt;},
+{me_hash = -8518757509529533123, me_key = &#39;__doc__&#39;, me_value = None},
+{me_hash = 0, me_key = 0x0, me_value = 0x0}, {
+  me_hash = 6614918939584953775, me_key = &#39;__package__&#39;, me_value = None}}}
+</pre></div>
+</div>
+<p>請注意，漂亮列印器其實並不呼叫 <code class="docutils literal notranslate"><span class="pre">repr()</span></code>。對於基本型別，他們嘗試緊密匹配其結果。</p>
+<p>一個可能令人困惑的地方是，某些型別的自訂列印器看起來很像 GDB 標準類型的內建列印器。例如，Python <code class="docutils literal notranslate"><span class="pre">int</span></code> (<span class="c-expr sig sig-inline c"><a class="reference internal" href="../c-api/long.html#c.PyLongObject" title="PyLongObject"><span class="n">PyLongObject</span></a><span class="p">*</span></span>) 的漂亮列印器給出的表示法無法與常規機器層級整數之其一區分：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) p some_machine_integer
+$3 = 42
+
+(gdb) p some_python_integer
+$4 = 42
+</pre></div>
+</div>
+<p>可以透過轉換 (cast) 為 <span class="c-expr sig sig-inline c"><a class="reference internal" href="../c-api/long.html#c.PyLongObject" title="PyLongObject"><span class="n">PyLongObject</span></a><span class="p">*</span></span> 來揭示內部結構：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) p *(PyLongObject*)some_python_integer
+$5 = {ob_base = {ob_base = {ob_refcnt = 8, ob_type = 0x3dad39f5e0}, ob_size = 1},
+ob_digit = {42}}
+</pre></div>
+</div>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">str</span></code> 型別時也可能會出現類似的困惑，其中的輸出看起來很像對於 <code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span></code> 的 gdb 內建列印器 ：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) p ptr_to_python_str
+$6 = &#39;__builtins__&#39;
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code> 實例的漂亮列印器預設使用單引號（Python 的 <code class="docutils literal notranslate"><span class="pre">repr</span></code> 對於字串也是如此），而 <code class="docutils literal notranslate"><span class="pre">char</span> <span class="pre">*</span></code> 值的標準列印器使用雙引號並包含十六進位位址：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) p ptr_to_char_star
+$7 = 0x6d72c0 &quot;hello world&quot;
+</pre></div>
+</div>
+<p>同樣，可以透過轉換為 <span class="c-expr sig sig-inline c"><a class="reference internal" href="../c-api/unicode.html#c.PyUnicodeObject" title="PyUnicodeObject"><span class="n">PyUnicodeObject</span></a><span class="p">*</span></span> 來揭示實作細節：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) p *(PyUnicodeObject*)$6
+$8 = {ob_base = {ob_refcnt = 33, ob_type = 0x3dad3a95a0}, length = 12,
+str = 0x7ffff2128500, hash = 7065186196740147912, state = 1, defenc = 0x0}
+</pre></div>
+</div>
+</section>
+<section id="py-list">
+<h3><code class="docutils literal notranslate"><span class="pre">py-list</span></code><a class="headerlink" href="#py-list" title="連結到這個標頭">¶</a></h3>
+<blockquote>
+<div><p>該擴充功能新增了一個 <code class="docutils literal notranslate"><span class="pre">py-list</span></code> 命令，該命令列出了所選執行緒中目前 frame 的 Python 原始程式碼（如果有）。目前的列會標有 &quot;&gt;&quot;：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) py-list
+ 901        if options.profile:
+ 902            options.profile = False
+ 903            profile_me()
+ 904            return
+ 905
+&gt;906        u = UI()
+ 907        if not u.quit:
+ 908            try:
+ 909                gtk.main()
+ 910            except KeyboardInterrupt:
+ 911                # properly quit on a keyboard interrupt...
+</pre></div>
+</div>
+<p>使用 <code class="docutils literal notranslate"><span class="pre">py-list</span> <span class="pre">START</span></code> 列出 Python 原始碼中不同的列號，使用 <code class="docutils literal notranslate"><span class="pre">py-list</span> <span class="pre">START,END</span></code> 列出 Python 原始碼中特定範圍的列。</p>
+</div></blockquote>
+</section>
+<section id="py-up-and-py-down">
+<h3><code class="docutils literal notranslate"><span class="pre">py-up</span></code> 和 <code class="docutils literal notranslate"><span class="pre">py-down</span></code><a class="headerlink" href="#py-up-and-py-down" title="連結到這個標頭">¶</a></h3>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">py-up</span></code> 和 <code class="docutils literal notranslate"><span class="pre">py-down</span></code> 命令類似於 GDB 的常規 <code class="docutils literal notranslate"><span class="pre">up</span></code> 和 <code class="docutils literal notranslate"><span class="pre">down</span></code> 命令，但嘗試在 CPython frame 層級移動，而不是 C frame。</p>
+<p>GDB 並不總是能夠讀取相關的 frame 資訊，這取決於編譯 CPython 的最佳化等級。在內部，這些指令會尋找正在執行預設 frame 計算 (evaluation) 函式（即 CPython 中迴圈的核心位元組碼直譯器）的 C frame，並尋找相關 <code class="docutils literal notranslate"><span class="pre">PyFrameObject</span> <span class="pre">*</span></code> 的值。</p>
+<p>它們在執行緒內發出（於 C 層級的）frame 編號。</p>
+<p>例如：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) py-up
+#37 Frame 0x9420b04, for file /usr/lib/python2.6/site-packages/
+gnome_sudoku/main.py, line 906, in start_game ()
+    u = UI()
+(gdb) py-up
+#40 Frame 0x948e82c, for file /usr/lib/python2.6/site-packages/
+gnome_sudoku/gnome_sudoku.py, line 22, in start_game(main=&lt;module at remote 0xb771b7f4&gt;)
+    main.start_game()
+(gdb) py-up
+Unable to find an older python frame
+</pre></div>
+</div>
+<p>所以現在我們處於 Python 堆疊的頂端。</p>
+<p>frame 編號與 GDB 標準 <code class="docutils literal notranslate"><span class="pre">backtrace</span></code> 指令顯示的 frame 編號相對應。此指令會跳過不執行 Python 程式碼的 C frame。</p>
+<p>回到下面：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) py-down
+#37 Frame 0x9420b04, for file /usr/lib/python2.6/site-packages/gnome_sudoku/main.py, line 906, in start_game ()
+    u = UI()
+(gdb) py-down
+#34 (unable to read python frame information)
+(gdb) py-down
+#23 (unable to read python frame information)
+(gdb) py-down
+#19 (unable to read python frame information)
+(gdb) py-down
+#14 Frame 0x99262ac, for file /usr/lib/python2.6/site-packages/gnome_sudoku/game_selector.py, line 201, in run_swallowed_dialog (self=&lt;NewOrSavedGameSelector(new_game_model=&lt;gtk.ListStore at remote 0x98fab44&gt;, puzzle=None, saved_games=[{&#39;gsd.auto_fills&#39;: 0, &#39;tracking&#39;: {}, &#39;trackers&#39;: {}, &#39;notes&#39;: [], &#39;saved_at&#39;: 1270084485, &#39;game&#39;: &#39;7 8 0 0 0 0 0 5 6 0 0 9 0 8 0 1 0 0 0 4 6 0 0 0 0 7 0 6 5 0 0 0 4 7 9 2 0 0 0 9 0 1 0 0 0 3 9 7 6 0 0 0 1 8 0 6 0 0 0 0 2 8 0 0 0 5 0 4 0 6 0 0 2 1 0 0 0 0 0 4 5\n7 8 0 0 0 0 0 5 6 0 0 9 0 8 0 1 0 0 0 4 6 0 0 0 0 7 0 6 5 1 8 3 4 7 9 2 0 0 0 9 0 1 0 0 0 3 9 7 6 0 0 0 1 8 0 6 0 0 0 0 2 8 0 0 0 5 0 4 0 6 0 0 2 1 0 0 0 0 0 4 5&#39;, &#39;gsd.impossible_hints&#39;: 0, &#39;timer.__absolute_start_time__&#39;: &lt;float at remote 0x984b474&gt;, &#39;gsd.hints&#39;: 0, &#39;timer.active_time&#39;: &lt;float at remote 0x984b494&gt;, &#39;timer.total_time&#39;: &lt;float at remote 0x984b464&gt;}], dialog=&lt;gtk.Dialog at remote 0x98faaa4&gt;, saved_game_model=&lt;gtk.ListStore at remote 0x98fad24&gt;, sudoku_maker=&lt;SudokuMaker(terminated=False, played=[], batch_siz...(truncated)
+            swallower.run_dialog(self.dialog)
+(gdb) py-down
+#11 Frame 0x9aead74, for file /usr/lib/python2.6/site-packages/gnome_sudoku/dialog_swallower.py, line 48, in run_dialog (self=&lt;SwappableArea(running=&lt;gtk.Dialog at remote 0x98faaa4&gt;, main_page=0) at remote 0x98fa6e4&gt;, d=&lt;gtk.Dialog at remote 0x98faaa4&gt;)
+            gtk.main()
+(gdb) py-down
+#8 (unable to read python frame information)
+(gdb) py-down
+Unable to find a newer python frame
+</pre></div>
+</div>
+<p>我們現在處於 Python 堆疊的底部。</p>
+<p>請注意，在 Python 3.12 及更高版本中，同一個 C 堆疊 frame 可用於多個 Python 堆疊 frame。這意味著 <code class="docutils literal notranslate"><span class="pre">py-up</span></code> 和 <code class="docutils literal notranslate"><span class="pre">py-down</span></code> 可以一次移動多個 Python frame。例如：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) py-up
+#6 Frame 0x7ffff7fb62b0, for file /tmp/rec.py, line 5, in recursive_function (n=0)
+   time.sleep(5)
+#6 Frame 0x7ffff7fb6240, for file /tmp/rec.py, line 7, in recursive_function (n=1)
+   recursive_function(n-1)
+#6 Frame 0x7ffff7fb61d0, for file /tmp/rec.py, line 7, in recursive_function (n=2)
+   recursive_function(n-1)
+#6 Frame 0x7ffff7fb6160, for file /tmp/rec.py, line 7, in recursive_function (n=3)
+   recursive_function(n-1)
+#6 Frame 0x7ffff7fb60f0, for file /tmp/rec.py, line 7, in recursive_function (n=4)
+   recursive_function(n-1)
+#6 Frame 0x7ffff7fb6080, for file /tmp/rec.py, line 7, in recursive_function (n=5)
+   recursive_function(n-1)
+#6 Frame 0x7ffff7fb6020, for file /tmp/rec.py, line 9, in &lt;module&gt; ()
+   recursive_function(5)
+(gdb) py-up
+Unable to find an older python frame
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+<section id="py-bt">
+<h3><code class="docutils literal notranslate"><span class="pre">py-bt</span></code><a class="headerlink" href="#py-bt" title="連結到這個標頭">¶</a></h3>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">py-bt</span></code> 指令嘗試顯示目前執行緒的 Python 層級回溯。</p>
+<p>例如：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) py-bt
+#8 (unable to read python frame information)
+#11 Frame 0x9aead74, for file /usr/lib/python2.6/site-packages/gnome_sudoku/dialog_swallower.py, line 48, in run_dialog (self=&lt;SwappableArea(running=&lt;gtk.Dialog at remote 0x98faaa4&gt;, main_page=0) at remote 0x98fa6e4&gt;, d=&lt;gtk.Dialog at remote 0x98faaa4&gt;)
+            gtk.main()
+#14 Frame 0x99262ac, for file /usr/lib/python2.6/site-packages/gnome_sudoku/game_selector.py, line 201, in run_swallowed_dialog (self=&lt;NewOrSavedGameSelector(new_game_model=&lt;gtk.ListStore at remote 0x98fab44&gt;, puzzle=None, saved_games=[{&#39;gsd.auto_fills&#39;: 0, &#39;tracking&#39;: {}, &#39;trackers&#39;: {}, &#39;notes&#39;: [], &#39;saved_at&#39;: 1270084485, &#39;game&#39;: &#39;7 8 0 0 0 0 0 5 6 0 0 9 0 8 0 1 0 0 0 4 6 0 0 0 0 7 0 6 5 0 0 0 4 7 9 2 0 0 0 9 0 1 0 0 0 3 9 7 6 0 0 0 1 8 0 6 0 0 0 0 2 8 0 0 0 5 0 4 0 6 0 0 2 1 0 0 0 0 0 4 5\n7 8 0 0 0 0 0 5 6 0 0 9 0 8 0 1 0 0 0 4 6 0 0 0 0 7 0 6 5 1 8 3 4 7 9 2 0 0 0 9 0 1 0 0 0 3 9 7 6 0 0 0 1 8 0 6 0 0 0 0 2 8 0 0 0 5 0 4 0 6 0 0 2 1 0 0 0 0 0 4 5&#39;, &#39;gsd.impossible_hints&#39;: 0, &#39;timer.__absolute_start_time__&#39;: &lt;float at remote 0x984b474&gt;, &#39;gsd.hints&#39;: 0, &#39;timer.active_time&#39;: &lt;float at remote 0x984b494&gt;, &#39;timer.total_time&#39;: &lt;float at remote 0x984b464&gt;}], dialog=&lt;gtk.Dialog at remote 0x98faaa4&gt;, saved_game_model=&lt;gtk.ListStore at remote 0x98fad24&gt;, sudoku_maker=&lt;SudokuMaker(terminated=False, played=[], batch_siz...(truncated)
+            swallower.run_dialog(self.dialog)
+#19 (unable to read python frame information)
+#23 (unable to read python frame information)
+#34 (unable to read python frame information)
+#37 Frame 0x9420b04, for file /usr/lib/python2.6/site-packages/gnome_sudoku/main.py, line 906, in start_game ()
+    u = UI()
+#40 Frame 0x948e82c, for file /usr/lib/python2.6/site-packages/gnome_sudoku/gnome_sudoku.py, line 22, in start_game (main=&lt;module at remote 0xb771b7f4&gt;)
+    main.start_game()
+</pre></div>
+</div>
+<p>The frame numbers correspond to those displayed by GDB's standard
+<code class="docutils literal notranslate"><span class="pre">backtrace</span></code> command.</p>
+</div></blockquote>
+</section>
+<section id="py-print">
+<h3><code class="docutils literal notranslate"><span class="pre">py-print</span></code><a class="headerlink" href="#py-print" title="連結到這個標頭">¶</a></h3>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">py-print</span></code> 命令查找 Python 名稱並嘗試列印它。它在目前執行緒中尋找局部變數，然後是全域變數，最後是內建變數：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) py-print self
+local &#39;self&#39; = &lt;SwappableArea(running=&lt;gtk.Dialog at remote 0x98faaa4&gt;,
+main_page=0) at remote 0x98fa6e4&gt;
+(gdb) py-print __name__
+global &#39;__name__&#39; = &#39;gnome_sudoku.dialog_swallower&#39;
+(gdb) py-print len
+builtin &#39;len&#39; = &lt;built-in function len&gt;
+(gdb) py-print scarlet_pimpernel
+&#39;scarlet_pimpernel&#39; not found
+</pre></div>
+</div>
+<p>如果目前 C frame 對應多個 Python frame，則 <code class="docutils literal notranslate"><span class="pre">py-print</span></code> 僅考慮第一個。</p>
+</div></blockquote>
+</section>
+<section id="py-locals">
+<h3><code class="docutils literal notranslate"><span class="pre">py-locals</span></code><a class="headerlink" href="#py-locals" title="連結到這個標頭">¶</a></h3>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">py-locals</span></code> 命令尋找所選執行緒中目前 Python frame 內的所有 Python 局部變數，並列印它們的表示：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) py-locals
+self = &lt;SwappableArea(running=&lt;gtk.Dialog at remote 0x98faaa4&gt;,
+main_page=0) at remote 0x98fa6e4&gt;
+d = &lt;gtk.Dialog at remote 0x98faaa4&gt;
+</pre></div>
+</div>
+<p>如果目前 C frame 對應於多個 Python frame，則會顯示所有這些 frame 的局部變數：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) py-locals
+Locals for recursive_function
+n = 0
+Locals for recursive_function
+n = 1
+Locals for recursive_function
+n = 2
+Locals for recursive_function
+n = 3
+Locals for recursive_function
+n = 4
+Locals for recursive_function
+n = 5
+Locals for &lt;module&gt;
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+</section>
+<section id="use-with-gdb-commands">
+<h2>與 GDB 指令一起使用<a class="headerlink" href="#use-with-gdb-commands" title="連結到這個標頭">¶</a></h2>
+<p>擴充命令補充了 GDB 的內建命令。例如，你可以將 <code class="docutils literal notranslate"><span class="pre">py-bt</span></code> 顯示的 frame 編號與 <code class="docutils literal notranslate"><span class="pre">frame</span></code> 命令一同使用來跳到所選執行緒中的特定 frame，如下所示：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) py-bt
+(output snipped)
+#68 Frame 0xaa4560, for file Lib/test/regrtest.py, line 1548, in &lt;module&gt; ()
+        main()
+(gdb) frame 68
+#68 0x00000000004cd1e6 in PyEval_EvalFrameEx (f=Frame 0xaa4560, for file Lib/test/regrtest.py, line 1548, in &lt;module&gt; (), throwflag=0) at Python/ceval.c:2665
+2665                            x = call_function(&amp;sp, oparg);
+(gdb) py-list
+1543        # 在暫時改變 CWD 到一個臨時且可寫入的目錄的
+1544        # 情境管理器中運行測試。
+1545        # 如果無法建立或更改 CWD，則使用原始的 CWD。
+1546        # 原始 CWD 可從 test_support.SAVEDCWD 獲得。
+1547        with test_support.temp_cwd(TESTCWD, quiet=True):
+&gt;1548            main()
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">info</span> <span class="pre">threads</span></code> 命令將為你提供行程內的執行緒串列，你可以使用 <code class="docutils literal notranslate"><span class="pre">thread</span></code> 命令選擇不同的執行緒：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) info threads
+  105 Thread 0x7fffefa18710 (LWP 10260)  sem_wait () at ../nptl/sysdeps/unix/sysv/linux/x86_64/sem_wait.S:86
+  104 Thread 0x7fffdf5fe710 (LWP 10259)  sem_wait () at ../nptl/sysdeps/unix/sysv/linux/x86_64/sem_wait.S:86
+* 1 Thread 0x7ffff7fe2700 (LWP 10145)  0x00000038e46d73e3 in select () at ../sysdeps/unix/syscall-template.S:82
+</pre></div>
+</div>
+<p>你可以使用 <code class="docutils literal notranslate"><span class="pre">thread</span> <span class="pre">apply</span> <span class="pre">all</span> <span class="pre">COMMAND</span></code>（或簡短地用 <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">a</span> <span class="pre">a</span> <span class="pre">COMMAND</span></code>）在所有執行緒上執行命令。使用 <code class="docutils literal notranslate"><span class="pre">py-bt</span></code> 你可以看到每個執行緒在 Python 層級正在做什麼：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>(gdb) t a a py-bt
+
+Thread 105 (Thread 0x7fffefa18710 (LWP 10260)):
+#5 Frame 0x7fffd00019d0, for file /home/david/coding/python-svn/Lib/threading.py, line 155, in _acquire_restore (self=&lt;_RLock(_Verbose__verbose=False, _RLock__owner=140737354016512, _RLock__block=&lt;thread.lock at remote 0x858770&gt;, _RLock__count=1) at remote 0xd7ff40&gt;, count_owner=(1, 140737213728528), count=1, owner=140737213728528)
+        self.__block.acquire()
+#8 Frame 0x7fffac001640, for file /home/david/coding/python-svn/Lib/threading.py, line 269, in wait (self=&lt;_Condition(_Condition__lock=&lt;_RLock(_Verbose__verbose=False, _RLock__owner=140737354016512, _RLock__block=&lt;thread.lock at remote 0x858770&gt;, _RLock__count=1) at remote 0xd7ff40&gt;, acquire=&lt;instancemethod at remote 0xd80260&gt;, _is_owned=&lt;instancemethod at remote 0xd80160&gt;, _release_save=&lt;instancemethod at remote 0xd803e0&gt;, release=&lt;instancemethod at remote 0xd802e0&gt;, _acquire_restore=&lt;instancemethod at remote 0xd7ee60&gt;, _Verbose__verbose=False, _Condition__waiters=[]) at remote 0xd7fd10&gt;, timeout=None, waiter=&lt;thread.lock at remote 0x858a90&gt;, saved_state=(1, 140737213728528))
+            self._acquire_restore(saved_state)
+#12 Frame 0x7fffb8001a10, for file /home/david/coding/python-svn/Lib/test/lock_tests.py, line 348, in f ()
+            cond.wait()
+#16 Frame 0x7fffb8001c40, for file /home/david/coding/python-svn/Lib/test/lock_tests.py, line 37, in task (tid=140737213728528)
+                f()
+
+Thread 104 (Thread 0x7fffdf5fe710 (LWP 10259)):
+#5 Frame 0x7fffe4001580, for file /home/david/coding/python-svn/Lib/threading.py, line 155, in _acquire_restore (self=&lt;_RLock(_Verbose__verbose=False, _RLock__owner=140737354016512, _RLock__block=&lt;thread.lock at remote 0x858770&gt;, _RLock__count=1) at remote 0xd7ff40&gt;, count_owner=(1, 140736940992272), count=1, owner=140736940992272)
+        self.__block.acquire()
+#8 Frame 0x7fffc8002090, for file /home/david/coding/python-svn/Lib/threading.py, line 269, in wait (self=&lt;_Condition(_Condition__lock=&lt;_RLock(_Verbose__verbose=False, _RLock__owner=140737354016512, _RLock__block=&lt;thread.lock at remote 0x858770&gt;, _RLock__count=1) at remote 0xd7ff40&gt;, acquire=&lt;instancemethod at remote 0xd80260&gt;, _is_owned=&lt;instancemethod at remote 0xd80160&gt;, _release_save=&lt;instancemethod at remote 0xd803e0&gt;, release=&lt;instancemethod at remote 0xd802e0&gt;, _acquire_restore=&lt;instancemethod at remote 0xd7ee60&gt;, _Verbose__verbose=False, _Condition__waiters=[]) at remote 0xd7fd10&gt;, timeout=None, waiter=&lt;thread.lock at remote 0x858860&gt;, saved_state=(1, 140736940992272))
+            self._acquire_restore(saved_state)
+#12 Frame 0x7fffac001c90, for file /home/david/coding/python-svn/Lib/test/lock_tests.py, line 348, in f ()
+            cond.wait()
+#16 Frame 0x7fffac0011c0, for file /home/david/coding/python-svn/Lib/test/lock_tests.py, line 37, in task (tid=140736940992272)
+                f()
+
+Thread 1 (Thread 0x7ffff7fe2700 (LWP 10145)):
+#5 Frame 0xcb5380, for file /home/david/coding/python-svn/Lib/test/lock_tests.py, line 16, in _wait ()
+    time.sleep(0.01)
+#8 Frame 0x7fffd00024a0, for file /home/david/coding/python-svn/Lib/test/lock_tests.py, line 378, in _check_notify (self=&lt;ConditionTests(_testMethodName=&#39;test_notify&#39;, _resultForDoCleanups=&lt;TestResult(_original_stdout=&lt;cStringIO.StringO at remote 0xc191e0&gt;, skipped=[], _mirrorOutput=False, testsRun=39, buffer=False, _original_stderr=&lt;file at remote 0x7ffff7fc6340&gt;, _stdout_buffer=&lt;cStringIO.StringO at remote 0xc9c7f8&gt;, _stderr_buffer=&lt;cStringIO.StringO at remote 0xc9c790&gt;, _moduleSetUpFailed=False, expectedFailures=[], errors=[], _previousTestClass=&lt;type at remote 0x928310&gt;, unexpectedSuccesses=[], failures=[], shouldStop=False, failfast=False) at remote 0xc185a0&gt;, _threads=(0,), _cleanups=[], _type_equality_funcs={&lt;type at remote 0x7eba00&gt;: &lt;instancemethod at remote 0xd750e0&gt;, &lt;type at remote 0x7e7820&gt;: &lt;instancemethod at remote 0xd75160&gt;, &lt;type at remote 0x7e30e0&gt;: &lt;instancemethod at remote 0xd75060&gt;, &lt;type at remote 0x7e7d20&gt;: &lt;instancemethod at remote 0xd751e0&gt;, &lt;type at remote 0x7f19e0...(truncated)
+        _wait()
+</pre></div>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">使用 GDB 來為 C API 擴充功能和 CPython 內部偵錯</a><ul>
+<li><a class="reference internal" href="#prerequisites">先決條件</a><ul>
+<li><a class="reference internal" href="#setup-with-python-built-from-source">使用從原始碼建置的 Python 進行設定</a></li>
+<li><a class="reference internal" href="#setup-for-python-from-a-linux-distro">從 Linux 發行版設定 Python</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-the-debug-build-and-development-mode">使用偵錯建置與使用開發模式</a></li>
+<li><a class="reference internal" href="#using-the-python-gdb-extension">使用 <code class="docutils literal notranslate"><span class="pre">python-gdb</span></code> 擴充功能</a><ul>
+<li><a class="reference internal" href="#pretty-printers">漂亮列印器</a></li>
+<li><a class="reference internal" href="#py-list"><code class="docutils literal notranslate"><span class="pre">py-list</span></code></a></li>
+<li><a class="reference internal" href="#py-up-and-py-down"><code class="docutils literal notranslate"><span class="pre">py-up</span></code> 和 <code class="docutils literal notranslate"><span class="pre">py-down</span></code></a></li>
+<li><a class="reference internal" href="#py-bt"><code class="docutils literal notranslate"><span class="pre">py-bt</span></code></a></li>
+<li><a class="reference internal" href="#py-print"><code class="docutils literal notranslate"><span class="pre">py-print</span></code></a></li>
+<li><a class="reference internal" href="#py-locals"><code class="docutils literal notranslate"><span class="pre">py-locals</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#use-with-gdb-commands">與 GDB 指令一起使用</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="descriptor.html"
+                          title="上一章">描述器 (Descriptor) 指南</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="enum.html"
+                          title="下一章">Enum HOWTO</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/gdb_helpers.rst"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="enum.html" title="Enum HOWTO"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="descriptor.html" title="描述器 (Descriptor) 指南"
+             >上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.13.5 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 如何達成任務</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">使用 GDB 來為 C API 擴充功能和 CPython 內部偵錯</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜尋" aria-label="快速搜尋" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    Theme
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>Auto</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; 
+      <a href="../copyright.html">
+    
+    版權
+    
+      </a>
+     2001-2025, Python Software Foundation.
+    <br>
+    This page is licensed under the Python Software Foundation License Version 2.
+    <br>
+    Examples, recipes, and other code in the documentation are additionally licensed under the Zero Clause BSD License.
+    <br>
+    
+      See <a href="/license.html">History and License</a> for more information.<br>
+    
+    
+    <br>
+
+    The Python Software Foundation is a non-profit corporation.
+<a href="https://www.python.org/psf/donations/">Please donate.</a>
+<br>
+    <br>
+      最後更新於 7月 17, 2025 (10:06 UTC)。
+    
+      <a href="/bugs.html">Found a bug</a>?
+    
+    <br>
+
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3 建立。
+    </div>
+
+  </body>
+</html>
