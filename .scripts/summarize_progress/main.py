@@ -6,27 +6,6 @@ import requests
 from pathlib import Path
 
 
-def entry_check(pofile: polib.POFile) -> str:
-    '''
-    Check the po file with how many entries are translated or not.
-    '''
-
-    lines_tranlated = len(pofile.translated_entries())
-    lines_untranlated = len(pofile.untranslated_entries())
-
-    if lines_tranlated == 0:
-        result = "❌"
-    elif lines_untranlated == 0:
-        result = "✅"
-    else:
-        lines_all = lines_tranlated + lines_untranlated
-        progress = lines_tranlated / lines_all
-        progress_percentage = round(progress * 100, 2)
-        result = f"{progress_percentage} %"
-
-    return result
-
-
 def get_open_issues_count() -> int:
     '''
     Fetch GitHub API to get the number of OPEN ISSUES.
@@ -89,21 +68,23 @@ def get_github_issues() -> list:
 
 
 def format_line_table_header() -> list:
-    return [f"|Filename|Progress|Issue|Assignee|\r\n",
+    return [f"|Filename|Progress (#string)|Issue|Assignee|\r\n",
             f"|-------:|:-------|:----|:-------|\r\n"]
 
 
-def format_issue_link(url: str) -> str:
-    return f"[{url.split('/')[-1]}]({url})" if len(url) > 0 else ''
+def format_line_po_issue_display(issue_link: str, issue_number: str, progress: float, create_issue_link: str) -> str:
+    if issue_link:
+        return f"[{issue_number}]({issue_link})"
+    if progress != 100.:
+        return f"[create issue]({create_issue_link})"
+    return ""
 
 
-def format_line_file(dirname: str, filename: str, data: dict) -> str:
-    return f"|[`{filename}`](https://github.com/python/python-docs-zh-tw/tree/3.13/{dirname}/{filename})" + \
-    f"|{data['progress']}|{format_issue_link(data['issue'])}|{data['assignee']}|\r\n"
-
-
-def format_line_directory(dirname: str) -> str:
-    return f"## {dirname}\r\n"
+def format_line_po(filename: str, po_link: str, progress: str, num_entries: str, issue_display: str, assignee: str) -> str:
+    progress_display = f"{progress} %"
+    if progress == 100:
+        progress_display = "✅"
+    return f"|[`{filename}`]({po_link})|{progress_display} ({num_entries:,})|{issue_display}|{assignee}|\r\n"
 
 
 if __name__ == "__main__":
@@ -118,11 +99,17 @@ if __name__ == "__main__":
     for filepath in glob.glob(str(BASE_DIR / "**/*.po"), recursive=True):
         path = Path(filepath)
         filename = path.name
-        dirname = path.parent.name if path.parent.name != BASE_DIR.name else '/'
+        dirname = path.parent.name if path.parent.name != BASE_DIR.name else 'root'
         po = polib.pofile(filepath)
 
+        num_entries = len(list(filter(lambda e: not e.obsolete, po)))
+        num_translated = len(po.translated_entries())
         summary.setdefault(dirname, {})[filename] = {
-            'progress': entry_check(po),
+            'po_info': {
+                'num_entries': num_entries,
+                'num_translated': num_translated,
+                'progress': round(num_translated / num_entries * 100, 2),
+            },
             'issue': '',
             'assignee': '',
         }
@@ -138,25 +125,47 @@ if __name__ == "__main__":
             pass
 
     '''
-    Adding Space for Formatting Markdown Link
-    '''
-
-    '''
-    Format the lines that will write into the markdown file,
+    Format the lines that will be written into the markdown file,
     also sort the directory name and file name.
     '''
     writeliner = []
     summary_sorted = dict(sorted(summary.items()))
+    total_entries, total_translated = 0, 0
     for dirname, filedict in summary_sorted.items():
-        writeliner.append(format_line_directory(dirname))
-        writeliner.extend(format_line_table_header())
-
+        dir_total_entries, dir_total_translated = 0, 0
+        lines = []
         filedict_sorted = dict(sorted(filedict.items()))
         for filename, filedata in filedict_sorted.items():
-            writeliner.append(format_line_file(dirname, filename, filedata))
+            file_path = f"{dirname}/{filename}" if dirname else filename
+            po_link = f"https://github.com/python/python-docs-zh-tw/tree/3.13/{file_path}"
+            issue_link = filedata['issue']
+            issue_number = f"#{issue_link.split('/')[-1]}"
+            create_issue_link = f"https://github.com/python/python-docs-zh-tw/issues/new?title=Translate%20`{file_path}`"
+            issue_display = format_line_po_issue_display(issue_link, issue_number, filedata['po_info']['progress'], create_issue_link)
+            line_po = format_line_po(
+                filename,
+                po_link,
+                filedata['po_info']['progress'],
+                filedata['po_info']['num_entries'],
+                issue_display,
+                filedata['assignee'],
+            )
+            lines.append(line_po)
 
-    with open(
-        f"summarize_progress/result.md",
-        "w",
-    ) as file:
+            dir_total_entries += filedata['po_info']['num_entries']
+            dir_total_translated += filedata['po_info']['num_translated']
+
+        dir_progress = round(dir_total_translated / dir_total_entries * 100, 2)
+        writeliner.append(f"## {dirname} ({dir_progress}%)\r\n")
+        writeliner.extend(format_line_table_header())
+        writeliner.extend(lines)
+
+        total_entries += dir_total_entries
+        total_translated += dir_total_translated
+
+    overall_progress = round(total_translated / total_entries * 100, 2)
+    title = f"## Overall Progress: {overall_progress}% ({total_translated:,} / {total_entries:,})\r\n"
+    writeliner = [title] + writeliner
+
+    with open(f"summarize_progress/result.md", "w") as file:
         file.writelines(writeliner)

@@ -2,15 +2,10 @@
 
 Useful scripts for the translation.
 
-## Translation Dictionary
-
-The repository includes terminology dictionaries (`terminology_dictionary.csv` and `focused_terminology_dictionary.csv`) that provide standard translations for important Python terms to maintain consistency across documents. These dictionaries are maintained using LLM knowledge and can be referenced by translators.
-
-See `TERMINOLOGY_DICTIONARY.md` for detailed usage and integration with translation workflow.
-
 ## From Google Translation
 
 Translate all untranslated entries of the given .po file with Google Translate.
+
 
 ```sh
 .scripts/google_translate.sh library/csv.po
