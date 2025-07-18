@@ -28,17 +28,13 @@ jobs:
       - name: Build HTML Docs
         run: VERSION=${{ github.event.repository.default_branch }} JOBS=4 MODE=html make all
 
-      - uses: actions/create-github-app-token@v2
-        id: app-token
-        with:
-          app-id: ${{ secrets.APP_ID }}
-          private-key: ${{ secrets.APP_PRIVATE_KEY }}
-
       - name: Deploy PR Doc Preview
+        # PR from the forked repo would be denied as the permission is not granted.
+        # Allow only PR from this repo.
+        if: ${{ ( github.event.pull_request.head.repo.full_name == github.event.pull_request.base.repo.full_name ) }}
         uses: rossjrw/pr-preview-action@v1
         with:
           source-dir: ../cpython/Doc/build/html
-          token: ${{ steps.app-token.outputs.token }}
           preview-branch: gh-pages
           umbrella-dir: pr-preview
           action: auto
