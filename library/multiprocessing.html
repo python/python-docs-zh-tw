@@ -154,7 +154,7 @@
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/main/Doc/library/multiprocessing.rst"
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/multiprocessing.rst?plain=1"
             rel="nofollow">顯示原始碼
         </a>
       </li>
@@ -315,13 +315,17 @@ multiprocess program is</p>
 </div>
 <p>For an explanation of why the <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">__name__</span> <span class="pre">==</span> <span class="pre">'__main__'</span></code> part is
 necessary, see <a class="reference internal" href="#multiprocessing-programming"><span class="std std-ref">Programming guidelines</span></a>.</p>
+<p>The arguments to <a class="reference internal" href="#multiprocessing.Process" title="multiprocessing.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></a> usually need to be unpickleable from within
+the child process. If you tried typing the above example directly into a REPL it
+could lead to an <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a> in the child process trying to locate the
+<em>f</em> function in the <code class="docutils literal notranslate"><span class="pre">__main__</span></code> module.</p>
 </section>
 <section id="contexts-and-start-methods">
 <span id="multiprocessing-start-methods"></span><h3>Contexts and start methods<a class="headerlink" href="#contexts-and-start-methods" title="連結到這個標頭">¶</a></h3>
 <p>Depending on the platform, <a class="reference internal" href="#module-multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">multiprocessing</span></code></a> supports three ways
 to start a process.  These <em>start methods</em> are</p>
 <blockquote>
-<div><dl>
+<div><dl id="multiprocessing-start-method-spawn">
 <dt><em>spawn</em></dt><dd><p>The parent process starts a fresh Python interpreter process.  The
 child process will only inherit those resources necessary to run
 the process object's <a class="reference internal" href="#multiprocessing.Process.run" title="multiprocessing.Process.run"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run()</span></code></a> method.  In particular,
@@ -330,6 +334,8 @@ will not be inherited.  Starting a process using this method is
 rather slow compared to using <em>fork</em> or <em>forkserver</em>.</p>
 <p>Available on POSIX and Windows platforms.  The default on Windows and macOS.</p>
 </dd>
+</dl>
+<dl id="multiprocessing-start-method-fork">
 <dt><em>fork</em></dt><dd><p>The parent process uses <a class="reference internal" href="os.html#os.fork" title="os.fork"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.fork()</span></code></a> to fork the Python
 interpreter.  The child process, when it begins, is effectively
 identical to the parent process.  All resources of the parent are
@@ -349,6 +355,8 @@ raise a <a class="reference internal" href="exceptions.html#DeprecationWarning" 
 See the <a class="reference internal" href="os.html#os.fork" title="os.fork"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.fork()</span></code></a> documentation for further explanation.</p>
 </div>
 </dd>
+</dl>
+<dl id="multiprocessing-start-method-forkserver">
 <dt><em>forkserver</em></dt><dd><p>When the program starts and selects the <em>forkserver</em> start method,
 a server process is spawned.  From then on, whenever a new process
 is needed, the parent process connects to the server and requests
@@ -425,9 +433,12 @@ program.</p>
 processes for a different context.  In particular, locks created using
 the <em>fork</em> context cannot be passed to processes started using the
 <em>spawn</em> or <em>forkserver</em> start methods.</p>
-<p>A library which wants to use a particular start method should probably
-use <a class="reference internal" href="#multiprocessing.get_context" title="multiprocessing.get_context"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_context()</span></code></a> to avoid interfering with the choice of the
-library user.</p>
+<p>Libraries using <a class="reference internal" href="#module-multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">multiprocessing</span></code></a> or
+<a class="reference internal" href="concurrent.futures.html#concurrent.futures.ProcessPoolExecutor" title="concurrent.futures.ProcessPoolExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessPoolExecutor</span></code></a> should be designed to allow
+their users to provide their own multiprocessing context.  Using a specific
+context of your own within a library can lead to incompatibilities with the
+rest of the library user's application.  Always document if your library
+requires a specific start method.</p>
 <div class="admonition warning">
 <p class="admonition-title">警告</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">'spawn'</span></code> and <code class="docutils literal notranslate"><span class="pre">'forkserver'</span></code> start methods generally cannot
@@ -706,8 +717,39 @@ inherited from the creating process.</p>
 which defaults to <code class="docutils literal notranslate"><span class="pre">()</span></code>, can be used to specify a list or tuple of the arguments
 to pass to <em>target</em>.</p>
 <p>If a subclass overrides the constructor, it must make sure it invokes the
-base class constructor (<code class="xref py py-meth docutils literal notranslate"><span class="pre">Process.__init__()</span></code>) before doing anything else
+base class constructor (<code class="docutils literal notranslate"><span class="pre">super().__init__()</span></code>) before doing anything else
 to the process.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>In general, all arguments to <a class="reference internal" href="#multiprocessing.Process" title="multiprocessing.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></a> must be picklable.  This is
+frequently observed when trying to create a <a class="reference internal" href="#multiprocessing.Process" title="multiprocessing.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></a> or use a
+<a class="reference internal" href="concurrent.futures.html#concurrent.futures.ProcessPoolExecutor" title="concurrent.futures.ProcessPoolExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">concurrent.futures.ProcessPoolExecutor</span></code></a> from a REPL with a
+locally defined <em>target</em> function.</p>
+<p>Passing a callable object defined in the current REPL session causes the
+child process to die via an uncaught <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a> exception when
+starting as <em>target</em> must have been defined within an importable module
+in order to be loaded during unpickling.</p>
+<p>Example of this uncatchable error from the child:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">multiprocessing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">mp</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">knigit</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Ni!&quot;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">process</span> <span class="o">=</span> <span class="n">mp</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">knigit</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">process</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">):</span>
+<span class="go">  File &quot;.../multiprocessing/spawn.py&quot;, line ..., in spawn_main</span>
+<span class="go">  File &quot;.../multiprocessing/spawn.py&quot;, line ..., in _main</span>
+<span class="go">AttributeError: module &#39;__main__&#39; has no attribute &#39;knigit&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">process</span>
+<span class="go">&lt;SpawnProcess name=&#39;SpawnProcess-1&#39; pid=379473 parent=378707 stopped exitcode=1&gt;</span>
+</pre></div>
+</div>
+<p>See <a class="reference internal" href="#multiprocessing-programming-spawn"><span class="std std-ref">The spawn and forkserver start methods</span></a>.  While this restriction is
+not true if using the <code class="docutils literal notranslate"><span class="pre">&quot;fork&quot;</span></code> start method, as of Python <code class="docutils literal notranslate"><span class="pre">3.14</span></code> that
+is no longer the default on any platform.  See
+<a class="reference internal" href="#multiprocessing-start-methods"><span class="std std-ref">Contexts and start methods</span></a>.
+See also <a class="reference external" href="https://github.com/python/cpython/issues/132898">gh-132898</a>.</p>
+</div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.3 版的變更: </span>新增 <em>daemon</em> 參數。</p>
 </div>
@@ -3191,14 +3233,15 @@ and discarding the cache when the pid changes. For example:</p>
 </div></blockquote>
 </section>
 <section id="the-spawn-and-forkserver-start-methods">
-<h3>The <em>spawn</em> and <em>forkserver</em> start methods<a class="headerlink" href="#the-spawn-and-forkserver-start-methods" title="連結到這個標頭">¶</a></h3>
+<span id="multiprocessing-programming-forkserver"></span><span id="multiprocessing-programming-spawn"></span><h3>The <em>spawn</em> and <em>forkserver</em> start methods<a class="headerlink" href="#the-spawn-and-forkserver-start-methods" title="連結到這個標頭">¶</a></h3>
 <p>There are a few extra restrictions which don't apply to the <em>fork</em>
 start method.</p>
 <p>More picklability</p>
 <blockquote>
-<div><p>Ensure that all arguments to <code class="xref py py-meth docutils literal notranslate"><span class="pre">Process.__init__()</span></code> are picklable.
-Also, if you subclass <a class="reference internal" href="#multiprocessing.Process" title="multiprocessing.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></a> then make sure that
-instances will be picklable when the <a class="reference internal" href="#multiprocessing.Process.start" title="multiprocessing.Process.start"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Process.start</span></code></a> method is called.</p>
+<div><p>Ensure that all arguments to <a class="reference internal" href="#multiprocessing.Process" title="multiprocessing.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></a> are
+picklable.  Also, if you subclass <code class="docutils literal notranslate"><span class="pre">Process.__init__</span></code>, you must make sure
+that instances will be picklable when the
+<a class="reference internal" href="#multiprocessing.Process.start" title="multiprocessing.Process.start"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Process.start</span></code></a> method is called.</p>
 </div></blockquote>
 <p>Global variables</p>
 <blockquote>
@@ -3657,7 +3700,7 @@ processes and collect the results:</p>
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/main/Doc/library/multiprocessing.rst"
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/multiprocessing.rst?plain=1"
             rel="nofollow">顯示原始碼
         </a>
       </li>
@@ -3749,7 +3792,7 @@ processes and collect the results:</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br>
     <br>
-      最後更新於 7月 22, 2025 (04:12 UTC)。
+      最後更新於 7月 28, 2025 (17:31 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
