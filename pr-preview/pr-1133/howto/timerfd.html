@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>timer file descriptor HOWTO &#8212; Python 3.13.5 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>計時器檔案描述器 (timerfd) 指南 &#8212; Python 3.13.5 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
@@ -89,7 +89,7 @@
   <div>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
-<li><a class="reference internal" href="#">timer file descriptor HOWTO</a><ul>
+<li><a class="reference internal" href="#">計時器檔案描述器 (timerfd) 指南</a><ul>
 <li><a class="reference internal" href="#examples">範例</a></li>
 </ul>
 </li>
@@ -152,7 +152,7 @@
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 如何達成任務</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">timer file descriptor HOWTO</a></li>
+        <li class="nav-item nav-item-this"><a href="">計時器檔案描述器 (timerfd) 指南</a></li>
                 <li class="right">
                     
 
@@ -183,49 +183,45 @@
           <div class="body" role="main">
             
   <section id="timer-file-descriptor-howto">
-<span id="timerfd-howto"></span><h1>timer file descriptor HOWTO<a class="headerlink" href="#timer-file-descriptor-howto" title="連結到這個標頭">¶</a></h1>
+<span id="timerfd-howto"></span><h1>計時器檔案描述器 (timerfd) 指南<a class="headerlink" href="#timer-file-descriptor-howto" title="連結到這個標頭">¶</a></h1>
 <dl class="field-list simple">
-<dt class="field-odd">Release<span class="colon">:</span></dt>
+<dt class="field-odd">發佈版本<span class="colon">:</span></dt>
 <dd class="field-odd"><p>1.13</p>
 </dd>
 </dl>
-<p>This HOWTO discusses Python's support for the linux timer file descriptor.</p>
+<p>此篇指南探討 Python 對 Linux 計時器檔案描述器的支援。</p>
 <section id="examples">
 <h2>範例<a class="headerlink" href="#examples" title="連結到這個標頭">¶</a></h2>
-<p>The following example shows how to use a timer file descriptor
-to execute a function twice a second:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Practical scripts should use really use a non-blocking timer,</span>
-<span class="c1"># we use a blocking timer here for simplicity.</span>
+<p>以下範例顯示如何使用計時器檔案描述器來每秒執行函式兩次：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 實際腳本應該使用非阻塞計時器，</span>
+<span class="c1"># 在這裡為了簡單起見我們使用阻塞計時器。</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">time</span>
 
-<span class="c1"># Create the timer file descriptor</span>
+<span class="c1"># 建立計時器檔案描述器</span>
 <span class="n">fd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">timerfd_create</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">CLOCK_REALTIME</span><span class="p">)</span>
 
-<span class="c1"># Start the timer in 1 second, with an interval of half a second</span>
+<span class="c1"># 在 1 秒後開始計時器，間隔為半秒</span>
 <span class="n">os</span><span class="o">.</span><span class="n">timerfd_settime</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="c1"># Process timer events four times.</span>
+    <span class="c1"># 處理計時器事件四次。</span>
     <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
-        <span class="c1"># read() will block until the timer expires</span>
+        <span class="c1"># read() 會阻塞直到計時器到期</span>
         <span class="n">_</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Timer expired&quot;</span><span class="p">)</span>
 <span class="k">finally</span><span class="p">:</span>
-    <span class="c1"># Remember to close the timer file descriptor!</span>
+    <span class="c1"># 記得關閉計時器檔案描述器！</span>
     <span class="n">os</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>To avoid the precision loss caused by the <a class="reference internal" href="../library/functions.html#float" title="float"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> type,
-timer file descriptors allow specifying initial expiration and interval
-in integer nanoseconds with <code class="docutils literal notranslate"><span class="pre">_ns</span></code> variants of the functions.</p>
-<p>This example shows how <a class="reference internal" href="../library/select.html#select.epoll" title="select.epoll"><code class="xref py py-func docutils literal notranslate"><span class="pre">epoll()</span></code></a> can be used with timer file
-descriptors to wait until the file descriptor is ready for reading:</p>
+<p>為了避免由 <a class="reference internal" href="../library/functions.html#float" title="float"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a> 型別造成的精度損失，計時器檔案描述器允許使用函式的 <code class="docutils literal notranslate"><span class="pre">_ns</span></code> 變體以整數奈秒為單位指定初始到期時間和間隔。</p>
+<p>此範例展示如何將 <a class="reference internal" href="../library/select.html#select.epoll" title="select.epoll"><code class="xref py py-func docutils literal notranslate"><span class="pre">epoll()</span></code></a> 與計時器檔案描述器一起使用，用於等待檔案描述器直到它準備好讀取：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">time</span><span class="o">,</span><span class="w"> </span><span class="nn">select</span><span class="o">,</span><span class="w"> </span><span class="nn">socket</span><span class="o">,</span><span class="w"> </span><span class="nn">sys</span>
 
-<span class="c1"># Create an epoll object</span>
+<span class="c1"># 建立 epoll 物件</span>
 <span class="n">ep</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">epoll</span><span class="p">()</span>
 
-<span class="c1"># In this example, use loopback address to send &quot;stop&quot; command to the server.</span>
+<span class="c1"># 在此範例中，使用回送位址 (loopback address) 向伺服器發送 &quot;stop&quot; 命令。</span>
 <span class="c1">#</span>
 <span class="c1"># $ telnet 127.0.0.1 1234</span>
 <span class="c1"># Trying 127.0.0.1...</span>
@@ -240,17 +236,17 @@ descriptors to wait until the file descriptor is ready for reading:</p>
 <span class="n">sock</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">ep</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="n">select</span><span class="o">.</span><span class="n">EPOLLIN</span><span class="p">)</span>
 
-<span class="c1"># Create timer file descriptors in non-blocking mode.</span>
+<span class="c1"># 以非阻塞模式建立計時器檔案描述器。</span>
 <span class="n">num</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">fds</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num</span><span class="p">):</span>
     <span class="n">fd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">timerfd_create</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">CLOCK_REALTIME</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">TFD_NONBLOCK</span><span class="p">)</span>
     <span class="n">fds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span>
-    <span class="c1"># Register the timer file descriptor for read events</span>
+    <span class="c1"># 為讀取事件註冊計時器檔案描述器</span>
     <span class="n">ep</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">select</span><span class="o">.</span><span class="n">EPOLLIN</span><span class="p">)</span>
 
-<span class="c1"># Start the timer with os.timerfd_settime_ns() in nanoseconds.</span>
-<span class="c1"># Timer 1 fires every 0.25 seconds; timer 2 every 0.5 seconds; etc</span>
+<span class="c1"># 使用 os.timerfd_settime_ns() 以奈秒為單位啟動計時器。</span>
+<span class="c1"># 計時器 1 每 0.25 秒觸發一次；計時器 2 每 0.5 秒觸發一次；以此類推</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">fd</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fds</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="n">one_sec_in_nsec</span> <span class="o">=</span> <span class="mi">10</span><span class="o">**</span><span class="mi">9</span>
     <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="n">one_sec_in_nsec</span>
@@ -261,45 +257,44 @@ descriptors to wait until the file descriptor is ready for reading:</p>
     <span class="n">conn</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">is_active</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="k">while</span> <span class="n">is_active</span><span class="p">:</span>
-        <span class="c1"># Wait for the timer to expire for 3 seconds.</span>
-        <span class="c1"># epoll.poll() returns a list of (fd, event) pairs.</span>
-        <span class="c1"># fd is a file descriptor.</span>
-        <span class="c1"># sock and conn[=returned value of socket.accept()] are socket objects, not file descriptors.</span>
-        <span class="c1"># So use sock.fileno() and conn.fileno() to get the file descriptors.</span>
+        <span class="c1"># 等待計時器在 3 秒內到期。</span>
+        <span class="c1"># epoll.poll() 回傳一個 (fd, event) 配對的串列。</span>
+        <span class="c1"># fd 是檔案描述器。</span>
+        <span class="c1"># sock 和 conn[=socket.accept() 的回傳值] 是 socket 物件，不是檔案描述器。</span>
+        <span class="c1"># 所以要使用 sock.fileno() 和 conn.fileno() 來取得檔案描述器。</span>
         <span class="n">events</span> <span class="o">=</span> <span class="n">ep</span><span class="o">.</span><span class="n">poll</span><span class="p">(</span><span class="n">timeout</span><span class="p">)</span>
 
-        <span class="c1"># If more than one timer file descriptors are ready for reading at once,</span>
-        <span class="c1"># epoll.poll() returns a list of (fd, event) pairs.</span>
+        <span class="c1"># 如果同時有多個計時器檔案描述器準備好讀取，</span>
+        <span class="c1"># epoll.poll() 會回傳一個 (fd, event) 配對的串列。</span>
         <span class="c1">#</span>
-        <span class="c1"># In this example settings,</span>
-        <span class="c1">#    1st timer fires every 0.25 seconds in 0.25 seconds. (0.25, 0.5, 0.75, 1.0, ...)</span>
-        <span class="c1">#    2nd timer every 0.5 seconds in 0.5 seconds. (0.5, 1.0, 1.5, 2.0, ...)</span>
-        <span class="c1">#    3rd timer every 0.75 seconds in 0.75 seconds. (0.75, 1.5, 2.25, 3.0, ...)</span>
+        <span class="c1"># 在此範例設定中，</span>
+        <span class="c1">#    第 1 個計時器在 0.25 秒內每 0.25 秒觸發一次。(0.25, 0.5, 0.75, 1.0, ...)</span>
+        <span class="c1">#    第 2 個計時器在 0.5 秒內每 0.5 秒觸發一次。(0.5, 1.0, 1.5, 2.0, ...)</span>
+        <span class="c1">#    第 3 個計時器在 0.75 秒內每 0.75 秒觸發一次。(0.75, 1.5, 2.25, 3.0, ...)</span>
         <span class="c1">#</span>
-        <span class="c1">#    In 0.25 seconds, only 1st timer fires.</span>
-        <span class="c1">#    In 0.5 seconds, 1st timer and 2nd timer fires at once.</span>
-        <span class="c1">#    In 0.75 seconds, 1st timer and 3rd timer fires at once.</span>
-        <span class="c1">#    In 1.5 seconds, 1st timer, 2nd timer and 3rd timer fires at once.</span>
+        <span class="c1">#    在 0.25 秒時，只有第 1 個計時器觸發。</span>
+        <span class="c1">#    在 0.5 秒時，第 1 個計時器和第 2 個計時器同時觸發。</span>
+        <span class="c1">#    在 0.75 秒時，第 1 個計時器和第 3 個計時器同時觸發。</span>
+        <span class="c1">#    在 1.5 秒時，第 1、2、3 個計時器同時觸發。</span>
         <span class="c1">#</span>
-        <span class="c1"># If a timer file descriptor is signaled more than once since</span>
-        <span class="c1"># the last os.read() call, os.read() returns the number of signaled</span>
-        <span class="c1"># as host order of class bytes.</span>
+        <span class="c1"># 如果計時器檔案描述器自上次 os.read() 呼叫以來被觸發多次，</span>
+        <span class="c1"># os.read() 會以主機類別位元組順序回傳被觸發次數。</span>
         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Signaled events=</span><span class="si">{</span><span class="n">events</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">fd</span><span class="p">,</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">events</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">event</span> <span class="o">&amp;</span> <span class="n">select</span><span class="o">.</span><span class="n">EPOLLIN</span><span class="p">:</span>
                 <span class="k">if</span> <span class="n">fd</span> <span class="o">==</span> <span class="n">sock</span><span class="o">.</span><span class="n">fileno</span><span class="p">():</span>
-                    <span class="c1"># Check if there is a connection request.</span>
+                    <span class="c1"># 檢查是否有連線請求。</span>
                     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Accepting connection </span><span class="si">{</span><span class="n">fd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="n">conn</span><span class="p">,</span> <span class="n">addr</span> <span class="o">=</span> <span class="n">sock</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
                     <span class="n">conn</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
                     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Accepted connection </span><span class="si">{</span><span class="n">conn</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="n">addr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="n">ep</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">select</span><span class="o">.</span><span class="n">EPOLLIN</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="n">conn</span> <span class="ow">and</span> <span class="n">fd</span> <span class="o">==</span> <span class="n">conn</span><span class="o">.</span><span class="n">fileno</span><span class="p">():</span>
-                    <span class="c1"># Check if there is data to read.</span>
+                    <span class="c1"># 檢查是否有資料要讀取。</span>
                     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading data </span><span class="si">{</span><span class="n">fd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="n">data</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
-                        <span class="c1"># You should catch UnicodeDecodeError exception for safety.</span>
+                        <span class="c1"># 為了安全起見，你應該捕獲 UnicodeDecodeError 例外。</span>
                         <span class="n">cmd</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
                         <span class="k">if</span> <span class="n">cmd</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;stop&quot;</span><span class="p">):</span>
                             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stopping server&quot;</span><span class="p">)</span>
@@ -307,7 +302,7 @@ descriptors to wait until the file descriptor is ready for reading:</p>
                         <span class="k">else</span><span class="p">:</span>
                             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown command: </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="c1"># No more data, close connection</span>
+                        <span class="c1"># 沒有更多資料，關閉連線</span>
                         <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Closing connection </span><span class="si">{</span><span class="n">fd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                         <span class="n">ep</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
                         <span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -325,11 +320,10 @@ descriptors to wait until the file descriptor is ready for reading:</p>
     <span class="n">ep</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>This example shows how <a class="reference internal" href="../library/select.html#select.select" title="select.select"><code class="xref py py-func docutils literal notranslate"><span class="pre">select()</span></code></a> can be used with timer file
-descriptors to wait until the file descriptor is ready for reading:</p>
+<p>此範例展示如何將 <a class="reference internal" href="../library/select.html#select.select" title="select.select"><code class="xref py py-func docutils literal notranslate"><span class="pre">select()</span></code></a> 與計時器檔案描述器一起使用，用於等待檔案描述器直到它準備好讀取：</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span><span class="o">,</span><span class="w"> </span><span class="nn">time</span><span class="o">,</span><span class="w"> </span><span class="nn">select</span><span class="o">,</span><span class="w"> </span><span class="nn">socket</span><span class="o">,</span><span class="w"> </span><span class="nn">sys</span>
 
-<span class="c1"># In this example, use loopback address to send &quot;stop&quot; command to the server.</span>
+<span class="c1"># 在此範例中，使用回送位址向伺服器發送 &quot;stop&quot; 命令。</span>
 <span class="c1">#</span>
 <span class="c1"># $ telnet 127.0.0.1 1234</span>
 <span class="c1"># Trying 127.0.0.1...</span>
@@ -343,14 +337,14 @@ descriptors to wait until the file descriptor is ready for reading:</p>
 <span class="n">sock</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
 <span class="n">sock</span><span class="o">.</span><span class="n">listen</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
-<span class="c1"># Create timer file descriptors in non-blocking mode.</span>
+<span class="c1"># 以非阻塞模式建立計時器檔案描述器。</span>
 <span class="n">num</span> <span class="o">=</span> <span class="mi">3</span>
 <span class="n">fds</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">timerfd_create</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">CLOCK_REALTIME</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">TFD_NONBLOCK</span><span class="p">)</span>
        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num</span><span class="p">)]</span>
 <span class="n">select_fds</span> <span class="o">=</span> <span class="n">fds</span> <span class="o">+</span> <span class="p">[</span><span class="n">sock</span><span class="p">]</span>
 
-<span class="c1"># Start the timers with os.timerfd_settime() in seconds.</span>
-<span class="c1"># Timer 1 fires every 0.25 seconds; timer 2 every 0.5 seconds; etc</span>
+<span class="c1"># 使用 os.timerfd_settime() 以秒為單位啟動計時器。</span>
+<span class="c1"># 計時器 1 每 0.25 秒觸發一次；計時器 2 每 0.5 秒觸發一次；以此類推</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">fd</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fds</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
    <span class="n">os</span><span class="o">.</span><span class="n">timerfd_settime</span><span class="p">(</span><span class="n">fd</span><span class="p">,</span> <span class="n">initial</span><span class="o">=</span><span class="n">i</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="n">i</span><span class="o">/</span><span class="mi">4</span><span class="p">)</span>
 
@@ -359,23 +353,23 @@ descriptors to wait until the file descriptor is ready for reading:</p>
     <span class="n">conn</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">is_active</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="k">while</span> <span class="n">is_active</span><span class="p">:</span>
-       <span class="c1"># Wait for the timer to expire for 3 seconds.</span>
-       <span class="c1"># select.select() returns a list of file descriptors or objects.</span>
+       <span class="c1"># 等待計時器在 3 秒內到期。</span>
+       <span class="c1"># select.select() 回傳檔案描述器或物件的串列。</span>
        <span class="n">rfd</span><span class="p">,</span> <span class="n">wfd</span><span class="p">,</span> <span class="n">xfd</span> <span class="o">=</span> <span class="n">select</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">select_fds</span><span class="p">,</span> <span class="n">select_fds</span><span class="p">,</span> <span class="n">select_fds</span><span class="p">,</span> <span class="n">timeout</span><span class="p">)</span>
        <span class="k">for</span> <span class="n">fd</span> <span class="ow">in</span> <span class="n">rfd</span><span class="p">:</span>
            <span class="k">if</span> <span class="n">fd</span> <span class="o">==</span> <span class="n">sock</span><span class="p">:</span>
-               <span class="c1"># Check if there is a connection request.</span>
+               <span class="c1"># 檢查是否有連線請求。</span>
                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Accepting connection </span><span class="si">{</span><span class="n">fd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                <span class="n">conn</span><span class="p">,</span> <span class="n">addr</span> <span class="o">=</span> <span class="n">sock</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
                <span class="n">conn</span><span class="o">.</span><span class="n">setblocking</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Accepted connection </span><span class="si">{</span><span class="n">conn</span><span class="si">}</span><span class="s2"> from </span><span class="si">{</span><span class="n">addr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                <span class="n">select_fds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
            <span class="k">elif</span> <span class="n">conn</span> <span class="ow">and</span> <span class="n">fd</span> <span class="o">==</span> <span class="n">conn</span><span class="p">:</span>
-               <span class="c1"># Check if there is data to read.</span>
+               <span class="c1"># 檢查是否有資料要讀取。</span>
                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reading data </span><span class="si">{</span><span class="n">fd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                <span class="n">data</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1024</span><span class="p">)</span>
                <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
-                   <span class="c1"># You should catch UnicodeDecodeError exception for safety.</span>
+                   <span class="c1"># 為了安全起見，你應該捕獲 UnicodeDecodeError 例外。</span>
                    <span class="n">cmd</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
                    <span class="k">if</span> <span class="n">cmd</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;stop&quot;</span><span class="p">):</span>
                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stopping server&quot;</span><span class="p">)</span>
@@ -383,7 +377,7 @@ descriptors to wait until the file descriptor is ready for reading:</p>
                    <span class="k">else</span><span class="p">:</span>
                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown command: </span><span class="si">{</span><span class="n">cmd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                <span class="k">else</span><span class="p">:</span>
-                   <span class="c1"># No more data, close connection</span>
+                   <span class="c1"># 沒有更多資料，關閉連線</span>
                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Closing connection </span><span class="si">{</span><span class="n">fd</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                    <span class="n">select_fds</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
                    <span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
@@ -414,7 +408,7 @@ descriptors to wait until the file descriptor is ready for reading:</p>
   <div>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
-<li><a class="reference internal" href="#">timer file descriptor HOWTO</a><ul>
+<li><a class="reference internal" href="#">計時器檔案描述器 (timerfd) 指南</a><ul>
 <li><a class="reference internal" href="#examples">範例</a></li>
 </ul>
 </li>
@@ -480,7 +474,7 @@ descriptors to wait until the file descriptor is ready for reading:</p>
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 如何達成任務</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">timer file descriptor HOWTO</a></li>
+        <li class="nav-item nav-item-this"><a href="">計時器檔案描述器 (timerfd) 指南</a></li>
                 <li class="right">
                     
 
@@ -527,7 +521,7 @@ descriptors to wait until the file descriptor is ready for reading:</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br>
     <br>
-      最後更新於 7月 28, 2025 (17:35 UTC)。
+      最後更新於 7月 30, 2025 (00:23 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
