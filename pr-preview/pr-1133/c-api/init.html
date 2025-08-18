@@ -98,6 +98,7 @@
 <li><a class="reference internal" href="#releasing-the-gil-from-extension-code">Releasing the GIL from extension code</a></li>
 <li><a class="reference internal" href="#non-python-created-threads">Non-Python created threads</a></li>
 <li><a class="reference internal" href="#cautions-about-fork">Cautions about fork()</a></li>
+<li><a class="reference internal" href="#cautions-regarding-runtime-finalization">Cautions regarding runtime finalization</a></li>
 <li><a class="reference internal" href="#high-level-api">高階 API</a></li>
 <li><a class="reference internal" href="#low-level-api">低階 API</a></li>
 </ul>
@@ -650,7 +651,11 @@ please report it).  Memory tied up in circular references between objects is not
 freed.  Some memory allocated by extension modules may not be freed.  Some
 extensions may not work properly if their initialization routine is called more
 than once; this can happen if an application calls <a class="reference internal" href="#c.Py_Initialize" title="Py_Initialize"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_Initialize()</span></code></a> and
-<a class="reference internal" href="#c.Py_FinalizeEx" title="Py_FinalizeEx"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_FinalizeEx()</span></code></a> more than once.</p>
+<a class="reference internal" href="#c.Py_FinalizeEx" title="Py_FinalizeEx"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_FinalizeEx()</span></code></a> more than once.  <a class="reference internal" href="#c.Py_FinalizeEx" title="Py_FinalizeEx"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_FinalizeEx()</span></code></a> must not be
+called recursively from within itself.  Therefore, it must not be called by
+any code that may be run as part of the interpreter shutdown process, such
+as <a class="reference internal" href="../library/atexit.html#module-atexit" title="atexit: Register and execute cleanup functions."><code class="xref py py-mod docutils literal notranslate"><span class="pre">atexit</span></code></a> handlers, object finalizers, or any code that may be run
+while flushing the stdout and stderr files.</p>
 <p class="audit-hook">引發一個不附帶引數的<a class="reference internal" href="../library/sys.html#auditing"><span class="std std-ref">稽核事件</span></a> <code class="docutils literal notranslate"><span class="pre">cpython._PySys_ClearAuditHooks</span></code>。</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.6 版被加入.</span></p>
@@ -1201,6 +1206,32 @@ thread, where the CPython global runtime was originally initialized.
 The only exception is if <code class="xref c c-func docutils literal notranslate"><span class="pre">exec()</span></code> will be called immediately
 after.</p>
 </section>
+<section id="cautions-regarding-runtime-finalization">
+<span id="id1"></span><h3>Cautions regarding runtime finalization<a class="headerlink" href="#cautions-regarding-runtime-finalization" title="連結到這個標頭">¶</a></h3>
+<p>In the late stage of <a class="reference internal" href="../glossary.html#term-interpreter-shutdown"><span class="xref std std-term">interpreter shutdown</span></a>, after attempting to wait for
+non-daemon threads to exit (though this can be interrupted by
+<a class="reference internal" href="../library/exceptions.html#KeyboardInterrupt" title="KeyboardInterrupt"><code class="xref py py-class docutils literal notranslate"><span class="pre">KeyboardInterrupt</span></code></a>) and running the <a class="reference internal" href="../library/atexit.html#module-atexit" title="atexit: Register and execute cleanup functions."><code class="xref py py-mod docutils literal notranslate"><span class="pre">atexit</span></code></a> functions, the runtime
+is marked as <em>finalizing</em>: <a class="reference internal" href="#c.Py_IsFinalizing" title="Py_IsFinalizing"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_IsFinalizing()</span></code></a> and
+<a class="reference internal" href="../library/sys.html#sys.is_finalizing" title="sys.is_finalizing"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.is_finalizing()</span></code></a> return true.  At this point, only the <em>finalization
+thread</em> that initiated finalization (typically the main thread) is allowed to
+acquire the <a class="reference internal" href="../glossary.html#term-GIL"><span class="xref std std-term">GIL</span></a>.</p>
+<p>If any thread, other than the finalization thread, attempts to acquire the GIL
+during finalization, either explicitly via <a class="reference internal" href="#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a>,
+<a class="reference internal" href="#c.Py_END_ALLOW_THREADS" title="Py_END_ALLOW_THREADS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_END_ALLOW_THREADS</span></code></a>, <a class="reference internal" href="#c.PyEval_AcquireThread" title="PyEval_AcquireThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_AcquireThread()</span></code></a>, or
+<code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_AcquireLock()</span></code>, or implicitly when the interpreter attempts to
+reacquire it after having yielded it, the thread enters <strong>a permanently blocked
+state</strong> where it remains until the program exits.  In most cases this is
+harmless, but this can result in deadlock if a later stage of finalization
+attempts to acquire a lock owned by the blocked thread, or otherwise waits on
+the blocked thread.</p>
+<p>Gross? Yes. This prevents random crashes and/or unexpectedly skipped C++
+finalizations further up the call stack when such threads were forcibly exited
+here in CPython 3.13.7 and earlier. The CPython runtime GIL acquiring C APIs
+have never had any error reporting or handling expectations at GIL acquisition
+time that would've allowed for graceful exit from this situation. Changing that
+would require new stable C APIs and rewriting the majority of C code in the
+CPython ecosystem to use those with error handling.</p>
+</section>
 <section id="high-level-api">
 <h3>高階 API<a class="headerlink" href="#high-level-api" title="連結到這個標頭">¶</a></h3>
 <p>These are the most commonly used types and functions when writing C extension
@@ -1269,11 +1300,14 @@ created, the current thread must not have acquired it, otherwise deadlock
 ensues.</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>Calling this function from a thread when the runtime is finalizing
-will terminate the thread, even if the thread was not created by Python.
-You can use <a class="reference internal" href="#c.Py_IsFinalizing" title="Py_IsFinalizing"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_IsFinalizing()</span></code></a> or <a class="reference internal" href="../library/sys.html#sys.is_finalizing" title="sys.is_finalizing"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.is_finalizing()</span></code></a> to
-check if the interpreter is in process of being finalized before calling
-this function to avoid unwanted termination.</p>
+<p>Calling this function from a thread when the runtime is finalizing will
+hang the thread until the program exits, even if the thread was not
+created by Python.  Refer to
+<a class="reference internal" href="#cautions-regarding-runtime-finalization"><span class="std std-ref">Cautions regarding runtime finalization</span></a> for more details.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13.7 (unreleased) 版的變更: </span>Hangs the current thread, rather than terminating it, if called while the
+interpreter is finalizing.</p>
 </div>
 </dd></dl>
 
@@ -1331,11 +1365,14 @@ to <a class="reference internal" href="#c.PyGILState_Release" title="PyGILState_
 to call arbitrary Python code.  Failure is a fatal error.</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>Calling this function from a thread when the runtime is finalizing
-will terminate the thread, even if the thread was not created by Python.
-You can use <a class="reference internal" href="#c.Py_IsFinalizing" title="Py_IsFinalizing"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_IsFinalizing()</span></code></a> or <a class="reference internal" href="../library/sys.html#sys.is_finalizing" title="sys.is_finalizing"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.is_finalizing()</span></code></a> to
-check if the interpreter is in process of being finalized before calling
-this function to avoid unwanted termination.</p>
+<p>Calling this function from a thread when the runtime is finalizing will
+hang the thread until the program exits, even if the thread was not
+created by Python.  Refer to
+<a class="reference internal" href="#cautions-regarding-runtime-finalization"><span class="std std-ref">Cautions regarding runtime finalization</span></a> for more details.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13.7 (unreleased) 版的變更: </span>Hangs the current thread, rather than terminating it, if called while the
+interpreter is finalizing.</p>
 </div>
 </dd></dl>
 
@@ -1653,16 +1690,19 @@ exception (if any) for the thread is cleared. This raises no exceptions.</p>
 If this thread already has the lock, deadlock ensues.</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>Calling this function from a thread when the runtime is finalizing
-will terminate the thread, even if the thread was not created by Python.
-You can use <a class="reference internal" href="#c.Py_IsFinalizing" title="Py_IsFinalizing"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_IsFinalizing()</span></code></a> or <a class="reference internal" href="../library/sys.html#sys.is_finalizing" title="sys.is_finalizing"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.is_finalizing()</span></code></a> to
-check if the interpreter is in process of being finalized before calling
-this function to avoid unwanted termination.</p>
+<p>Calling this function from a thread when the runtime is finalizing will
+hang the thread until the program exits, even if the thread was not
+created by Python.  Refer to
+<a class="reference internal" href="#cautions-regarding-runtime-finalization"><span class="std std-ref">Cautions regarding runtime finalization</span></a> for more details.</p>
 </div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.8 版的變更: </span>Updated to be consistent with <a class="reference internal" href="#c.PyEval_RestoreThread" title="PyEval_RestoreThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_RestoreThread()</span></code></a>,
 <a class="reference internal" href="#c.Py_END_ALLOW_THREADS" title="Py_END_ALLOW_THREADS"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_END_ALLOW_THREADS()</span></code></a>, and <a class="reference internal" href="#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a>,
 and terminate the current thread if called while the interpreter is finalizing.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13.7 (unreleased) 版的變更: </span>Hangs the current thread, rather than terminating it, if called while the
+interpreter is finalizing.</p>
 </div>
 <p><a class="reference internal" href="#c.PyEval_RestoreThread" title="PyEval_RestoreThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_RestoreThread()</span></code></a> is a higher-level function which is always
 available (even when threads have not been initialized).</p>
@@ -1683,7 +1723,7 @@ available (even when threads have not been initialized).</p>
 </section>
 </section>
 <section id="sub-interpreter-support">
-<span id="id1"></span><h2>Sub-interpreter support<a class="headerlink" href="#sub-interpreter-support" title="連結到這個標頭">¶</a></h2>
+<span id="id2"></span><h2>Sub-interpreter support<a class="headerlink" href="#sub-interpreter-support" title="連結到這個標頭">¶</a></h2>
 <p>While in most uses, you will only embed a single Python interpreter, there
 are cases where you need to create several independent interpreters in the
 same process and perhaps even in the same thread. Sub-interpreters allow
@@ -2519,7 +2559,7 @@ issue a fatal error.</p>
 </dd></dl>
 
 <section id="python-critical-section-api">
-<span id="id2"></span><h3>Python Critical Section API<a class="headerlink" href="#python-critical-section-api" title="連結到這個標頭">¶</a></h3>
+<span id="id3"></span><h3>Python Critical Section API<a class="headerlink" href="#python-critical-section-api" title="連結到這個標頭">¶</a></h3>
 <p>The critical section API provides a deadlock avoidance layer on top of
 per-object locks for <a class="reference internal" href="../glossary.html#term-free-threading"><span class="xref std std-term">free-threaded</span></a> CPython.  They are
 intended to replace reliance on the <a class="reference internal" href="../glossary.html#term-global-interpreter-lock"><span class="xref std std-term">global interpreter lock</span></a>, and are
@@ -2646,6 +2686,7 @@ address first) to avoid lock ordering deadlocks.</p>
 <li><a class="reference internal" href="#releasing-the-gil-from-extension-code">Releasing the GIL from extension code</a></li>
 <li><a class="reference internal" href="#non-python-created-threads">Non-Python created threads</a></li>
 <li><a class="reference internal" href="#cautions-about-fork">Cautions about fork()</a></li>
+<li><a class="reference internal" href="#cautions-regarding-runtime-finalization">Cautions regarding runtime finalization</a></li>
 <li><a class="reference internal" href="#high-level-api">高階 API</a></li>
 <li><a class="reference internal" href="#low-level-api">低階 API</a></li>
 </ul>
@@ -2783,7 +2824,7 @@ address first) to avoid lock ordering deadlocks.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br>
     <br>
-      最後更新於 8月 17, 2025 (00:23 UTC)。
+      最後更新於 8月 18, 2025 (00:23 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
