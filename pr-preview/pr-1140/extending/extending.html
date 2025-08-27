@@ -997,7 +997,14 @@ references to all its items, so when item 1 is replaced, it has to dispose of
 the original item 1.  Now let's suppose the original item 1 was an instance of a
 user-defined class, and let's further suppose that the class defined a
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">__del__()</span></code> method.  If this class instance has a reference count of 1,
-disposing of it will call its <code class="xref py py-meth docutils literal notranslate"><span class="pre">__del__()</span></code> method.</p>
+disposing of it will call its <code class="xref py py-meth docutils literal notranslate"><span class="pre">__del__()</span></code> method. Internally,
+<a class="reference internal" href="../c-api/list.html#c.PyList_SetItem" title="PyList_SetItem"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyList_SetItem()</span></code></a> calls <a class="reference internal" href="../c-api/refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> on the replaced item,
+which invokes replaced item's corresponding
+<a class="reference internal" href="../c-api/typeobj.html#c.PyTypeObject.tp_dealloc" title="PyTypeObject.tp_dealloc"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_dealloc</span></code></a> function. During
+deallocation, <a class="reference internal" href="../c-api/typeobj.html#c.PyTypeObject.tp_dealloc" title="PyTypeObject.tp_dealloc"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_dealloc</span></code></a> calls
+<a class="reference internal" href="../c-api/typeobj.html#c.PyTypeObject.tp_finalize" title="PyTypeObject.tp_finalize"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_finalize</span></code></a>, which is mapped to the
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">__del__()</span></code> method for class instances (see <span class="target" id="index-4"></span><a class="pep reference external" href="https://peps.python.org/pep-0442/"><strong>PEP 442</strong></a>). This entire
+sequence happens synchronously within the <a class="reference internal" href="../c-api/list.html#c.PyList_SetItem" title="PyList_SetItem"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyList_SetItem()</span></code></a> call.</p>
 <p>Since it is written in Python, the <code class="xref py py-meth docutils literal notranslate"><span class="pre">__del__()</span></code> method can execute arbitrary
 Python code.  Could it perhaps do something to invalidate the reference to
 <code class="docutils literal notranslate"><span class="pre">item</span></code> in <code class="xref c c-func docutils literal notranslate"><span class="pre">bug()</span></code>?  You bet!  Assuming that the list passed into
@@ -1444,7 +1451,7 @@ this is still found in much existing code.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br>
     <br>
-      最後更新於 8月 26, 2025 (00:21 UTC)。
+      最後更新於 8月 27, 2025 (00:21 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
