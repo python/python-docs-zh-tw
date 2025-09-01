@@ -2564,12 +2564,19 @@ issue a fatal error.</p>
 per-object locks for <a class="reference internal" href="../glossary.html#term-free-threading"><span class="xref std std-term">free-threaded</span></a> CPython.  They are
 intended to replace reliance on the <a class="reference internal" href="../glossary.html#term-global-interpreter-lock"><span class="xref std std-term">global interpreter lock</span></a>, and are
 no-ops in versions of Python with the global interpreter lock.</p>
+<p>Critical sections are intended to be used for custom types implemented
+in C-API extensions. They should generally not be used with built-in types like
+<a class="reference internal" href="../library/stdtypes.html#list" title="list"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> and <a class="reference internal" href="../library/stdtypes.html#dict" title="dict"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> because their public C-APIs
+already use critical sections internally, with the notable
+exception of <a class="reference internal" href="dict.html#c.PyDict_Next" title="PyDict_Next"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyDict_Next()</span></code></a>, which requires critical section
+to be acquired externally.</p>
 <p>Critical sections avoid deadlocks by implicitly suspending active critical
-sections and releasing the locks during calls to <a class="reference internal" href="#c.PyEval_SaveThread" title="PyEval_SaveThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SaveThread()</span></code></a>.
-When <a class="reference internal" href="#c.PyEval_RestoreThread" title="PyEval_RestoreThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_RestoreThread()</span></code></a> is called, the most recent critical section
-is resumed, and its locks reacquired.  This means the critical section API
-provides weaker guarantees than traditional locks -- they are useful because
-their behavior is similar to the <a class="reference internal" href="../glossary.html#term-GIL"><span class="xref std std-term">GIL</span></a>.</p>
+sections, hence, they do not provide exclusive access such as provided by
+traditional locks like <a class="reference internal" href="#c.PyMutex" title="PyMutex"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMutex</span></code></a>.  When a critical section is started,
+the per-object lock for the object is acquired. If the code executed inside the
+critical section calls C-API functions then it can suspend the critical section thereby
+releasing the per-object lock, so other threads can acquire the per-object lock
+for the same object.</p>
 <p>The functions and structs used by the macros are exposed for cases
 where C macros are not available. They should only be used as in the
 given macro expansions. Note that the sizes and contents of the structures may
@@ -2824,7 +2831,7 @@ address first) to avoid lock ordering deadlocks.</p>
 <a href="https://www.python.org/psf/donations/">Please donate.</a>
 <br>
     <br>
-      最後更新於 8月 22, 2025 (14:39 UTC)。
+      最後更新於 9月 01, 2025 (22:01 UTC)。
     
       <a href="/bugs.html">Found a bug</a>?
     
