@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>signal --- 設定非同步事件的處理函式 &#8212; Python 3.13.7 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=5ff89526" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
+    
+    <script src="../_static/documentation_options.js?v=c3f79bfb"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.13.7 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權" href="../copyright.html" />
+    <link rel="next" title="mmap --- 記憶體對映檔案的支援" href="mmap.html" />
+    <link rel="prev" title="selectors --- 高階 I/O 多工" href="selectors.html" />
+    
+      
+      <link rel="canonical" href="https://docs.python.org/3/library/signal.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="../_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="../_static/py.svg">
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script>
+            <script type="text/javascript" src="../_static/search-focus.js"></script>
+            <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="Menu">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="../_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"></span>
+            <form role="search" class="search" action="../search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="快速搜尋" aria-label="快速搜尋" type="search" name="q">
+                <input type="submit" value="前往">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+            
+<label class="theme-selector-label">
+    Theme
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>Auto</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+    </select>
+</label>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">signal</span></code> --- 設定非同步事件的處理函式</a><ul>
+<li><a class="reference internal" href="#general-rules">一般規則</a><ul>
+<li><a class="reference internal" href="#execution-of-python-signal-handlers">Python 訊號處理程式的執行</a></li>
+<li><a class="reference internal" href="#signals-and-threads">訊號和執行緒</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-contents">模組內容</a></li>
+<li><a class="reference internal" href="#examples">範例</a></li>
+<li><a class="reference internal" href="#note-on-sigpipe">關於 SIGPIPE 的說明</a></li>
+<li><a class="reference internal" href="#note-on-signal-handlers-and-exceptions">訊號處理程式與例外的說明</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="selectors.html"
+                          title="上一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">selectors</span></code> --- 高階 I/O 多工</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="mmap.html"
+                          title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mmap</span></code> --- 記憶體對映檔案的支援</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/signal.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="mmap.html" title="mmap --- 記憶體對映檔案的支援"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="selectors.html" title="selectors --- 高階 I/O 多工"
+             accesskey="P">上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.13.7 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="ipc.html" accesskey="U">網路與行程間通訊</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">signal</span></code> --- 設定非同步事件的處理函式</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜尋" aria-label="快速搜尋" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    Theme
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>Auto</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-signal">
+<span id="signal-set-handlers-for-asynchronous-events"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">signal</span></code> --- 設定非同步事件的處理函式<a class="headerlink" href="#module-signal" title="連結到這個標頭">¶</a></h1>
+<p><strong>原始碼：</strong><a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.13/Lib/signal.py">Lib/signal.py</a></p>
+<hr class="docutils" />
+<p>本模組提供於 Python 中使用訊號處理程式的機制。</p>
+<section id="general-rules">
+<h2>一般規則<a class="headerlink" href="#general-rules" title="連結到這個標頭">¶</a></h2>
+<p><a class="reference internal" href="#signal.signal" title="signal.signal"><code class="xref py py-func docutils literal notranslate"><span class="pre">signal.signal()</span></code></a> 函式允許定義自訂的處理程式，會在收到訊號時執行。我們安裝了少數的預設處理程式：<a class="reference internal" href="#signal.SIGPIPE" title="signal.SIGPIPE"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGPIPE</span></code></a> 會被忽略 (所以管道和 socket 上的寫入錯誤可以當作一般的 Python 例外報告)，而 <a class="reference internal" href="#signal.SIGINT" title="signal.SIGINT"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGINT</span></code></a>（如果父行程沒有改變它的話）會被轉換成 <a class="reference internal" href="exceptions.html#KeyboardInterrupt" title="KeyboardInterrupt"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyboardInterrupt</span></code></a> 例外。</p>
+<p>特定訊號的處理程式一旦被設定，就會一直被安裝，直到被明確地重設為止 (不管底層的實作為何，Python 皆模擬出 BSD 風格的介面)，但 <a class="reference internal" href="#signal.SIGCHLD" title="signal.SIGCHLD"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGCHLD</span></code></a> 的處理程式除外，它會跟隨底層的實作。</p>
+<p>在 WebAssembly 平台上，訊號是模擬出來的，故行為不同。有幾個函式和訊號在這些平台上是不可用的。</p>
+<section id="execution-of-python-signal-handlers">
+<h3>Python 訊號處理程式的執行<a class="headerlink" href="#execution-of-python-signal-handlers" title="連結到這個標頭">¶</a></h3>
+<p>Python 訊號處理程式不會在低階（C 語言）訊號處理程式中執行。相反地，低階訊號處理程式會設定一個旗標，告訴<a class="reference internal" href="../glossary.html#term-virtual-machine"><span class="xref std std-term">虛擬機</span></a>在稍後執行相對應的 Python 訊號處理程式（例如在下一個 <a class="reference internal" href="../glossary.html#term-bytecode"><span class="xref std std-term">bytecode</span></a> 指令）。這會有一些後果：</p>
+<ul class="simple">
+<li><p>捕捉像 <a class="reference internal" href="#signal.SIGFPE" title="signal.SIGFPE"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGFPE</span></code></a> 或 <a class="reference internal" href="#signal.SIGSEGV" title="signal.SIGSEGV"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGSEGV</span></code></a> 這類由 C 程式碼中無效操作所引起的同步錯誤是沒有意義的。Python 將從訊號處理程式中回傳到 C 程式碼，而 C 程式碼很可能再次引發相同的訊號，導致 Python 明顯假當機 (hang)。從 Python 3.3 開始，你可以使用 <a class="reference internal" href="faulthandler.html#module-faulthandler" title="faulthandler: Dump the Python traceback."><code class="xref py py-mod docutils literal notranslate"><span class="pre">faulthandler</span></code></a> 模組來報告同步錯誤。</p></li>
+<li><p>純粹以 C 實作的長時間計算（例如在大量文字上的正規表示式比對）可能會不間斷地運行任意長度的時間而不考慮收到的任何訊號。當計算完成時，Python 訊號處理程式會被呼叫。</p></li>
+<li><p>如果處理程式引發例外，就會在主執行緒中「憑空」產生例外。請參閱<a class="reference internal" href="#handlers-and-exceptions"><span class="std std-ref">下面的說明</span></a>。</p></li>
+</ul>
+</section>
+<section id="signals-and-threads">
+<span id="id1"></span><h3>訊號和執行緒<a class="headerlink" href="#signals-and-threads" title="連結到這個標頭">¶</a></h3>
+<p>Python 訊號處理程式總是在主直譯器的主 Python 執行緒中執行，即使訊號是在另一個執行緒中接收到的。這意味著訊號不能用來做為執行緒間通訊的方式。你可以使用 <a class="reference internal" href="threading.html#module-threading" title="threading: Thread-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code></a> 模組的同步原語 (synchronization primitive) 來代替。</p>
+<p>此外，只有主直譯器的主執行緒才被允許設定新的訊號處理程式。</p>
+</section>
+</section>
+<section id="module-contents">
+<h2>模組內容<a class="headerlink" href="#module-contents" title="連結到這個標頭">¶</a></h2>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.5 版的變更: </span>下面列出的訊號 (SIG*)、處理器（<a class="reference internal" href="#signal.SIG_DFL" title="signal.SIG_DFL"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_DFL</span></code></a>、<a class="reference internal" href="#signal.SIG_IGN" title="signal.SIG_IGN"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_IGN</span></code></a>）和訊號遮罩 (sigmask)（<a class="reference internal" href="#signal.SIG_BLOCK" title="signal.SIG_BLOCK"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_BLOCK</span></code></a>、<a class="reference internal" href="#signal.SIG_UNBLOCK" title="signal.SIG_UNBLOCK"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_UNBLOCK</span></code></a>、<a class="reference internal" href="#signal.SIG_SETMASK" title="signal.SIG_SETMASK"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_SETMASK</span></code></a>）的相關常數被轉換成 <a class="reference internal" href="enum.html#enum.IntEnum" title="enum.IntEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">enums</span></code></a>（<a class="reference internal" href="#signal.Signals" title="signal.Signals"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signals</span></code></a>、<a class="reference internal" href="#signal.Handlers" title="signal.Handlers"><code class="xref py py-class docutils literal notranslate"><span class="pre">Handlers</span></code></a> 和 <a class="reference internal" href="#signal.Sigmasks" title="signal.Sigmasks"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sigmasks</span></code></a>）。<a class="reference internal" href="#signal.getsignal" title="signal.getsignal"><code class="xref py py-func docutils literal notranslate"><span class="pre">getsignal()</span></code></a>、<a class="reference internal" href="#signal.pthread_sigmask" title="signal.pthread_sigmask"><code class="xref py py-func docutils literal notranslate"><span class="pre">pthread_sigmask()</span></code></a>、<a class="reference internal" href="#signal.sigpending" title="signal.sigpending"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigpending()</span></code></a> 和 <a class="reference internal" href="#signal.sigwait" title="signal.sigwait"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigwait()</span></code></a> 函式會回傳可被人類閱讀的<a class="reference internal" href="enum.html#enum.IntEnum" title="enum.IntEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">枚舉</span></code></a>作為 <a class="reference internal" href="#signal.Signals" title="signal.Signals"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signals</span></code></a> 物件。</p>
+</div>
+<p>訊號模組定義了三個枚舉：</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="signal.Signals">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">Signals</span></span><a class="headerlink" href="#signal.Signals" title="連結到這個定義">¶</a></dt>
+<dd><p>SIG* 常數和 CTRL_* 常數的 <a class="reference internal" href="enum.html#enum.IntEnum" title="enum.IntEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></a> 集合。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.5 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="signal.Handlers">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">Handlers</span></span><a class="headerlink" href="#signal.Handlers" title="連結到這個定義">¶</a></dt>
+<dd><p><a class="reference internal" href="#signal.SIG_DFL" title="signal.SIG_DFL"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_DFL</span></code></a> 和 <a class="reference internal" href="#signal.SIG_IGN" title="signal.SIG_IGN"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_IGN</span></code></a> 常數的 <a class="reference internal" href="enum.html#enum.IntEnum" title="enum.IntEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></a> 集合。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.5 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="signal.Sigmasks">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">Sigmasks</span></span><a class="headerlink" href="#signal.Sigmasks" title="連結到這個定義">¶</a></dt>
+<dd><p><a class="reference internal" href="#signal.SIG_BLOCK" title="signal.SIG_BLOCK"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_BLOCK</span></code></a>、<a class="reference internal" href="#signal.SIG_UNBLOCK" title="signal.SIG_UNBLOCK"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_UNBLOCK</span></code></a> 和 <a class="reference internal" href="#signal.SIG_SETMASK" title="signal.SIG_SETMASK"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_SETMASK</span></code></a> 常數的 <a class="reference internal" href="enum.html#enum.IntEnum" title="enum.IntEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></a> 集合。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+<p>更多資訊請見 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/sigprocmask(2)">sigprocmask(2)</a></em> 與 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/pthread_sigmask(3)">pthread_sigmask(3)</a></em> 線上手冊。</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.5 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<p>在 <a class="reference internal" href="#module-signal" title="signal: Set handlers for asynchronous events."><code class="xref py py-mod docutils literal notranslate"><span class="pre">signal</span></code></a> 模組中定義的變數有：</p>
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIG_DFL">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIG_DFL</span></span><a class="headerlink" href="#signal.SIG_DFL" title="連結到這個定義">¶</a></dt>
+<dd><p>這是兩種標準訊號處理選項之一；它會簡單地執行訊號的預設功能。例如，在大多數系統上，<code class="xref py py-const docutils literal notranslate"><span class="pre">SIGQUIT</span></code> 的預設動作是轉儲 (dump) 核心並退出，而 <a class="reference internal" href="#signal.SIGCHLD" title="signal.SIGCHLD"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGCHLD</span></code></a> 的預設動作是直接忽略。</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIG_IGN">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIG_IGN</span></span><a class="headerlink" href="#signal.SIG_IGN" title="連結到這個定義">¶</a></dt>
+<dd><p>這是另一個標準的訊號處理程式，會直接忽略給定的訊號。</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGABRT">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGABRT</span></span><a class="headerlink" href="#signal.SIGABRT" title="連結到這個定義">¶</a></dt>
+<dd><p>來自 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/abort(3)">abort(3)</a></em> 的中止訊號。</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGALRM">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGALRM</span></span><a class="headerlink" href="#signal.SIGALRM" title="連結到這個定義">¶</a></dt>
+<dd><p>來自 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/alarm(2)">alarm(2)</a></em> 的計時器訊號。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGBREAK">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGBREAK</span></span><a class="headerlink" href="#signal.SIGBREAK" title="連結到這個定義">¶</a></dt>
+<dd><p>從鍵盤中斷 (CTRL + BREAK)。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Windows.</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGBUS">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGBUS</span></span><a class="headerlink" href="#signal.SIGBUS" title="連結到這個定義">¶</a></dt>
+<dd><p>匯流排錯誤（記憶體存取不良）。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGCHLD">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGCHLD</span></span><a class="headerlink" href="#signal.SIGCHLD" title="連結到這個定義">¶</a></dt>
+<dd><p>子行程停止或終止。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGCLD">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGCLD</span></span><a class="headerlink" href="#signal.SIGCLD" title="連結到這個定義">¶</a></dt>
+<dd><p><a class="reference internal" href="#signal.SIGCHLD" title="signal.SIGCHLD"><code class="xref py py-data docutils literal notranslate"><span class="pre">SIGCHLD</span></code></a> 的別名。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: not macOS.</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGCONT">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGCONT</span></span><a class="headerlink" href="#signal.SIGCONT" title="連結到這個定義">¶</a></dt>
+<dd><p>如果目前行程是被停止的，則繼續運行</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGFPE">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGFPE</span></span><a class="headerlink" href="#signal.SIGFPE" title="連結到這個定義">¶</a></dt>
+<dd><p>浮點運算例外。例如除以零。</p>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><a class="reference internal" href="exceptions.html#ZeroDivisionError" title="ZeroDivisionError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ZeroDivisionError</span></code></a> 會在除法或模運算 (modulo operation) 的第二個引數為零時引發。</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGHUP">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGHUP</span></span><a class="headerlink" href="#signal.SIGHUP" title="連結到這個定義">¶</a></dt>
+<dd><p>偵測到控制終端機掛斷 (hangup) 或控制行程死亡。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGILL">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGILL</span></span><a class="headerlink" href="#signal.SIGILL" title="連結到這個定義">¶</a></dt>
+<dd><p>非法指令。</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGINT">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGINT</span></span><a class="headerlink" href="#signal.SIGINT" title="連結到這個定義">¶</a></dt>
+<dd><p>從鍵盤中斷 (CTRL + C)。</p>
+<p>預設動作是引發 <a class="reference internal" href="exceptions.html#KeyboardInterrupt" title="KeyboardInterrupt"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyboardInterrupt</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGKILL">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGKILL</span></span><a class="headerlink" href="#signal.SIGKILL" title="連結到這個定義">¶</a></dt>
+<dd><p>殺死訊號。</p>
+<p>它無法被捕捉、阻擋或忽略。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGPIPE">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGPIPE</span></span><a class="headerlink" href="#signal.SIGPIPE" title="連結到這個定義">¶</a></dt>
+<dd><p>管道中斷 (broken pipe)：寫到沒有讀取器 (reader) 的管道。</p>
+<p>預設動作是忽略訊號。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGSEGV">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGSEGV</span></span><a class="headerlink" href="#signal.SIGSEGV" title="連結到這個定義">¶</a></dt>
+<dd><p>記憶體區段錯誤 (segmentation fault)：無效記憶體參照。</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGSTKFLT">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGSTKFLT</span></span><a class="headerlink" href="#signal.SIGSTKFLT" title="連結到這個定義">¶</a></dt>
+<dd><p>輔助處理器 (coprocessor) 上的堆疊錯誤 (stack fault)。Linux 核心不會引發此訊號：它只能在使用者空間 (user space) 中引發。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Linux.</p>
+<p>在訊號可用的架構上。請參閱 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/signal(7)">signal(7)</a></em> 線上手冊以取得更多資訊。</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.11 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGTERM">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGTERM</span></span><a class="headerlink" href="#signal.SIGTERM" title="連結到這個定義">¶</a></dt>
+<dd><p>終止訊號。</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGUSR1">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGUSR1</span></span><a class="headerlink" href="#signal.SIGUSR1" title="連結到這個定義">¶</a></dt>
+<dd><p>使用者定義訊號 1。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGUSR2">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGUSR2</span></span><a class="headerlink" href="#signal.SIGUSR2" title="連結到這個定義">¶</a></dt>
+<dd><p>使用者定義訊號 2。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIGWINCH">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIGWINCH</span></span><a class="headerlink" href="#signal.SIGWINCH" title="連結到這個定義">¶</a></dt>
+<dd><p>視窗調整大小訊號。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">SIG*</span></span></dt>
+<dd><p>所有的訊號編號都是以符號定義的。例如，掛斷訊號被定義為 <a class="reference internal" href="#signal.SIGHUP" title="signal.SIGHUP"><code class="xref py py-const docutils literal notranslate"><span class="pre">signal.SIGHUP</span></code></a>；變數名稱與 C 程式中使用的名稱相同，可在 <code class="docutils literal notranslate"><span class="pre">&lt;signal.h&gt;</span></code> 中找到。Unix 線上手冊 '<code class="xref c c-func docutils literal notranslate"><span class="pre">signal()</span></code>' 列出了現有的訊號（在某些系統上是 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/signal(2)">signal(2)</a></em>，在其他系統上是在 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/signal(7)">signal(7)</a></em> 中）。請注意，並非所有系統都會定義同一套訊號名稱；只有那些由系統所定義的名稱才會由這個模組定義。</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.CTRL_C_EVENT">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">CTRL_C_EVENT</span></span><a class="headerlink" href="#signal.CTRL_C_EVENT" title="連結到這個定義">¶</a></dt>
+<dd><p>與 <kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">C</kbd> 擊鍵 (keystroke) 事件相對應的訊號。此訊號只能與 <a class="reference internal" href="os.html#os.kill" title="os.kill"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.kill()</span></code></a> 搭配使用。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Windows.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.2 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.CTRL_BREAK_EVENT">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">CTRL_BREAK_EVENT</span></span><a class="headerlink" href="#signal.CTRL_BREAK_EVENT" title="連結到這個定義">¶</a></dt>
+<dd><p>與 <kbd class="kbd docutils literal notranslate">Ctrl</kbd>+<kbd class="kbd docutils literal notranslate">Break</kbd> 擊鍵事件相對應的訊號。此訊號只能與 <a class="reference internal" href="os.html#os.kill" title="os.kill"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.kill()</span></code></a> 搭配使用。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Windows.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.2 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.NSIG">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">NSIG</span></span><a class="headerlink" href="#signal.NSIG" title="連結到這個定義">¶</a></dt>
+<dd><p>比最高編號訊號的編號多一。使用 <a class="reference internal" href="#signal.valid_signals" title="signal.valid_signals"><code class="xref py py-func docutils literal notranslate"><span class="pre">valid_signals()</span></code></a> 來取得有效的訊號編號。</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.ITIMER_REAL">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">ITIMER_REAL</span></span><a class="headerlink" href="#signal.ITIMER_REAL" title="連結到這個定義">¶</a></dt>
+<dd><p>即時減少間隔計時器 (interval timer)，並在到期時送出 <a class="reference internal" href="#signal.SIGALRM" title="signal.SIGALRM"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGALRM</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.ITIMER_VIRTUAL">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">ITIMER_VIRTUAL</span></span><a class="headerlink" href="#signal.ITIMER_VIRTUAL" title="連結到這個定義">¶</a></dt>
+<dd><p>僅在執行行程時遞減間隔計時器，並在到期時傳送 SIGVTALRM。</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.ITIMER_PROF">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">ITIMER_PROF</span></span><a class="headerlink" href="#signal.ITIMER_PROF" title="連結到這個定義">¶</a></dt>
+<dd><p>當行程執行或系統代表行程執行時，都會減少間隔計時器。與 ITIMER_VIRTUAL 配合，這個計時器通常用來分析 (profile) 應用程式在使用者空間與核心空間 (kernel space) 所花費的時間。SIGPROF 會在到期時傳送。</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIG_BLOCK">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIG_BLOCK</span></span><a class="headerlink" href="#signal.SIG_BLOCK" title="連結到這個定義">¶</a></dt>
+<dd><p><a class="reference internal" href="#signal.pthread_sigmask" title="signal.pthread_sigmask"><code class="xref py py-func docutils literal notranslate"><span class="pre">pthread_sigmask()</span></code></a> 的 <em>how</em> 參數的可能值，表示訊號將被阻檔。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.3 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIG_UNBLOCK">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIG_UNBLOCK</span></span><a class="headerlink" href="#signal.SIG_UNBLOCK" title="連結到這個定義">¶</a></dt>
+<dd><p><a class="reference internal" href="#signal.pthread_sigmask" title="signal.pthread_sigmask"><code class="xref py py-func docutils literal notranslate"><span class="pre">pthread_sigmask()</span></code></a> 的 <em>how</em> 參數的可能值，表示訊號將被解除阻檔。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.3 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="signal.SIG_SETMASK">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">SIG_SETMASK</span></span><a class="headerlink" href="#signal.SIG_SETMASK" title="連結到這個定義">¶</a></dt>
+<dd><p><a class="reference internal" href="#signal.pthread_sigmask" title="signal.pthread_sigmask"><code class="xref py py-func docutils literal notranslate"><span class="pre">pthread_sigmask()</span></code></a> 的 <em>how</em> 參數的可能值，表示訊號遮罩 (signal mask) 要被取代。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.3 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<p><a class="reference internal" href="#module-signal" title="signal: Set handlers for asynchronous events."><code class="xref py py-mod docutils literal notranslate"><span class="pre">signal</span></code></a> 模組定義了一個例外：</p>
+<dl class="py exception">
+<dt class="sig sig-object py" id="signal.ItimerError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">ItimerError</span></span><a class="headerlink" href="#signal.ItimerError" title="連結到這個定義">¶</a></dt>
+<dd><p>當 <a class="reference internal" href="#signal.setitimer" title="signal.setitimer"><code class="xref py py-func docutils literal notranslate"><span class="pre">setitimer()</span></code></a> 或 <a class="reference internal" href="#signal.getitimer" title="signal.getitimer"><code class="xref py py-func docutils literal notranslate"><span class="pre">getitimer()</span></code></a> 底層實作發生錯誤時引發訊號。如果傳給 <a class="reference internal" href="#signal.setitimer" title="signal.setitimer"><code class="xref py py-func docutils literal notranslate"><span class="pre">setitimer()</span></code></a> 的是無效的間隔計時器或負數時間，則預期會發生此錯誤。這個錯誤是 <a class="reference internal" href="exceptions.html#OSError" title="OSError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code></a> 的子型別。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.3 版被加入: </span>此錯誤過去是 <a class="reference internal" href="exceptions.html#IOError" title="IOError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">IOError</span></code></a> 的子型別，現在是 <a class="reference internal" href="exceptions.html#OSError" title="OSError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code></a> 的別名。</p>
+</div>
+</dd></dl>
+
+<p><a class="reference internal" href="#module-signal" title="signal: Set handlers for asynchronous events."><code class="xref py py-mod docutils literal notranslate"><span class="pre">signal</span></code></a> 模組定義了下列函式：</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.alarm">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">alarm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#signal.alarm" title="連結到這個定義">¶</a></dt>
+<dd><p>如果 <em>time</em> 非零，則此函式會要求在 <em>time</em> 秒後傳送 <a class="reference internal" href="#signal.SIGALRM" title="signal.SIGALRM"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGALRM</span></code></a> 訊號給該行程。任何先前排程 (scheduled) 的警報都會被取消（任何時候都只能排程一個警報）。回傳值是先前設定的警報原本再等多久就會被傳送的秒數。如果 <em>time</em> 為零，則不會去排程任何警報，且已排程的警報會被取消。如果回傳值為零，則代表目前未排程任何警報。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+<p>更多資訊請見 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/alarm(2)">alarm(2)</a></em> 線上手冊。</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.getsignal">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">getsignal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signalnum</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#signal.getsignal" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳訊號 <em>signalnum</em> 的目前訊號處理程式。回傳值可以是一個可呼叫的 Python 物件，或是特殊值 <a class="reference internal" href="#signal.SIG_IGN" title="signal.SIG_IGN"><code class="xref py py-const docutils literal notranslate"><span class="pre">signal.SIG_IGN</span></code></a>、<a class="reference internal" href="#signal.SIG_DFL" title="signal.SIG_DFL"><code class="xref py py-const docutils literal notranslate"><span class="pre">signal.SIG_DFL</span></code></a> 或 <a class="reference internal" href="constants.html#None" title="None"><code class="xref py py-const docutils literal notranslate"><span class="pre">None</span></code></a> 之一。這裡的 <a class="reference internal" href="#signal.SIG_IGN" title="signal.SIG_IGN"><code class="xref py py-const docutils literal notranslate"><span class="pre">signal.SIG_IGN</span></code></a> 表示訊號先前被忽略，<a class="reference internal" href="#signal.SIG_DFL" title="signal.SIG_DFL"><code class="xref py py-const docutils literal notranslate"><span class="pre">signal.SIG_DFL</span></code></a> 表示訊號先前使用預設的處理方式，而 <code class="docutils literal notranslate"><span class="pre">None</span></code> 表示先前的訊號處理程式並未從 Python 安裝。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.strsignal">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">strsignal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signalnum</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#signal.strsignal" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳訊號 <em>signalnum</em> 的描述，例如 <a class="reference internal" href="#signal.SIGINT" title="signal.SIGINT"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGINT</span></code></a> 的 &quot;Interrupt&quot;。如果 <em>signalnum</em> 沒有描述，則回傳 <a class="reference internal" href="constants.html#None" title="None"><code class="xref py py-const docutils literal notranslate"><span class="pre">None</span></code></a>。如果 <em>signalnum</em> 無效則會引發 <a class="reference internal" href="exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a>。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.8 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.valid_signals">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">valid_signals</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#signal.valid_signals" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳此平台上的有效訊號編號集合。如果某些訊號被系統保留作為內部使用，則此值可能小於 <code class="docutils literal notranslate"><span class="pre">range(1,</span> <span class="pre">NSIG)</span></code>。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.8 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.pause">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">pause</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#signal.pause" title="連結到這個定義">¶</a></dt>
+<dd><p>使行程休眠，直到接收到訊號；然後呼叫適當的處理程式。不會回傳任何東西。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+<p>更多資訊請見 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/signal(2)">signal(2)</a></em> 線上手冊。</p>
+</div>
+<p>也請見 <a class="reference internal" href="#signal.sigwait" title="signal.sigwait"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigwait()</span></code></a>、<a class="reference internal" href="#signal.sigwaitinfo" title="signal.sigwaitinfo"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigwaitinfo()</span></code></a>、<a class="reference internal" href="#signal.sigtimedwait" title="signal.sigtimedwait"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigtimedwait()</span></code></a> 和 <a class="reference internal" href="#signal.sigpending" title="signal.sigpending"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigpending()</span></code></a>。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.raise_signal">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">raise_signal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signum</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#signal.raise_signal" title="連結到這個定義">¶</a></dt>
+<dd><p>傳送訊號至呼叫的行程。不會回傳任何東西。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.8 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.pidfd_send_signal">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">pidfd_send_signal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pidfd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sig</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">siginfo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#signal.pidfd_send_signal" title="連結到這個定義">¶</a></dt>
+<dd><p>傳送訊號 <em>sig</em> 到檔案描述器 <em>pidfd</em> 所指的行程。Python 目前不支援 <em>siginfo</em> 參數；它必須是 <code class="docutils literal notranslate"><span class="pre">None</span></code>。<em>flags</em> 引數是提供給未來的擴充；目前沒有定義旗標值。</p>
+<p>更多資訊請見 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/pidfd_send_signal(2)">pidfd_send_signal(2)</a></em> 線上手冊。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Linux &gt;= 5.1, Android &gt;= <a class="reference internal" href="sys.html#sys.getandroidapilevel" title="sys.getandroidapilevel"><code class="xref py py-func docutils literal notranslate"><span class="pre">build-time</span></code></a> API level 31</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.9 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.pthread_kill">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">pthread_kill</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thread_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signalnum</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#signal.pthread_kill" title="連結到這個定義">¶</a></dt>
+<dd><p>將訊號 <em>signalnum</em> 傳送給與呼叫者在同一行程中的另一個執行緒 <em>thread_id</em>。目標執行緒能執行任何程式碼（無論為 Python 與否）。但是，如果目標執行緒正執行 Python 直譯器，Python 訊號處理程式將會<a class="reference internal" href="#signals-and-threads"><span class="std std-ref">由主直譯器的主執行緒來執行</span></a>。因此，向特定 Python 執行緒發送訊號的唯一意義是強制執行中的系統呼叫以 <a class="reference internal" href="exceptions.html#InterruptedError" title="InterruptedError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">InterruptedError</span></code></a> 方式失敗。</p>
+<p>使用 <a class="reference internal" href="threading.html#threading.get_ident" title="threading.get_ident"><code class="xref py py-func docutils literal notranslate"><span class="pre">threading.get_ident()</span></code></a> 或 <a class="reference internal" href="threading.html#threading.Thread" title="threading.Thread"><code class="xref py py-class docutils literal notranslate"><span class="pre">threading.Thread</span></code></a> 物件的 <a class="reference internal" href="threading.html#threading.Thread.ident" title="threading.Thread.ident"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ident</span></code></a> 屬性來取得 <em>thread_id</em> 的適當值。</p>
+<p>如果 <em>signalnum</em> 為 0，則不會傳送訊號，但仍會執行錯誤檢查；這可用來檢查目標執行緒是否仍在執行。</p>
+<p class="audit-hook">引發一個附帶引數 <code class="docutils literal notranslate"><span class="pre">thread_id</span></code>、<code class="docutils literal notranslate"><span class="pre">signalnum</span></code> 的<a class="reference internal" href="sys.html#auditing"><span class="std std-ref">稽核事件</span></a> <code class="docutils literal notranslate"><span class="pre">signal.pthread_kill</span></code>。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+<p>更多資訊請見 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/pthread_kill(3)">pthread_kill(3)</a></em> 線上手冊。</p>
+</div>
+<p>另請參閱 <a class="reference internal" href="os.html#os.kill" title="os.kill"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.kill()</span></code></a>。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.3 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.pthread_sigmask">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">pthread_sigmask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">how</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#signal.pthread_sigmask" title="連結到這個定義">¶</a></dt>
+<dd><p>擷取和/或變更呼叫執行緒的訊號遮罩。訊號遮罩是目前阻擋呼叫者傳送的訊號集合。將舊的訊號遮罩作為一組訊號集合回傳。</p>
+<p>呼叫的行為取決於 <em>how</em> 的值，如下所示。</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#signal.SIG_BLOCK" title="signal.SIG_BLOCK"><code class="xref py py-data docutils literal notranslate"><span class="pre">SIG_BLOCK</span></code></a>：被阻檔的訊號集合是目前訊號集合與 <em>mask</em> 引數的聯集。</p></li>
+<li><p><a class="reference internal" href="#signal.SIG_UNBLOCK" title="signal.SIG_UNBLOCK"><code class="xref py py-data docutils literal notranslate"><span class="pre">SIG_UNBLOCK</span></code></a>：將 <em>mask</em> 中的訊號從目前阻檔的訊號集合中移除。嘗試為未被阻檔的訊號解除阻檔是允許的。</p></li>
+<li><p><a class="reference internal" href="#signal.SIG_SETMASK" title="signal.SIG_SETMASK"><code class="xref py py-data docutils literal notranslate"><span class="pre">SIG_SETMASK</span></code></a>：將被阻檔的訊號集合設定為 <em>mask</em> 引數。</p></li>
+</ul>
+<p><em>mask</em> 是一組訊號編號（例如 {<a class="reference internal" href="#signal.SIGINT" title="signal.SIGINT"><code class="xref py py-const docutils literal notranslate"><span class="pre">signal.SIGINT</span></code></a>, <a class="reference internal" href="#signal.SIGTERM" title="signal.SIGTERM"><code class="xref py py-const docutils literal notranslate"><span class="pre">signal.SIGTERM</span></code></a>}）的集合。使用 <a class="reference internal" href="#signal.valid_signals" title="signal.valid_signals"><code class="xref py py-func docutils literal notranslate"><span class="pre">valid_signals()</span></code></a> 來取得包含所有訊號的完整遮罩。</p>
+<p>例如，<code class="docutils literal notranslate"><span class="pre">signal.pthread_sigmask(signal.SIG_BLOCK,</span> <span class="pre">[])</span></code> 會讀取呼叫執行緒的訊號遮罩。</p>
+<p><a class="reference internal" href="#signal.SIGKILL" title="signal.SIGKILL"><code class="xref py py-data docutils literal notranslate"><span class="pre">SIGKILL</span></code></a> 和 <code class="xref py py-data docutils literal notranslate"><span class="pre">SIGSTOP</span></code> 不能被阻檔。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+<p>更多資訊請見 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/sigprocmask(2)">sigprocmask(2)</a></em> 與 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/pthread_sigmask(3)">pthread_sigmask(3)</a></em> 線上手冊。</p>
+</div>
+<p>另請參閱 <a class="reference internal" href="#signal.pause" title="signal.pause"><code class="xref py py-func docutils literal notranslate"><span class="pre">pause()</span></code></a>、<a class="reference internal" href="#signal.sigpending" title="signal.sigpending"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigpending()</span></code></a> 與 <a class="reference internal" href="#signal.sigwait" title="signal.sigwait"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigwait()</span></code></a>。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.3 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.setitimer">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">setitimer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">which</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seconds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#signal.setitimer" title="連結到這個定義">¶</a></dt>
+<dd><p>設定由 <em>which</em> 指定的間隔計時器（<a class="reference internal" href="#signal.ITIMER_REAL" title="signal.ITIMER_REAL"><code class="xref py py-const docutils literal notranslate"><span class="pre">signal.ITIMER_REAL</span></code></a>、<a class="reference internal" href="#signal.ITIMER_VIRTUAL" title="signal.ITIMER_VIRTUAL"><code class="xref py py-const docutils literal notranslate"><span class="pre">signal.ITIMER_VIRTUAL</span></code></a> 或 <a class="reference internal" href="#signal.ITIMER_PROF" title="signal.ITIMER_PROF"><code class="xref py py-const docutils literal notranslate"><span class="pre">signal.ITIMER_PROF</span></code></a> 之一）並在*seconds*（接受浮點數，與 <a class="reference internal" href="#signal.alarm" title="signal.alarm"><code class="xref py py-func docutils literal notranslate"><span class="pre">alarm()</span></code></a> 不同）之後啟動，在之後的每 <em>interval</em> 秒啟動一次（如果 <em>interval</em> 非零）。<em>which</em> 指定的間隔計時器可透過將 <em>seconds</em> 設定為零來清除它。</p>
+<p>當間隔計時器啟動時，一個訊號會被傳送給行程。傳送的訊號取決於使用的計時器；<a class="reference internal" href="#signal.ITIMER_REAL" title="signal.ITIMER_REAL"><code class="xref py py-const docutils literal notranslate"><span class="pre">signal.ITIMER_REAL</span></code></a> 會傳送 <a class="reference internal" href="#signal.SIGALRM" title="signal.SIGALRM"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGALRM</span></code></a>，<a class="reference internal" href="#signal.ITIMER_VIRTUAL" title="signal.ITIMER_VIRTUAL"><code class="xref py py-const docutils literal notranslate"><span class="pre">signal.ITIMER_VIRTUAL</span></code></a> 會傳送 <code class="xref py py-const docutils literal notranslate"><span class="pre">SIGVTALRM</span></code>，而 <a class="reference internal" href="#signal.ITIMER_PROF" title="signal.ITIMER_PROF"><code class="xref py py-const docutils literal notranslate"><span class="pre">signal.ITIMER_PROF</span></code></a> 會傳送 <code class="xref py py-const docutils literal notranslate"><span class="pre">SIGPROF</span></code>。</p>
+<p>舊值會以一個元組回傳：(delay, interval)。</p>
+<p>嘗試傳入無效的間隔計時器會導致 <a class="reference internal" href="#signal.ItimerError" title="signal.ItimerError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ItimerError</span></code></a>。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.getitimer">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">getitimer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">which</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#signal.getitimer" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳由 <em>which</em> 指定之間隔計時器的目前值。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.set_wakeup_fd">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">set_wakeup_fd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fd</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">warn_on_full_buffer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#signal.set_wakeup_fd" title="連結到這個定義">¶</a></dt>
+<dd><p>設定喚醒檔案描述器為 <em>fd</em>。當接收到其處理程式已有被註冊的訊號時，訊號編號會以單一位元組寫入 fd。如果你沒有為你在意的訊號註冊處理程式，就不會寫入到喚醒 fd。這可被函式庫用來喚醒輪詢 (wakeup a poll) 或 select 呼叫，讓訊號得以完全處理。</p>
+<p>回傳舊的喚醒 fd（如果檔案描述器喚醒未啟用，則回傳 -1）。如果 <em>fd</em> 為 -1，則會停用檔案描述器喚醒。如果不是 -1，<em>fd</em> 必須是非阻塞的。在再次呼叫輪詢或 select 之前，由函式庫來決定是否移除 <em>fd</em> 中的任何位元組。</p>
+<p>當啟用執行緒時，這個函式只能從<a class="reference internal" href="#signals-and-threads"><span class="std std-ref">主直譯器</span></a>的主執行緒來呼叫；嘗試從其他執行緒呼叫它將會引發 <a class="reference internal" href="exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> 例外。</p>
+<p>使用這個函式有兩種常見的方式。在這兩種方法中，當訊號抵達時，你都要使用 fd 來喚醒，但它們的不同之處在於如何判斷<em>哪個或哪些</em>訊號有抵達。</p>
+<p>在第一種方法中，我們從 fd 的緩衝區中讀取資料，而位元組值則提供訊號編號。這個方法很簡單，但在少數情況下可能會遇到問題：一般來說，fd 的緩衝區空間有限，如果太多訊號來得太快，那麼緩衝區可能會滿，而有些訊號可能會遺失。如果你使用這種方法，那麼你應該設定 <code class="docutils literal notranslate"><span class="pre">warn_on_full_buffer=True</span></code>，這至少會在訊號丟失時將警告印出到 stderr。</p>
+<p>在第二種方法中，我們<em>只會</em>將喚醒 fd 用於喚醒，而忽略實際的位元組值。在這種情況下，我們只在乎 fd 的緩衝區是空或非空；即便緩衝區滿了也不代表有問題。如果你使用這種方法，那麼你應該設定 <code class="docutils literal notranslate"><span class="pre">warn_on_full_buffer=False</span></code>，這樣你的使用者就不會被虛假的警告訊息所混淆。</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.5 版的變更: </span>在 Windows 上，此功能現在也支援 socket 處理程式。</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.7 版的變更: </span>新增 <code class="docutils literal notranslate"><span class="pre">warn_on_full_buffer</span></code> 參數。</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.siginterrupt">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">siginterrupt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signalnum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flag</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#signal.siginterrupt" title="連結到這個定義">¶</a></dt>
+<dd><p>改變系統呼叫重新啟動的行為：如果 <em>flag</em> 是 <a class="reference internal" href="constants.html#False" title="False"><code class="xref py py-const docutils literal notranslate"><span class="pre">False</span></code></a>，系統呼叫會在被訊號 <em>signalnum</em> 中斷時重新啟動，否則系統呼叫會被中斷。不會回傳任何東西。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+<p>更多資訊請見 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/siginterrupt(3)">siginterrupt(3)</a></em> 線上手冊。</p>
+</div>
+<p>請注意，使用 <a class="reference internal" href="#module-signal" title="signal: Set handlers for asynchronous events."><code class="xref py py-func docutils literal notranslate"><span class="pre">signal()</span></code></a> 安裝訊號處理程式，會透過隱式呼叫 <code class="xref c c-func docutils literal notranslate"><span class="pre">siginterrupt()</span></code> 來將重新啟動的行為重設為可中斷，且指定訊號的 <em>flag</em> 值為 true。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.signal">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">signal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signalnum</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">handler</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#signal.signal" title="連結到這個定義">¶</a></dt>
+<dd><p>將訊號 <em>signalnum</em> 的處理程式設定為函式 <em>handler</em>。<em>handler</em> 可以是帶兩個引數的可呼叫 Python 物件（見下面），或是特殊值 <a class="reference internal" href="#signal.SIG_IGN" title="signal.SIG_IGN"><code class="xref py py-const docutils literal notranslate"><span class="pre">signal.SIG_IGN</span></code></a> 或 <a class="reference internal" href="#signal.SIG_DFL" title="signal.SIG_DFL"><code class="xref py py-const docutils literal notranslate"><span class="pre">signal.SIG_DFL</span></code></a> 之一。先前的訊號處理程式將會被回傳（請參閱上面 <a class="reference internal" href="#signal.getsignal" title="signal.getsignal"><code class="xref py py-func docutils literal notranslate"><span class="pre">getsignal()</span></code></a> 的說明）。（更多資訊請參閱 Unix 線上手冊 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/signal(2)">signal(2)</a></em>）。</p>
+<p>當啟用執行緒時，這個函式只能從<a class="reference internal" href="#signals-and-threads"><span class="std std-ref">主直譯器</span></a>的主執行緒來呼叫；嘗試從其他執行緒呼叫它將會引發 <a class="reference internal" href="exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a> 例外。</p>
+<p><em>handler</em> 被呼叫時有兩個引數：訊號編號和目前的堆疊 frame（<code class="docutils literal notranslate"><span class="pre">None</span></code> 或一個 frame 物件；關於 frame 物件的描述，請參閱<a class="reference internal" href="../reference/datamodel.html#frame-objects"><span class="std std-ref">型別階層中的描述</span></a>或 <a class="reference internal" href="inspect.html#module-inspect" title="inspect: Extract information and source code from live objects."><code class="xref py py-mod docutils literal notranslate"><span class="pre">inspect</span></code></a> 模組中的屬性描述）。</p>
+<p>在 Windows 上，<a class="reference internal" href="#module-signal" title="signal: Set handlers for asynchronous events."><code class="xref py py-func docutils literal notranslate"><span class="pre">signal()</span></code></a> 只能在使用 <a class="reference internal" href="#signal.SIGABRT" title="signal.SIGABRT"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGABRT</span></code></a>、<a class="reference internal" href="#signal.SIGFPE" title="signal.SIGFPE"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGFPE</span></code></a>、<a class="reference internal" href="#signal.SIGILL" title="signal.SIGILL"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGILL</span></code></a>、<a class="reference internal" href="#signal.SIGINT" title="signal.SIGINT"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGINT</span></code></a>、<a class="reference internal" href="#signal.SIGSEGV" title="signal.SIGSEGV"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGSEGV</span></code></a>、<a class="reference internal" href="#signal.SIGTERM" title="signal.SIGTERM"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGTERM</span></code></a> 或 <a class="reference internal" href="#signal.SIGBREAK" title="signal.SIGBREAK"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGBREAK</span></code></a> 時呼叫。在其他情況下會引發 <a class="reference internal" href="exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a>。請注意，並非所有系統都定義相同的訊號名稱；如果訊號名稱沒有被定義為 <code class="docutils literal notranslate"><span class="pre">SIG*</span></code> 模組層級常數，則會引發 <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a> 錯誤。</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.sigpending">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">sigpending</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#signal.sigpending" title="連結到這個定義">¶</a></dt>
+<dd><p>檢查待傳送至呼叫執行緒的訊號集合（即阻檔時已被提出的訊號）。回傳待定訊號的集合。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+<p>更多資訊請見 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/sigpending(2)">sigpending(2)</a></em> 線上手冊。</p>
+</div>
+<p>另請參閱 <a class="reference internal" href="#signal.pause" title="signal.pause"><code class="xref py py-func docutils literal notranslate"><span class="pre">pause()</span></code></a>、<a class="reference internal" href="#signal.pthread_sigmask" title="signal.pthread_sigmask"><code class="xref py py-func docutils literal notranslate"><span class="pre">pthread_sigmask()</span></code></a> 與 <a class="reference internal" href="#signal.sigwait" title="signal.sigwait"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigwait()</span></code></a>。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.3 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.sigwait">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">sigwait</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#signal.sigwait" title="連結到這個定義">¶</a></dt>
+<dd><p>暫停呼叫執行緒的執行，直到送出訊號集合 <em>sigset</em> 中指定的一個訊號。函式接受訊號（將其從待定訊號清單中移除），並回傳訊號編號。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+<p>更多資訊請見 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/sigwait(3)">sigwait(3)</a></em> 線上手冊。</p>
+</div>
+<p>另也請見 <a class="reference internal" href="#signal.pause" title="signal.pause"><code class="xref py py-func docutils literal notranslate"><span class="pre">pause()</span></code></a>、<a class="reference internal" href="#signal.pthread_sigmask" title="signal.pthread_sigmask"><code class="xref py py-func docutils literal notranslate"><span class="pre">pthread_sigmask()</span></code></a>、<a class="reference internal" href="#signal.sigpending" title="signal.sigpending"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigpending()</span></code></a>、<a class="reference internal" href="#signal.sigwaitinfo" title="signal.sigwaitinfo"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigwaitinfo()</span></code></a> 和 <a class="reference internal" href="#signal.sigtimedwait" title="signal.sigtimedwait"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigtimedwait()</span></code></a>。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.3 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.sigwaitinfo">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">sigwaitinfo</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigset</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#signal.sigwaitinfo" title="連結到這個定義">¶</a></dt>
+<dd><p>暫停呼叫執行緒的執行，直到送出訊號集合 <em>sigset</em> 中指定的一個訊號。該函式接受訊號，並將其從待定訊號清單中移除。如果 <em>sigset</em> 中的一個訊號已經是呼叫執行緒的待定訊號，函式會立即回傳該訊號的相關資訊。對於已傳送的訊號，訊號處理程式不會被呼叫。如果被不在 <em>sigset</em> 中的訊號中斷，函式會引發 <a class="reference internal" href="exceptions.html#InterruptedError" title="InterruptedError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">InterruptedError</span></code></a>。</p>
+<p>回傳值是一個物件，代表 <code class="xref c c-type docutils literal notranslate"><span class="pre">siginfo_t</span></code> 結構所包含的資料，即 <code class="xref py py-attr docutils literal notranslate"><span class="pre">si_signo</span></code>、<code class="xref py py-attr docutils literal notranslate"><span class="pre">si_code</span></code>、<code class="xref py py-attr docutils literal notranslate"><span class="pre">si_errno</span></code>、<code class="xref py py-attr docutils literal notranslate"><span class="pre">si_pid</span></code>、<code class="xref py py-attr docutils literal notranslate"><span class="pre">si_uid</span></code>、<code class="xref py py-attr docutils literal notranslate"><span class="pre">si_status</span></code>、<code class="xref py py-attr docutils literal notranslate"><span class="pre">si_band</span></code>。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+<p>更多資訊請見 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/sigwaitinfo(2)">sigwaitinfo(2)</a></em> 線上手冊。</p>
+</div>
+<p>另請參閱 <a class="reference internal" href="#signal.pause" title="signal.pause"><code class="xref py py-func docutils literal notranslate"><span class="pre">pause()</span></code></a>、<a class="reference internal" href="#signal.sigwait" title="signal.sigwait"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigwait()</span></code></a> 與 <a class="reference internal" href="#signal.sigtimedwait" title="signal.sigtimedwait"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigtimedwait()</span></code></a>。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.3 版被加入.</span></p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.5 版的變更: </span>現在如果被不在 <em>sigset</em> 中的訊號中斷，且訊號處理程式沒有引發例外，則會重試函式（理由請參閱 <span class="target" id="index-4"></span><a class="pep reference external" href="https://peps.python.org/pep-0475/"><strong>PEP 475</strong></a>）。</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="signal.sigtimedwait">
+<span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">sigtimedwait</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sigset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#signal.sigtimedwait" title="連結到這個定義">¶</a></dt>
+<dd><p>類似 <a class="reference internal" href="#signal.sigwaitinfo" title="signal.sigwaitinfo"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigwaitinfo()</span></code></a>，但需要額外的 <em>timeout</em> 引數指定逾時時間。如果 <em>timeout</em> 指定為 <code class="docutils literal notranslate"><span class="pre">0</span></code>，會執行輪詢。如果發生逾時則會回傳 <a class="reference internal" href="constants.html#None" title="None"><code class="xref py py-const docutils literal notranslate"><span class="pre">None</span></code></a>。</p>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
+<p>更多資訊請見 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/sigtimedwait(2)">sigtimedwait(2)</a></em> 線上手冊。</p>
+</div>
+<p>另請參閱 <a class="reference internal" href="#signal.pause" title="signal.pause"><code class="xref py py-func docutils literal notranslate"><span class="pre">pause()</span></code></a>、<a class="reference internal" href="#signal.sigwait" title="signal.sigwait"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigwait()</span></code></a> 與 <a class="reference internal" href="#signal.sigwaitinfo" title="signal.sigwaitinfo"><code class="xref py py-func docutils literal notranslate"><span class="pre">sigwaitinfo()</span></code></a>。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.3 版被加入.</span></p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.5 版的變更: </span>現在如果被不在 <em>sigset</em> 中的訊號中斷，且訊號處理程式沒有引發例外，則會使用重新計算的 <em>timeout</em> 重試函式（理由請參閱 <span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0475/"><strong>PEP 475</strong></a>）。</p>
+</div>
+</dd></dl>
+
+</section>
+<section id="examples">
+<span id="signal-example"></span><h2>範例<a class="headerlink" href="#examples" title="連結到這個標頭">¶</a></h2>
+<p>這是一個最小範例程式。它使用 <a class="reference internal" href="#signal.alarm" title="signal.alarm"><code class="xref py py-func docutils literal notranslate"><span class="pre">alarm()</span></code></a> 函式來限制等待開啟檔案的時間；如果檔案是用於可能未開啟的序列裝置，這會很有用，因為這通常會導致 <a class="reference internal" href="os.html#os.open" title="os.open"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.open()</span></code></a> 無限期地被擱置。解決方法是在開啟檔案前設定一個 5 秒的警報；如果操作時間過長，警報訊號就會被送出，而處理程式會產生例外。</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">signal</span><span class="o">,</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">handler</span><span class="p">(</span><span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+    <span class="n">signame</span> <span class="o">=</span> <span class="n">signal</span><span class="o">.</span><span class="n">Signals</span><span class="p">(</span><span class="n">signum</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Signal handler called with signal </span><span class="si">{</span><span class="n">signame</span><span class="si">}</span><span class="s1"> (</span><span class="si">{</span><span class="n">signum</span><span class="si">}</span><span class="s1">)&#39;</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">OSError</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t open device!&quot;</span><span class="p">)</span>
+
+<span class="c1"># 設定訊號處理程式與五秒警報</span>
+<span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGALRM</span><span class="p">,</span> <span class="n">handler</span><span class="p">)</span>
+<span class="n">signal</span><span class="o">.</span><span class="n">alarm</span><span class="p">(</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># 這個 open() 可能無限期地被擱置</span>
+<span class="n">fd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;/dev/ttyS0&#39;</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">O_RDWR</span><span class="p">)</span>
+
+<span class="n">signal</span><span class="o">.</span><span class="n">alarm</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>          <span class="c1"># 停用警報</span>
+</pre></div>
+</div>
+</section>
+<section id="note-on-sigpipe">
+<h2>關於 SIGPIPE 的說明<a class="headerlink" href="#note-on-sigpipe" title="連結到這個標頭">¶</a></h2>
+<p>將程式的輸出管道化到 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/head(1)">head(1)</a></em> 之類的工具，會在你的行程的標準輸出接收器提早關閉時，導致 <a class="reference internal" href="#signal.SIGPIPE" title="signal.SIGPIPE"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGPIPE</span></code></a> 訊號傳送給你的行程。這會導致類似 <code class="code docutils literal notranslate"><span class="pre">BrokenPipeError:</span> <span class="pre">[Errno</span> <span class="pre">32]</span> <span class="pre">Broken</span> <span class="pre">pipe</span></code> 的例外。要處理這種情況，請將你的進入點包裝成如下的樣子來捕捉這個例外：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># 模擬大量輸出（你的程式取代此迴圈）</span>
+        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10000</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">)</span>
+        <span class="c1"># 在這裡清除輸出以強制 SIGPIPE 在這個 try 區塊</span>
+        <span class="c1"># 中被觸發</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">BrokenPipeError</span><span class="p">:</span>
+        <span class="c1"># Python 在退出時清除標準串流；為剩下的輸出重新導向</span>
+        <span class="c1"># 至 devnull 來避免關閉時的 BrokenPipeError</span>
+        <span class="n">devnull</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">O_WRONLY</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">dup2</span><span class="p">(</span><span class="n">devnull</span><span class="p">,</span> <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">fileno</span><span class="p">())</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Python 在 EPIPE 時以錯誤碼 1 退出</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>不要為了避免 <a class="reference internal" href="exceptions.html#BrokenPipeError" title="BrokenPipeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BrokenPipeError</span></code></a> 而將 <a class="reference internal" href="#signal.SIGPIPE" title="signal.SIGPIPE"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGPIPE</span></code></a> 之處置 (disposition) 設定為 <a class="reference internal" href="#signal.SIG_DFL" title="signal.SIG_DFL"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_DFL</span></code></a>。這樣做會導致你的程式在寫入任何 socket 連線時被中斷而意外退出。</p>
+</section>
+<section id="note-on-signal-handlers-and-exceptions">
+<span id="handlers-and-exceptions"></span><h2>訊號處理程式與例外的說明<a class="headerlink" href="#note-on-signal-handlers-and-exceptions" title="連結到這個標頭">¶</a></h2>
+<p>如果訊號處理程式產生例外，例外會傳送到主執行緒並可能在任何 <a class="reference internal" href="../glossary.html#term-bytecode"><span class="xref std std-term">bytecode</span></a> 指令之後發生。最值得注意的是，<a class="reference internal" href="exceptions.html#KeyboardInterrupt" title="KeyboardInterrupt"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyboardInterrupt</span></code></a> 可能在執行過程中的任何時候出現。大多數 Python 程式碼，包括標準函式庫，都無法避免這種情況，因此 <a class="reference internal" href="exceptions.html#KeyboardInterrupt" title="KeyboardInterrupt"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyboardInterrupt</span></code></a>（或任何其他由訊號處理程式產生的例外）可能會在罕見的情況下使程式處於預期之外的狀態。</p>
+<p>為了說明這個問題，請參考以下程式碼：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">SpamContext</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># 如果 KeyboardInterrupt 在此發生則一切正常</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="c1"># 如果 KeyboardInterrupt 在此發生，__exit__ 將不會被呼叫</span>
+        <span class="o">...</span>
+        <span class="c1"># KeyboardInterrupt 可能在函式回傳之前發生</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+        <span class="o">...</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>對許多程式來說，尤其是那些只想在 <a class="reference internal" href="exceptions.html#KeyboardInterrupt" title="KeyboardInterrupt"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyboardInterrupt</span></code></a> 時退出的程式，這並不是問題，但是對於複雜或需要高可靠性的應用程式來說，應該避免從訊號處理程式產生例外。它們也應該避免將捕獲 <a class="reference internal" href="exceptions.html#KeyboardInterrupt" title="KeyboardInterrupt"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyboardInterrupt</span></code></a> 作為一種優雅關閉 (gracefully shutting down) 的方式。相反地，它們應該安裝自己的 <a class="reference internal" href="#signal.SIGINT" title="signal.SIGINT"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGINT</span></code></a> 處理程式。以下是 HTTP 伺服器避免 <a class="reference internal" href="exceptions.html#KeyboardInterrupt" title="KeyboardInterrupt"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyboardInterrupt</span></code></a> 的範例：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">socket</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">selectors</span><span class="w"> </span><span class="kn">import</span> <span class="n">DefaultSelector</span><span class="p">,</span> <span class="n">EVENT_READ</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">http.server</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPServer</span><span class="p">,</span> <span class="n">SimpleHTTPRequestHandler</span>
+
+<span class="n">interrupt_read</span><span class="p">,</span> <span class="n">interrupt_write</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socketpair</span><span class="p">()</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">handler</span><span class="p">(</span><span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Signal handler called with signal&#39;</span><span class="p">,</span> <span class="n">signum</span><span class="p">)</span>
+    <span class="n">interrupt_write</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;</span><span class="se">\0</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">handler</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">serve_forever</span><span class="p">(</span><span class="n">httpd</span><span class="p">):</span>
+    <span class="n">sel</span> <span class="o">=</span> <span class="n">DefaultSelector</span><span class="p">()</span>
+    <span class="n">sel</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">interrupt_read</span><span class="p">,</span> <span class="n">EVENT_READ</span><span class="p">)</span>
+    <span class="n">sel</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">httpd</span><span class="p">,</span> <span class="n">EVENT_READ</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">sel</span><span class="o">.</span><span class="n">select</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">fileobj</span> <span class="o">==</span> <span class="n">interrupt_read</span><span class="p">:</span>
+                <span class="n">interrupt_read</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                <span class="k">return</span>
+            <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">fileobj</span> <span class="o">==</span> <span class="n">httpd</span><span class="p">:</span>
+                <span class="n">httpd</span><span class="o">.</span><span class="n">handle_request</span><span class="p">()</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Serving on port 8000&quot;</span><span class="p">)</span>
+<span class="n">httpd</span> <span class="o">=</span> <span class="n">HTTPServer</span><span class="p">((</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">),</span> <span class="n">SimpleHTTPRequestHandler</span><span class="p">)</span>
+<span class="n">serve_forever</span><span class="p">(</span><span class="n">httpd</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Shutdown...&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">signal</span></code> --- 設定非同步事件的處理函式</a><ul>
+<li><a class="reference internal" href="#general-rules">一般規則</a><ul>
+<li><a class="reference internal" href="#execution-of-python-signal-handlers">Python 訊號處理程式的執行</a></li>
+<li><a class="reference internal" href="#signals-and-threads">訊號和執行緒</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-contents">模組內容</a></li>
+<li><a class="reference internal" href="#examples">範例</a></li>
+<li><a class="reference internal" href="#note-on-sigpipe">關於 SIGPIPE 的說明</a></li>
+<li><a class="reference internal" href="#note-on-signal-handlers-and-exceptions">訊號處理程式與例外的說明</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="selectors.html"
+                          title="上一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">selectors</span></code> --- 高階 I/O 多工</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="mmap.html"
+                          title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mmap</span></code> --- 記憶體對映檔案的支援</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/signal.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>瀏覽</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="mmap.html" title="mmap --- 記憶體對映檔案的支援"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="selectors.html" title="selectors --- 高階 I/O 多工"
+             >上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.13.7 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="ipc.html" >網路與行程間通訊</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">signal</span></code> --- 設定非同步事件的處理函式</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜尋" aria-label="快速搜尋" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    Theme
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>Auto</option>
+        <option value="light">Light</option>
+        <option value="dark">Dark</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; 
+      <a href="../copyright.html">
+    
+    版權
+    
+      </a>
+     2001-2025, Python Software Foundation.
+    <br>
+    This page is licensed under the Python Software Foundation License Version 2.
+    <br>
+    Examples, recipes, and other code in the documentation are additionally licensed under the Zero Clause BSD License.
+    <br>
+    
+      See <a href="/license.html">History and License</a> for more information.<br>
+    
+    
+    <br>
+
+    The Python Software Foundation is a non-profit corporation.
+<a href="https://www.python.org/psf/donations/">Please donate.</a>
+<br>
+    <br>
+      最後更新於 9月 01, 2025 (13:31 UTC)。
+    
+      <a href="/bugs.html">Found a bug</a>?
+    
+    <br>
+
+    使用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3 建立。
+    </div>
+
+  </body>
+</html>
