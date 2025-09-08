@@ -1,12 +1,11 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) 2001-2022, Python Software Foundation
+# Copyright (C) 2001 Python Software Foundation
 # This file is distributed under the same license as the Python package.
 #
 # Translators:
 # Leon H., 2017
 msgid ""
 msgstr ""
-"Project-Id-Version: Python 3.13\n"
+"Project-Id-Version: Python 3.14\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2025-09-08 15:25+0800\n"
 "PO-Revision-Date: 2018-05-23 14:34+0000\n"
@@ -209,7 +208,6 @@ msgid ""
 msgstr ""
 
 #: ../../extending/newtypes.rst:72
-#, fuzzy
 msgid ""
 "static void\n"
 "newdatatype_dealloc(PyObject *op)\n"
@@ -220,10 +218,11 @@ msgid ""
 "}"
 msgstr ""
 "static void\n"
-"newdatatype_dealloc(newdatatypeobject *obj)\n"
+"newdatatype_dealloc(PyObject *op)\n"
 "{\n"
-"    free(obj->obj_UnderlyingDatatypePtr);\n"
-"    Py_TYPE(obj)->tp_free((PyObject *)obj);\n"
+"    newdatatypeobject *self = (newdatatypeobject *) op;\n"
+"    free(self->obj_UnderlyingDatatypePtr);\n"
+"    Py_TYPE(self)->tp_free(self);\n"
 "}"
 
 #: ../../extending/newtypes.rst:80
@@ -233,7 +232,6 @@ msgid ""
 msgstr ""
 
 #: ../../extending/newtypes.rst:83
-#, fuzzy
 msgid ""
 "static void\n"
 "newdatatype_dealloc(PyObject *op)\n"
@@ -246,12 +244,13 @@ msgid ""
 "}"
 msgstr ""
 "static void\n"
-"newdatatype_dealloc(newdatatypeobject *obj)\n"
+"newdatatype_dealloc(PyObject *op)\n"
 "{\n"
-"    PyObject_GC_UnTrack(obj);\n"
-"    Py_CLEAR(obj->other_obj);\n"
+"    newdatatypeobject *self = (newdatatypeobject *) op;\n"
+"    PyObject_GC_UnTrack(op);\n"
+"    Py_CLEAR(self->other_obj);\n"
 "    ...\n"
-"    Py_TYPE(obj)->tp_free((PyObject *)obj);\n"
+"    Py_TYPE(self)->tp_free(self);\n"
 "}"
 
 #: ../../extending/newtypes.rst:97
@@ -354,7 +353,6 @@ msgid ""
 msgstr ""
 
 #: ../../extending/newtypes.rst:174
-#, fuzzy
 msgid ""
 "static PyObject *\n"
 "newdatatype_repr(PyObject *op)\n"
@@ -365,10 +363,11 @@ msgid ""
 "}"
 msgstr ""
 "static PyObject *\n"
-"newdatatype_repr(newdatatypeobject *obj)\n"
+"newdatatype_repr(PyObject *op)\n"
 "{\n"
+"    newdatatypeobject *self = (newdatatypeobject *) op;\n"
 "    return PyUnicode_FromFormat(\"Repr-ified_newdatatype{{size:%d}}\",\n"
-"                                obj->obj_UnderlyingDatatypePtr->size);\n"
+"                                self->obj_UnderlyingDatatypePtr->size);\n"
 "}"
 
 #: ../../extending/newtypes.rst:182
@@ -395,7 +394,6 @@ msgid "Here is a simple example::"
 msgstr "以下是個簡單的範例： ::"
 
 #: ../../extending/newtypes.rst:195
-#, fuzzy
 msgid ""
 "static PyObject *\n"
 "newdatatype_str(PyObject *op)\n"
@@ -406,10 +404,11 @@ msgid ""
 "}"
 msgstr ""
 "static PyObject *\n"
-"newdatatype_str(newdatatypeobject *obj)\n"
+"newdatatype_str(PyObject *op)\n"
 "{\n"
+"    newdatatypeobject *self = (newdatatypeobject *) op;\n"
 "    return PyUnicode_FromFormat(\"Stringified_newdatatype{{size:%d}}\",\n"
-"                                obj->obj_UnderlyingDatatypePtr->size);\n"
+"                                self->obj_UnderlyingDatatypePtr->size);\n"
 "}"
 
 #: ../../extending/newtypes.rst:206
@@ -778,7 +777,6 @@ msgid ""
 msgstr ""
 
 #: ../../extending/newtypes.rst:448
-#, fuzzy
 msgid ""
 "static Py_hash_t\n"
 "newdatatype_hash(PyObject *op)\n"
@@ -793,12 +791,14 @@ msgid ""
 "}"
 msgstr ""
 "static Py_hash_t\n"
-"newdatatype_hash(newdatatypeobject *obj)\n"
+"newdatatype_hash(PyObject *op)\n"
 "{\n"
+"    newdatatypeobject *self = (newdatatypeobject *) op;\n"
 "    Py_hash_t result;\n"
-"    result = obj->some_size + 32767 * obj->some_number;\n"
-"    if (result == -1)\n"
-"       result = -2;\n"
+"    result = self->some_size + 32767 * self->some_number;\n"
+"    if (result == -1) {\n"
+"        result = -2;\n"
+"    }\n"
 "    return result;\n"
 "}"
 
@@ -853,7 +853,6 @@ msgid "Here is a toy ``tp_call`` implementation::"
 msgstr ""
 
 #: ../../extending/newtypes.rst:489
-#, fuzzy
 msgid ""
 "static PyObject *\n"
 "newdatatype_call(PyObject *op, PyObject *args, PyObject *kwds)\n"
@@ -875,8 +874,9 @@ msgid ""
 "}"
 msgstr ""
 "static PyObject *\n"
-"newdatatype_call(newdatatypeobject *obj, PyObject *args, PyObject *kwds)\n"
+"newdatatype_call(PyObject *op, PyObject *args, PyObject *kwds)\n"
 "{\n"
+"    newdatatypeobject *self = (newdatatypeobject *) op;\n"
 "    PyObject *result;\n"
 "    const char *arg1;\n"
 "    const char *arg2;\n"
@@ -887,7 +887,7 @@ msgstr ""
 "    }\n"
 "    result = PyUnicode_FromFormat(\n"
 "        \"Returning -- value: [%d] arg1: [%s] arg2: [%s] arg3: [%s]\\n\",\n"
-"        obj->obj_UnderlyingDatatypePtr->size,\n"
+"        self->obj_UnderlyingDatatypePtr->size,\n"
 "        arg1, arg2, arg3);\n"
 "    return result;\n"
 "}"
