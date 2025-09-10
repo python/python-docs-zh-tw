@@ -59,9 +59,15 @@ an event loop:
    instead of using these lower level functions to manually create and close an
    event loop.
 
-   .. deprecated:: 3.12
-      Deprecation warning is emitted if there is no current event loop.
-      In some future Python release this will become an error.
+   .. versionchanged:: 3.14
+      Raises a :exc:`RuntimeError` if there is no current event loop.
+
+   .. note::
+
+      The :mod:`!asyncio` policy system is deprecated and will be removed
+      in Python 3.16; from there on, this function will return the current
+      running event loop if present else it will return the
+      loop set by :func:`set_event_loop`.
 
 .. function:: set_event_loop(loop)
 
@@ -367,7 +373,7 @@ Creating Futures and Tasks
 
    .. versionadded:: 3.5.2
 
-.. method:: loop.create_task(coro, *, name=None, context=None, **kwargs)
+.. method:: loop.create_task(coro, *, name=None, context=None, eager_start=None, **kwargs)
 
    Schedule the execution of :ref:`coroutine <coroutine>` *coro*.
    Return a :class:`Task` object.
@@ -378,8 +384,7 @@ Creating Futures and Tasks
 
    The full function signature is largely the same as that of the
    :class:`Task` constructor (or factory) - all of the keyword arguments to
-   this function are passed through to that interface, except *name*,
-   or *context* if it is ``None``.
+   this function are passed through to that interface.
 
    If the *name* argument is provided and not ``None``, it is set as
    the name of the task using :meth:`Task.set_name`.
@@ -387,6 +392,11 @@ Creating Futures and Tasks
    An optional keyword-only *context* argument allows specifying a
    custom :class:`contextvars.Context` for the *coro* to run in.
    The current context copy is created when no *context* is provided.
+
+   An optional keyword-only *eager_start* argument allows specifying
+   if the task should execute eagerly during the call to create_task,
+   or be scheduled later. If *eager_start* is not passed the mode set
+   by :meth:`loop.set_task_factory` will be used.
 
    .. versionchanged:: 3.8
       Added the *name* parameter.
@@ -400,6 +410,9 @@ Creating Futures and Tasks
    .. versionchanged:: 3.13.4
       Rolled back the change that passes on *name* and *context* (if it is None),
       while still passing on other arbitrary keyword arguments (to avoid breaking backwards compatibility with 3.13.3).
+
+   .. versionchanged:: 3.14
+      All *kwargs* are now passed on. The *eager_start* parameter works with eager task factories.
 
 .. method:: loop.set_task_factory(factory)
 
@@ -418,6 +431,9 @@ Creating Futures and Tasks
    .. versionchanged:: 3.13.4
       *name* is no longer passed to task factories. *context* is no longer passed
       to task factories if it is ``None``.
+
+      .. versionchanged:: 3.14
+         *name* and *context* are now unconditionally passed on to task factories again.
 
 .. method:: loop.get_task_factory()
 
@@ -1374,6 +1390,12 @@ Executing code in thread or process pools
                   pool, cpu_bound)
               print('custom process pool', result)
 
+          # 4. Run in a custom interpreter pool:
+          with concurrent.futures.InterpreterPoolExecutor() as pool:
+              result = await loop.run_in_executor(
+                  pool, cpu_bound)
+              print('custom interpreter pool', result)
+
       if __name__ == '__main__':
           asyncio.run(main())
 
@@ -1398,7 +1420,8 @@ Executing code in thread or process pools
 
    Set *executor* as the default executor used by :meth:`run_in_executor`.
    *executor* must be an instance of
-   :class:`~concurrent.futures.ThreadPoolExecutor`.
+   :class:`~concurrent.futures.ThreadPoolExecutor`, which includes
+   :class:`~concurrent.futures.InterpreterPoolExecutor`.
 
    .. versionchanged:: 3.11
       *executor* must be an instance of
@@ -1847,12 +1870,11 @@ By default asyncio is configured to use :class:`EventLoop`.
       import asyncio
       import selectors
 
-      class MyPolicy(asyncio.DefaultEventLoopPolicy):
-         def new_event_loop(self):
-            selector = selectors.SelectSelector()
-            return asyncio.SelectorEventLoop(selector)
+      async def main():
+         ...
 
-      asyncio.set_event_loop_policy(MyPolicy())
+      loop_factory = lambda: asyncio.SelectorEventLoop(selectors.SelectSelector())
+      asyncio.run(main(), loop_factory=loop_factory)
 
 
    .. availability:: Unix, Windows.

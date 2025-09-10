@@ -142,6 +142,7 @@ Morsel Objects
                     version
                     httponly
                     samesite
+                    partitioned
 
    The attribute :attr:`httponly` specifies that the cookie is only transferred
    in HTTP requests, and is not accessible through JavaScript. This is intended
@@ -153,6 +154,19 @@ Morsel Objects
    requests and top-level navigations), and "None" (sent with same-site and
    cross-site requests). When using "None", the "secure" attribute must also
    be set, as required by modern browsers.
+
+   The attribute :attr:`partitioned` indicates to user agents that these
+   cross-site cookies *should* only be available in the same top-level context
+   that the cookie was first set in. For this to be accepted by the user agent,
+   you **must** also set ``Secure``.
+
+   In addition, it is recommended to use the ``__Host`` prefix when setting
+   partitioned cookies to make them bound to the hostname and not the
+   registrable domain. Read
+   `CHIPS (Cookies Having Independent Partitioned State)`_
+   for full details and examples.
+
+   .. _CHIPS (Cookies Having Independent Partitioned State): https://github.com/privacycg/CHIPS/blob/main/README.md
 
    The keys are case-insensitive and their default value is ``''``.
 
@@ -167,6 +181,9 @@ Morsel Objects
 
    .. versionchanged:: 3.8
       Added support for the :attr:`samesite` attribute.
+
+   .. versionchanged:: 3.14
+      Added support for the :attr:`partitioned` attribute.
 
 
 .. attribute:: Morsel.value

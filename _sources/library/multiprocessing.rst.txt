@@ -132,11 +132,11 @@ to start a process.  These *start methods* are
     inherited by the child process.  Note that safely forking a
     multithreaded process is problematic.
 
-    Available on POSIX systems.  Currently the default on POSIX except macOS.
+    Available on POSIX systems.
 
-    .. note::
-       The default start method will change away from *fork* in Python 3.14.
-       Code that requires *fork* should explicitly specify that via
+    .. versionchanged:: 3.14
+       This is no longer the default start method on any platform.
+       Code that requires *fork* must explicitly specify that via
        :func:`get_context` or :func:`set_start_method`.
 
     .. versionchanged:: 3.12
@@ -156,9 +156,11 @@ to start a process.  These *start methods* are
     side-effect so it is generally safe for it to use :func:`os.fork`.
     No unnecessary resources are inherited.
 
-    Available on POSIX platforms which support passing file descriptors
-    over Unix pipes such as Linux.
+    Available on POSIX platforms which support passing file descriptors over
+    Unix pipes such as Linux.  The default on those.
 
+    .. versionchanged:: 3.14
+       This became the default start method on POSIX platforms.
 
 .. versionchanged:: 3.4
    *spawn* added on all POSIX platforms, and *forkserver* added for
@@ -171,6 +173,13 @@ to start a process.  These *start methods* are
    On macOS, the *spawn* start method is now the default.  The *fork* start
    method should be considered unsafe as it can lead to crashes of the
    subprocess as macOS system libraries may start threads. See :issue:`33725`.
+
+.. versionchanged:: 3.14
+
+   On POSIX platforms the default start method was changed from *fork* to
+   *forkserver* to retain the performance but avoid common multithreaded
+   process incompatibilities. See :gh:`84559`.
+
 
 On POSIX using the *spawn* or *forkserver* start methods will also
 start a *resource tracker* process which tracks the unlinked named
@@ -378,35 +387,40 @@ However, if you really do need to use some shared data then
    proxies.
 
    A manager returned by :func:`Manager` will support types
-   :class:`list`, :class:`dict`, :class:`~managers.Namespace`, :class:`Lock`,
+   :class:`list`, :class:`dict`, :class:`set`, :class:`~managers.Namespace`, :class:`Lock`,
    :class:`RLock`, :class:`Semaphore`, :class:`BoundedSemaphore`,
    :class:`Condition`, :class:`Event`, :class:`Barrier`,
    :class:`Queue`, :class:`Value` and :class:`Array`.  For example, ::
 
       from multiprocessing import Process, Manager
 
-      def f(d, l):
+      def f(d, l, s):
           d[1] = '1'
           d['2'] = 2
           d[0.25] = None
           l.reverse()
+          s.add('a')
+          s.add('b')
 
       if __name__ == '__main__':
           with Manager() as manager:
               d = manager.dict()
               l = manager.list(range(10))
+              s = manager.set()
 
-              p = Process(target=f, args=(d, l))
+              p = Process(target=f, args=(d, l, s))
               p.start()
               p.join()
 
               print(d)
               print(l)
+              print(s)
 
    will print ::
 
        {0.25: None, 1: '1', '2': 2}
        [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+       {'a', 'b'}
 
    Server process managers are more flexible than using shared memory objects
    because they can be made to support arbitrary object types.  Also, a single
@@ -695,6 +709,25 @@ The :mod:`multiprocessing` package mostly replicates the API of the
       a file descriptor usable with primitives from the :mod:`select` module.
 
       .. versionadded:: 3.3
+
+   .. method:: interrupt()
+
+      Terminate the process. Works on POSIX using the :py:const:`~signal.SIGINT` signal.
+      Behavior on Windows is undefined.
+
+      By default, this terminates the child process by raising :exc:`KeyboardInterrupt`.
+      This behavior can be altered by setting the respective signal handler in the child
+      process :func:`signal.signal` for :py:const:`~signal.SIGINT`.
+
+      Note: if the child process catches and discards :exc:`KeyboardInterrupt`, the
+      process will not be terminated.
+
+      Note: the default behavior will also set :attr:`exitcode` to ``1`` as if an
+      uncaught exception was raised in the child process. To have a different
+      :attr:`exitcode` you may simply catch :exc:`KeyboardInterrupt` and call
+      ``exit(your_code)``.
+
+      .. versionadded:: 3.14
 
    .. method:: terminate()
 
@@ -1454,6 +1487,13 @@ object -- see :ref:`multiprocessing-managers`.
       when invoked on an unlocked lock, a :exc:`ValueError` is raised.
 
 
+   .. method:: locked()
+
+      Return a boolean indicating whether this object is locked right now.
+
+      .. versionadded:: 3.14
+
+
 .. class:: RLock()
 
    A recursive lock object: a close analog of :class:`threading.RLock`.  A
@@ -1512,6 +1552,13 @@ object -- see :ref:`multiprocessing-managers`.
       or thread other than the owner or if the lock is in an unlocked (unowned)
       state.  Note that the type of exception raised in this situation
       differs from the implemented behavior in :meth:`threading.RLock.release`.
+
+
+   .. method:: locked()
+
+      Return a boolean indicating whether this object is locked right now.
+
+      .. versionadded:: 3.14
 
 
 .. class:: Semaphore([value])
@@ -1979,6 +2026,15 @@ their parent process exits.  The manager classes are defined in the
                list(sequence)
 
       Create a shared :class:`list` object and return a proxy for it.
+
+   .. method:: set()
+               set(sequence)
+               set(mapping)
+
+      Create a shared :class:`set` object and return a proxy for it.
+
+      .. versionadded:: 3.14
+         :class:`set` support was added.
 
    .. versionchanged:: 3.6
       Shared objects are capable of being nested.  For example, a shared

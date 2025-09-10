@@ -334,6 +334,14 @@ The :mod:`functools` module defines the following functions:
       Returning ``NotImplemented`` from the underlying comparison function for
       unrecognised types is now supported.
 
+.. data:: Placeholder
+
+   A singleton object used as a sentinel to reserve a place
+   for positional arguments when calling :func:`partial`
+   and :func:`partialmethod`.
+
+   .. versionadded:: 3.14
+
 .. function:: partial(func, /, *args, **keywords)
 
    Return a new :ref:`partial object<partial-objects>` which when called
@@ -344,26 +352,67 @@ The :mod:`functools` module defines the following functions:
    Roughly equivalent to::
 
       def partial(func, /, *args, **keywords):
-          def newfunc(*fargs, **fkeywords):
-              newkeywords = {**keywords, **fkeywords}
-              return func(*args, *fargs, **newkeywords)
+          def newfunc(*more_args, **more_keywords):
+              return func(*args, *more_args, **(keywords | more_keywords))
           newfunc.func = func
           newfunc.args = args
           newfunc.keywords = keywords
           return newfunc
 
-   The :func:`partial` is used for partial function application which "freezes"
+   The :func:`!partial` function is used for partial function application which "freezes"
    some portion of a function's arguments and/or keywords resulting in a new object
    with a simplified signature.  For example, :func:`partial` can be used to create
    a callable that behaves like the :func:`int` function where the *base* argument
-   defaults to two:
+   defaults to ``2``:
 
-      >>> from functools import partial
+   .. doctest::
+
       >>> basetwo = partial(int, base=2)
       >>> basetwo.__doc__ = 'Convert base 2 string to an int.'
       >>> basetwo('10010')
       18
 
+   If :data:`Placeholder` sentinels are present in *args*, they will be filled first
+   when :func:`!partial` is called. This makes it possible to pre-fill any positional
+   argument with a call to :func:`!partial`; without :data:`!Placeholder`,
+   only the chosen number of leading positional arguments can be pre-filled.
+
+   If any :data:`!Placeholder` sentinels are present, all must be filled at call time:
+
+   .. doctest::
+
+      >>> say_to_world = partial(print, Placeholder, Placeholder, "world!")
+      >>> say_to_world('Hello', 'dear')
+      Hello dear world!
+
+   Calling ``say_to_world('Hello')`` raises a :exc:`TypeError`, because
+   only one positional argument is provided, but there are two placeholders
+   that must be filled in.
+
+   If :func:`!partial` is applied to an existing :func:`!partial` object,
+   :data:`!Placeholder` sentinels of the input object are filled in with
+   new positional arguments.
+   A placeholder can be retained by inserting a new
+   :data:`!Placeholder` sentinel to the place held by a previous :data:`!Placeholder`:
+
+   .. doctest::
+
+      >>> from functools import partial, Placeholder as _
+      >>> remove = partial(str.replace, _, _, '')
+      >>> message = 'Hello, dear dear world!'
+      >>> remove(message, ' dear')
+      'Hello, world!'
+      >>> remove_dear = partial(remove, _, ' dear')
+      >>> remove_dear(message)
+      'Hello, world!'
+      >>> remove_first_dear = partial(remove_dear, _, 1)
+      >>> remove_first_dear(message)
+      'Hello, dear world!'
+
+   :data:`!Placeholder` cannot be passed to :func:`!partial` as a keyword argument.
+
+   .. versionchanged:: 3.14
+      Added support for :data:`Placeholder` in positional arguments.
 
 .. class:: partialmethod(func, /, *args, **keywords)
 
@@ -409,7 +458,7 @@ The :mod:`functools` module defines the following functions:
    .. versionadded:: 3.4
 
 
-.. function:: reduce(function, iterable[, initial], /)
+.. function:: reduce(function, iterable, /[, initial])
 
    Apply *function* of two arguments cumulatively to the items of *iterable*, from
    left to right, so as to reduce the iterable to a single value.  For example,
@@ -424,7 +473,7 @@ The :mod:`functools` module defines the following functions:
 
       initial_missing = object()
 
-      def reduce(function, iterable, initial=initial_missing, /):
+      def reduce(function, iterable, /, initial=initial_missing):
           it = iter(iterable)
           if initial is initial_missing:
               value = next(it)
@@ -436,6 +485,9 @@ The :mod:`functools` module defines the following functions:
 
    See :func:`itertools.accumulate` for an iterator that yields all intermediate
    values.
+
+   .. versionchanged:: 3.14
+      *initial* is now supported as a keyword argument.
 
 .. decorator:: singledispatch
 
@@ -474,7 +526,7 @@ The :mod:`functools` module defines the following functions:
      ...     for i, elem in enumerate(arg):
      ...         print(i, elem)
 
-   :data:`types.UnionType` and :data:`typing.Union` can also be used::
+   :class:`typing.Union` can also be used::
 
     >>> @fun.register
     ... def _(arg: int | float, verbose=False):
@@ -610,8 +662,8 @@ The :mod:`functools` module defines the following functions:
       The :func:`~singledispatch.register` attribute now supports using type annotations.
 
    .. versionchanged:: 3.11
-      The :func:`~singledispatch.register` attribute now supports :data:`types.UnionType`
-      and :data:`typing.Union` as type annotations.
+      The :func:`~singledispatch.register` attribute now supports
+      :class:`typing.Union` as a type annotation.
 
 
 .. class:: singledispatchmethod(func)
@@ -770,10 +822,7 @@ have three read-only attributes:
    The keyword arguments that will be supplied when the :class:`partial` object is
    called.
 
-:class:`partial` objects are like :ref:`function objects <user-defined-funcs>`
-in that they are callable, weak referenceable, and can have attributes.
-There are some important differences.  For instance, the
-:attr:`~function.__name__` and :attr:`function.__doc__` attributes
-are not created automatically.  Also, :class:`partial` objects defined in
-classes behave like static methods and do not transform into bound methods
-during instance attribute look-up.
+:class:`partial` objects are like :ref:`function objects <user-defined-funcs>` in that they are
+callable, weak referenceable, and can have attributes.  There are some important
+differences.  For instance, the :attr:`~definition.__name__` and :attr:`~definition.__doc__` attributes
+are not created automatically.

@@ -589,3 +589,171 @@ Object Protocol
    has the :c:macro:`Py_TPFLAGS_MANAGED_DICT` flag set.
 
    .. versionadded:: 3.13
+
+.. c:function:: int PyUnstable_Object_EnableDeferredRefcount(PyObject *obj)
+
+   Enable `deferred reference counting <https://peps.python.org/pep-0703/#deferred-reference-counting>`_ on *obj*,
+   if supported by the runtime.  In the :term:`free-threaded <free threading>` build,
+   this allows the interpreter to avoid reference count adjustments to *obj*,
+   which may improve multi-threaded performance.  The tradeoff is
+   that *obj* will only be deallocated by the tracing garbage collector, and
+   not when the interpreter no longer has any references to it.
+
+   This function returns ``1`` if deferred reference counting is enabled on *obj*,
+   and ``0`` if deferred reference counting is not supported or if the hint was
+   ignored by the interpreter, such as when deferred reference counting is already
+   enabled on *obj*. This function is thread-safe, and cannot fail.
+
+   This function does nothing on builds with the :term:`GIL` enabled, which do
+   not support deferred reference counting. This also does nothing if *obj* is not
+   an object tracked by the garbage collector (see :func:`gc.is_tracked` and
+   :c:func:`PyObject_GC_IsTracked`).
+
+   This function is intended to be used soon after *obj* is created,
+   by the code that creates it, such as in the object's :c:member:`~PyTypeObject.tp_new`
+   slot.
+
+   .. versionadded:: 3.14
+
+.. c:function:: int PyUnstable_Object_IsUniqueReferencedTemporary(PyObject *obj)
+
+   Check if *obj* is a unique temporary object.
+   Returns ``1`` if *obj* is known to be a unique temporary object,
+   and ``0`` otherwise.  This function cannot fail, but the check is
+   conservative, and may return ``0`` in some cases even if *obj* is a unique
+   temporary object.
+
+   If an object is a unique temporary, it is guaranteed that the current code
+   has the only reference to the object. For arguments to C functions, this
+   should be used instead of checking if the reference count is ``1``. Starting
+   with Python 3.14, the interpreter internally avoids some reference count
+   modifications when loading objects onto the operands stack by
+   :term:`borrowing <borrowed reference>` references when possible, which means
+   that a reference count of ``1`` by itself does not guarantee that a function
+   argument uniquely referenced.
+
+   In the example below, ``my_func`` is called with a unique temporary object
+   as its argument::
+
+      my_func([1, 2, 3])
+
+   In the example below, ``my_func`` is **not** called with a unique temporary
+   object as its argument, even if its refcount is ``1``::
+
+      my_list = [1, 2, 3]
+      my_func(my_list)
+
+   See also the function :c:func:`Py_REFCNT`.
+
+   .. versionadded:: 3.14
+
+.. c:function:: int PyUnstable_IsImmortal(PyObject *obj)
+
+   This function returns non-zero if *obj* is :term:`immortal`, and zero
+   otherwise. This function cannot fail.
+
+   .. note::
+
+      Objects that are immortal in one CPython version are not guaranteed to
+      be immortal in another.
+
+   .. versionadded:: 3.14
+
+.. c:function:: int PyUnstable_TryIncRef(PyObject *obj)
+
+   Increments the reference count of *obj* if it is not zero.  Returns ``1``
+   if the object's reference count was successfully incremented. Otherwise,
+   this function returns ``0``.
+
+   :c:func:`PyUnstable_EnableTryIncRef` must have been called
+   earlier on *obj* or this function may spuriously return ``0`` in the
+   :term:`free threading` build.
+
+   This function is logically equivalent to the following C code, except that
+   it behaves atomically in the :term:`free threading` build::
+
+      if (Py_REFCNT(op) > 0) {
+         Py_INCREF(op);
+         return 1;
+      }
+      return 0;
+
+   This is intended as a building block for managing weak references
+   without the overhead of a Python :ref:`weak reference object <weakrefobjects>`.
+
+   Typically, correct use of this function requires support from *obj*'s
+   deallocator (:c:member:`~PyTypeObject.tp_dealloc`).
+   For example, the following sketch could be adapted to implement a
+   "weakmap" that works like a :py:class:`~weakref.WeakValueDictionary`
+   for a specific type:
+
+   .. code-block:: c
+
+      PyMutex mutex;
+
+      PyObject *
+      add_entry(weakmap_key_type *key, PyObject *value)
+      {
+          PyUnstable_EnableTryIncRef(value);
+          weakmap_type weakmap = ...;
+          PyMutex_Lock(&mutex);
+          weakmap_add_entry(weakmap, key, value);
+          PyMutex_Unlock(&mutex);
+          Py_RETURN_NONE;
+      }
+
+      PyObject *
+      get_value(weakmap_key_type *key)
+      {
+          weakmap_type weakmap = ...;
+          PyMutex_Lock(&mutex);
+          PyObject *result = weakmap_find(weakmap, key);
+          if (PyUnstable_TryIncRef(result)) {
+              // `result` is safe to use
+              PyMutex_Unlock(&mutex);
+              return result;
+          }
+          // if we get here, `result` is starting to be garbage-collected,
+          // but has not been removed from the weakmap yet
+          PyMutex_Unlock(&mutex);
+          return NULL;
+      }
+
+      // tp_dealloc function for weakmap values
+      void
+      value_dealloc(PyObject *value)
+      {
+          weakmap_type weakmap = ...;
+          PyMutex_Lock(&mutex);
+          weakmap_remove_value(weakmap, value);
+
+          ...
+          PyMutex_Unlock(&mutex);
+      }
+
+   .. versionadded:: 3.14
+
+.. c:function:: void PyUnstable_EnableTryIncRef(PyObject *obj)
+
+   Enables subsequent uses of :c:func:`PyUnstable_TryIncRef` on *obj*.  The
+   caller must hold a :term:`strong reference` to *obj* when calling this.
+
+   .. versionadded:: 3.14
+
+.. c:function:: int PyUnstable_Object_IsUniquelyReferenced(PyObject *op)
+
+   Determine if *op* only has one reference.
+
+   On GIL-enabled builds, this function is equivalent to
+   :c:expr:`Py_REFCNT(op) == 1`.
+
+   On a :term:`free threaded <free threading>` build, this checks if *op*'s
+   :term:`reference count` is equal to one and additionally checks if *op*
+   is only used by this thread. :c:expr:`Py_REFCNT(op) == 1` is **not**
+   thread-safe on free threaded builds; prefer this function.
+
+   The caller must hold an :term:`attached thread state`, despite the fact
+   that this function doesn't call into the Python interpreter. This function
+   cannot fail.
+
+   .. versionadded:: 3.14

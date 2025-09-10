@@ -73,14 +73,15 @@ ArgumentParser objects
                           formatter_class=argparse.HelpFormatter, \
                           prefix_chars='-', fromfile_prefix_chars=None, \
                           argument_default=None, conflict_handler='error', \
-                          add_help=True, allow_abbrev=True, exit_on_error=True)
+                          add_help=True, allow_abbrev=True, exit_on_error=True, \
+                          *, suggest_on_error=False, color=True)
 
    Create a new :class:`ArgumentParser` object. All parameters should be passed
    as keyword arguments. Each parameter has its own more detailed description
    below, but in short they are:
 
-   * prog_ - The name of the program (default:
-     ``os.path.basename(sys.argv[0])``)
+   * prog_ - The name of the program (default: generated from the ``__main__``
+     module attributes and ``sys.argv[0]``)
 
    * usage_ - The string describing the program usage (default: generated from
      arguments added to parser)
@@ -110,10 +111,15 @@ ArgumentParser objects
    * add_help_ - Add a ``-h/--help`` option to the parser (default: ``True``)
 
    * allow_abbrev_ - Allows long options to be abbreviated if the
-     abbreviation is unambiguous. (default: ``True``)
+     abbreviation is unambiguous (default: ``True``)
 
    * exit_on_error_ - Determines whether or not :class:`!ArgumentParser` exits with
      error info when an error occurs. (default: ``True``)
+
+   * suggest_on_error_ - Enables suggestions for mistyped argument choices
+     and subparser names (default: ``False``)
+
+   * color_ - Allow color output (default: ``True``)
 
    .. versionchanged:: 3.5
       *allow_abbrev* parameter was added.
@@ -124,6 +130,9 @@ ArgumentParser objects
 
    .. versionchanged:: 3.9
       *exit_on_error* parameter was added.
+
+   .. versionchanged:: 3.14
+      *suggest_on_error* and *color* parameters were added.
 
 The following sections describe how each of these are used.
 
@@ -156,7 +165,8 @@ the ``prog=`` argument to :class:`ArgumentParser`::
    options:
     -h, --help  show this help message and exit
 
-Note that the program name, whether determined from ``sys.argv[0]`` or from the
+Note that the program name, whether determined from ``sys.argv[0]``,
+from the ``__main__`` module attributes or from the
 ``prog=`` argument, is available to help messages using the ``%(prog)s`` format
 specifier.
 
@@ -171,6 +181,9 @@ specifier.
     -h, --help  show this help message and exit
     --foo FOO   foo of the myprogram program
 
+.. versionchanged:: 3.14
+   The default ``prog`` value now reflects how ``__main__`` was actually executed,
+   rather than always being ``os.path.basename(sys.argv[0])``.
 
 usage
 ^^^^^
@@ -194,6 +207,12 @@ arguments it contains. The default message can be overridden with the
 
 The ``%(prog)s`` format specifier is available to fill in the program name in
 your usage messages.
+
+When a custom usage message is specified for the main parser, you may also want to
+consider passing  the ``prog`` argument to :meth:`~ArgumentParser.add_subparsers`
+or the ``prog`` and the ``usage`` arguments to
+:meth:`~_SubParsersAction.add_parser`, to ensure consistent command prefixes and
+usage information across subparsers.
 
 
 .. _description:
@@ -573,6 +592,55 @@ If the user would like to catch errors manually, the feature can be enabled by s
 
 .. versionadded:: 3.9
 
+suggest_on_error
+^^^^^^^^^^^^^^^^
+
+By default, when a user passes an invalid argument choice or subparser name,
+:class:`ArgumentParser` will exit with error info and list the permissible
+argument choices (if specified) or subparser names as part of the error message.
+
+If the user would like to enable suggestions for mistyped argument choices and
+subparser names, the feature can be enabled by setting ``suggest_on_error`` to
+``True``. Note that this only applies for arguments when the choices specified
+are strings::
+
+   >>> parser = argparse.ArgumentParser(description='Process some integers.',
+                                        suggest_on_error=True)
+   >>> parser.add_argument('--action', choices=['sum', 'max'])
+   >>> parser.add_argument('integers', metavar='N', type=int, nargs='+',
+   ...                     help='an integer for the accumulator')
+   >>> parser.parse_args(['--action', 'sumn', 1, 2, 3])
+   tester.py: error: argument --action: invalid choice: 'sumn', maybe you meant 'sum'? (choose from 'sum', 'max')
+
+If you're writing code that needs to be compatible with older Python versions
+and want to opportunistically use ``suggest_on_error`` when it's available, you
+can set it as an attribute after initializing the parser instead of using the
+keyword argument::
+
+   >>> parser = argparse.ArgumentParser(description='Process some integers.')
+   >>> parser.suggest_on_error = True
+
+.. versionadded:: 3.14
+
+
+color
+^^^^^
+
+By default, the help message is printed in color using `ANSI escape sequences
+<https://en.wikipedia.org/wiki/ANSI_escape_code>`__.
+If you want plain text help messages, you can disable this :ref:`in your local
+environment <using-on-controlling-color>`, or in the argument parser itself
+by setting ``color`` to ``False``::
+
+   >>> parser = argparse.ArgumentParser(description='Process some integers.',
+   ...                                  color=False)
+   >>> parser.add_argument('--action', choices=['sum', 'max'])
+   >>> parser.add_argument('integers', metavar='N', type=int, nargs='+',
+   ...                     help='an integer for the accumulator')
+   >>> parser.parse_args(['--help'])
+
+.. versionadded:: 3.14
+
 
 The add_argument() method
 -------------------------
@@ -649,6 +717,25 @@ be positional::
    >>> parser.parse_args(['--foo', 'FOO'])
    usage: PROG [-h] [-f FOO] bar
    PROG: error: the following arguments are required: bar
+
+By default, :mod:`!argparse` automatically handles the internal naming and
+display names of arguments, simplifying the process without requiring
+additional configuration.
+As such, you do not need to specify the dest_ and metavar_ parameters.
+The dest_ parameter defaults to the argument name with underscores ``_``
+replacing hyphens ``-`` . The metavar_ parameter defaults to the
+upper-cased name. For example::
+
+   >>> parser = argparse.ArgumentParser(prog='PROG')
+   >>> parser.add_argument('--foo-bar')
+   >>> parser.parse_args(['--foo-bar', 'FOO-BAR']
+   Namespace(foo_bar='FOO-BAR')
+   >>> parser.print_help()
+   usage:  [-h] [--foo-bar FOO-BAR]
+
+   optional arguments:
+    -h, --help  show this help message and exit
+    --foo-bar FOO-BAR
 
 
 .. _action:
@@ -829,16 +916,14 @@ See also :ref:`specifying-ambiguous-arguments`. The supported values are:
   output files::
 
      >>> parser = argparse.ArgumentParser()
-     >>> parser.add_argument('infile', nargs='?', type=argparse.FileType('r'),
-     ...                     default=sys.stdin)
-     >>> parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
-     ...                     default=sys.stdout)
+     >>> parser.add_argument('infile', nargs='?')
+     >>> parser.add_argument('outfile', nargs='?')
      >>> parser.parse_args(['input.txt', 'output.txt'])
-     Namespace(infile=<_io.TextIOWrapper name='input.txt' encoding='UTF-8'>,
-               outfile=<_io.TextIOWrapper name='output.txt' encoding='UTF-8'>)
+     Namespace(infile='input.txt', outfile='output.txt')
+     >>> parser.parse_args(['input.txt'])
+     Namespace(infile='input.txt', outfile=None)
      >>> parser.parse_args([])
-     Namespace(infile=<_io.TextIOWrapper name='<stdin>' encoding='UTF-8'>,
-               outfile=<_io.TextIOWrapper name='<stdout>' encoding='UTF-8'>)
+     Namespace(infile=None, outfile=None)
 
 .. index:: single: * (asterisk); in argparse module
 
@@ -998,7 +1083,6 @@ Common built-in types and functions can be used as type converters:
    parser.add_argument('distance', type=float)
    parser.add_argument('street', type=ascii)
    parser.add_argument('code_point', type=ord)
-   parser.add_argument('dest_file', type=argparse.FileType('w', encoding='latin-1'))
    parser.add_argument('datapath', type=pathlib.Path)
 
 User defined functions can be used as well:
@@ -1785,6 +1869,10 @@ Sub-commands
    .. versionchanged:: 3.7
       New *required* keyword-only parameter.
 
+   .. versionchanged:: 3.14
+      Subparser's *prog* is no longer affected by a custom usage message in
+      the main parser.
+
 
 FileType objects
 ^^^^^^^^^^^^^^^^
@@ -1812,8 +1900,18 @@ FileType objects
       >>> parser.parse_args(['-'])
       Namespace(infile=<_io.TextIOWrapper name='<stdin>' encoding='UTF-8'>)
 
+   .. note::
+
+      If one argument uses *FileType* and then a subsequent argument fails,
+      an error is reported but the file is not automatically closed.
+      This can also clobber the output files.
+      In this case, it would be better to wait until after the parser has
+      run and then use the :keyword:`with`-statement to manage the files.
+
    .. versionchanged:: 3.4
       Added the *encodings* and *errors* parameters.
+
+   .. deprecated:: 3.14
 
 
 Argument groups
@@ -1873,11 +1971,14 @@ Argument groups
    Note that any arguments not in your user-defined groups will end up back
    in the usual "positional arguments" and "optional arguments" sections.
 
-   .. versionchanged:: 3.11
-    Calling :meth:`add_argument_group` on an argument group is deprecated.
-    This feature was never supported and does not always work correctly.
-    The function exists on the API by accident through inheritance and
-    will be removed in the future.
+   .. deprecated-removed:: 3.11 3.14
+      Calling :meth:`add_argument_group` on an argument group now raises an
+      exception. This nesting was never supported, often failed to work
+      correctly, and was unintentionally exposed through inheritance.
+
+   .. deprecated:: 3.14
+      Passing prefix_chars_ to :meth:`add_argument_group`
+      is now deprecated.
 
 
 Mutual exclusion
@@ -1936,11 +2037,11 @@ Mutual exclusion
        --foo FOO   foo help
        --bar BAR   bar help
 
-   .. versionchanged:: 3.11
-    Calling :meth:`add_argument_group` or :meth:`add_mutually_exclusive_group`
-    on a mutually exclusive group is deprecated. These features were never
-    supported and do not always work correctly. The functions exist on the
-    API by accident through inheritance and will be removed in the future.
+   .. deprecated-removed:: 3.11 3.14
+      Calling :meth:`add_argument_group` or :meth:`add_mutually_exclusive_group`
+      on a mutually exclusive group now raises an exception. This nesting was
+      never supported, often failed to work correctly, and was unintentionally
+      exposed through inheritance.
 
 
 Parser defaults

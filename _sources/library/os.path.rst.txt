@@ -42,8 +42,8 @@ the :mod:`glob` module.)
    a path that is *always* in one of the different formats.  They all have the
    same interface:
 
-   * :mod:`posixpath` for UNIX-style paths
-   * :mod:`ntpath` for Windows paths
+   * :mod:`!posixpath` for UNIX-style paths
+   * :mod:`!ntpath` for Windows paths
 
 
 .. versionchanged:: 3.8
@@ -447,7 +447,7 @@ the :mod:`glob` module.)
    .. versionchanged:: 3.10
       The *strict* parameter was added.
 
-   .. versionchanged:: 3.13.4
+   .. versionchanged:: 3.14
       The :py:data:`~os.path.ALLOW_MISSING` value for the *strict* parameter
       was added.
 
@@ -455,7 +455,7 @@ the :mod:`glob` module.)
 
    Special value used for the *strict* argument in :func:`realpath`.
 
-   .. versionadded:: 3.13.4
+   .. versionadded:: 3.14
 
 .. function:: relpath(path, start=os.curdir)
 

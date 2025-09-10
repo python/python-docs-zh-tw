@@ -137,16 +137,30 @@ created.  Socket addresses are represented as follows:
 - :const:`AF_BLUETOOTH` supports the following protocols and address
   formats:
 
-  - :const:`BTPROTO_L2CAP` accepts ``(bdaddr, psm)`` where ``bdaddr`` is
-    the Bluetooth address as a string and ``psm`` is an integer.
+  - :const:`BTPROTO_L2CAP` accepts a tuple
+    ``(bdaddr, psm[, cid[, bdaddr_type]])`` where:
+
+    - ``bdaddr`` is a string specifying the Bluetooth address.
+    - ``psm`` is an integer specifying the Protocol/Service Multiplexer.
+    - ``cid`` is an optional integer specifying the Channel Identifier.
+      If not given, defaults to zero.
+    - ``bdaddr_type`` is an optional integer specifying the address type;
+      one of :const:`BDADDR_BREDR` (default), :const:`BDADDR_LE_PUBLIC`,
+      :const:`BDADDR_LE_RANDOM`.
+
+    .. versionchanged:: 3.14
+       Added ``cid`` and ``bdaddr_type`` fields.
 
   - :const:`BTPROTO_RFCOMM` accepts ``(bdaddr, channel)`` where ``bdaddr``
     is the Bluetooth address as a string and ``channel`` is an integer.
 
   - :const:`BTPROTO_HCI` accepts a format that depends on your OS.
 
-    - On Linux it accepts a tuple ``(device_id,)`` where ``device_id``
-      is an integer specifying the number of the Bluetooth device.
+    - On Linux it accepts an integer ``device_id`` or a tuple
+      ``(device_id, [channel])`` where ``device_id``
+      specifies the number of the Bluetooth device,
+      and ``channel`` is an optional integer specifying the HCI channel
+      (:const:`HCI_CHANNEL_RAW` by default).
     - On FreeBSD, NetBSD and DragonFly BSD it accepts ``bdaddr``
       where ``bdaddr`` is the Bluetooth address as a string.
 
@@ -156,10 +170,16 @@ created.  Socket addresses are represented as follows:
     .. versionchanged:: 3.13.3
        FreeBSD support added.
 
+    .. versionchanged:: 3.14
+       Added ``channel`` field.
+       ``device_id`` not packed in a tuple is now accepted.
+
   - :const:`BTPROTO_SCO` accepts ``bdaddr`` where ``bdaddr`` is
     the Bluetooth address as a string or a :class:`bytes` object.
     (ex. ``'12:23:34:45:56:67'`` or ``b'12:23:34:45:56:67'``)
-    This protocol is not supported under FreeBSD.
+
+    .. versionchanged:: 3.14
+       FreeBSD support added.
 
 - :const:`AF_ALG` is a Linux-only socket based interface to Kernel
   cryptography. An algorithm socket is configured with a tuple of two to four
@@ -418,14 +438,14 @@ The AF_* and SOCK_* constants are now :class:`AddressFamily` and
       ``TCP_USER_TIMEOUT``, ``TCP_CONGESTION`` were added.
 
    .. versionchanged:: 3.6.5
-      On Windows, ``TCP_FASTOPEN``, ``TCP_KEEPCNT`` appear if run-time Windows
-      supports.
+      Added support for ``TCP_FASTOPEN``, ``TCP_KEEPCNT`` on Windows platforms
+      when available.
 
    .. versionchanged:: 3.7
       ``TCP_NOTSENT_LOWAT`` was added.
 
-      On Windows, ``TCP_KEEPIDLE``, ``TCP_KEEPINTVL`` appear if run-time Windows
-      supports.
+      Added support for ``TCP_KEEPIDLE``, ``TCP_KEEPINTVL`` on Windows platforms
+      when available.
 
    .. versionchanged:: 3.10
       ``IP_RECVTOS`` was added.
@@ -455,6 +475,14 @@ The AF_* and SOCK_* constants are now :class:`AddressFamily` and
       same way that ``SO_BINDTODEVICE`` is used, but with the index of a
       network interface instead of its name.
 
+   .. versionchanged:: 3.14
+      Added missing ``IP_FREEBIND``, ``IP_RECVERR``, ``IPV6_RECVERR``,
+      ``IP_RECVTTL``, and ``IP_RECVORIGDSTADDR`` on Linux.
+
+   .. versionchanged:: 3.14
+      Added support for ``TCP_QUICKACK`` on Windows platforms when available.
+
+
 .. data:: AF_CAN
           PF_CAN
           SOL_CAN_*
@@ -470,7 +498,7 @@ The AF_* and SOCK_* constants are now :class:`AddressFamily` and
    .. versionchanged:: 3.11
       NetBSD support was added.
 
-   .. versionchanged:: 3.13.4
+   .. versionchanged:: 3.14
       Restored missing ``CAN_RAW_ERR_FILTER`` on Linux.
 
 .. data:: CAN_BCM
@@ -626,6 +654,14 @@ The AF_* and SOCK_* constants are now :class:`AddressFamily` and
    This constant contains a boolean value which indicates if IPv6 is supported on
    this platform.
 
+.. data:: AF_BLUETOOTH
+          BTPROTO_L2CAP
+          BTPROTO_RFCOMM
+          BTPROTO_HCI
+          BTPROTO_SCO
+
+   Integer constants for use with Bluetooth addresses.
+
 .. data:: BDADDR_ANY
           BDADDR_LOCAL
 
@@ -634,13 +670,81 @@ The AF_* and SOCK_* constants are now :class:`AddressFamily` and
    any address when specifying the binding socket with
    :const:`BTPROTO_RFCOMM`.
 
+.. data:: BDADDR_BREDR
+          BDADDR_LE_PUBLIC
+          BDADDR_LE_RANDOM
+
+   These constants describe the Bluetooth address type when binding or
+   connecting a :const:`BTPROTO_L2CAP` socket.
+
+   .. availability:: Linux, FreeBSD
+
+   .. versionadded:: 3.14
+
+.. data:: SOL_RFCOMM
+          SOL_L2CAP
+          SOL_HCI
+          SOL_SCO
+          SOL_BLUETOOTH
+
+   Used in the level argument to the :meth:`~socket.setsockopt` and
+   :meth:`~socket.getsockopt` methods of Bluetooth socket objects.
+
+   :const:`SOL_BLUETOOTH` is only available on Linux. Other constants
+   are available if the corresponding protocol is supported.
+
+.. data:: SO_L2CAP_*
+          L2CAP_LM
+          L2CAP_LM_*
+          SO_RFCOMM_*
+          RFCOMM_LM_*
+          SO_SCO_*
+          SO_BTH_*
+          BT_*
+
+   Used in the option name and value argument to the :meth:`~socket.setsockopt`
+   and :meth:`~socket.getsockopt` methods of Bluetooth socket objects.
+
+   :const:`!BT_*` and :const:`L2CAP_LM` are only available on Linux.
+   :const:`!SO_BTH_*` are only available on Windows.
+   Other constants may be available on Linux and various BSD platforms.
+
+   .. versionadded:: 3.14
+
 .. data:: HCI_FILTER
           HCI_TIME_STAMP
           HCI_DATA_DIR
+          SO_HCI_EVT_FILTER
+          SO_HCI_PKT_FILTER
 
-   For use with :const:`BTPROTO_HCI`. :const:`!HCI_FILTER` is only
-   available on Linux and FreeBSD. :const:`!HCI_TIME_STAMP` and
-   :const:`!HCI_DATA_DIR` are only available on Linux.
+   Option names for use with :const:`BTPROTO_HCI`.
+   Availability and format of the option values depend on platform.
+
+   .. versionchanged:: 3.14
+      Added :const:`!SO_HCI_EVT_FILTER` and :const:`!SO_HCI_PKT_FILTER`
+      on NetBSD and DragonFly BSD.
+      Added :const:`!HCI_DATA_DIR` on FreeBSD, NetBSD and DragonFly BSD.
+
+.. data:: HCI_DEV_NONE
+
+   The ``device_id`` value used to create an HCI socket that isn't specific
+   to a single Bluetooth adapter.
+
+   .. availability:: Linux
+
+   .. versionadded:: 3.14
+
+.. data:: HCI_CHANNEL_RAW
+          HCI_CHANNEL_USER
+          HCI_CHANNEL_MONITOR
+          HCI_CHANNEL_CONTROL
+          HCI_CHANNEL_LOGGING
+
+   Possible values for ``channel`` field in the :const:`BTPROTO_HCI` address.
+
+   .. availability:: Linux
+
+   .. versionadded:: 3.14
 
 .. data:: AF_QIPCRTR
 
@@ -672,6 +776,14 @@ The AF_* and SOCK_* constants are now :class:`AddressFamily` and
    .. versionadded:: 3.11
 
    .. availability:: Linux >= 3.9
+
+.. data:: SO_REUSEPORT_LB
+
+   Constant to enable duplicate address and port bindings with load balancing.
+
+  .. versionadded:: 3.14
+
+  .. availability:: FreeBSD >= 12.0
 
 .. data:: AF_HYPERV
           HV_PROTOCOL_RAW
@@ -1595,8 +1707,6 @@ to sockets.
 
 .. method:: socket.ioctl(control, option)
 
-   :platform: Windows
-
    The :meth:`ioctl` method is a limited interface to the WSAIoctl system
    interface.  Please refer to the `Win32 documentation
    <https://msdn.microsoft.com/en-us/library/ms741621%28VS.85%29.aspx>`_ for more
@@ -1608,8 +1718,11 @@ to sockets.
    Currently only the following control codes are supported:
    ``SIO_RCVALL``, ``SIO_KEEPALIVE_VALS``, and ``SIO_LOOPBACK_FAST_PATH``.
 
+   .. availability:: Windows
+
    .. versionchanged:: 3.6
       ``SIO_LOOPBACK_FAST_PATH`` was added.
+
 
 .. method:: socket.listen([backlog])
 

@@ -1,3 +1,5 @@
+.. _library-cmdline:
+
 ++++++++++++++++++++++++++++++++++++
 Modules command-line interface (CLI)
 ++++++++++++++++++++++++++++++++++++
@@ -11,7 +13,6 @@ The following modules have a command-line interface.
 * :mod:`code`
 * :ref:`compileall <compileall-cli>`
 * :mod:`cProfile`: see :ref:`profile <profile-cli>`
-* :ref:`difflib <difflib-interface>`
 * :ref:`dis <dis-cli>`
 * :ref:`doctest <doctest-cli>`
 * :mod:`!encodings.rot_13`
@@ -23,10 +24,10 @@ The following modules have a command-line interface.
 * :ref:`http.server <http-server-cli>`
 * :mod:`!idlelib`
 * :ref:`inspect <inspect-module-cli>`
-* :ref:`json.tool <json-commandline>`
-* :mod:`mimetypes`
+* :ref:`json <json-commandline>`
+* :ref:`mimetypes <mimetypes-cli>`
 * :mod:`pdb`
-* :mod:`pickle`
+* :ref:`pickle <pickle-cli>`
 * :ref:`pickletools <pickletools-cli>`
 * :ref:`platform <platform-cli>`
 * :mod:`poplib`

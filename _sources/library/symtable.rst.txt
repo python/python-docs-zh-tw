@@ -192,6 +192,19 @@ Examining Symbol Tables
 
       For example:
 
+      .. testsetup:: symtable.Class.get_methods
+
+         import warnings
+         context = warnings.catch_warnings()
+         context.__enter__()
+         warnings.simplefilter("ignore", category=DeprecationWarning)
+
+      .. testcleanup:: symtable.Class.get_methods
+
+         context.__exit__()
+
+      .. doctest:: symtable.Class.get_methods
+
          >>> import symtable
          >>> st = symtable.symtable('''
          ... def outer(): pass
@@ -208,12 +221,15 @@ Examining Symbol Tables
          ...    global outer
          ...    def outer(self): pass
          ... ''', 'test', 'exec')
-         >>> class_A = st.get_children()[1]
+         >>> class_A = st.get_children()[2]
          >>> class_A.get_methods()
          ('f', 'g', 'h')
 
       Although ``A().f()`` raises :exc:`TypeError` at runtime, ``A.f`` is still
       considered as a method-like function.
+
+      .. deprecated-removed:: 3.14 3.16
+
 
 .. class:: Symbol
 
@@ -235,6 +251,12 @@ Examining Symbol Tables
    .. method:: is_parameter()
 
       Return ``True`` if the symbol is a parameter.
+
+   .. method:: is_type_parameter()
+
+      Return ``True`` if the symbol is a type parameter.
+
+      .. versionadded:: 3.14
 
    .. method:: is_global()
 
@@ -263,9 +285,41 @@ Examining Symbol Tables
       Return ``True`` if the symbol is referenced in its block, but not assigned
       to.
 
+   .. method:: is_free_class()
+
+      Return *True* if a class-scoped symbol is free from
+      the perspective of a method.
+
+      Consider the following example::
+
+         def f():
+             x = 1  # function-scoped
+             class C:
+                 x = 2  # class-scoped
+                 def method(self):
+                     return x
+
+      In this example, the class-scoped symbol ``x`` is considered to
+      be free from the perspective of ``C.method``, thereby allowing
+      the latter to return *1* at runtime and not *2*.
+
+      .. versionadded:: 3.14
+
    .. method:: is_assigned()
 
       Return ``True`` if the symbol is assigned to in its block.
+
+   .. method:: is_comp_iter()
+
+      Return ``True`` if the symbol is a comprehension iteration variable.
+
+      .. versionadded:: 3.14
+
+   .. method:: is_comp_cell()
+
+      Return ``True`` if the symbol is a cell in an inlined comprehension.
+
+      .. versionadded:: 3.14
 
    .. method:: is_namespace()
 

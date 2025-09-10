@@ -37,6 +37,7 @@ Python Library Reference.
    mro.rst
    free-threading-python.rst
    free-threading-extensions.rst
+   remote_debugging.rst
 
 General:
 
@@ -70,3 +71,4 @@ Debugging and profiling:
 * :ref:`gdb`
 * :ref:`instrumentation`
 * :ref:`perf_profiling`
+* :ref:`remote-debugging`

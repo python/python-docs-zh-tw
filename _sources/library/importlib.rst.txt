@@ -393,6 +393,8 @@ ABC hierarchy::
     .. deprecated:: 3.7
        This ABC is deprecated in favour of supporting resource loading
        through :class:`importlib.resources.abc.TraversableResources`.
+       This class exists for backwards compatibility only with other ABCs in
+       this module.
 
     .. method:: get_data(path)
        :abstractmethod:
@@ -1275,7 +1277,7 @@ find and load modules.
 
    When a module is loaded with this loader, the ``__file__`` for the module
    will report as the location of the ``.fwork`` file. This allows code to use
-   the ``__file__`` of a  module as an anchor for file system traveral.
+   the ``__file__`` of a  module as an anchor for file system traversal.
    However, the spec origin will reference the location of the *actual* binary
    in the ``.framework`` folder.
 

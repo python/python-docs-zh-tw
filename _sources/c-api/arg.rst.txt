@@ -270,12 +270,18 @@ small to receive the value.
    Convert a Python integer to a C :c:expr:`unsigned long` without
    overflow checking.
 
+   .. versionchanged:: 3.14
+      Use :meth:`~object.__index__` if available.
+
 ``L`` (:class:`int`) [long long]
    Convert a Python integer to a C :c:expr:`long long`.
 
 ``K`` (:class:`int`) [unsigned long long]
    Convert a Python integer to a C :c:expr:`unsigned long long`
    without overflow checking.
+
+   .. versionchanged:: 3.14
+      Use :meth:`~object.__index__` if available.
 
 ``n`` (:class:`int`) [:c:type:`Py_ssize_t`]
    Convert a Python integer to a C :c:type:`Py_ssize_t`.
@@ -357,10 +363,25 @@ Other objects
 
    .. versionadded:: 3.3
 
-``(items)`` (:class:`tuple`) [*matching-items*]
-   The object must be a Python sequence whose length is the number of format units
+``(items)`` (sequence) [*matching-items*]
+   The object must be a Python sequence (except :class:`str`, :class:`bytes`
+   or :class:`bytearray`) whose length is the number of format units
    in *items*.  The C arguments must correspond to the individual format units in
    *items*.  Format units for sequences may be nested.
+
+   If *items* contains format units which store a :ref:`borrowed buffer
+   <c-arg-borrowed-buffer>` (``s``, ``s#``, ``z``, ``z#``, ``y``, or ``y#``)
+   or a :term:`borrowed reference` (``S``, ``Y``, ``U``, ``O``, or ``O!``),
+   the object must be a Python tuple.
+   The *converter* for the ``O&`` format unit in *items* must not store
+   a borrowed buffer or a borrowed reference.
+
+   .. versionchanged:: 3.14
+      :class:`str` and :class:`bytearray` objects no longer accepted as a sequence.
+
+   .. deprecated:: 3.14
+      Non-tuple sequences are deprecated if *items* contains format units
+      which store a borrowed buffer or a borrowed reference.
 
 A few other characters have a meaning in a format string.  These may not occur
 inside nested parentheses.  They are:
@@ -646,6 +667,17 @@ Building values
 
    ``n`` (:class:`int`) [:c:type:`Py_ssize_t`]
       Convert a C :c:type:`Py_ssize_t` to a Python integer.
+
+   ``p`` (:class:`bool`) [int]
+      Convert a C :c:expr:`int` to a Python :class:`bool` object.
+
+      Be aware that this format requires an ``int`` argument.
+      Unlike most other contexts in C, variadic arguments are not coerced to
+      a suitable type automatically.
+      You can convert another type (for example, a pointer or a float) to a
+      suitable ``int`` value using ``(x) ? 1 : 0`` or ``!!x``.
+
+      .. versionadded:: 3.14
 
    ``c`` (:class:`bytes` of length 1) [char]
       Convert a C :c:expr:`int` representing a byte to a Python :class:`bytes` object of

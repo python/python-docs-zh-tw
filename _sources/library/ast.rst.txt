@@ -1,4 +1,4 @@
-:mod:`!ast` --- Abstract Syntax Trees
+:mod:`!ast` --- Abstract syntax trees
 =====================================
 
 .. module:: ast
@@ -29,7 +29,7 @@ compiled into a Python code object using the built-in :func:`compile` function.
 
 .. _abstract-grammar:
 
-Abstract Grammar
+Abstract grammar
 ----------------
 
 The abstract grammar is currently defined as follows:
@@ -133,6 +133,11 @@ Node classes
 
    Simple indices are represented by their value, extended slices are
    represented as tuples.
+
+.. versionchanged:: 3.14
+
+    The :meth:`~object.__repr__` output of :class:`~ast.AST` nodes includes
+    the values of the node fields.
 
 .. deprecated:: 3.8
 
@@ -285,9 +290,9 @@ Literals
    * ``conversion`` is an integer:
 
      * -1: no formatting
-     * 115: ``!s`` string formatting
-     * 114: ``!r`` repr formatting
-     * 97: ``!a`` ascii formatting
+     * 97 (``ord('a')``): ``!a`` :func:`ASCII <ascii>` formatting
+     * 114 (``ord('r')``): ``!r`` :func:`repr` formatting
+     * 115 (``ord('s')``): ``!s`` :func:`string <str>` formatting
 
    * ``format_spec`` is a :class:`JoinedStr` node representing the formatting
      of the value, or ``None`` if no format was specified. Both
@@ -319,6 +324,58 @@ Literals
                         format_spec=JoinedStr(
                             values=[
                                 Constant(value='.3')]))]))
+
+
+.. class:: TemplateStr(values, /)
+
+   .. versionadded:: 3.14
+
+   Node representing a template string literal, comprising a series of
+   :class:`Interpolation` and :class:`Constant` nodes.
+   These nodes may be any order, and do not need to be interleaved.
+
+   .. doctest::
+
+        >>> expr = ast.parse('t"{name} finished {place:ordinal}"', mode='eval')
+        >>> print(ast.dump(expr, indent=4))
+        Expression(
+            body=TemplateStr(
+                values=[
+                    Interpolation(
+                        value=Name(id='name', ctx=Load()),
+                        str='name',
+                        conversion=-1),
+                    Constant(value=' finished '),
+                    Interpolation(
+                        value=Name(id='place', ctx=Load()),
+                        str='place',
+                        conversion=-1,
+                        format_spec=JoinedStr(
+                            values=[
+                                Constant(value='ordinal')]))]))
+
+.. class:: Interpolation(value, str, conversion, format_spec=None)
+
+   .. versionadded:: 3.14
+
+   Node representing a single interpolation field in a template string literal.
+
+   * ``value`` is any expression node (such as a literal, a variable, or a
+     function call).
+     This has the same meaning as ``FormattedValue.value``.
+   * ``str`` is a constant containing the text of the interpolation expression.
+   * ``conversion`` is an integer:
+
+     * -1: no conversion
+     * 97 (``ord('a')``): ``!a`` :func:`ASCII <ascii>` conversion
+     * 114 (``ord('r')``): ``!r`` :func:`repr` conversion
+     * 115 (``ord('s')``): ``!s`` :func:`string <str>` conversion
+
+     This has the same meaning as ``FormattedValue.conversion``.
+   * ``format_spec`` is a :class:`JoinedStr` node representing the formatting
+     of the value, or ``None`` if no format was specified. Both
+     ``conversion`` and ``format_spec`` can be set at the same time.
+     This has the same meaning as ``FormattedValue.format_spec``.
 
 
 .. class:: List(elts, ctx)
@@ -2151,10 +2208,10 @@ Async and await
    of :class:`ast.operator`, :class:`ast.unaryop`, :class:`ast.cmpop`,
    :class:`ast.boolop` and :class:`ast.expr_context`) on the returned tree
    will be singletons. Changes to one will be reflected in all other
-   occurrences of the same value (e.g. :class:`ast.Add`).
+   occurrences of the same value (for example, :class:`ast.Add`).
 
 
-:mod:`ast` Helpers
+:mod:`ast` helpers
 ------------------
 
 Apart from the node classes, the :mod:`ast` module defines these utility functions
@@ -2480,7 +2537,7 @@ and classes for traversing abstract syntax trees:
 
 .. _ast-compiler-flags:
 
-Compiler Flags
+Compiler flags
 --------------
 
 The following flags may be passed to :func:`compile` in order to change
@@ -2513,9 +2570,23 @@ effects on the compilation of a program:
    .. versionadded:: 3.8
 
 
+.. function:: compare(a, b, /, *, compare_attributes=False)
+
+   Recursively compares two ASTs.
+
+   *compare_attributes* affects whether AST attributes are considered
+   in the comparison. If *compare_attributes* is ``False`` (default), then
+   attributes are ignored. Otherwise they must all be equal. This
+   option is useful to check whether the ASTs are structurally equal but
+   differ in whitespace or similar details. Attributes include line numbers
+   and column offsets.
+
+   .. versionadded:: 3.14
+
+
 .. _ast-cli:
 
-Command-Line Usage
+Command-line usage
 ------------------
 
 .. versionadded:: 3.9
@@ -2553,6 +2624,28 @@ The following options are accepted:
             --indent <indent>
 
    Indentation of nodes in AST (number of spaces).
+
+.. option:: --feature-version <version>
+
+   Python version in the format 3.x (for example, 3.10). Defaults to the
+   current version of the interpreter.
+
+   .. versionadded:: 3.14
+
+.. option:: -O <level>
+            --optimize <level>
+
+   Optimization level for parser. Defaults to no optimization.
+
+   .. versionadded:: 3.14
+
+.. option:: --show-empty
+
+   Show empty lists and fields that are ``None``. Defaults to not showing empty
+   objects.
+
+   .. versionadded:: 3.14
+
 
 If :file:`infile` is specified its contents are parsed to AST and dumped
 to stdout.  Otherwise, the content is read from stdin.

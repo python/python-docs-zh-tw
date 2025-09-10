@@ -44,6 +44,10 @@ The module's API can be divided into two parts:
   necessary for later formatting without holding references to actual exception
   and traceback objects.
 
+.. versionadded:: 3.13
+   Output is colorized by default and can be
+   :ref:`controlled using environment variables <using-on-controlling-color>`.
+
 
 Module-Level Functions
 ----------------------
@@ -252,6 +256,11 @@ Module-Level Functions
    used. This helper is used with :meth:`StackSummary.extract`.
 
    .. versionadded:: 3.5
+
+   .. versionchanged:: 3.14
+      This function previously returned a generator that would walk the stack
+      when first iterated over. The generator returned now is the state of the
+      stack when ``walk_stack`` is called.
 
 .. function:: walk_tb(tb)
 

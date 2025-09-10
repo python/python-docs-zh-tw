@@ -187,6 +187,14 @@ Cross platform
    .. versionchanged:: 3.9
       :attr:`processor` is resolved late instead of immediately.
 
+.. function:: invalidate_caches()
+
+   Clear out the internal cache of information, such as the :func:`uname`.
+   This is typically useful when the platform's :func:`node` is changed
+   by an external process and one needs to retrieve the updated value.
+
+   .. versionadded:: 3.14
+
 
 Java platform
 -------------

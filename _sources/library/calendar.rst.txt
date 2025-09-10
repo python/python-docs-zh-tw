@@ -173,17 +173,20 @@ interpreted as prescribed by the ISO 8601 standard.  Year 0 is 1 BC, year -1 is
       on the first weekday as specified in the constructor or set by the
       :meth:`setfirstweekday` method.
 
+
    .. method:: formatweekday(weekday, width)
 
       Return a string representing the name of a single weekday formatted to
       the specified *width*. The *weekday* parameter is an integer representing
       the day of the week, where ``0`` is Monday and ``6`` is Sunday.
 
+
    .. method:: formatweekheader(width)
 
       Return a string containing the header row of weekday names, formatted
       with the given *width* for each column. The names depend on the locale
       settings and are padded to the specified width.
+
 
    .. method:: formatmonth(theyear, themonth, w=0, l=0)
 
@@ -193,12 +196,14 @@ interpreted as prescribed by the ISO 8601 standard.  Year 0 is 1 BC, year -1 is
       on the first weekday as specified in the constructor or set by the
       :meth:`setfirstweekday` method.
 
+
    .. method:: formatmonthname(theyear, themonth, width=0, withyear=True)
 
       Return a string representing the month's name centered within the
       specified *width*. If *withyear* is ``True``, include the year in the
       output. The *theyear* and *themonth* parameters specify the year
       and month for the name to be formatted respectively.
+
 
    .. method:: prmonth(theyear, themonth, w=0, l=0)
 
@@ -569,7 +574,7 @@ The :mod:`calendar` module defines the following exceptions:
 
 .. _calendar-cli:
 
-Command-Line Usage
+Command-line usage
 ------------------
 
 .. versionadded:: 2.5
@@ -707,6 +712,9 @@ The following options are accepted:
    The number of months printed per row.
    Defaults to 3.
 
+.. versionchanged:: 3.14
+   By default, today's date is highlighted in color and can be
+   :ref:`controlled using environment variables <using-on-controlling-color>`.
 
 *HTML-mode options:*
 

@@ -63,7 +63,7 @@ any codec:
 
 The full details for each codec can also be looked up directly:
 
-.. function:: lookup(encoding)
+.. function:: lookup(encoding, /)
 
    Looks up the codec info in the Python codec registry and returns a
    :class:`CodecInfo` object as defined below.
@@ -164,7 +164,7 @@ these additional functions which use :func:`lookup` for the codec lookup:
 Custom codecs are made available by registering a suitable codec search
 function:
 
-.. function:: register(search_function)
+.. function:: register(search_function, /)
 
    Register a codec search function. Search functions are expected to take one
    argument, being the encoding name in all lower case letters with hyphens
@@ -176,7 +176,7 @@ function:
       Hyphens and spaces are converted to underscore.
 
 
-.. function:: unregister(search_function)
+.. function:: unregister(search_function, /)
 
    Unregister a codec search function and clear the registry's cache.
    If the search function is not registered, do nothing.
@@ -215,6 +215,10 @@ wider range of codecs when working with binary files:
 
    .. versionchanged:: 3.11
       The ``'U'`` mode has been removed.
+
+   .. deprecated:: 3.14
+
+      :func:`codecs.open` has been superseded by :func:`open`.
 
 
 .. function:: EncodedFile(file, data_encoding, file_encoding=None, errors='strict')
@@ -438,7 +442,7 @@ In addition, the following error handler is specific to the given codecs:
 The set of allowed values can be extended by registering a new named error
 handler:
 
-.. function:: register_error(name, error_handler)
+.. function:: register_error(name, error_handler, /)
 
    Register the error handling function *error_handler* under the name *name*.
    The *error_handler* argument will be called during encoding and decoding
@@ -464,7 +468,7 @@ handler:
 Previously registered error handlers (including the standard error handlers)
 can be looked up by name:
 
-.. function:: lookup_error(name)
+.. function:: lookup_error(name, /)
 
    Return the error handler previously registered under the name *name*.
 
@@ -1071,6 +1075,10 @@ alias for the ``'utf_8'`` codec.
    The below table lists the most common aliases, for a complete list
    refer to the source :source:`aliases.py <Lib/encodings/aliases.py>` file.
 
+On Windows, ``cpXXX`` codecs are available for all code pages.
+But only codecs listed in the following table are guarantead to exist on
+other platforms.
+
 .. impl-detail::
 
    Some common encodings can bypass the codecs lookup machinery to
@@ -1243,7 +1251,7 @@ particular, the following variants typically exist:
 +-----------------+--------------------------------+--------------------------------+
 | iso8859_3       | iso-8859-3, latin3, L3         | Esperanto, Maltese             |
 +-----------------+--------------------------------+--------------------------------+
-| iso8859_4       | iso-8859-4, latin4, L4         | Northern Europe                |
+| iso8859_4       | iso-8859-4, latin4, L4         | Baltic languages               |
 +-----------------+--------------------------------+--------------------------------+
 | iso8859_5       | iso-8859-5, cyrillic           | Belarusian, Bulgarian,         |
 |                 |                                | Macedonian, Russian, Serbian   |
@@ -1335,6 +1343,9 @@ particular, the following variants typically exist:
 
 .. versionchanged:: 3.8
    ``cp65001`` is now an alias to ``utf_8``.
+
+.. versionchanged:: 3.14
+   On Windows, ``cpXXX`` codecs are now available for all code pages.
 
 
 Python Specific Encodings
@@ -1472,36 +1483,6 @@ to :class:`bytes` mappings. They are not supported by :meth:`bytes.decode`
    Restoration of the aliases for the binary transforms.
 
 
-.. _standalone-codec-functions:
-
-Standalone Codec Functions
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The following functions provide encoding and decoding functionality similar to codecs,
-but are not available as named codecs through :func:`codecs.encode` or :func:`codecs.decode`.
-They are used internally (for example, by :mod:`pickle`) and behave similarly to the
-``string_escape`` codec that was removed in Python 3.
-
-.. function:: codecs.escape_encode(input, errors=None)
-
-   Encode *input* using escape sequences. Similar to how :func:`repr` on bytes
-   produces escaped byte values.
-
-   *input* must be a :class:`bytes` object.
-
-   Returns a tuple ``(output, length)`` where *output* is a :class:`bytes`
-   object and *length* is the number of bytes consumed.
-
-.. function:: codecs.escape_decode(input, errors=None)
-
-   Decode *input* from escape sequences back to the original bytes.
-
-   *input* must be a :term:`bytes-like object`.
-
-   Returns a tuple ``(output, length)`` where *output* is a :class:`bytes`
-   object and *length* is the number of bytes consumed.
-
-
 .. _text-transforms:
 
 Text Transforms
@@ -1549,7 +1530,7 @@ This module implements the following functions:
 
 
 .. note::
-   The following function should not be used directly, except for testing
+   The following functions should not be used directly, except for testing
    purposes; :func:`codecs.lookup` should be used instead.
 
 
@@ -1567,6 +1548,18 @@ This module implements the following functions:
 
    If the codec module defines a ``getaliases()`` function any returned aliases
    are registered for future use.
+
+
+.. function:: win32_code_page_search_function(encoding)
+
+   Search for a Windows code page encoding *encoding* of the form ``cpXXXX``.
+
+   If the code page is valid and supported, return a :class:`codecs.CodecInfo`
+   object for it.
+
+   .. availability:: Windows.
+
+   .. versionadded:: 3.14
 
 
 This module implements the following exception:

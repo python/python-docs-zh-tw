@@ -266,7 +266,7 @@ The special characters are:
      not a word boundary as outside a set, and numeric escapes
      such as ``\1`` are always octal escapes, not group references.
      Special sequences which do not match a single character such as ``\A``
-     and ``\Z`` are not allowed.
+     and ``\z`` are not allowed.
 
    .. index:: single: ^ (caret); in regular expressions
 
@@ -581,11 +581,8 @@ character ``'$'``.
    Word boundaries are determined by the current locale
    if the :py:const:`~re.LOCALE` flag is used.
 
-   .. note::
-
-      Note that ``\B`` does not match an empty string, which differs from
-      RE implementations in other programming languages such as Perl.
-      This behavior is kept for compatibility reasons.
+   .. versionchanged:: 3.14
+      ``\B`` now matches empty input string.
 
 .. index:: single: \d; in regular expressions
 
@@ -664,10 +661,16 @@ character ``'$'``.
    matches characters which are neither alphanumeric in the current locale
    nor the underscore.
 
-.. index:: single: \Z; in regular expressions
+.. index:: single: \z; in regular expressions
+           single: \Z; in regular expressions
+
+``\z``
+   Matches only at the end of the string.
+
+   .. versionadded:: 3.14
 
 ``\Z``
-   Matches only at the end of the string.
+   The same as ``\z``.  For compatibility with old Python versions.
 
 .. index::
    single: \a; in regular expressions

@@ -81,7 +81,8 @@ language using this mechanism:
    * * .. data:: annotations
      * 3.7.0b1
      * Never [1]_
-     * :pep:`563`: *Postponed evaluation of annotations*
+     * :pep:`563`: *Postponed evaluation of annotations*,
+       :pep:`649`: *Deferred evaluation of annotations using descriptors*
 
 .. XXX Adding a new entry?  Remember to update simple_stmts.rst, too.
 
@@ -130,11 +131,9 @@ language using this mechanism:
 
 .. [1]
    ``from __future__ import annotations`` was previously scheduled to
-   become mandatory in Python 3.10, but the Python Steering Council
-   twice decided to delay the change
-   (`announcement for Python 3.10 <https://mail.python.org/archives/list/python-dev@python.org/message/CLVXXPQ2T2LQ5MP2Y53VVQFCXYWQJHKZ/>`__;
-   `announcement for Python 3.11 <https://mail.python.org/archives/list/python-dev@python.org/message/VIZEBX5EYMSYIJNDBF6DMUMZOCWHARSO/>`__).
-   No final decision has been made yet. See also :pep:`563` and :pep:`649`.
+   become mandatory in Python 3.10, but the change was delayed and ultimately
+   canceled. This feature will eventually be deprecated and removed. See
+   :pep:`649` and :pep:`749`.
 
 
 .. seealso::

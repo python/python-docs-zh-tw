@@ -30,6 +30,16 @@ familiar with writing an extension before  attempting to embed Python in a real
 application.
 
 
+Language version compatibility
+==============================
+
+Python's C API is compatible with C11 and C++11 versions of C and C++.
+
+This is a lower limit: the C API does not require features from later
+C/C++ versions.
+You do *not* need to enable your compiler's "c11 mode".
+
+
 Coding standards
 ================
 
@@ -101,32 +111,10 @@ Useful macros
 =============
 
 Several useful macros are defined in the Python header files.  Many are
-defined closer to where they are useful (e.g. :c:macro:`Py_RETURN_NONE`).
+defined closer to where they are useful (for example, :c:macro:`Py_RETURN_NONE`,
+:c:macro:`PyMODINIT_FUNC`).
 Others of a more general utility are defined here.  This is not necessarily a
 complete listing.
-
-.. c:macro:: PyMODINIT_FUNC
-
-   Declare an extension module ``PyInit`` initialization function. The function
-   return type is :c:expr:`PyObject*`. The macro declares any special linkage
-   declarations required by the platform, and for C++ declares the function as
-   ``extern "C"``.
-
-   The initialization function must be named :samp:`PyInit_{name}`, where
-   *name* is the name of the module, and should be the only non-\ ``static``
-   item defined in the module file. Example::
-
-       static struct PyModuleDef spam_module = {
-           .m_base = PyModuleDef_HEAD_INIT,
-           .m_name = "spam",
-           ...
-       };
-
-       PyMODINIT_FUNC
-       PyInit_spam(void)
-       {
-           return PyModuleDef_Init(&spam_module);
-       }
 
 
 .. c:macro:: Py_ABS(x)

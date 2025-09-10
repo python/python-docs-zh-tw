@@ -1,4 +1,4 @@
-Pending Removal in Python 3.15
+Pending removal in Python 3.15
 ------------------------------
 
 * The import system:
@@ -81,7 +81,7 @@ Pending Removal in Python 3.15
 
   * The undocumented keyword argument syntax for creating
     :class:`~typing.NamedTuple` classes
-    (e.g. ``Point = NamedTuple("Point", x=int, y=int)``)
+    (for example, ``Point = NamedTuple("Point", x=int, y=int)``)
     has been deprecated since Python 3.13.
     Use the class-based syntax or the functional syntax instead.
 
@@ -103,3 +103,9 @@ Pending Removal in Python 3.15
     and :meth:`~wave.Wave_read.getmarkers` methods of
     the :class:`~wave.Wave_read` and :class:`~wave.Wave_write` classes
     have been deprecated since Python 3.13.
+
+* :mod:`zipimport`:
+
+  * :meth:`~zipimport.zipimporter.load_module` has been deprecated since
+    Python 3.10. Use :meth:`~zipimport.zipimporter.exec_module` instead.
+    (Contributed by Jiahao Li in :gh:`125746`.)
