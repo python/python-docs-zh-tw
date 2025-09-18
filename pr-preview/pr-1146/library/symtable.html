@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>symtable --- 存取編譯器的符號表 &#8212; Python 3.14.0rc2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=8cd84f99" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
+    
+    <script src="../_static/documentation_options.js?v=1f5d461d"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.14.0rc2 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權所有" href="../copyright.html" />
+    <link rel="next" title="token --- 與 Python 剖析樹一起使用的常數" href="token.html" />
+    <link rel="prev" title="ast --- 抽象語法樹 (Abstract Syntax Trees)" href="ast.html" />
+    
+      
+      <link rel="canonical" href="https://docs.python.org/3/library/symtable.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="../_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="../_static/py.svg">
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script>
+            <script type="text/javascript" src="../_static/search-focus.js"></script>
+            <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="選單">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="../_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"></span>
+            <form role="search" class="search" action="../search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q">
+                <input type="submit" value="前往">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+            
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">symtable</span></code> --- 存取編譯器的符號表</a><ul>
+<li><a class="reference internal" href="#generating-symbol-tables">產生符號表</a></li>
+<li><a class="reference internal" href="#examining-symbol-tables">檢查符號表</a></li>
+<li><a class="reference internal" href="#command-line-usage">命令列用法</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="ast.html"
+                          title="上一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ast</span></code> --- 抽象語法樹 (Abstract Syntax Trees)</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="token.html"
+                          title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">token</span></code> --- 與 Python 剖析樹一起使用的常數</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/symtable.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="token.html" title="token --- 與 Python 剖析樹一起使用的常數"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="ast.html" title="ast --- 抽象語法樹 (Abstract Syntax Trees)"
+             accesskey="P">上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.0rc2 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="language.html" accesskey="U">Python 語言服務</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">symtable</span></code> --- 存取編譯器的符號表</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-symtable">
+<span id="symtable-access-to-the-compiler-s-symbol-tables"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">symtable</span></code> --- 存取編譯器的符號表<a class="headerlink" href="#module-symtable" title="連結到這個標頭">¶</a></h1>
+<p><strong>原始碼：</strong><a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.14/Lib/symtable.py">Lib/symtable.py</a></p>
+<hr class="docutils" />
+<p>符號表 (symbol table) 是在生成位元組碼 (bytecode) 之前由編譯器從 AST 生成的。符號表負責計算程式碼中每個識別器 (identifier) 的作用域。<a class="reference internal" href="#module-symtable" title="symtable: Interface to the compiler's internal symbol tables."><code class="xref py py-mod docutils literal notranslate"><span class="pre">symtable</span></code></a> 提供了一個介面來檢查這些表。</p>
+<section id="generating-symbol-tables">
+<h2>產生符號表<a class="headerlink" href="#generating-symbol-tables" title="連結到這個標頭">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="symtable.symtable">
+<span class="sig-prename descclassname"><span class="pre">symtable.</span></span><span class="sig-name descname"><span class="pre">symtable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#symtable.symtable" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳 Python 原始 <em>code</em> 的頂層 <a class="reference internal" href="#symtable.SymbolTable" title="symtable.SymbolTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">SymbolTable</span></code></a>。<em>filename</em> 是包含程式碼之檔案之名稱。<em>compile_type</em> 類似於 <a class="reference internal" href="functions.html#compile" title="compile"><code class="xref py py-func docutils literal notranslate"><span class="pre">compile()</span></code></a> 的 <em>mode</em> 引數。</p>
+</dd></dl>
+
+</section>
+<section id="examining-symbol-tables">
+<h2>檢查符號表<a class="headerlink" href="#examining-symbol-tables" title="連結到這個標頭">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="symtable.SymbolTableType">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">symtable.</span></span><span class="sig-name descname"><span class="pre">SymbolTableType</span></span><a class="headerlink" href="#symtable.SymbolTableType" title="連結到這個定義">¶</a></dt>
+<dd><p>表明 <a class="reference internal" href="#symtable.SymbolTable" title="symtable.SymbolTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">SymbolTable</span></code></a> 物件型別的列舉。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="symtable.SymbolTableType.MODULE">
+<span class="sig-name descname"><span class="pre">MODULE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&quot;module&quot;</span></em><a class="headerlink" href="#symtable.SymbolTableType.MODULE" title="連結到這個定義">¶</a></dt>
+<dd><p>用於模組的符號表。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="symtable.SymbolTableType.FUNCTION">
+<span class="sig-name descname"><span class="pre">FUNCTION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&quot;function&quot;</span></em><a class="headerlink" href="#symtable.SymbolTableType.FUNCTION" title="連結到這個定義">¶</a></dt>
+<dd><p>用於函式的符號表。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="symtable.SymbolTableType.CLASS">
+<span class="sig-name descname"><span class="pre">CLASS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&quot;class&quot;</span></em><a class="headerlink" href="#symtable.SymbolTableType.CLASS" title="連結到這個定義">¶</a></dt>
+<dd><p>用於類別的符號表。</p>
+</dd></dl>
+
+<p>以下成員代表不同風格的<a class="reference internal" href="../reference/executionmodel.html#annotation-scopes"><span class="std std-ref">註釋作用域</span></a>。</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="symtable.SymbolTableType.ANNOTATION">
+<span class="sig-name descname"><span class="pre">ANNOTATION</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&quot;annotation&quot;</span></em><a class="headerlink" href="#symtable.SymbolTableType.ANNOTATION" title="連結到這個定義">¶</a></dt>
+<dd><p>如果 <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">__future__</span> <span class="pre">import</span> <span class="pre">annotations</span></code> 處於活動狀態，則用於註解。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="symtable.SymbolTableType.TYPE_ALIAS">
+<span class="sig-name descname"><span class="pre">TYPE_ALIAS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&quot;type</span> <span class="pre">alias&quot;</span></em><a class="headerlink" href="#symtable.SymbolTableType.TYPE_ALIAS" title="連結到這個定義">¶</a></dt>
+<dd><p>用於 <a class="reference internal" href="../reference/simple_stmts.html#type"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">type</span></code></a> 結構的符號表。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="symtable.SymbolTableType.TYPE_PARAMETERS">
+<span class="sig-name descname"><span class="pre">TYPE_PARAMETERS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&quot;type</span> <span class="pre">parameters&quot;</span></em><a class="headerlink" href="#symtable.SymbolTableType.TYPE_PARAMETERS" title="連結到這個定義">¶</a></dt>
+<dd><p>用於<a class="reference internal" href="../reference/compound_stmts.html#generic-functions"><span class="std std-ref">泛型函式 (generic functions)</span></a>或<a class="reference internal" href="../reference/compound_stmts.html#generic-classes"><span class="std std-ref">泛型類別 (generic classes)</span></a>的符號表。</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="symtable.SymbolTableType.TYPE_VARIABLE">
+<span class="sig-name descname"><span class="pre">TYPE_VARIABLE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&quot;type</span> <span class="pre">variable&quot;</span></em><a class="headerlink" href="#symtable.SymbolTableType.TYPE_VARIABLE" title="連結到這個定義">¶</a></dt>
+<dd><p>用於形式意義上 (formal sense) 的繫結、約束元組 (constraint tuple) 或單一型別變數的預設值的符號表，即 TypeVar、TypeVarTuple 或 ParamSpec 物件（後兩者不支援繫結或約束元組）。</p>
+</dd></dl>
+
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="symtable.SymbolTable">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">symtable.</span></span><span class="sig-name descname"><span class="pre">SymbolTable</span></span><a class="headerlink" href="#symtable.SymbolTable" title="連結到這個定義">¶</a></dt>
+<dd><p>一個區塊 (block) 的命名空間表 (namespace table) 。建構函式 (constructor) 並不公開。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.SymbolTable.get_type">
+<span class="sig-name descname"><span class="pre">get_type</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.SymbolTable.get_type" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳符號表的類型。可能的值為 <a class="reference internal" href="#symtable.SymbolTableType" title="symtable.SymbolTableType"><code class="xref py py-class docutils literal notranslate"><span class="pre">SymbolTableType</span></code></a> 列舉的成員。</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>新增了 <code class="docutils literal notranslate"><span class="pre">'annotation'</span></code>、<code class="docutils literal notranslate"><span class="pre">'TypeVar</span> <span class="pre">bound'</span></code>、<code class="docutils literal notranslate"><span class="pre">'type</span> <span class="pre">alias'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'type</span> <span class="pre">parameter'</span></code> 作為可能的回傳值。</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span>回傳值是 <a class="reference internal" href="#symtable.SymbolTableType" title="symtable.SymbolTableType"><code class="xref py py-class docutils literal notranslate"><span class="pre">SymbolTableType</span></code></a> 列舉的成員。</p>
+<p>回傳字串的確切值在未來可能會發生變化，因此建議使用 <a class="reference internal" href="#symtable.SymbolTableType" title="symtable.SymbolTableType"><code class="xref py py-class docutils literal notranslate"><span class="pre">SymbolTableType</span></code></a> 成員而不是寫死 (hard-coded) 字串。</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.SymbolTable.get_id">
+<span class="sig-name descname"><span class="pre">get_id</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.SymbolTable.get_id" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳表的識別器。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.SymbolTable.get_name">
+<span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.SymbolTable.get_name" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳表的名稱。如果表用於類別，則這是類別的名稱；如果表用於函式，則這是函式的名稱；如果表是全域的，則為 <code class="docutils literal notranslate"><span class="pre">'top'</span></code> （<a class="reference internal" href="#symtable.SymbolTable.get_type" title="symtable.SymbolTable.get_type"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_type()</span></code></a> 會回傳 <code class="docutils literal notranslate"><span class="pre">'module'</span></code>）。對於型別參數作用域（用於泛型類別、函式和型別別名），它是底層類別、函式或型別別名的名稱。對於型別別名作用域，它是型別別名的名稱。對於 <a class="reference internal" href="typing.html#typing.TypeVar" title="typing.TypeVar"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a> 綁定作用域，它會是 <code class="docutils literal notranslate"><span class="pre">TypeVar</span></code> 的名稱。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.SymbolTable.get_lineno">
+<span class="sig-name descname"><span class="pre">get_lineno</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.SymbolTable.get_lineno" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳此表所代表的區塊中第一行的編號。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.SymbolTable.is_optimized">
+<span class="sig-name descname"><span class="pre">is_optimized</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.SymbolTable.is_optimized" title="連結到這個定義">¶</a></dt>
+<dd><p>如果可以最佳化該表中的區域變數，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.SymbolTable.is_nested">
+<span class="sig-name descname"><span class="pre">is_nested</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.SymbolTable.is_nested" title="連結到這個定義">¶</a></dt>
+<dd><p>如果區塊是巢狀類別或函式，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.SymbolTable.has_children">
+<span class="sig-name descname"><span class="pre">has_children</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.SymbolTable.has_children" title="連結到這個定義">¶</a></dt>
+<dd><p>如果區塊內有巢狀命名空間，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。這些可以透過 <a class="reference internal" href="#symtable.SymbolTable.get_children" title="symtable.SymbolTable.get_children"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_children()</span></code></a> 獲得。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.SymbolTable.get_identifiers">
+<span class="sig-name descname"><span class="pre">get_identifiers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.SymbolTable.get_identifiers" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳包含表中符號之名稱的視圖物件 (view object)。請參閱<a class="reference internal" href="stdtypes.html#dict-views"><span class="std std-ref">視圖物件的文件</span></a>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.SymbolTable.lookup">
+<span class="sig-name descname"><span class="pre">lookup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#symtable.SymbolTable.lookup" title="連結到這個定義">¶</a></dt>
+<dd><p>在表中查找 <em>name</em> 並回傳一個 <a class="reference internal" href="#symtable.Symbol" title="symtable.Symbol"><code class="xref py py-class docutils literal notranslate"><span class="pre">Symbol</span></code></a> 實例。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.SymbolTable.get_symbols">
+<span class="sig-name descname"><span class="pre">get_symbols</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.SymbolTable.get_symbols" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳表中名稱的 <a class="reference internal" href="#symtable.Symbol" title="symtable.Symbol"><code class="xref py py-class docutils literal notranslate"><span class="pre">Symbol</span></code></a> 實例串列。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.SymbolTable.get_children">
+<span class="sig-name descname"><span class="pre">get_children</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.SymbolTable.get_children" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳巢狀符號表的串列。</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="symtable.Function">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">symtable.</span></span><span class="sig-name descname"><span class="pre">Function</span></span><a class="headerlink" href="#symtable.Function" title="連結到這個定義">¶</a></dt>
+<dd><p>一個函式或方法的命名空間。該類別繼承自 <a class="reference internal" href="#symtable.SymbolTable" title="symtable.SymbolTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">SymbolTable</span></code></a>。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Function.get_parameters">
+<span class="sig-name descname"><span class="pre">get_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Function.get_parameters" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳一個包含此函式參數名稱的元組 (tuple)。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Function.get_locals">
+<span class="sig-name descname"><span class="pre">get_locals</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Function.get_locals" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳一個包含此函式中區域變數 (locals) 名稱的元組。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Function.get_globals">
+<span class="sig-name descname"><span class="pre">get_globals</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Function.get_globals" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳一個包含此函式中全域變數 (globals) 名稱的元組。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Function.get_nonlocals">
+<span class="sig-name descname"><span class="pre">get_nonlocals</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Function.get_nonlocals" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳一個包含此函式中明確宣告的非區域變數 (nonlocals) 名稱的元組。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Function.get_frees">
+<span class="sig-name descname"><span class="pre">get_frees</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Function.get_frees" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳一個包含此函式中的<a class="reference internal" href="../glossary.html#term-closure-variable"><span class="xref std std-term">自由（閉包）變數 (free (closure) variables)</span></a> 名稱的元組。</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="symtable.Class">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">symtable.</span></span><span class="sig-name descname"><span class="pre">Class</span></span><a class="headerlink" href="#symtable.Class" title="連結到這個定義">¶</a></dt>
+<dd><p>一個類別的命名空間。該類別繼承自 <a class="reference internal" href="#symtable.SymbolTable" title="symtable.SymbolTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">SymbolTable</span></code></a>。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Class.get_methods">
+<span class="sig-name descname"><span class="pre">get_methods</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Class.get_methods" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳一個包含類別中聲明的類似方法之函式名稱的元組。</p>
+<p>在這裡，術語「方法 (method)」表示透過 <a class="reference internal" href="../reference/compound_stmts.html#def"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">def</span></code></a> 或 <a class="reference internal" href="../reference/compound_stmts.html#async-def"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">async</span> <span class="pre">def</span></code></a> 在類別主體中定義的<em>任何</em>函式。</p>
+<p><a class="reference internal" href="#symtable.Class.get_methods" title="symtable.Class.get_methods"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_methods()</span></code></a> 不會取得更深作用域內定義的函式（例如在內部類別中）。</p>
+<p>舉例來說：</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">symtable</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">st</span> <span class="o">=</span> <span class="n">symtable</span><span class="o">.</span><span class="n">symtable</span><span class="p">(</span><span class="s1">&#39;&#39;&#39;</span>
+<span class="gp">... </span><span class="s1">def outer(): pass</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1">class A:</span>
+<span class="gp">... </span><span class="s1">   def f():</span>
+<span class="gp">... </span><span class="s1">       def w(): pass</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1">   def g(self): pass</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1">   @classmethod</span>
+<span class="gp">... </span><span class="s1">   async def h(cls): pass</span>
+<span class="gp">...</span>
+<span class="gp">... </span><span class="s1">   global outer</span>
+<span class="gp">... </span><span class="s1">   def outer(self): pass</span>
+<span class="gp">... </span><span class="s1">&#39;&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;test&#39;</span><span class="p">,</span> <span class="s1">&#39;exec&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">class_A</span> <span class="o">=</span> <span class="n">st</span><span class="o">.</span><span class="n">get_children</span><span class="p">()[</span><span class="mi">2</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">class_A</span><span class="o">.</span><span class="n">get_methods</span><span class="p">()</span>
+<span class="go">(&#39;f&#39;, &#39;g&#39;, &#39;h&#39;)</span>
+</pre></div>
+</div>
+<p>儘管 <code class="docutils literal notranslate"><span class="pre">A().f()</span></code> 會在 runtime 引發 <a class="reference internal" href="exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a>，但 <code class="docutils literal notranslate"><span class="pre">A.f</span></code> 仍然被視為類似方法的函式。</p>
+<div class="deprecated-removed">
+<p><span class="versionmodified deprecated">Deprecated since version 3.14, will be removed in version 3.16.</span></p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="symtable.Symbol">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">symtable.</span></span><span class="sig-name descname"><span class="pre">Symbol</span></span><a class="headerlink" href="#symtable.Symbol" title="連結到這個定義">¶</a></dt>
+<dd><p><a class="reference internal" href="#symtable.SymbolTable" title="symtable.SymbolTable"><code class="xref py py-class docutils literal notranslate"><span class="pre">SymbolTable</span></code></a> 中的條目對應於來源中的識別器。建構函式不是公開的。</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.get_name">
+<span class="sig-name descname"><span class="pre">get_name</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.get_name" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳符號的名稱。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.is_referenced">
+<span class="sig-name descname"><span class="pre">is_referenced</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.is_referenced" title="連結到這個定義">¶</a></dt>
+<dd><p>如果該符號在其區塊中使用，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.is_imported">
+<span class="sig-name descname"><span class="pre">is_imported</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.is_imported" title="連結到這個定義">¶</a></dt>
+<dd><p>如果符號是從 import 陳述式建立的，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.is_parameter">
+<span class="sig-name descname"><span class="pre">is_parameter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.is_parameter" title="連結到這個定義">¶</a></dt>
+<dd><p>如果符號是一個參數，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.is_type_parameter">
+<span class="sig-name descname"><span class="pre">is_type_parameter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.is_type_parameter" title="連結到這個定義">¶</a></dt>
+<dd><p>如果符號是一個型別參數，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.14 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.is_global">
+<span class="sig-name descname"><span class="pre">is_global</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.is_global" title="連結到這個定義">¶</a></dt>
+<dd><p>如果符號是全域的，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.is_nonlocal">
+<span class="sig-name descname"><span class="pre">is_nonlocal</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.is_nonlocal" title="連結到這個定義">¶</a></dt>
+<dd><p>如果符號是非區域的，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.is_declared_global">
+<span class="sig-name descname"><span class="pre">is_declared_global</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.is_declared_global" title="連結到這個定義">¶</a></dt>
+<dd><p>如果使用全域陳述式將符號聲明為全域的，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.is_local">
+<span class="sig-name descname"><span class="pre">is_local</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.is_local" title="連結到這個定義">¶</a></dt>
+<dd><p>如果符號是其區塊的區域符號，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.is_annotated">
+<span class="sig-name descname"><span class="pre">is_annotated</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.is_annotated" title="連結到這個定義">¶</a></dt>
+<dd><p>如果符號有被註釋，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.6 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.is_free">
+<span class="sig-name descname"><span class="pre">is_free</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.is_free" title="連結到這個定義">¶</a></dt>
+<dd><p>如果該符號在其區塊中被參照 (referenced) 但未被賦值 (assigned)，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.is_free_class">
+<span class="sig-name descname"><span class="pre">is_free_class</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.is_free_class" title="連結到這個定義">¶</a></dt>
+<dd><p>Return <em>True</em> if a class-scoped symbol is free from
+the perspective of a method.</p>
+<p>參考以下範例：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">():</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="mi">1</span>  <span class="c1"># function-scoped</span>
+    <span class="k">class</span><span class="w"> </span><span class="nc">C</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># class-scoped</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">x</span>
+</pre></div>
+</div>
+<p>In this example, the class-scoped symbol <code class="docutils literal notranslate"><span class="pre">x</span></code> is considered to
+be free from the perspective of <code class="docutils literal notranslate"><span class="pre">C.method</span></code>, thereby allowing
+the latter to return <em>1</em> at runtime and not <em>2</em>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.14 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.is_assigned">
+<span class="sig-name descname"><span class="pre">is_assigned</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.is_assigned" title="連結到這個定義">¶</a></dt>
+<dd><p>如果該符號被賦值到其區塊中，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.is_comp_iter">
+<span class="sig-name descname"><span class="pre">is_comp_iter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.is_comp_iter" title="連結到這個定義">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the symbol is a comprehension iteration variable.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.14 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.is_comp_cell">
+<span class="sig-name descname"><span class="pre">is_comp_cell</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.is_comp_cell" title="連結到這個定義">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the symbol is a cell in an inlined comprehension.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.14 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.is_namespace">
+<span class="sig-name descname"><span class="pre">is_namespace</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.is_namespace" title="連結到這個定義">¶</a></dt>
+<dd><p>如果名稱綁定引入 (introduce) 新的命名空間，則回傳 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+<p>如果名稱用作函式或類別陳述式的目標，則這將會是 true。</p>
+<p>舉例來說：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">table</span> <span class="o">=</span> <span class="n">symtable</span><span class="o">.</span><span class="n">symtable</span><span class="p">(</span><span class="s2">&quot;def some_func(): pass&quot;</span><span class="p">,</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span> <span class="s2">&quot;exec&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">table</span><span class="o">.</span><span class="n">lookup</span><span class="p">(</span><span class="s2">&quot;some_func&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">is_namespace</span><span class="p">()</span>
+<span class="go">True</span>
+</pre></div>
+</div>
+<p>請注意，單個名稱可以綁定到多個物件。如果結果為 <code class="docutils literal notranslate"><span class="pre">True</span></code>，則該名稱也可能被綁定到其他物件，例如 int 或 list，而不會引入新的命名空間。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.get_namespaces">
+<span class="sig-name descname"><span class="pre">get_namespaces</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.get_namespaces" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳綁定到該名稱的命名空間的串列。</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="symtable.Symbol.get_namespace">
+<span class="sig-name descname"><span class="pre">get_namespace</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#symtable.Symbol.get_namespace" title="連結到這個定義">¶</a></dt>
+<dd><p>回傳綁定到該名稱的命名空間。如果該名稱綁定了多個命名空間或沒有命名空間，則會引發 <a class="reference internal" href="exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a>。</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="command-line-usage">
+<span id="symtable-cli"></span><h2>命令列用法<a class="headerlink" href="#command-line-usage" title="連結到這個標頭">¶</a></h2>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+<p><a class="reference internal" href="#module-symtable" title="symtable: Interface to the compiler's internal symbol tables."><code class="xref py py-mod docutils literal notranslate"><span class="pre">symtable</span></code></a> 模組可以從命令列作為腳本執行。</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>symtable<span class="w"> </span><span class="o">[</span>infile...<span class="o">]</span>
+</pre></div>
+</div>
+<p>為指定的 Python 原始檔產生符號表並轉儲 (dump) 到 stdout。如果未指定輸入檔案，則從 stdin 讀取內容。</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">symtable</span></code> --- 存取編譯器的符號表</a><ul>
+<li><a class="reference internal" href="#generating-symbol-tables">產生符號表</a></li>
+<li><a class="reference internal" href="#examining-symbol-tables">檢查符號表</a></li>
+<li><a class="reference internal" href="#command-line-usage">命令列用法</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="ast.html"
+                          title="上一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">ast</span></code> --- 抽象語法樹 (Abstract Syntax Trees)</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="token.html"
+                          title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">token</span></code> --- 與 Python 剖析樹一起使用的常數</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/symtable.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="token.html" title="token --- 與 Python 剖析樹一起使用的常數"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="ast.html" title="ast --- 抽象語法樹 (Abstract Syntax Trees)"
+             >上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.0rc2 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="language.html" >Python 語言服務</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">symtable</span></code> --- 存取編譯器的符號表</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; <a href="../copyright.html">版權所有</a> 2001 Python Software Foundation.
+    <br>
+    此頁面採用 Python 軟體基金會授權條款第 2 版。
+    <br>
+    文件中的範例、應用技巧與其他程式碼額外採用了 Zero Clause BSD 授權條款。
+    <br>
+    
+      更多訊息請見<a href="/license.html">歷史與授權條款</a>。<br>
+    
+    
+    <br>
+
+    Python 軟體基金會是一家非營利法人。
+<a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
+<br>
+    <br>
+      最後更新於 9月 18, 2025 (09:08 UTC)。
+    
+      <a href="/bugs.html">發現 bug</a>？
+    
+    <br>
+
+    以 <a href="https://www.sphinx-doc.org/">Sphinx</a>8.2.3建立。 
+    </div>
+
+  </body>
+</html>
