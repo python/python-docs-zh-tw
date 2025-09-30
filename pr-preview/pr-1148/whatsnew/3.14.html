@@ -222,7 +222,10 @@
 <li><a class="reference internal" href="#pending-removal-in-future-versions">未來版本中的待移除項目</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#cpython-bytecode-changes">CPython 位元組碼變更</a></li>
+<li><a class="reference internal" href="#cpython-bytecode-changes">CPython 位元組碼變更</a><ul>
+<li><a class="reference internal" href="#pseudo-instructions">Pseudo-instructions</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#c-api-changes">C API 變更</a><ul>
 <li><a class="reference internal" href="#new-features-in-the-c-api">C API 中的新功能</a></li>
 <li><a class="reference internal" href="#limited-c-api-changes">Limited C API changes</a></li>
@@ -3103,9 +3106,67 @@ runtime or by static type checkers).</p>
 <section id="cpython-bytecode-changes">
 <h2>CPython 位元組碼變更<a class="headerlink" href="#cpython-bytecode-changes" title="連結到這個標頭">¶</a></h2>
 <ul class="simple">
-<li><p>Replaced the opcode <code class="docutils literal notranslate"><span class="pre">BINARY_SUBSCR</span></code> by <a class="reference internal" href="../library/dis.html#opcode-BINARY_OP"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">BINARY_OP</span></code></a> with oparg <code class="docutils literal notranslate"><span class="pre">NB_SUBSCR</span></code>.
+<li><p>Replaced the opcode <code class="xref std std-opcode docutils literal notranslate"><span class="pre">BINARY_SUBSCR</span></code> by the <a class="reference internal" href="../library/dis.html#opcode-BINARY_OP"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">BINARY_OP</span></code></a>
+opcode with the <code class="docutils literal notranslate"><span class="pre">NB_SUBSCR</span></code> oparg.
 (Contributed by Irit Katriel in <a class="reference external" href="https://github.com/python/cpython/issues/100239">gh-100239</a>.)</p></li>
+<li><p>Add the <a class="reference internal" href="../library/dis.html#opcode-BUILD_INTERPOLATION"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">BUILD_INTERPOLATION</span></code></a> and <a class="reference internal" href="../library/dis.html#opcode-BUILD_TEMPLATE"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">BUILD_TEMPLATE</span></code></a>
+opcodes to construct new <a class="reference internal" href="../library/string.templatelib.html#string.templatelib.Interpolation" title="string.templatelib.Interpolation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interpolation</span></code></a>
+and <a class="reference internal" href="../library/string.templatelib.html#string.templatelib.Template" title="string.templatelib.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a> instances, respectively.
+(Contributed by Lysandros Nikolaou and others in <a class="reference external" href="https://github.com/python/cpython/issues/132661">gh-132661</a>;
+see also <a class="reference internal" href="#whatsnew314-pep750"><span class="std std-ref">PEP 750: Template strings</span></a>).</p></li>
+<li><p>Remove the <code class="xref std std-opcode docutils literal notranslate"><span class="pre">BUILD_CONST_KEY_MAP</span></code> opcode.
+Use <a class="reference internal" href="../library/dis.html#opcode-BUILD_MAP"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">BUILD_MAP</span></code></a> instead.
+(Contributed by Mark Shannon in <a class="reference external" href="https://github.com/python/cpython/issues/122160">gh-122160</a>.)</p></li>
+<li><p>Replace the <code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_ASSERTION_ERROR</span></code> opcode with
+<a class="reference internal" href="../library/dis.html#opcode-LOAD_COMMON_CONSTANT"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_COMMON_CONSTANT</span></code></a> and add support for loading
+<a class="reference internal" href="../library/exceptions.html#NotImplementedError" title="NotImplementedError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a>.</p></li>
+<li><p>Add the <a class="reference internal" href="../library/dis.html#opcode-LOAD_FAST_BORROW"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_FAST_BORROW</span></code></a> and <a class="reference internal" href="../library/dis.html#opcode-LOAD_FAST_BORROW_LOAD_FAST_BORROW"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_FAST_BORROW_LOAD_FAST_BORROW</span></code></a>
+opcodes to reduce reference counting overhead when the interpreter can prove
+that the reference in the frame outlives the reference loaded onto the stack.
+(Contributed by Matt Page in <a class="reference external" href="https://github.com/python/cpython/issues/130704">gh-130704</a>.)</p></li>
+<li><p>Add the <a class="reference internal" href="../library/dis.html#opcode-LOAD_SMALL_INT"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_SMALL_INT</span></code></a> opcode, which pushes a small integer
+equal to the <code class="docutils literal notranslate"><span class="pre">oparg</span></code> to the stack.
+The <code class="xref std std-opcode docutils literal notranslate"><span class="pre">RETURN_CONST</span></code> opcode is removed as it is no longer used.
+(Contributed by Mark Shannon in <a class="reference external" href="https://github.com/python/cpython/issues/125837">gh-125837</a>.)</p></li>
+<li><p>Add the new <a class="reference internal" href="../library/dis.html#opcode-LOAD_SPECIAL"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_SPECIAL</span></code></a> instruction.
+Generate code for <a class="reference internal" href="../reference/compound_stmts.html#with"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">with</span></code></a> and <a class="reference internal" href="../reference/compound_stmts.html#async-with"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">async</span> <span class="pre">with</span></code></a> statements
+using the new instruction.
+Removed the <code class="xref std std-opcode docutils literal notranslate"><span class="pre">BEFORE_WITH</span></code> and <code class="xref std std-opcode docutils literal notranslate"><span class="pre">BEFORE_ASYNC_WITH</span></code> instructions.
+(Contributed by Mark Shannon in <a class="reference external" href="https://github.com/python/cpython/issues/120507">gh-120507</a>.)</p></li>
+<li><p>Add the <a class="reference internal" href="../library/dis.html#opcode-POP_ITER"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">POP_ITER</span></code></a> opcode to support 'virtual' iterators.
+(Contributed by Mark Shannon in <a class="reference external" href="https://github.com/python/cpython/issues/132554">gh-132554</a>.)</p></li>
 </ul>
+<section id="pseudo-instructions">
+<h3>Pseudo-instructions<a class="headerlink" href="#pseudo-instructions" title="連結到這個標頭">¶</a></h3>
+<ul class="simple">
+<li><p>Add the <code class="xref std std-opcode docutils literal notranslate"><span class="pre">ANNOTATIONS_PLACEHOLDER</span></code> pseudo instruction
+to support partially executed module-level annotations with
+<a class="reference internal" href="#whatsnew314-pep649"><span class="std std-ref">deferred evaluation of annotations</span></a>.
+(Contributed by Jelle Zijlstra in <a class="reference external" href="https://github.com/python/cpython/issues/130907">gh-130907</a>.)</p></li>
+<li><p>Add the <code class="xref std std-opcode docutils literal notranslate"><span class="pre">BINARY_OP_EXTEND</span></code> pseudo instruction,
+which executes a pair of functions (guard and specialization functions)
+accessed from the inline cache.
+(Contributed by Irit Katriel in <a class="reference external" href="https://github.com/python/cpython/issues/100239">gh-100239</a>.)</p></li>
+<li><p>Add three specializations for <a class="reference internal" href="../library/dis.html#opcode-CALL_KW"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">CALL_KW</span></code></a>;
+<code class="xref std std-opcode docutils literal notranslate"><span class="pre">CALL_KW_PY</span></code> for calls to Python functions,
+<code class="xref std std-opcode docutils literal notranslate"><span class="pre">CALL_KW_BOUND_METHOD</span></code> for calls to bound methods, and
+<code class="xref std std-opcode docutils literal notranslate"><span class="pre">CALL_KW_NON_PY</span></code> for all other calls.
+(Contributed by Mark Shannon in <a class="reference external" href="https://github.com/python/cpython/issues/118093">gh-118093</a>.)</p></li>
+<li><p>Add the <a class="reference internal" href="../library/dis.html#opcode-JUMP_IF_TRUE"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">JUMP_IF_TRUE</span></code></a> and <a class="reference internal" href="../library/dis.html#opcode-JUMP_IF_FALSE"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">JUMP_IF_FALSE</span></code></a> pseudo instructions,
+conditional jumps which do not impact the stack.
+Replaced by the sequence <code class="docutils literal notranslate"><span class="pre">COPY</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">TO_BOOL</span></code>, <code class="docutils literal notranslate"><span class="pre">POP_JUMP_IF_TRUE/FALSE</span></code>.
+(Contributed by Irit Katriel in <a class="reference external" href="https://github.com/python/cpython/issues/124285">gh-124285</a>.)</p></li>
+<li><p>Add the <code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_CONST_MORTAL</span></code> pseudo instruction.
+(Contributed by Mark Shannon in <a class="reference external" href="https://github.com/python/cpython/issues/128685">gh-128685</a>.)</p></li>
+<li><p>Add the <a class="reference internal" href="../library/dis.html#opcode-LOAD_CONST_IMMORTAL"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_CONST_IMMORTAL</span></code></a> pseudo instruction,
+which does the same as <code class="xref std std-opcode docutils literal notranslate"><span class="pre">LOAD_CONST</span></code>, but is more efficient
+for immortal objects.
+(Contributed by Mark Shannon in <a class="reference external" href="https://github.com/python/cpython/issues/125837">gh-125837</a>.)</p></li>
+<li><p>Add the <a class="reference internal" href="../library/dis.html#opcode-NOT_TAKEN"><code class="xref std std-opcode docutils literal notranslate"><span class="pre">NOT_TAKEN</span></code></a> pseudo instruction, used by <a class="reference internal" href="../library/sys.monitoring.html#module-sys.monitoring" title="sys.monitoring: Access and control event monitoring"><code class="xref py py-mod docutils literal notranslate"><span class="pre">sys.monitoring</span></code></a>
+to record branch events (such as <a class="reference internal" href="../library/sys.monitoring.html#monitoring-event-BRANCH_LEFT"><code class="xref std std-monitoring-event docutils literal notranslate"><span class="pre">BRANCH_LEFT</span></code></a>).
+(Contributed by Mark Shannon in <a class="reference external" href="https://github.com/python/cpython/issues/122548">gh-122548</a>.)</p></li>
+</ul>
+</section>
 </section>
 <section id="c-api-changes">
 <h2>C API 變更<a class="headerlink" href="#c-api-changes" title="連結到這個標頭">¶</a></h2>
@@ -3719,7 +3780,10 @@ functions on Python 3.13 and older.</p>
 <li><a class="reference internal" href="#pending-removal-in-future-versions">未來版本中的待移除項目</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#cpython-bytecode-changes">CPython 位元組碼變更</a></li>
+<li><a class="reference internal" href="#cpython-bytecode-changes">CPython 位元組碼變更</a><ul>
+<li><a class="reference internal" href="#pseudo-instructions">Pseudo-instructions</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#c-api-changes">C API 變更</a><ul>
 <li><a class="reference internal" href="#new-features-in-the-c-api">C API 中的新功能</a></li>
 <li><a class="reference internal" href="#limited-c-api-changes">Limited C API changes</a></li>
@@ -3848,7 +3912,7 @@ functions on Python 3.13 and older.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 9月 29, 2025 (00:21 UTC)。
+      最後更新於 9月 30, 2025 (00:19 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

@@ -341,7 +341,7 @@ helpful.</p>
 <p>To add Python to an iOS Xcode project:</p>
 <ol class="arabic">
 <li><p>Build or obtain a Python <code class="docutils literal notranslate"><span class="pre">XCFramework</span></code>. See the instructions in
-<a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.14/iOS/README.rst">iOS/README.rst</a> (in the CPython source distribution) for details on
+<a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.14/Apple/iOS/README.md">Apple/iOS/README.md</a> (in the CPython source distribution) for details on
 how to build a Python <code class="docutils literal notranslate"><span class="pre">XCFramework</span></code>. At a minimum, you will need a build
 that supports <code class="docutils literal notranslate"><span class="pre">arm64-apple-ios</span></code>, plus one of either
 <code class="docutils literal notranslate"><span class="pre">arm64-apple-ios-simulator</span></code> or <code class="docutils literal notranslate"><span class="pre">x86_64-apple-ios-simulator</span></code>.</p></li>
@@ -349,8 +349,6 @@ that supports <code class="docutils literal notranslate"><span class="pre">arm64
 instructions, we'll assume you've dropped the <code class="docutils literal notranslate"><span class="pre">XCframework</span></code> into the root
 of your project; however, you can use any other location that you want by
 adjusting paths as needed.</p></li>
-<li><p>Drag the <code class="docutils literal notranslate"><span class="pre">iOS/Resources/dylib-Info-template.plist</span></code> file into your project,
-and ensure it is associated with the app target.</p></li>
 <li><p>Add your application code as a folder in your Xcode project. In the
 following instructions, we'll assume that your user code is in a folder
 named <code class="docutils literal notranslate"><span class="pre">app</span></code> in the root of your project; you can use any other location by
@@ -381,86 +379,23 @@ Content&quot;, add <code class="docutils literal notranslate"><span class="pre">
 </li>
 </ul>
 </li>
-<li><p>Add a build step that copies the Python standard library into your app. In
-the &quot;Build Phases&quot; tab, add a new &quot;Run Script&quot; build step <em>before</em> the
-&quot;Embed Frameworks&quot; step, but <em>after</em> the &quot;Copy Bundle Resources&quot; step. Name
-the step &quot;Install Target Specific Python Standard Library&quot;, disable the
-&quot;Based on dependency analysis&quot; checkbox, and set the script content to:</p>
+<li><p>Add a build step that processes the Python standard library, and your own
+Python binary dependencies. In the &quot;Build Phases&quot; tab, add a new &quot;Run
+Script&quot; build step <em>before</em> the &quot;Embed Frameworks&quot; step, but <em>after</em> the
+&quot;Copy Bundle Resources&quot; step. Name the step &quot;Process Python libraries&quot;,
+disable the &quot;Based on dependency analysis&quot; checkbox, and set the script
+content to:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="w"> </span>-e
-
-mkdir<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="s2">/python/lib&quot;</span>
-<span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$EFFECTIVE_PLATFORM_NAME</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;-iphonesimulator&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Installing Python modules for iOS Simulator&quot;</span>
-<span class="w">    </span>rsync<span class="w"> </span>-au<span class="w"> </span>--delete<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT_DIR</span><span class="s2">/Python.xcframework/ios-arm64_x86_64-simulator/lib/&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="s2">/python/lib/&quot;</span>
-<span class="k">else</span>
-<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Installing Python modules for iOS Device&quot;</span>
-<span class="w">    </span>rsync<span class="w"> </span>-au<span class="w"> </span>--delete<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PROJECT_DIR</span><span class="s2">/Python.xcframework/ios-arm64/lib/&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="s2">/python/lib/&quot;</span>
-<span class="k">fi</span>
+<span class="nb">source</span><span class="w"> </span><span class="nv">$PROJECT_DIR</span>/Python.xcframework/build/build_utils.sh
+install_python<span class="w"> </span>Python.xcframework<span class="w"> </span>app
 </pre></div>
 </div>
-<p>Note that the name of the simulator &quot;slice&quot; in the XCframework may be
-different, depending the CPU architectures your <code class="docutils literal notranslate"><span class="pre">XCFramework</span></code> supports.</p>
-</li>
-<li><p>Add a second build step that processes the binary extension modules in the
-standard library into &quot;Framework&quot; format. Add a &quot;Run Script&quot; build step
-<em>directly after</em> the one you added in step 8, named &quot;Prepare Python Binary
-Modules&quot;. It should also have &quot;Based on dependency analysis&quot; unchecked, with
-the following script content:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">set</span><span class="w"> </span>-e
-
-install_dylib<span class="w"> </span><span class="o">()</span><span class="w"> </span><span class="o">{</span>
-<span class="w">    </span><span class="nv">INSTALL_BASE</span><span class="o">=</span><span class="nv">$1</span>
-<span class="w">    </span><span class="nv">FULL_EXT</span><span class="o">=</span><span class="nv">$2</span>
-
-<span class="w">    </span><span class="c1"># The name of the extension file</span>
-<span class="w">    </span><span class="nv">EXT</span><span class="o">=</span><span class="k">$(</span>basename<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$FULL_EXT</span><span class="s2">&quot;</span><span class="k">)</span>
-<span class="w">    </span><span class="c1"># The location of the extension file, relative to the bundle</span>
-<span class="w">    </span><span class="nv">RELATIVE_EXT</span><span class="o">=</span><span class="si">${</span><span class="nv">FULL_EXT</span><span class="p">#</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="p">/</span><span class="si">}</span>
-<span class="w">    </span><span class="c1"># The path to the extension file, relative to the install base</span>
-<span class="w">    </span><span class="nv">PYTHON_EXT</span><span class="o">=</span><span class="si">${</span><span class="nv">RELATIVE_EXT</span><span class="p">/</span><span class="nv">$INSTALL_BASE</span><span class="p">/</span><span class="si">}</span>
-<span class="w">    </span><span class="c1"># The full dotted name of the extension module, constructed from the file path.</span>
-<span class="w">    </span><span class="nv">FULL_MODULE_NAME</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="nv">$PYTHON_EXT</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="w"> </span><span class="s2">&quot;.&quot;</span><span class="w"> </span>-f<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s2">&quot;/&quot;</span><span class="w"> </span><span class="s2">&quot;.&quot;</span><span class="k">)</span><span class="p">;</span>
-<span class="w">    </span><span class="c1"># A bundle identifier; not actually used, but required by Xcode framework packaging</span>
-<span class="w">    </span><span class="nv">FRAMEWORK_BUNDLE_ID</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="nv">$PRODUCT_BUNDLE_IDENTIFIER</span>.<span class="nv">$FULL_MODULE_NAME</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>tr<span class="w"> </span><span class="s2">&quot;_&quot;</span><span class="w"> </span><span class="s2">&quot;-&quot;</span><span class="k">)</span>
-<span class="w">    </span><span class="c1"># The name of the framework folder.</span>
-<span class="w">    </span><span class="nv">FRAMEWORK_FOLDER</span><span class="o">=</span><span class="s2">&quot;Frameworks/</span><span class="nv">$FULL_MODULE_NAME</span><span class="s2">.framework&quot;</span>
-
-<span class="w">    </span><span class="c1"># If the framework folder doesn&#39;t exist, create it.</span>
-<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>!<span class="w"> </span>-d<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="s2">/</span><span class="nv">$FRAMEWORK_FOLDER</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
-<span class="w">        </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Creating framework for </span><span class="nv">$RELATIVE_EXT</span><span class="s2">&quot;</span>
-<span class="w">        </span>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="s2">/</span><span class="nv">$FRAMEWORK_FOLDER</span><span class="s2">&quot;</span>
-<span class="w">        </span>cp<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="s2">/dylib-Info-template.plist&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="s2">/</span><span class="nv">$FRAMEWORK_FOLDER</span><span class="s2">/Info.plist&quot;</span>
-<span class="w">        </span>plutil<span class="w"> </span>-replace<span class="w"> </span>CFBundleExecutable<span class="w"> </span>-string<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$FULL_MODULE_NAME</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="s2">/</span><span class="nv">$FRAMEWORK_FOLDER</span><span class="s2">/Info.plist&quot;</span>
-<span class="w">        </span>plutil<span class="w"> </span>-replace<span class="w"> </span>CFBundleIdentifier<span class="w"> </span>-string<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$FRAMEWORK_BUNDLE_ID</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="s2">/</span><span class="nv">$FRAMEWORK_FOLDER</span><span class="s2">/Info.plist&quot;</span>
-<span class="w">    </span><span class="k">fi</span>
-
-<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Installing binary for </span><span class="nv">$FRAMEWORK_FOLDER</span><span class="s2">/</span><span class="nv">$FULL_MODULE_NAME</span><span class="s2">&quot;</span>
-<span class="w">    </span>mv<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$FULL_EXT</span><span class="s2">&quot;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="s2">/</span><span class="nv">$FRAMEWORK_FOLDER</span><span class="s2">/</span><span class="nv">$FULL_MODULE_NAME</span><span class="s2">&quot;</span>
-<span class="w">    </span><span class="c1"># Create a placeholder .fwork file where the .so was</span>
-<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$FRAMEWORK_FOLDER</span><span class="s2">/</span><span class="nv">$FULL_MODULE_NAME</span><span class="s2">&quot;</span><span class="w"> </span>&gt;<span class="w"> </span><span class="si">${</span><span class="nv">FULL_EXT</span><span class="p">%.so</span><span class="si">}</span>.fwork
-<span class="w">    </span><span class="c1"># Create a back reference to the .so file location in the framework</span>
-<span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">RELATIVE_EXT</span><span class="p">%.so</span><span class="si">}</span><span class="s2">.fwork&quot;</span><span class="w"> </span>&gt;<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="s2">/</span><span class="nv">$FRAMEWORK_FOLDER</span><span class="s2">/</span><span class="nv">$FULL_MODULE_NAME</span><span class="s2">.origin&quot;</span>
-<span class="w"> </span><span class="o">}</span>
-
-<span class="w"> </span><span class="nv">PYTHON_VER</span><span class="o">=</span><span class="k">$(</span>ls<span class="w"> </span>-1<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="s2">/python/lib&quot;</span><span class="k">)</span>
-<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Install Python </span><span class="nv">$PYTHON_VER</span><span class="s2"> standard library extension modules...&quot;</span>
-<span class="w"> </span>find<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="s2">/python/lib/</span><span class="nv">$PYTHON_VER</span><span class="s2">/lib-dynload&quot;</span><span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*.so&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="nb">read</span><span class="w"> </span>FULL_EXT<span class="p">;</span><span class="w"> </span><span class="k">do</span>
-<span class="w">    </span>install_dylib<span class="w"> </span>python/lib/<span class="nv">$PYTHON_VER</span>/lib-dynload/<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$FULL_EXT</span><span class="s2">&quot;</span>
-<span class="w"> </span><span class="k">done</span>
-
-<span class="w"> </span><span class="c1"># Clean up dylib template</span>
-<span class="w"> </span>rm<span class="w"> </span>-f<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="s2">/dylib-Info-template.plist&quot;</span>
-
-<span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Signing frameworks as </span><span class="nv">$EXPANDED_CODE_SIGN_IDENTITY_NAME</span><span class="s2"> (</span><span class="nv">$EXPANDED_CODE_SIGN_IDENTITY</span><span class="s2">)...&quot;</span>
-<span class="w"> </span>find<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$CODESIGNING_FOLDER_PATH</span><span class="s2">/Frameworks&quot;</span><span class="w"> </span>-name<span class="w"> </span><span class="s2">&quot;*.framework&quot;</span><span class="w"> </span>-exec<span class="w"> </span>/usr/bin/codesign<span class="w"> </span>--force<span class="w"> </span>--sign<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$EXPANDED_CODE_SIGN_IDENTITY</span><span class="s2">&quot;</span><span class="w"> </span><span class="si">${</span><span class="nv">OTHER_CODE_SIGN_FLAGS</span><span class="k">:-</span><span class="si">}</span><span class="w"> </span>-o<span class="w"> </span>runtime<span class="w"> </span>--timestamp<span class="o">=</span>none<span class="w"> </span>--preserve-metadata<span class="o">=</span>identifier,entitlements,flags<span class="w"> </span>--generate-entitlement-der<span class="w"> </span><span class="s2">&quot;{}&quot;</span><span class="w"> </span><span class="se">\;</span>
-</pre></div>
-</div>
+<p>If you have placed your XCframework somewhere other than the root of your
+project, modify the path to the first argument.</p>
 </li>
 <li><p>Add Objective C code to initialize and use a Python interpreter in embedded
-mode. You should ensure that:</p></li>
-</ol>
-<blockquote>
-<div><ul class="simple">
+mode. You should ensure that:</p>
+<ul class="simple">
 <li><p>UTF-8 mode (<a class="reference internal" href="../c-api/init_config.html#c.PyPreConfig.utf8_mode" title="PyPreConfig.utf8_mode"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyPreConfig.utf8_mode</span></code></a>) is <em>enabled</em>;</p></li>
 <li><p>Buffered stdio (<a class="reference internal" href="../c-api/init_config.html#c.PyConfig.buffered_stdio" title="PyConfig.buffered_stdio"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyConfig.buffered_stdio</span></code></a>) is <em>disabled</em>;</p></li>
 <li><p>Writing bytecode (<a class="reference internal" href="../c-api/init_config.html#c.PyConfig.write_bytecode" title="PyConfig.write_bytecode"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyConfig.write_bytecode</span></code></a>) is <em>disabled</em>;</p></li>
@@ -479,21 +414,20 @@ mode. You should ensure that:</p></li>
 </ul>
 <p>Your app's bundle location can be determined using <code class="docutils literal notranslate"><span class="pre">[[NSBundle</span> <span class="pre">mainBundle]</span>
 <span class="pre">resourcePath]</span></code>.</p>
-</div></blockquote>
-<p>Steps 8, 9 and 10 of these instructions assume that you have a single folder of
+</li>
+</ol>
+<p>Steps 7 and 8 of these instructions assume that you have a single folder of
 pure Python application code, named <code class="docutils literal notranslate"><span class="pre">app</span></code>. If you have third-party binary
 modules in your app, some additional steps will be required:</p>
 <ul class="simple">
 <li><p>You need to ensure that any folders containing third-party binaries are
-either associated with the app target, or copied in as part of step 8. Step 8
-should also purge any binaries that are not appropriate for the platform a
-specific build is targeting (i.e., delete any device binaries if you're
-building an app targeting the simulator).</p></li>
-<li><p>Any folders that contain third-party binaries must be processed into
-framework form by step 9. The invocation of <code class="docutils literal notranslate"><span class="pre">install_dylib</span></code> that processes
-the <code class="docutils literal notranslate"><span class="pre">lib-dynload</span></code> folder can be copied and adapted for this purpose.</p></li>
-<li><p>If you're using a separate folder for third-party packages, ensure that folder
-is included as part of the <span class="target" id="index-2"></span><a class="reference internal" href="cmdline.html#envvar-PYTHONPATH"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a> configuration in step 10.</p></li>
+either associated with the app target, or are explicitly copied as part of
+step 7. Step 7 should also purge any binaries that are not appropriate for
+the platform a specific build is targeting (i.e., delete any device binaries
+if you're building an app targeting the simulator).</p></li>
+<li><p>If you're using a separate folder for third-party packages, ensure that
+folder is added to the end of the call to <code class="docutils literal notranslate"><span class="pre">install_python</span></code> in step 7, and
+as part of the <span class="target" id="index-2"></span><a class="reference internal" href="cmdline.html#envvar-PYTHONPATH"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a> configuration in step 8.</p></li>
 <li><p>If any of the folders that contain third-party packages will contain <code class="docutils literal notranslate"><span class="pre">.pth</span></code>
 files, you should add that folder as a <em>site directory</em> (using
 <a class="reference internal" href="../library/site.html#site.addsitedir" title="site.addsitedir"><code class="xref py py-meth docutils literal notranslate"><span class="pre">site.addsitedir()</span></code></a>), rather than adding to <span class="target" id="index-3"></span><a class="reference internal" href="cmdline.html#envvar-PYTHONPATH"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHONPATH</span></code></a> or
@@ -502,22 +436,25 @@ files, you should add that folder as a <em>site directory</em> (using
 </section>
 <section id="testing-a-python-package">
 <h3><span class="section-number">7.2.3. </span>Testing a Python package<a class="headerlink" href="#testing-a-python-package" title="連結到這個標頭">¶</a></h3>
-<p>The CPython source tree contains <a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.14/iOS/testbed">a testbed project</a> that
+<p>The CPython source tree contains <a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.14/Apple/iOS/testbed">a testbed project</a> that
 is used to run the CPython test suite on the iOS simulator. This testbed can also
 be used as a testbed project for running your Python library's test suite on iOS.</p>
-<p>After building or obtaining an iOS XCFramework (See <a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.14/iOS/README.rst">iOS/README.rst</a>
-for details), create a clone of the Python iOS testbed project by running:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>iOS/testbed<span class="w"> </span>clone<span class="w"> </span>--framework<span class="w"> </span>&lt;path/to/Python.xcframework&gt;<span class="w"> </span>--app<span class="w"> </span>&lt;path/to/module1&gt;<span class="w"> </span>--app<span class="w"> </span>&lt;path/to/module2&gt;<span class="w"> </span>app-testbed
+<p>After building or obtaining an iOS XCFramework (see <a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.14/Apple/iOS/README.md">Apple/iOS/README.md</a>
+for details), create a clone of the Python iOS testbed project. If you used the
+<code class="docutils literal notranslate"><span class="pre">Apple</span></code> build script to build the XCframework, you can run:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>cross-build/iOS/testbed<span class="w"> </span>clone<span class="w"> </span>--app<span class="w"> </span>&lt;path/to/module1&gt;<span class="w"> </span>--app<span class="w"> </span>&lt;path/to/module2&gt;<span class="w"> </span>app-testbed
 </pre></div>
 </div>
-<p>You will need to modify the <code class="docutils literal notranslate"><span class="pre">iOS/testbed</span></code> reference to point to that
-directory in the CPython source tree; any folders specified with the <code class="docutils literal notranslate"><span class="pre">--app</span></code>
-flag will be copied into the cloned testbed project. The resulting testbed will
-be created in the <code class="docutils literal notranslate"><span class="pre">app-testbed</span></code> folder. In this example, the <code class="docutils literal notranslate"><span class="pre">module1</span></code> and
-<code class="docutils literal notranslate"><span class="pre">module2</span></code> would be importable modules at runtime. If your project has
-additional dependencies, they can be installed into the
-<code class="docutils literal notranslate"><span class="pre">app-testbed/iOSTestbed/app_packages</span></code> folder (using <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">--target</span>
-<span class="pre">app-testbed/iOSTestbed/app_packages</span></code> or similar).</p>
+<p>Or, if you've sourced your own XCframework, by running:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>python<span class="w"> </span>Apple/testbed<span class="w"> </span>clone<span class="w"> </span>--platform<span class="w"> </span>iOS<span class="w"> </span>--framework<span class="w"> </span>&lt;path/to/Python.xcframework&gt;<span class="w"> </span>--app<span class="w"> </span>&lt;path/to/module1&gt;<span class="w"> </span>--app<span class="w"> </span>&lt;path/to/module2&gt;<span class="w"> </span>app-testbed
+</pre></div>
+</div>
+<p>Any folders specified with the <code class="docutils literal notranslate"><span class="pre">--app</span></code> flag will be copied into the cloned
+testbed project. The resulting testbed will be created in the <code class="docutils literal notranslate"><span class="pre">app-testbed</span></code>
+folder. In this example, the <code class="docutils literal notranslate"><span class="pre">module1</span></code> and <code class="docutils literal notranslate"><span class="pre">module2</span></code> would be importable
+modules at runtime. If your project has additional dependencies, they can be
+installed into the <code class="docutils literal notranslate"><span class="pre">app-testbed/Testbed/app_packages</span></code> folder (using <code class="docutils literal notranslate"><span class="pre">pip</span>
+<span class="pre">install</span> <span class="pre">--target</span> <span class="pre">app-testbed/Testbed/app_packages</span></code> or similar).</p>
 <p>You can then use the <code class="docutils literal notranslate"><span class="pre">app-testbed</span></code> folder to run the test suite for your app,
 For example, if <code class="docutils literal notranslate"><span class="pre">module1.tests</span></code> was the entry point to your test suite, you
 could run:</p>
@@ -538,7 +475,7 @@ should be the first child of the root node), and select the &quot;Configurations
 tab. Modify the &quot;Arguments Passed On Launch&quot; value to change the testing
 arguments.</p>
 <p>The test plan also disables parallel testing, and specifies the use of the
-<code class="docutils literal notranslate"><span class="pre">iOSTestbed.lldbinit</span></code> file for providing configuration of the debugger. The
+<code class="docutils literal notranslate"><span class="pre">Testbed.lldbinit</span></code> file for providing configuration of the debugger. The
 default debugger configuration disables automatic breakpoints on the
 <code class="docutils literal notranslate"><span class="pre">SIGINT</span></code>, <code class="docutils literal notranslate"><span class="pre">SIGUSR1</span></code>, <code class="docutils literal notranslate"><span class="pre">SIGUSR2</span></code>, and <code class="docutils literal notranslate"><span class="pre">SIGXFSZ</span></code> signals.</p>
 </section>
@@ -691,7 +628,7 @@ patch is applied automatically when building for iOS.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 9月 29, 2025 (00:21 UTC)。
+      最後更新於 9月 30, 2025 (00:19 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
