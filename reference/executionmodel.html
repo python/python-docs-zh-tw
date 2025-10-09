@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>4. 執行模型 &#8212; Python 3.14.0rc2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4. 執行模型 &#8212; Python 3.14.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=8cd84f99" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
     
-    <script src="../_static/documentation_options.js?v=1f5d461d"></script>
+    <script src="../_static/documentation_options.js?v=d58accf9"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,7 +20,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.14.0rc2 說明文件 中搜尋"
+          title="在 Python 3.14.0 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -101,6 +101,11 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#exceptions">4.3. 例外</a></li>
+<li><a class="reference internal" href="#runtime-components">4.4. Runtime Components</a><ul>
+<li><a class="reference internal" href="#general-computing-model">4.4.1. General Computing Model</a></li>
+<li><a class="reference internal" href="#python-runtime-model">4.4.2. Python Runtime Model</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -158,7 +163,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.0rc2 Documentation</a> &#187;
+      <a href="../index.html">3.14.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 語言參考手冊</a> &#187;</li>
@@ -484,6 +489,183 @@ relied on by code which will run under multiple versions of the interpreter.</p>
 </div>
 <p>See also the description of the <a class="reference internal" href="compound_stmts.html#try"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">try</span></code></a> statement in section <a class="reference internal" href="compound_stmts.html#try"><span class="std std-ref">try 陳述式</span></a>
 and <a class="reference internal" href="simple_stmts.html#raise"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">raise</span></code></a> statement in section <a class="reference internal" href="simple_stmts.html#raise"><span class="std std-ref">raise 陳述式</span></a>.</p>
+</section>
+<section id="runtime-components">
+<span id="execcomponents"></span><h2><span class="section-number">4.4. </span>Runtime Components<a class="headerlink" href="#runtime-components" title="連結到這個標頭">¶</a></h2>
+<section id="general-computing-model">
+<h3><span class="section-number">4.4.1. </span>General Computing Model<a class="headerlink" href="#general-computing-model" title="連結到這個標頭">¶</a></h3>
+<p>Python's execution model does not operate in a vacuum.  It runs on
+a host machine and through that host's runtime environment, including
+its operating system (OS), if there is one.  When a program runs,
+the conceptual layers of how it runs on the host look something
+like this:</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line"><strong>host machine</strong></div>
+<div class="line-block">
+<div class="line"><strong>process</strong> (global resources)</div>
+<div class="line-block">
+<div class="line"><strong>thread</strong> (runs machine code)</div>
+</div>
+</div>
+</div>
+</div></blockquote>
+<p>Each process represents a program running on the host.  Think of each
+process itself as the data part of its program.  Think of the process'
+threads as the execution part of the program.  This distinction will
+be important to understand the conceptual Python runtime.</p>
+<p>The process, as the data part, is the execution context in which the
+program runs.  It mostly consists of the set of resources assigned to
+the program by the host, including memory, signals, file handles,
+sockets, and environment variables.</p>
+<p>Processes are isolated and independent from one another.  (The same
+is true for hosts.)  The host manages the process' access to its
+assigned resources, in addition to coordinating between processes.</p>
+<p>Each thread represents the actual execution of the program's machine
+code, running relative to the resources assigned to the program's
+process.  It's strictly up to the host how and when that execution
+takes place.</p>
+<p>From the point of view of Python, a program always starts with exactly
+one thread.  However, the program may grow to run in multiple
+simultaneous threads.  Not all hosts support multiple threads per
+process, but most do.  Unlike processes, threads in a process are not
+isolated and independent from one another.  Specifically, all threads
+in a process share all of the process' resources.</p>
+<p>The fundamental point of threads is that each one does <em>run</em>
+independently, at the same time as the others.  That may be only
+conceptually at the same time (&quot;concurrently&quot;) or physically
+(&quot;in parallel&quot;).  Either way, the threads effectively run
+at a non-synchronized rate.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>That non-synchronized rate means none of the process' memory is
+guaranteed to stay consistent for the code running in any given
+thread.  Thus multi-threaded programs must take care to coordinate
+access to intentionally shared resources.  Likewise, they must take
+care to be absolutely diligent about not accessing any <em>other</em>
+resources in multiple threads; otherwise two threads running at the
+same time might accidentally interfere with each other's use of some
+shared data.  All this is true for both Python programs and the
+Python runtime.</p>
+<p>The cost of this broad, unstructured requirement is the tradeoff for
+the kind of raw concurrency that threads provide.  The alternative
+to the required discipline generally means dealing with
+non-deterministic bugs and data corruption.</p>
+</div>
+</section>
+<section id="python-runtime-model">
+<h3><span class="section-number">4.4.2. </span>Python Runtime Model<a class="headerlink" href="#python-runtime-model" title="連結到這個標頭">¶</a></h3>
+<p>The same conceptual layers apply to each Python program, with some
+extra data layers specific to Python:</p>
+<blockquote>
+<div><div class="line-block">
+<div class="line"><strong>host machine</strong></div>
+<div class="line-block">
+<div class="line"><strong>process</strong> (global resources)</div>
+<div class="line-block">
+<div class="line">Python global runtime (<em>state</em>)</div>
+<div class="line-block">
+<div class="line">Python interpreter (<em>state</em>)</div>
+<div class="line-block">
+<div class="line"><strong>thread</strong> (runs Python bytecode and &quot;C-API&quot;)</div>
+<div class="line-block">
+<div class="line">Python thread <em>state</em></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></blockquote>
+<p>At the conceptual level: when a Python program starts, it looks exactly
+like that diagram, with one of each.  The runtime may grow to include
+multiple interpreters, and each interpreter may grow to include
+multiple thread states.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>A Python implementation won't necessarily implement the runtime
+layers distinctly or even concretely.  The only exception is places
+where distinct layers are directly specified or exposed to users,
+like through the <a class="reference internal" href="../library/threading.html#module-threading" title="threading: Thread-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code></a> module.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>The initial interpreter is typically called the &quot;main&quot; interpreter.
+Some Python implementations, like CPython, assign special roles
+to the main interpreter.</p>
+<p>Likewise, the host thread where the runtime was initialized is known
+as the &quot;main&quot; thread.  It may be different from the process' initial
+thread, though they are often the same.  In some cases &quot;main thread&quot;
+may be even more specific and refer to the initial thread state.
+A Python runtime might assign specific responsibilities
+to the main thread, such as handling signals.</p>
+</div>
+<p>As a whole, the Python runtime consists of the global runtime state,
+interpreters, and thread states.  The runtime ensures all that state
+stays consistent over its lifetime, particularly when used with
+multiple host threads.</p>
+<p>The global runtime, at the conceptual level, is just a set of
+interpreters.  While those interpreters are otherwise isolated and
+independent from one another, they may share some data or other
+resources.  The runtime is responsible for managing these global
+resources safely.  The actual nature and management of these resources
+is implementation-specific.  Ultimately, the external utility of the
+global runtime is limited to managing interpreters.</p>
+<p>In contrast, an &quot;interpreter&quot; is conceptually what we would normally
+think of as the (full-featured) &quot;Python runtime&quot;.  When machine code
+executing in a host thread interacts with the Python runtime, it calls
+into Python in the context of a specific interpreter.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>The term &quot;interpreter&quot; here is not the same as the &quot;bytecode
+interpreter&quot;, which is what regularly runs in threads, executing
+compiled Python code.</p>
+<p>In an ideal world, &quot;Python runtime&quot; would refer to what we currently
+call &quot;interpreter&quot;.  However, it's been called &quot;interpreter&quot; at least
+since introduced in 1997 (<a class="reference external" href="https://github.com/python/cpython/commit/a027efa5b">CPython:a027efa5b</a>).</p>
+</div>
+<p>Each interpreter completely encapsulates all of the non-process-global,
+non-thread-specific state needed for the Python runtime to work.
+Notably, the interpreter's state persists between uses.  It includes
+fundamental data like <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>.  The runtime ensures
+multiple threads using the same interpreter will safely
+share it between them.</p>
+<p>A Python implementation may support using multiple interpreters at the
+same time in the same process.  They are independent and isolated from
+one another.  For example, each interpreter has its own
+<a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>.</p>
+<p>For thread-specific runtime state, each interpreter has a set of thread
+states, which it manages, in the same way the global runtime contains
+a set of interpreters.  It can have thread states for as many host
+threads as it needs.  It may even have multiple thread states for
+the same host thread, though that isn't as common.</p>
+<p>Each thread state, conceptually, has all the thread-specific runtime
+data an interpreter needs to operate in one host thread.  The thread
+state includes the current raised exception and the thread's Python
+call stack.  It may include other thread-specific resources.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>The term &quot;Python thread&quot; can sometimes refer to a thread state, but
+normally it means a thread created using the <a class="reference internal" href="../library/threading.html#module-threading" title="threading: Thread-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code></a> module.</p>
+</div>
+<p>Each thread state, over its lifetime, is always tied to exactly one
+interpreter and exactly one host thread.  It will only ever be used in
+that thread and with that interpreter.</p>
+<p>Multiple thread states may be tied to the same host thread, whether for
+different interpreters or even the same interpreter.  However, for any
+given host thread, only one of the thread states tied to it can be used
+by the thread at a time.</p>
+<p>Thread states are isolated and independent from one another and don't
+share any data, except for possibly sharing an interpreter and objects
+or other resources belonging to that interpreter.</p>
+<p>Once a program is running, new Python threads can be created using the
+<a class="reference internal" href="../library/threading.html#module-threading" title="threading: Thread-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code></a> module (on platforms and Python implementations that
+support threads).  Additional processes can be created using the
+<a class="reference internal" href="../library/os.html#module-os" title="os: Miscellaneous operating system interfaces."><code class="xref py py-mod docutils literal notranslate"><span class="pre">os</span></code></a>, <a class="reference internal" href="../library/subprocess.html#module-subprocess" title="subprocess: Subprocess management."><code class="xref py py-mod docutils literal notranslate"><span class="pre">subprocess</span></code></a>, and <a class="reference internal" href="../library/multiprocessing.html#module-multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">multiprocessing</span></code></a> modules.
+Interpreters can be created and used with the
+<a class="reference internal" href="../library/concurrent.interpreters.html#module-concurrent.interpreters" title="concurrent.interpreters: Multiple interpreters in the same process"><code class="xref py py-mod docutils literal notranslate"><span class="pre">interpreters</span></code></a> module.  Coroutines (async) can
+be run using <a class="reference internal" href="../library/asyncio.html#module-asyncio" title="asyncio: Asynchronous I/O."><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code></a> in each interpreter, typically only
+in a single thread (often the main thread).</p>
 <p class="rubric">註解</p>
 <aside class="footnote-list brackets">
 <aside class="footnote brackets" id="id5" role="doc-footnote">
@@ -492,6 +674,7 @@ and <a class="reference internal" href="simple_stmts.html#raise"><code class="xr
 is not available at the time the module is compiled.</p>
 </aside>
 </aside>
+</section>
 </section>
 </section>
 
@@ -517,6 +700,11 @@ is not available at the time the module is compiled.</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#exceptions">4.3. 例外</a></li>
+<li><a class="reference internal" href="#runtime-components">4.4. Runtime Components</a><ul>
+<li><a class="reference internal" href="#general-computing-model">4.4.1. General Computing Model</a></li>
+<li><a class="reference internal" href="#python-runtime-model">4.4.2. Python Runtime Model</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -577,7 +765,7 @@ is not available at the time the module is compiled.</p>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.0rc2 Documentation</a> &#187;
+      <a href="../index.html">3.14.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 語言參考手冊</a> &#187;</li>
@@ -622,7 +810,7 @@ is not available at the time the module is compiled.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 9月 18, 2025 (09:15 UTC)。
+      最後更新於 10月 09, 2025 (07:13 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>8. 複合陳述式 &#8212; Python 3.14.0rc2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>8. 複合陳述式 &#8212; Python 3.14.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=8cd84f99" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
     
-    <script src="../_static/documentation_options.js?v=1f5d461d"></script>
+    <script src="../_static/documentation_options.js?v=d58accf9"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,7 +20,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.14.0rc2 說明文件 中搜尋"
+          title="在 Python 3.14.0 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -192,7 +192,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.0rc2 Documentation</a> &#187;
+      <a href="../index.html">3.14.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 語言參考手冊</a> &#187;</li>
@@ -453,15 +453,27 @@ stored in the <a class="reference internal" href="../library/sys.html#module-sys
 </section>
 <section id="except-star">
 <span id="index-13"></span><span id="id2"></span><h3><span class="section-number">8.4.2. </span><code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> 子句<a class="headerlink" href="#except-star" title="連結到這個標頭">¶</a></h3>
-<p>The <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> clause(s) are used for handling
-<a class="reference internal" href="../library/exceptions.html#ExceptionGroup" title="ExceptionGroup"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ExceptionGroup</span></code></a>s. The exception type for matching is interpreted as in
-the case of <a class="reference internal" href="#except"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">except</span></code></a>, but in the case of exception groups we can have
-partial matches when the type matches some of the exceptions in the group.
-This means that multiple <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> clauses can execute,
-each handling part of the exception group.
-Each clause executes at most once and handles an exception group
-of all matching exceptions.  Each exception in the group is handled by at most
-one <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> clause, the first that matches it.</p>
+<p>The <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> clause(s) specify one or more handlers for groups of
+exceptions (<a class="reference internal" href="../library/exceptions.html#BaseExceptionGroup" title="BaseExceptionGroup"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BaseExceptionGroup</span></code></a> instances). A <a class="reference internal" href="#try"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">try</span></code></a> statement
+can have either <a class="reference internal" href="#except"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">except</span></code></a> or <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> clauses, but not both.
+The exception type for matching is mandatory in the case of <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code>,
+so <code class="docutils literal notranslate"><span class="pre">except*:</span></code> is a syntax error. The type is interpreted as in the case of
+<code class="xref std std-keyword docutils literal notranslate"><span class="pre">except</span></code>, but matching is performed on the exceptions contained in the
+group that is being handled. An <a class="reference internal" href="../library/exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a> is raised if a matching
+type is a subclass of <code class="xref py py-exc docutils literal notranslate"><span class="pre">BaseExceptionGroup</span></code>, because that would have
+ambiguous semantics.</p>
+<p>When an exception group is raised in the try block, each <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code>
+clause splits (see <a class="reference internal" href="../library/exceptions.html#BaseExceptionGroup.split" title="BaseExceptionGroup.split"><code class="xref py py-meth docutils literal notranslate"><span class="pre">split()</span></code></a>) it into the subgroups
+of matching and non-matching exceptions. If the matching subgroup is not empty,
+it becomes the handled exception (the value returned from <a class="reference internal" href="../library/sys.html#sys.exception" title="sys.exception"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.exception()</span></code></a>)
+and assigned to the target of the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> clause (if there is one).
+Then, the body of the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> clause executes. If the non-matching
+subgroup is not empty, it is processed by the next <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> in the
+same manner. This continues until all exceptions in the group have been matched,
+or the last <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> clause has run.</p>
+<p>After all <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> clauses execute, the group of unhandled exceptions
+is merged with any exceptions that were raised or re-raised from within
+<code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> clauses. This merged exception group propagates on.:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="k">raise</span> <span class="n">ExceptionGroup</span><span class="p">(</span><span class="s2">&quot;eg&quot;</span><span class="p">,</span>
 <span class="gp">... </span>        <span class="p">[</span><span class="ne">ValueError</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="ne">TypeError</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="ne">OSError</span><span class="p">(</span><span class="mi">3</span><span class="p">),</span> <span class="ne">OSError</span><span class="p">(</span><span class="mi">4</span><span class="p">)])</span>
@@ -473,21 +485,19 @@ one <code class="xref std std-keyword docutils literal notranslate"><span class=
 <span class="go">caught &lt;class &#39;ExceptionGroup&#39;&gt; with nested (TypeError(2),)</span>
 <span class="go">caught &lt;class &#39;ExceptionGroup&#39;&gt; with nested (OSError(3), OSError(4))</span>
 <span class="go">  + Exception Group Traceback (most recent call last):</span>
-<span class="go">  |   File &quot;&lt;stdin&gt;&quot;, line 2, in &lt;module&gt;</span>
-<span class="go">  | ExceptionGroup: eg</span>
+<span class="go">  |   File &quot;&lt;doctest default[0]&gt;&quot;, line 2, in &lt;module&gt;</span>
+<span class="go">  |     raise ExceptionGroup(&quot;eg&quot;,</span>
+<span class="go">  |         [ValueError(1), TypeError(2), OSError(3), OSError(4)])</span>
+<span class="go">  | ExceptionGroup: eg (1 sub-exception)</span>
 <span class="go">  +-+---------------- 1 ----------------</span>
 <span class="go">    | ValueError: 1</span>
 <span class="go">    +------------------------------------</span>
 </pre></div>
 </div>
-<p>Any remaining exceptions that were not handled by any <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code>
-clause are re-raised at the end, along with all exceptions that were
-raised from within the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> clauses. If this list contains
-more than one exception to reraise, they are combined into an exception
-group.</p>
-<p>If the raised exception is not an exception group and its type matches
-one of the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> clauses, it is caught and wrapped by an
-exception group with an empty message string.</p>
+<p>If the exception raised from the <a class="reference internal" href="#try"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">try</span></code></a> block is not an exception group
+and its type matches one of the <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> clauses, it is caught and
+wrapped by an exception group with an empty message string. This ensures that the
+type of the target <code class="docutils literal notranslate"><span class="pre">e</span></code> is consistently <a class="reference internal" href="../library/exceptions.html#BaseExceptionGroup" title="BaseExceptionGroup"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BaseExceptionGroup</span></code></a>:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">try</span><span class="p">:</span>
 <span class="gp">... </span>    <span class="k">raise</span> <span class="ne">BlockingIOError</span>
 <span class="gp">... </span><span class="k">except</span><span class="o">*</span> <span class="ne">BlockingIOError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -496,12 +506,7 @@ exception group with an empty message string.</p>
 <span class="go">ExceptionGroup(&#39;&#39;, (BlockingIOError()))</span>
 </pre></div>
 </div>
-<p>An <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> clause must have a matching expression; it cannot be <code class="docutils literal notranslate"><span class="pre">except*:</span></code>.
-Furthermore, this expression cannot contain exception group types, because that would
-have ambiguous semantics.</p>
-<p>It is not possible to mix <a class="reference internal" href="#except"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">except</span></code></a> and <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code>
-in the same <a class="reference internal" href="#try"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">try</span></code></a>.
-The <a class="reference internal" href="simple_stmts.html#break"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">break</span></code></a>, <a class="reference internal" href="simple_stmts.html#continue"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">continue</span></code></a>, and <a class="reference internal" href="simple_stmts.html#return"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">return</span></code></a> statements
+<p><a class="reference internal" href="simple_stmts.html#break"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">break</span></code></a>, <a class="reference internal" href="simple_stmts.html#continue"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">continue</span></code></a> and <a class="reference internal" href="simple_stmts.html#return"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">return</span></code></a>
 cannot appear in an <code class="xref std std-keyword docutils literal notranslate"><span class="pre">except*</span></code> clause.</p>
 </section>
 <section id="else-clause">
@@ -664,7 +669,7 @@ statement.</p>
 </div>
 </section>
 <section id="the-match-statement">
-<span id="match"></span><h2><span class="section-number">8.6. </span><code class="xref std std-keyword docutils literal notranslate"><span class="pre">match</span></code> 陳述式<a class="headerlink" href="#the-match-statement" title="連結到這個標頭">¶</a></h2>
+<span id="case"></span><span id="match"></span><h2><span class="section-number">8.6. </span><code class="xref std std-keyword docutils literal notranslate"><span class="pre">match</span></code> 陳述式<a class="headerlink" href="#the-match-statement" title="連結到這個標頭">¶</a></h2>
 <div class="versionadded" id="index-20">
 <p><span class="versionmodified added">在 3.10 版被加入.</span></p>
 </div>
@@ -1926,7 +1931,7 @@ the class's <a class="reference internal" href="../glossary.html#term-docstring"
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.0rc2 Documentation</a> &#187;
+      <a href="../index.html">3.14.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 語言參考手冊</a> &#187;</li>
@@ -1971,7 +1976,7 @@ the class's <a class="reference internal" href="../glossary.html#term-docstring"
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 9月 18, 2025 (09:15 UTC)。
+      最後更新於 10月 09, 2025 (07:13 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
