@@ -200,12 +200,11 @@
 model of how <a class="reference internal" href="../library/asyncio.html#module-asyncio" title="asyncio: Asynchronous I/O."><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code></a> fundamentally works, helping you understand the
 how and why behind the recommended patterns.</p>
 <p>You might be curious about some key <code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code> concepts.
-You'll be comfortably able to answer these questions by the end of this
-article:</p>
+By the end of this article, you'll be able to comfortably answer these questions:</p>
 <ul class="simple">
 <li><p>What's happening behind the scenes when an object is awaited?</p></li>
 <li><p>How does <code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code> differentiate between a task which doesn't need
-CPU-time (such as a network request or file read) as opposed to a task that
+CPU time (such as a network request or file read) as opposed to a task that
 does (such as computing n-factorial)?</p></li>
 <li><p>How to write an asynchronous variant of an operation, such as
 an async sleep or database request.</p></li>
@@ -223,7 +222,7 @@ Jesse Jiryu Davis and Guido van Rossum.</p></li>
 <section id="a-conceptual-overview-part-1-the-high-level">
 <h2>A conceptual overview part 1: the high-level<a class="headerlink" href="#a-conceptual-overview-part-1-the-high-level" title="連結到這個標頭">¶</a></h2>
 <p>In part 1, we'll cover the main, high-level building blocks of <code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code>:
-the event loop, coroutine functions, coroutine objects, tasks and <code class="docutils literal notranslate"><span class="pre">await</span></code>.</p>
+the event loop, coroutine functions, coroutine objects, tasks, and <code class="docutils literal notranslate"><span class="pre">await</span></code>.</p>
 <section id="event-loop">
 <h3>事件迴圈<a class="headerlink" href="#event-loop" title="連結到這個標頭">¶</a></h3>
 <p>Everything in <code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code> happens relative to the event loop.
@@ -240,7 +239,7 @@ Once it pauses or completes, it returns control to the event loop.
 The event loop will then select another job from its pool and invoke it.
 You can <em>roughly</em> think of the collection of jobs as a queue: jobs are added and
 then processed one at a time, generally (but not always) in order.
-This process repeats indefinitely with the event loop cycling endlessly
+This process repeats indefinitely, with the event loop cycling endlessly
 onwards.
 If there are no more jobs pending execution, the event loop is smart enough to
 rest and avoid needlessly wasting CPU cycles, and will come back when there's
@@ -440,7 +439,7 @@ Once the task finishes, it will add its various callbacks to the event loop,
 in this case, a call to resume <code class="docutils literal notranslate"><span class="pre">plant_a_tree()</span></code>.</p>
 <p>Generally speaking, when the awaited task finishes (<code class="docutils literal notranslate"><span class="pre">dig_the_hole_task</span></code>),
 the original task or coroutine (<code class="docutils literal notranslate"><span class="pre">plant_a_tree()</span></code>) is added back to the event
-loops to-do list to be resumed.</p>
+loop's to-do list to be resumed.</p>
 <p>This is a basic, yet reliable mental model.
 In practice, the control handoffs are slightly more complex, but not by much.
 In part 2, we'll walk through the details that make this possible.</p>
@@ -472,7 +471,7 @@ Consider this program:</p>
 <p>The first statement in the coroutine <code class="docutils literal notranslate"><span class="pre">main()</span></code> creates <code class="docutils literal notranslate"><span class="pre">task_b</span></code> and schedules
 it for execution via the event loop.
 Then, <code class="docutils literal notranslate"><span class="pre">coro_a()</span></code> is repeatedly awaited. Control never cedes to the
-event loop which is why we see the output of all three <code class="docutils literal notranslate"><span class="pre">coro_a()</span></code>
+event loop, which is why we see the output of all three <code class="docutils literal notranslate"><span class="pre">coro_a()</span></code>
 invocations before <code class="docutils literal notranslate"><span class="pre">coro_b()</span></code>'s output:</p>
 <div class="highlight-none notranslate"><div class="highlight"><pre><span></span>I am coro_a(). Hi!
 I am coro_a(). Hi!
@@ -496,8 +495,8 @@ I am coro_a(). Hi!
 That example highlights how using only <code class="docutils literal notranslate"><span class="pre">await</span> <span class="pre">coroutine</span></code> could
 unintentionally hog control from other tasks and effectively stall the event
 loop.
-<a class="reference internal" href="../library/asyncio-runner.html#asyncio.run" title="asyncio.run"><code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.run()</span></code></a> can help you detect such occurences via the
-<code class="docutils literal notranslate"><span class="pre">debug=True</span></code> flag which accordingly enables
+<a class="reference internal" href="../library/asyncio-runner.html#asyncio.run" title="asyncio.run"><code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.run()</span></code></a> can help you detect such occurrences via the
+<code class="docutils literal notranslate"><span class="pre">debug=True</span></code> flag, which enables
 <a class="reference internal" href="../library/asyncio-dev.html#asyncio-debug-mode"><span class="std std-ref">debug mode</span></a>.
 Among other things, it will log any coroutines that monopolize execution for
 100ms or longer.</p>
@@ -505,8 +504,8 @@ Among other things, it will log any coroutines that monopolize execution for
 <code class="docutils literal notranslate"><span class="pre">await</span></code> for improved performance.
 Each time a task is awaited, control needs to be passed all the way up the
 call stack to the event loop.
-That might sound minor, but in a large program with many <code class="docutils literal notranslate"><span class="pre">await</span></code>'s and a deep
-callstack that overhead can add up to a meaningful performance drag.</p>
+That might sound minor, but in a large program with many <code class="docutils literal notranslate"><span class="pre">await</span></code> statements and a deep
+call stack, that overhead can add up to a meaningful performance drag.</p>
 </section>
 </section>
 <section id="a-conceptual-overview-part-2-the-nuts-and-bolts">
@@ -524,7 +523,7 @@ resume a coroutine.
 If the coroutine was paused and is now being resumed, the argument <code class="docutils literal notranslate"><span class="pre">arg</span></code>
 will be sent in as the return value of the <code class="docutils literal notranslate"><span class="pre">yield</span></code> statement which originally
 paused it.
-If the coroutine is being used for the first time (as opposed to being resumed)
+If the coroutine is being used for the first time (as opposed to being resumed),
 <code class="docutils literal notranslate"><span class="pre">arg</span></code> must be <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="linenos"> 1</span><span class="k">class</span><span class="w"> </span><span class="nc">Rock</span><span class="p">:</span>
 <span class="linenos"> 2</span>    <span class="k">def</span><span class="w"> </span><span class="fm">__await__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -552,14 +551,14 @@ If the coroutine is being used for the first time (as opposed to being resumed)
 <span class="linenos">24</span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Coroutine main() finished and provided value: </span><span class="si">{</span><span class="n">returned_value</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="../reference/expressions.html#yieldexpr"><span class="std std-ref">yield</span></a>, like usual, pauses execution and returns control
+<p><a class="reference internal" href="../reference/expressions.html#yieldexpr"><span class="std std-ref">yield</span></a>, as usual, pauses execution and returns control
 to the caller.
 In the example above, the <code class="docutils literal notranslate"><span class="pre">yield</span></code>, on line 3, is called by
 <code class="docutils literal notranslate"><span class="pre">...</span> <span class="pre">=</span> <span class="pre">await</span> <span class="pre">rock</span></code> on line 11.
 More broadly speaking, <code class="docutils literal notranslate"><span class="pre">await</span></code> calls the <a class="reference internal" href="../reference/datamodel.html#object.__await__" title="object.__await__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__await__()</span></code></a> method of
 the given object.
 <code class="docutils literal notranslate"><span class="pre">await</span></code> also does one more very special thing: it propagates (or &quot;passes
-along&quot;) any <code class="docutils literal notranslate"><span class="pre">yield</span></code>s it receives up the call-chain.
+along&quot;) any <code class="docutils literal notranslate"><span class="pre">yield</span></code>s it receives up the call chain.
 In this case, that's back to <code class="docutils literal notranslate"><span class="pre">...</span> <span class="pre">=</span> <span class="pre">coroutine.send(None)</span></code> on line 16.</p>
 <p>The coroutine is resumed via the <code class="docutils literal notranslate"><span class="pre">coroutine.send(42)</span></code> call on line 21.
 The coroutine picks back up from where it <code class="docutils literal notranslate"><span class="pre">yield</span></code>ed (or paused) on line 3
@@ -603,12 +602,12 @@ Despite that, <code class="docutils literal notranslate"><span class="pre">yield
 computation's status and result.
 The term is a nod to the idea of something still to come or not yet happened,
 and the object is a way to keep an eye on that something.</p>
-<p>A future has a few important attributes. One is its state which can be either
-&quot;pending&quot;, &quot;cancelled&quot; or &quot;done&quot;.
+<p>A future has a few important attributes. One is its state, which can be either
+&quot;pending&quot;, &quot;cancelled&quot;, or &quot;done&quot;.
 Another is its result, which is set when the state transitions to done.
 Unlike a coroutine, a future does not represent the actual computation to be
 done; instead, it represents the status and result of that computation, kind of
-like a status light (red, yellow or green) or indicator.</p>
+like a status light (red, yellow, or green) or indicator.</p>
 <p><a class="reference internal" href="../library/asyncio-task.html#asyncio.Task" title="asyncio.Task"><code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.Task</span></code></a> subclasses <a class="reference internal" href="../library/asyncio-future.html#asyncio.Future" title="asyncio.Future"><code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.Future</span></code></a> in order to gain
 these various capabilities.
 The prior section said tasks store a list of callbacks, which wasn't entirely
@@ -626,8 +625,8 @@ for waiting and resuming.</p>
 <p>We'll go through an example of how you could leverage a future to create your
 own variant of asynchronous sleep (<code class="docutils literal notranslate"><span class="pre">async_sleep</span></code>) which mimics
 <a class="reference internal" href="../library/asyncio-task.html#asyncio.sleep" title="asyncio.sleep"><code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.sleep()</span></code></a>.</p>
-<p>This snippet registers a few tasks with the event loop and then awaits a
-coroutine wrapped in a task: <code class="docutils literal notranslate"><span class="pre">async_sleep(3)</span></code>.
+<p>This snippet registers a few tasks with the event loop and then awaits the task
+created by <code class="docutils literal notranslate"><span class="pre">asyncio.create_task</span></code>, which wraps the <code class="docutils literal notranslate"><span class="pre">async_sleep(3)</span></code> coroutine.
 We want that task to finish only after three seconds have elapsed, but without
 preventing other tasks from running.</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">other_work</span><span class="p">():</span>
@@ -671,8 +670,8 @@ will monitor how much time has elapsed and, accordingly, call
     <span class="k">await</span> <span class="n">future</span>
 </pre></div>
 </div>
-<p>Below, we'll use a rather bare object, <code class="docutils literal notranslate"><span class="pre">YieldToEventLoop()</span></code>, to <code class="docutils literal notranslate"><span class="pre">yield</span></code>
-from <code class="docutils literal notranslate"><span class="pre">__await__</span></code> in order to cede control to the event loop.
+<p>Below, we use a rather bare <code class="docutils literal notranslate"><span class="pre">YieldToEventLoop()</span></code> object to <code class="docutils literal notranslate"><span class="pre">yield</span></code>
+from its <code class="docutils literal notranslate"><span class="pre">__await__</span></code> method, ceding control to the event loop.
 This is effectively the same as calling <code class="docutils literal notranslate"><span class="pre">asyncio.sleep(0)</span></code>, but this approach
 offers more clarity, not to mention it's somewhat cheating to use
 <code class="docutils literal notranslate"><span class="pre">asyncio.sleep</span></code> when showcasing how to implement it!</p>
@@ -682,13 +681,13 @@ The <code class="docutils literal notranslate"><span class="pre">watcher_task</s
 be invoked once per full cycle of the event loop.
 On each resumption, it'll check the time and if not enough has elapsed, then
 it'll pause once again and hand control back to the event loop.
-Eventually, enough time will have elapsed, and <code class="docutils literal notranslate"><span class="pre">_sleep_watcher(...)</span></code> will
-mark the future as done, and then itself finish too by breaking out of the
+Once enough time has elapsed, <code class="docutils literal notranslate"><span class="pre">_sleep_watcher(...)</span></code>
+marks the future as done and completes by exiting its
 infinite <code class="docutils literal notranslate"><span class="pre">while</span></code> loop.
 Given this helper task is only invoked once per cycle of the event loop,
 you'd be correct to note that this asynchronous sleep will sleep <em>at least</em>
 three seconds, rather than exactly three seconds.
-Note this is also of true of <code class="docutils literal notranslate"><span class="pre">asyncio.sleep</span></code>.</p>
+Note this is also true of <code class="docutils literal notranslate"><span class="pre">asyncio.sleep</span></code>.</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">YieldToEventLoop</span><span class="p">:</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__await__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">yield</span>
@@ -727,7 +726,7 @@ For reference, you could implement it without futures, like so:</p>
             <span class="k">await</span> <span class="n">YieldToEventLoop</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>But, that's all for now. Hopefully you're ready to more confidently dive into
+<p>But that's all for now. Hopefully you're ready to more confidently dive into
 some async programming or check out advanced topics in the
 <a class="reference internal" href="../library/asyncio.html#module-asyncio" title="asyncio: Asynchronous I/O."><code class="xref py py-mod docutils literal notranslate"><span class="pre">rest</span> <span class="pre">of</span> <span class="pre">the</span> <span class="pre">documentation</span></code></a>.</p>
 </section>
@@ -863,7 +862,7 @@ some async programming or check out advanced topics in the
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 10月 09, 2025 (07:13 UTC)。
+      最後更新於 10月 22, 2025 (17:21 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
