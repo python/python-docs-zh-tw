@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Remote debugging attachment protocol &#8212; Python 3.14.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=8cd84f99" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
+    
+    <script src="../_static/documentation_options.js?v=d58accf9"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.14.0 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權所有" href="../copyright.html" />
+    <link rel="next" title="Python 常見問題" href="../faq/index.html" />
+    <link rel="prev" title="支援自由執行緒的 C API 擴充" href="free-threading-extensions.html" />
+    
+      
+      <link rel="canonical" href="https://docs.python.org/3/howto/remote_debugging.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="../_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="../_static/py.svg">
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script>
+            <script type="text/javascript" src="../_static/search-focus.js"></script>
+            <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="選單">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="../_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"></span>
+            <form role="search" class="search" action="../search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q">
+                <input type="submit" value="前往">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+            
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Remote debugging attachment protocol</a></li>
+<li><a class="reference internal" href="#permission-requirements">Permission requirements</a></li>
+<li><a class="reference internal" href="#locating-the-pyruntime-structure">Locating the PyRuntime structure</a></li>
+<li><a class="reference internal" href="#reading-py-debugoffsets">讀取 _Py_DebugOffsets</a></li>
+<li><a class="reference internal" href="#locating-the-interpreter-and-thread-state">Locating the interpreter and thread state</a></li>
+<li><a class="reference internal" href="#writing-control-information">Writing control information</a></li>
+<li><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="free-threading-extensions.html"
+                          title="上一章">支援自由執行緒的 C API 擴充</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="../faq/index.html"
+                          title="下一章">Python 常見問題</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/remote_debugging.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="../faq/index.html" title="Python 常見問題"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="free-threading-extensions.html" title="支援自由執行緒的 C API 擴充"
+             accesskey="P">上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.0 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 如何達成任務</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Remote debugging attachment protocol</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="remote-debugging-attachment-protocol">
+<span id="remote-debugging"></span><h1>Remote debugging attachment protocol<a class="headerlink" href="#remote-debugging-attachment-protocol" title="連結到這個標頭">¶</a></h1>
+<p>This protocol enables external tools to attach to a running CPython process and
+execute Python code remotely.</p>
+<p>Most platforms require elevated privileges to attach to another Python process.</p>
+</section>
+<section id="permission-requirements">
+<span id="id1"></span><h1>Permission requirements<a class="headerlink" href="#permission-requirements" title="連結到這個標頭">¶</a></h1>
+<p>Attaching to a running Python process for remote debugging requires elevated
+privileges on most platforms. The specific requirements and troubleshooting
+steps depend on your operating system:</p>
+<p class="rubric">Linux</p>
+<p>The tracer process must have the <code class="docutils literal notranslate"><span class="pre">CAP_SYS_PTRACE</span></code> capability or equivalent
+privileges. You can only trace processes you own and can signal. Tracing may
+fail if the process is already being traced, or if it is running with
+set-user-ID or set-group-ID. Security modules like Yama may further restrict
+tracing.</p>
+<p>To temporarily relax ptrace restrictions (until reboot), run:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">echo</span> <span class="pre">0</span> <span class="pre">|</span> <span class="pre">sudo</span> <span class="pre">tee</span> <span class="pre">/proc/sys/kernel/yama/ptrace_scope</span></code></p>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Disabling <code class="docutils literal notranslate"><span class="pre">ptrace_scope</span></code> reduces system hardening and should only be done
+in trusted environments.</p>
+</div>
+<p>If running inside a container, use <code class="docutils literal notranslate"><span class="pre">--cap-add=SYS_PTRACE</span></code> or
+<code class="docutils literal notranslate"><span class="pre">--privileged</span></code>, and run as root if needed.</p>
+<p>Try re-running the command with elevated privileges:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">-E</span> <span class="pre">!!</span></code></p>
+</div></blockquote>
+<p class="rubric">macOS</p>
+<p>To attach to another process, you typically need to run your debugging tool
+with elevated privileges. This can be done by using <code class="docutils literal notranslate"><span class="pre">sudo</span></code> or running as
+root.</p>
+<p>Even when attaching to processes you own, macOS may block debugging unless
+the debugger is run with root privileges due to system security restrictions.</p>
+<p class="rubric">Windows</p>
+<p>To attach to another process, you usually need to run your debugging tool
+with administrative privileges. Start the command prompt or terminal as
+Administrator.</p>
+<p>Some processes may still be inaccessible even with Administrator rights,
+unless you have the <code class="docutils literal notranslate"><span class="pre">SeDebugPrivilege</span></code> privilege enabled.</p>
+<p>To resolve file or folder access issues, adjust the security permissions:</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>Right-click the file or folder and select <strong>Properties</strong>.</p></li>
+<li><p>Go to the <strong>Security</strong> tab to view users and groups with access.</p></li>
+<li><p>Click <strong>Edit</strong> to modify permissions.</p></li>
+<li><p>選擇你的使用者帳戶。</p></li>
+<li><p>In <strong>Permissions</strong>, check <strong>Read</strong> or <strong>Full control</strong> as needed.</p></li>
+<li><p>點擊 <strong>Apply</strong>，然後點擊 <strong>OK</strong> 來確認。</p></li>
+</ol>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Ensure you've satisfied all <a class="reference internal" href="#permission-requirements"><span class="std std-ref">Permission requirements</span></a> before proceeding.</p>
+</div>
+<p>This section describes the low-level protocol that enables external tools to
+inject and execute a Python script within a running CPython process.</p>
+<p>This mechanism forms the basis of the <a class="reference internal" href="../library/sys.html#sys.remote_exec" title="sys.remote_exec"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.remote_exec()</span></code></a> function, which
+instructs a remote Python process to execute a <code class="docutils literal notranslate"><span class="pre">.py</span></code> file. However, this
+section does not document the usage of that function. Instead, it provides a
+detailed explanation of the underlying protocol, which takes as input the
+<code class="docutils literal notranslate"><span class="pre">pid</span></code> of a target Python process and the path to a Python source file to be
+executed. This information supports independent reimplementation of the
+protocol, regardless of programming language.</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>The execution of the injected script depends on the interpreter reaching a
+safe evaluation point. As a result, execution may be delayed depending on
+the runtime state of the target process.</p>
+</div>
+<p>Once injected, the script is executed by the interpreter within the target
+process the next time a safe evaluation point is reached. This approach enables
+remote execution capabilities without modifying the behavior or structure of
+the running Python application.</p>
+<p>Subsequent sections provide a step-by-step description of the protocol,
+including techniques for locating interpreter structures in memory, safely
+accessing internal fields, and triggering code execution. Platform-specific
+variations are noted where applicable, and example implementations are included
+to clarify each operation.</p>
+</section>
+<section id="locating-the-pyruntime-structure">
+<h1>Locating the PyRuntime structure<a class="headerlink" href="#locating-the-pyruntime-structure" title="連結到這個標頭">¶</a></h1>
+<p>CPython places the <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> structure in a dedicated binary section to
+help external tools find it at runtime. The name and format of this section
+vary by platform. For example, <code class="docutils literal notranslate"><span class="pre">.PyRuntime</span></code> is used on ELF systems, and
+<code class="docutils literal notranslate"><span class="pre">__DATA,__PyRuntime</span></code> is used on macOS. Tools can find the offset of this
+structure by examining the binary on disk.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> structure contains CPython’s global interpreter state and
+provides access to other internal data, including the list of interpreters,
+thread states, and debugger support fields.</p>
+<p>To work with a remote Python process, a debugger must first find the memory
+address of the <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> structure in the target process. This address
+can’t be hardcoded or calculated from a symbol name, because it depends on
+where the operating system loaded the binary.</p>
+<p>The method for finding <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> depends on the platform, but the steps are
+the same in general:</p>
+<ol class="arabic simple">
+<li><p>Find the base address where the Python binary or shared library was loaded
+in the target process.</p></li>
+<li><p>Use the on-disk binary to locate the offset of the <code class="docutils literal notranslate"><span class="pre">.PyRuntime</span></code> section.</p></li>
+<li><p>Add the section offset to the base address to compute the address in memory.</p></li>
+</ol>
+<p>The sections below explain how to do this on each supported platform and
+include example code.</p>
+<p class="rubric">Linux (ELF)</p>
+<p>To find the <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> structure on Linux:</p>
+<ol class="arabic simple">
+<li><p>Read the process’s memory map (for example, <code class="docutils literal notranslate"><span class="pre">/proc/&lt;pid&gt;/maps</span></code>) to find
+the address where the Python executable or <code class="docutils literal notranslate"><span class="pre">libpython</span></code> was loaded.</p></li>
+<li><p>Parse the ELF section headers in the binary to get the offset of the
+<code class="docutils literal notranslate"><span class="pre">.PyRuntime</span></code> section.</p></li>
+<li><p>Add that offset to the base address from step 1 to get the memory address of
+<code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code>.</p></li>
+</ol>
+<p>以下是一個範例實作：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">find_py_runtime_linux</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="c1"># Step 1: Try to find the Python executable in memory</span>
+    <span class="n">binary_path</span><span class="p">,</span> <span class="n">base_address</span> <span class="o">=</span> <span class="n">find_mapped_binary</span><span class="p">(</span>
+        <span class="n">pid</span><span class="p">,</span> <span class="n">name_contains</span><span class="o">=</span><span class="s2">&quot;python&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Step 2: Fallback to shared library if executable is not found</span>
+    <span class="k">if</span> <span class="n">binary_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">binary_path</span><span class="p">,</span> <span class="n">base_address</span> <span class="o">=</span> <span class="n">find_mapped_binary</span><span class="p">(</span>
+            <span class="n">pid</span><span class="p">,</span> <span class="n">name_contains</span><span class="o">=</span><span class="s2">&quot;libpython&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Step 3: Parse ELF headers to get .PyRuntime section offset</span>
+    <span class="n">section_offset</span> <span class="o">=</span> <span class="n">parse_elf_section_offset</span><span class="p">(</span>
+        <span class="n">binary_path</span><span class="p">,</span> <span class="s2">&quot;.PyRuntime&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Step 4: Compute PyRuntime address in memory</span>
+    <span class="k">return</span> <span class="n">base_address</span> <span class="o">+</span> <span class="n">section_offset</span>
+</pre></div>
+</div>
+<p>On Linux systems, there are two main approaches to read memory from another
+process. The first is through the <code class="docutils literal notranslate"><span class="pre">/proc</span></code> filesystem, specifically by reading from
+<code class="docutils literal notranslate"><span class="pre">/proc/[pid]/mem</span></code> which provides direct access to the process's memory. This
+requires appropriate permissions - either being the same user as the target
+process or having root access. The second approach is using the
+<code class="docutils literal notranslate"><span class="pre">process_vm_readv()</span></code> system call which provides a more efficient way to copy
+memory between processes. While ptrace's <code class="docutils literal notranslate"><span class="pre">PTRACE_PEEKTEXT</span></code> operation can also be
+used to read memory, it is significantly slower as it only reads one word at a
+time and requires multiple context switches between the tracer and tracee
+processes.</p>
+<p>For parsing ELF sections, the process involves reading and interpreting the ELF
+file format structures from the binary file on disk. The ELF header contains a
+pointer to the section header table. Each section header contains metadata about
+a section including its name (stored in a separate string table), offset, and
+size. To find a specific section like .PyRuntime, you need to walk through these
+headers and match the section name. The section header then provides the offset
+where that section exists in the file, which can be used to calculate its
+runtime address when the binary is loaded into memory.</p>
+<p>You can read more about the ELF file format in the <a class="reference external" href="https://en.wikipedia.org/wiki/Executable_and_Linkable_Format">ELF specification</a>.</p>
+<p class="rubric">macOS (Mach-O)</p>
+<p>在 macOS 上找 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構：</p>
+<ol class="arabic simple">
+<li><p>Call <code class="docutils literal notranslate"><span class="pre">task_for_pid()</span></code> to get the <code class="docutils literal notranslate"><span class="pre">mach_port_t</span></code> task port for the target
+process. This handle is needed to read memory using APIs like
+<code class="docutils literal notranslate"><span class="pre">mach_vm_read_overwrite</span></code> and <code class="docutils literal notranslate"><span class="pre">mach_vm_region</span></code>.</p></li>
+<li><p>Scan the memory regions to find the one containing the Python executable or
+<code class="docutils literal notranslate"><span class="pre">libpython</span></code>.</p></li>
+<li><p>Load the binary file from disk and parse the Mach-O headers to find the
+section named <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> in the <code class="docutils literal notranslate"><span class="pre">__DATA</span></code> segment.  On macOS, symbol
+names are automatically prefixed with an underscore, so the <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code>
+symbol appears as <code class="docutils literal notranslate"><span class="pre">_PyRuntime</span></code> in the symbol table, but the section name
+is not affected.</p></li>
+</ol>
+<p>以下是一個範例實作：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">find_py_runtime_macos</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="c1"># Step 1: Get access to the process&#39;s memory</span>
+    <span class="n">handle</span> <span class="o">=</span> <span class="n">get_memory_access_handle</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+
+    <span class="c1"># Step 2: Try to find the Python executable in memory</span>
+    <span class="n">binary_path</span><span class="p">,</span> <span class="n">base_address</span> <span class="o">=</span> <span class="n">find_mapped_binary</span><span class="p">(</span>
+        <span class="n">handle</span><span class="p">,</span> <span class="n">name_contains</span><span class="o">=</span><span class="s2">&quot;python&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Step 3: Fallback to libpython if the executable is not found</span>
+    <span class="k">if</span> <span class="n">binary_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">binary_path</span><span class="p">,</span> <span class="n">base_address</span> <span class="o">=</span> <span class="n">find_mapped_binary</span><span class="p">(</span>
+            <span class="n">handle</span><span class="p">,</span> <span class="n">name_contains</span><span class="o">=</span><span class="s2">&quot;libpython&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Step 4: Parse Mach-O headers to get __DATA,__PyRuntime section offset</span>
+    <span class="n">section_offset</span> <span class="o">=</span> <span class="n">parse_macho_section_offset</span><span class="p">(</span>
+        <span class="n">binary_path</span><span class="p">,</span> <span class="s2">&quot;__DATA&quot;</span><span class="p">,</span> <span class="s2">&quot;__PyRuntime&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Step 5: Compute the PyRuntime address in memory</span>
+    <span class="k">return</span> <span class="n">base_address</span> <span class="o">+</span> <span class="n">section_offset</span>
+</pre></div>
+</div>
+<p>On macOS, accessing another process's memory requires using Mach-O specific APIs
+and file formats. The first step is obtaining a <code class="docutils literal notranslate"><span class="pre">task_port</span></code> handle via
+<code class="docutils literal notranslate"><span class="pre">task_for_pid()</span></code>, which provides access to the target process's memory space.
+This handle enables memory operations through APIs like
+<code class="docutils literal notranslate"><span class="pre">mach_vm_read_overwrite()</span></code>.</p>
+<p>The process memory can be examined using <code class="docutils literal notranslate"><span class="pre">mach_vm_region()</span></code> to scan through the
+virtual memory space, while <code class="docutils literal notranslate"><span class="pre">proc_regionfilename()</span></code> helps identify which binary
+files are loaded at each memory region. When the Python binary or library is
+found, its Mach-O headers need to be parsed to locate the <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> structure.</p>
+<p>The Mach-O format organizes code and data into segments and sections. The
+<code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> structure lives in a section named <code class="docutils literal notranslate"><span class="pre">__PyRuntime</span></code> within the
+<code class="docutils literal notranslate"><span class="pre">__DATA</span></code> segment. The actual runtime address calculation involves finding the
+<code class="docutils literal notranslate"><span class="pre">__TEXT</span></code> segment which serves as the binary's base address, then locating the
+<code class="docutils literal notranslate"><span class="pre">__DATA</span></code> segment containing our target section. The final address is computed by
+combining the base address with the appropriate section offsets from the Mach-O
+headers.</p>
+<p>Note that accessing another process's memory on macOS typically requires
+elevated privileges - either root access or special security entitlements
+granted to the debugging process.</p>
+<p class="rubric">Windows (PE)</p>
+<p>在 Windows 上找 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構：</p>
+<ol class="arabic simple">
+<li><p>Use the ToolHelp API to enumerate all modules loaded in the target process.
+This is done using functions such as <a class="reference external" href="https://learn.microsoft.com/en-us/windows/win32/api/tlhelp32/nf-tlhelp32-createtoolhelp32snapshot">CreateToolhelp32Snapshot</a>,
+<a class="reference external" href="https://learn.microsoft.com/en-us/windows/win32/api/tlhelp32/nf-tlhelp32-module32first">Module32First</a>,
+and <a class="reference external" href="https://learn.microsoft.com/en-us/windows/win32/api/tlhelp32/nf-tlhelp32-module32next">Module32Next</a>.</p></li>
+<li><p>Identify the module corresponding to <code class="file docutils literal notranslate"><span class="pre">python.exe</span></code> or
+<code class="file docutils literal notranslate"><span class="pre">python</span><em><span class="pre">XY</span></em><span class="pre">.dll</span></code>, where <code class="docutils literal notranslate"><span class="pre">X</span></code> and <code class="docutils literal notranslate"><span class="pre">Y</span></code> are the major and minor
+version numbers of the Python version, and record its base address.</p></li>
+<li><p>Locate the <code class="docutils literal notranslate"><span class="pre">PyRuntim</span></code> section. Due to the PE format's 8-character limit
+on section names (defined as <code class="docutils literal notranslate"><span class="pre">IMAGE_SIZEOF_SHORT_NAME</span></code>), the original
+name <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> is truncated. This section contains the <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code>
+structure.</p></li>
+<li><p>Retrieve the section’s relative virtual address (RVA) and add it to the base
+address of the module.</p></li>
+</ol>
+<p>以下是一個範例實作：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">find_py_runtime_windows</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="c1"># Step 1: Try to find the Python executable in memory</span>
+    <span class="n">binary_path</span><span class="p">,</span> <span class="n">base_address</span> <span class="o">=</span> <span class="n">find_loaded_module</span><span class="p">(</span>
+        <span class="n">pid</span><span class="p">,</span> <span class="n">name_contains</span><span class="o">=</span><span class="s2">&quot;python&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Step 2: Fallback to shared pythonXY.dll if the executable is not</span>
+    <span class="c1"># found</span>
+    <span class="k">if</span> <span class="n">binary_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">binary_path</span><span class="p">,</span> <span class="n">base_address</span> <span class="o">=</span> <span class="n">find_loaded_module</span><span class="p">(</span>
+            <span class="n">pid</span><span class="p">,</span> <span class="n">name_contains</span><span class="o">=</span><span class="s2">&quot;python3&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Step 3: Parse PE section headers to get the RVA of the PyRuntime</span>
+    <span class="c1"># section. The section name appears as &quot;PyRuntim&quot; due to the</span>
+    <span class="c1"># 8-character limit defined by the PE format (IMAGE_SIZEOF_SHORT_NAME).</span>
+    <span class="n">section_rva</span> <span class="o">=</span> <span class="n">parse_pe_section_offset</span><span class="p">(</span><span class="n">binary_path</span><span class="p">,</span> <span class="s2">&quot;PyRuntim&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Step 4: Compute PyRuntime address in memory</span>
+    <span class="k">return</span> <span class="n">base_address</span> <span class="o">+</span> <span class="n">section_rva</span>
+</pre></div>
+</div>
+<p>On Windows, accessing another process's memory requires using the Windows API
+functions like <code class="docutils literal notranslate"><span class="pre">CreateToolhelp32Snapshot()</span></code> and <code class="docutils literal notranslate"><span class="pre">Module32First()/Module32Next()</span></code>
+to enumerate loaded modules. The <code class="docutils literal notranslate"><span class="pre">OpenProcess()</span></code> function provides a handle to
+access the target process's memory space, enabling memory operations through
+<code class="docutils literal notranslate"><span class="pre">ReadProcessMemory()</span></code>.</p>
+<p>The process memory can be examined by enumerating loaded modules to find the
+Python binary or DLL. When found, its PE headers need to be parsed to locate the
+<code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> structure.</p>
+<p>The PE format organizes code and data into sections. The <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> structure
+lives in a section named &quot;PyRuntim&quot; (truncated from &quot;PyRuntime&quot; due to PE's
+8-character name limit). The actual runtime address calculation involves finding
+the module's base address from the module entry, then locating our target
+section in the PE headers. The final address is computed by combining the base
+address with the section's virtual address from the PE section headers.</p>
+<p>Note that accessing another process's memory on Windows typically requires
+appropriate privileges - either administrative access or the <code class="docutils literal notranslate"><span class="pre">SeDebugPrivilege</span></code>
+privilege granted to the debugging process.</p>
+</section>
+<section id="reading-py-debugoffsets">
+<h1>讀取 _Py_DebugOffsets<a class="headerlink" href="#reading-py-debugoffsets" title="連結到這個標頭">¶</a></h1>
+<p>Once the address of the <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> structure has been determined, the next
+step is to read the <code class="docutils literal notranslate"><span class="pre">_Py_DebugOffsets</span></code> structure located at the beginning of
+the <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> block.</p>
+<p>This structure provides version-specific field offsets that are needed to
+safely read interpreter and thread state memory. These offsets vary between
+CPython versions and must be checked before use to ensure they are compatible.</p>
+<p>To read and check the debug offsets, follow these steps:</p>
+<ol class="arabic simple">
+<li><p>Read memory from the target process starting at the <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> address,
+covering the same number of bytes as the <code class="docutils literal notranslate"><span class="pre">_Py_DebugOffsets</span></code> structure.
+This structure is located at the very start of the <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> memory
+block. Its layout is defined in CPython’s internal headers and stays the
+same within a given minor version, but may change in major versions.</p></li>
+<li><p>Check that the structure contains valid data:</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">cookie</span></code> field must match the expected debug marker.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">version</span></code> field must match the version of the Python interpreter
+used by the debugger.</p></li>
+<li><p>If either the debugger or the target process is using a pre-release
+version (for example, an alpha, beta, or release candidate), the versions
+must match exactly.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">free_threaded</span></code> field must have the same value in both the debugger
+and the target process.</p></li>
+</ul>
+</li>
+<li><p>If the structure is valid, the offsets it contains can be used to locate
+fields in memory. If any check fails, the debugger should stop the operation
+to avoid reading memory in the wrong format.</p></li>
+</ol>
+<p>The following is an example implementation that reads and checks
+<code class="docutils literal notranslate"><span class="pre">_Py_DebugOffsets</span></code>:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">read_debug_offsets</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">py_runtime_addr</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DebugOffsets</span><span class="p">:</span>
+    <span class="c1"># Step 1: Read memory from the target process at the PyRuntime address</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">read_process_memory</span><span class="p">(</span>
+        <span class="n">pid</span><span class="p">,</span> <span class="n">address</span><span class="o">=</span><span class="n">py_runtime_addr</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">DEBUG_OFFSETS_SIZE</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Step 2: Deserialize the raw bytes into a _Py_DebugOffsets structure</span>
+    <span class="n">debug_offsets</span> <span class="o">=</span> <span class="n">parse_debug_offsets</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="c1"># Step 3: Validate the contents of the structure</span>
+    <span class="k">if</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">cookie</span> <span class="o">!=</span> <span class="n">EXPECTED_COOKIE</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Invalid or missing debug cookie&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">version</span> <span class="o">!=</span> <span class="n">LOCAL_PYTHON_VERSION</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">&quot;Mismatch between caller and target Python versions&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">free_threaded</span> <span class="o">!=</span> <span class="n">LOCAL_FREE_THREADED</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Mismatch in free-threaded configuration&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">debug_offsets</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p><strong>Process suspension recommended</strong></p>
+<p>To avoid race conditions and ensure memory consistency, it is strongly
+recommended that the target process be suspended before performing any
+operations that read or write internal interpreter state. The Python runtime
+may concurrently mutate interpreter data structures—such as creating or
+destroying threads—during normal execution. This can result in invalid
+memory reads or writes.</p>
+<p>A debugger may suspend execution by attaching to the process with <code class="docutils literal notranslate"><span class="pre">ptrace</span></code>
+or by sending a <code class="docutils literal notranslate"><span class="pre">SIGSTOP</span></code> signal. Execution should only be resumed after
+debugger-side memory operations are complete.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Some tools, such as profilers or sampling-based debuggers, may operate on
+a running process without suspension. In such cases, tools must be
+explicitly designed to handle partially updated or inconsistent memory.
+For most debugger implementations, suspending the process remains the
+safest and most robust approach.</p>
+</div>
+</div>
+</section>
+<section id="locating-the-interpreter-and-thread-state">
+<h1>Locating the interpreter and thread state<a class="headerlink" href="#locating-the-interpreter-and-thread-state" title="連結到這個標頭">¶</a></h1>
+<p>Before code can be injected and executed in a remote Python process, the
+debugger must choose a thread in which to schedule execution. This is necessary
+because the control fields used to perform remote code injection are located in
+the <code class="docutils literal notranslate"><span class="pre">_PyRemoteDebuggerSupport</span></code> structure, which is embedded in a
+<code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code> object. These fields are modified by the debugger to request
+execution of injected scripts.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code> structure represents a thread running inside a Python
+interpreter.  It maintains the thread’s evaluation context and contains the
+fields required for debugger coordination.  Locating a valid <code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code>
+is therefore a key prerequisite for triggering execution remotely.</p>
+<p>A thread is typically selected based on its role or ID. In most cases, the main
+thread is used, but some tools may target a specific thread by its native
+thread ID. Once the target thread is chosen, the debugger must locate both the
+interpreter and the associated thread state structures in memory.</p>
+<p>The relevant internal structures are defined as follows:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PyInterpreterState</span></code> represents an isolated Python interpreter instance.
+Each interpreter maintains its own set of imported modules, built-in state,
+and thread state list. Although most Python applications use a single
+interpreter, CPython supports multiple interpreters in the same process.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code> represents a thread running within an interpreter. It
+contains execution state and the control fields used by the debugger.</p></li>
+</ul>
+<p>To locate a thread:</p>
+<ol class="arabic simple">
+<li><p>Use the offset <code class="docutils literal notranslate"><span class="pre">runtime_state.interpreters_head</span></code> to obtain the address of
+the first interpreter in the <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> structure. This is the entry point
+to the linked list of active interpreters.</p></li>
+<li><p>Use the offset <code class="docutils literal notranslate"><span class="pre">interpreter_state.threads_main</span></code> to access the main thread
+state associated with the selected interpreter. This is typically the most
+reliable thread to target.</p></li>
+<li><p>Optionally, use the offset <code class="docutils literal notranslate"><span class="pre">interpreter_state.threads_head</span></code> to iterate
+through the linked list of all thread states. Each <code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code>
+structure contains a <code class="docutils literal notranslate"><span class="pre">native_thread_id</span></code> field, which may be compared to
+a target thread ID to find a specific thread.</p></li>
+<li><p>Once a valid <code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code> has been found, its address can be used in
+later steps of the protocol, such as writing debugger control fields and
+scheduling execution.</p></li>
+</ol>
+<p>The following is an example implementation that locates the main thread state:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">find_main_thread_state</span><span class="p">(</span>
+    <span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">py_runtime_addr</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">debug_offsets</span><span class="p">:</span> <span class="n">DebugOffsets</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="c1"># Step 1: Read interpreters_head from PyRuntime</span>
+    <span class="n">interp_head_ptr</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">py_runtime_addr</span> <span class="o">+</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">runtime_state</span><span class="o">.</span><span class="n">interpreters_head</span>
+    <span class="p">)</span>
+    <span class="n">interp_addr</span> <span class="o">=</span> <span class="n">read_pointer</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">interp_head_ptr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">interp_addr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No interpreter found in the target process&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Step 2: Read the threads_main pointer from the interpreter</span>
+    <span class="n">threads_main_ptr</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">interp_addr</span> <span class="o">+</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">interpreter_state</span><span class="o">.</span><span class="n">threads_main</span>
+    <span class="p">)</span>
+    <span class="n">thread_state_addr</span> <span class="o">=</span> <span class="n">read_pointer</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">threads_main_ptr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">thread_state_addr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Main thread state is not available&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">thread_state_addr</span>
+</pre></div>
+</div>
+<p>The following example demonstrates how to locate a thread by its native thread
+ID:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">find_thread_by_id</span><span class="p">(</span>
+    <span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">interp_addr</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">debug_offsets</span><span class="p">:</span> <span class="n">DebugOffsets</span><span class="p">,</span>
+    <span class="n">target_tid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="c1"># Start at threads_head and walk the linked list</span>
+    <span class="n">thread_ptr</span> <span class="o">=</span> <span class="n">read_pointer</span><span class="p">(</span>
+        <span class="n">pid</span><span class="p">,</span>
+        <span class="n">interp_addr</span> <span class="o">+</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">interpreter_state</span><span class="o">.</span><span class="n">threads_head</span>
+    <span class="p">)</span>
+
+    <span class="k">while</span> <span class="n">thread_ptr</span><span class="p">:</span>
+        <span class="n">native_tid_ptr</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">thread_ptr</span> <span class="o">+</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">thread_state</span><span class="o">.</span><span class="n">native_thread_id</span>
+        <span class="p">)</span>
+        <span class="n">native_tid</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">native_tid_ptr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">native_tid</span> <span class="o">==</span> <span class="n">target_tid</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">thread_ptr</span>
+        <span class="n">thread_ptr</span> <span class="o">=</span> <span class="n">read_pointer</span><span class="p">(</span>
+            <span class="n">pid</span><span class="p">,</span>
+            <span class="n">thread_ptr</span> <span class="o">+</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">thread_state</span><span class="o">.</span><span class="n">next</span>
+        <span class="p">)</span>
+
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Thread with the given ID was not found&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Once a valid thread state has been located, the debugger can proceed with
+modifying its control fields and scheduling execution, as described in the next
+section.</p>
+</section>
+<section id="writing-control-information">
+<h1>Writing control information<a class="headerlink" href="#writing-control-information" title="連結到這個標頭">¶</a></h1>
+<p>Once a valid <code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code> structure has been identified, the debugger may
+modify control fields within it to schedule the execution of a specified Python
+script. These control fields are checked periodically by the interpreter, and
+when set correctly, they trigger the execution of remote code at a safe point
+in the evaluation loop.</p>
+<p>Each <code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code> contains a <code class="docutils literal notranslate"><span class="pre">_PyRemoteDebuggerSupport</span></code> structure used
+for communication between the debugger and the interpreter. The locations of
+its fields are defined by the <code class="docutils literal notranslate"><span class="pre">_Py_DebugOffsets</span></code> structure and include the
+following:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">debugger_script_path</span></code>: A fixed-size buffer that holds the full path to a
+Python source file (<code class="docutils literal notranslate"><span class="pre">.py</span></code>).  This file must be accessible and readable by
+the target process when execution is triggered.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">debugger_pending_call</span></code>: An integer flag. Setting this to <code class="docutils literal notranslate"><span class="pre">1</span></code> tells the
+interpreter that a script is ready to be executed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">eval_breaker</span></code>: A field checked by the interpreter during execution.
+Setting bit 5 (<code class="docutils literal notranslate"><span class="pre">_PY_EVAL_PLEASE_STOP_BIT</span></code>, value <code class="docutils literal notranslate"><span class="pre">1U</span> <span class="pre">&lt;&lt;</span> <span class="pre">5</span></code>) in this
+field causes the interpreter to pause and check for debugger activity.</p></li>
+</ul>
+<p>To complete the injection, the debugger must perform the following steps:</p>
+<ol class="arabic simple">
+<li><p>Write the full script path into the <code class="docutils literal notranslate"><span class="pre">debugger_script_path</span></code> buffer.</p></li>
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">debugger_pending_call</span></code> to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p>Read the current value of <code class="docutils literal notranslate"><span class="pre">eval_breaker</span></code>, set bit 5
+(<code class="docutils literal notranslate"><span class="pre">_PY_EVAL_PLEASE_STOP_BIT</span></code>), and write the updated value back. This
+signals the interpreter to check for debugger activity.</p></li>
+</ol>
+<p>以下是一個範例實作：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">inject_script</span><span class="p">(</span>
+    <span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">thread_state_addr</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">debug_offsets</span><span class="p">:</span> <span class="n">DebugOffsets</span><span class="p">,</span>
+    <span class="n">script_path</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># Compute the base offset of _PyRemoteDebuggerSupport</span>
+    <span class="n">support_base</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">thread_state_addr</span> <span class="o">+</span>
+        <span class="n">debug_offsets</span><span class="o">.</span><span class="n">debugger_support</span><span class="o">.</span><span class="n">remote_debugger_support</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Step 1: Write the script path into debugger_script_path</span>
+    <span class="n">script_path_ptr</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">support_base</span> <span class="o">+</span>
+        <span class="n">debug_offsets</span><span class="o">.</span><span class="n">debugger_support</span><span class="o">.</span><span class="n">debugger_script_path</span>
+    <span class="p">)</span>
+    <span class="n">write_string</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">script_path_ptr</span><span class="p">,</span> <span class="n">script_path</span><span class="p">)</span>
+
+    <span class="c1"># Step 2: Set debugger_pending_call to 1</span>
+    <span class="n">pending_ptr</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">support_base</span> <span class="o">+</span>
+        <span class="n">debug_offsets</span><span class="o">.</span><span class="n">debugger_support</span><span class="o">.</span><span class="n">debugger_pending_call</span>
+    <span class="p">)</span>
+    <span class="n">write_int</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">pending_ptr</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># Step 3: Set _PY_EVAL_PLEASE_STOP_BIT (bit 5, value 1 &lt;&lt; 5) in</span>
+    <span class="c1"># eval_breaker</span>
+    <span class="n">eval_breaker_ptr</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">thread_state_addr</span> <span class="o">+</span>
+        <span class="n">debug_offsets</span><span class="o">.</span><span class="n">debugger_support</span><span class="o">.</span><span class="n">eval_breaker</span>
+    <span class="p">)</span>
+    <span class="n">breaker</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">eval_breaker_ptr</span><span class="p">)</span>
+    <span class="n">breaker</span> <span class="o">|=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="n">write_int</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">eval_breaker_ptr</span><span class="p">,</span> <span class="n">breaker</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Once these fields are set, the debugger may resume the process (if it was
+suspended).  The interpreter will process the request at the next safe
+evaluation point, load the script from disk, and execute it.</p>
+<p>It is the responsibility of the debugger to ensure that the script file remains
+present and accessible to the target process during execution.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Script execution is asynchronous. The script file cannot be deleted
+immediately after injection. The debugger should wait until the injected
+script has produced an observable effect before removing the file.
+This effect depends on what the script is designed to do. For example,
+a debugger might wait until the remote process connects back to a socket
+before removing the script. Once such an effect is observed, it is safe to
+assume the file is no longer needed.</p>
+</div>
+</section>
+<section id="summary">
+<h1>Summary<a class="headerlink" href="#summary" title="連結到這個標頭">¶</a></h1>
+<p>To inject and execute a Python script in a remote process:</p>
+<ol class="arabic simple">
+<li><p>Locate the <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> structure in the target process’s memory.</p></li>
+<li><p>Read and validate the <code class="docutils literal notranslate"><span class="pre">_Py_DebugOffsets</span></code> structure at the beginning of
+<code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code>.</p></li>
+<li><p>Use the offsets to locate a valid <code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code>.</p></li>
+<li><p>Write the path to a Python script into <code class="docutils literal notranslate"><span class="pre">debugger_script_path</span></code>.</p></li>
+<li><p>Set the <code class="docutils literal notranslate"><span class="pre">debugger_pending_call</span></code> flag to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">_PY_EVAL_PLEASE_STOP_BIT</span></code> in the <code class="docutils literal notranslate"><span class="pre">eval_breaker</span></code> field.</p></li>
+<li><p>Resume the process (if suspended). The script will execute at the next safe
+evaluation point.</p></li>
+</ol>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Remote debugging attachment protocol</a></li>
+<li><a class="reference internal" href="#permission-requirements">Permission requirements</a></li>
+<li><a class="reference internal" href="#locating-the-pyruntime-structure">Locating the PyRuntime structure</a></li>
+<li><a class="reference internal" href="#reading-py-debugoffsets">讀取 _Py_DebugOffsets</a></li>
+<li><a class="reference internal" href="#locating-the-interpreter-and-thread-state">Locating the interpreter and thread state</a></li>
+<li><a class="reference internal" href="#writing-control-information">Writing control information</a></li>
+<li><a class="reference internal" href="#summary">Summary</a></li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="free-threading-extensions.html"
+                          title="上一章">支援自由執行緒的 C API 擴充</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="../faq/index.html"
+                          title="下一章">Python 常見問題</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/remote_debugging.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="../faq/index.html" title="Python 常見問題"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="free-threading-extensions.html" title="支援自由執行緒的 C API 擴充"
+             >上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.0 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 如何達成任務</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Remote debugging attachment protocol</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; <a href="../copyright.html">版權所有</a> 2001 Python Software Foundation.
+    <br>
+    此頁面採用 Python 軟體基金會授權條款第 2 版。
+    <br>
+    文件中的範例、應用技巧與其他程式碼額外採用了 Zero Clause BSD 授權條款。
+    <br>
+    
+      更多訊息請見<a href="/license.html">歷史與授權條款</a>。<br>
+    
+    
+    <br>
+
+    Python 軟體基金會是一家非營利法人。
+<a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
+<br>
+    <br>
+      最後更新於 10月 27, 2025 (07:20 UTC)。
+    
+      <a href="/bugs.html">發現 bug</a>？
+    
+    <br>
+
+    以 <a href="https://www.sphinx-doc.org/">Sphinx</a>8.2.3建立。 
+    </div>
+
+  </body>
+</html>
