@@ -44,6 +44,12 @@ msgid ""
 "data starting at the current file position, and :meth:`seek` through the "
 "file to different positions."
 msgstr ""
+"記憶體對映檔案物件 (memory-mapped file objects) 的行為類似於 :class:`bytearray` "
+"和\\ :term:`檔案物件 <file object>`。你可以在大多數預期使用 :class:`bytearray` "
+"的地方使用 mmap 物件；例如，你可以使用 :mod:`re` 模組來搜尋記憶體對映檔案的內容。"
+"你也可以透過 ``obj[index] = 97`` 來變更單一位元組，或透過賦值給切片來變更子序列："
+"``obj[i1:i2] = b'...'``。你也可以從目前的檔案位置開始讀寫資料，並使用 :meth:"
+"`seek` 在檔案中移動到不同的位置。"
 
 #: ../../library/mmap.rst:19
 msgid ""
@@ -55,6 +61,11 @@ msgid ""
 "open the file using the :func:`os.open` function, which returns a file "
 "descriptor directly (the file still needs to be closed when done)."
 msgstr ""
+"記憶體對映檔案是由 :class:`~mmap.mmap` 建構函式所建立，在 Unix 和 Windows 上的用"
+"法不同。無論哪種情況，你都必須提供一個以變更模式開啟之檔案的檔案描述器。如果"
+"你想要對映現有的 Python 檔案物件，請使用其 :meth:`~io.IOBase.fileno` 方法來取"
+"得 *fileno* 參數的正確值。或者你也可以使用 :func:`os.open` 函式來開啟檔案，"
+"它會直接回傳檔案描述器（檔案在使用完畢後仍需要關閉）。"
 
 #: ../../library/mmap.rst:28
 msgid ""
@@ -63,6 +74,8 @@ msgid ""
 "that local modifications to the buffers are actually available to the "
 "mapping."
 msgstr ""
+"如果你想要為可寫入的緩衝檔案建立記憶體對映，應該先 :func:`~io.IOBase.flush` "
+"該檔案。這是為了確保對緩衝區的區域修改確實可供對映使用。"
 
 #: ../../library/mmap.rst:33
 msgid ""
@@ -79,6 +92,15 @@ msgid ""
 "Assignment to an :const:`ACCESS_COPY` memory map affects memory but does not "
 "update the underlying file."
 msgstr ""
+"對於 Unix 和 Windows 版本的建構函式，*access* 都可以指定為可選的關鍵字參數。"
+"*access* 接受四個值之一：:const:`ACCESS_READ`、:const:`ACCESS_WRITE` 或 :"
+"const:`ACCESS_COPY` 分別用於指定唯讀、直寫 (write-through) 或寫入時複製 "
+"(copy-on-write) 記憶體，或 :const:`ACCESS_DEFAULT` 以遵從 *prot*。*access* "
+"在 Unix 和 Windows 上都可以使用。如果未指定 *access*，Windows 的 mmap 會回傳直寫對映。"
+"三種存取類型的初始記憶體值都是取自指定的檔案。對 :const:`ACCESS_READ` 記憶體對映進行"
+"賦值會引發 :exc:`TypeError` 例外。對 :const:`ACCESS_WRITE` 記憶體對映進行賦值會"
+"同時影響記憶體和底層檔案。對 :const:`ACCESS_COPY` 記憶體對映進行賦值會影響記憶體，但不會改變"
+"底層檔案。"
 
 #: ../../library/mmap.rst:46
 msgid "Added :const:`ACCESS_DEFAULT` constant."
@@ -88,7 +110,7 @@ msgstr "新增 :const:`ACCESS_DEFAULT` 常數。"
 msgid ""
 "To map anonymous memory, -1 should be passed as the fileno along with the "
 "length."
-msgstr ""
+msgstr "要對映匿名記憶體，應將 -1 與長度一起作為 fileno 傳入。"
 
 #: ../../library/mmap.rst:53
 msgid ""
@@ -99,6 +121,10 @@ msgid ""
 "size of the file, except that if the file is empty Windows raises an "
 "exception (you cannot create an empty mapping on Windows)."
 msgstr ""
+"**（Windows 版本）** 從檔案控制代碼 (file handle) *fileno* 指定的檔案來對映 "
+"*length* 個位元組，並建立一個 mmap 物件。如果 *length* 大於檔案目前的大小，檔案"
+"會被擴充為能夠包含 *length* 個位元組。如果 *length* 為 ``0``，對映的最大長度就是"
+"檔案目前的大小，但如果檔案為空，Windows 會引發例外（因無法在 Windows 上建立空白的對映）。"
 
 #: ../../library/mmap.rst:60
 msgid ""
@@ -110,6 +136,11 @@ msgid ""
 "*tagname* parameter will assist in keeping your code portable between Unix "
 "and Windows."
 msgstr ""
+"若有指定 *tagname* 且不為 ``None``，則其為給定對映的標籤名稱字串。Windows 允許"
+"你對同一個檔案設定許多不同的對映。如果你指定了一個現有標籤名稱，該標籤就會"
+"被開啟，否則會建立一個具有此名稱的新標籤。如果省略此參數或為 ``None``，對映會"
+"在沒有名稱的情況下建立。避免使用 *tagname* 參數將有助於保持你的程式碼在 Unix "
+"和 Windows 之間的可移植性。"
 
 #: ../../library/mmap.rst:68
 msgid ""
@@ -118,6 +149,9 @@ msgid ""
 "defaults to 0.  *offset* must be a multiple of the :const:"
 "`ALLOCATIONGRANULARITY`."
 msgstr ""
+"*offset* 可以指定為非負整數偏移量。mmap 的參照會是相對於從檔案開頭算起之偏移"
+"量。*offset* 預設為 0。*offset* 必須是 :const:`ALLOCATIONGRANULARITY` 的倍"
+"數。"
 
 #: ../../library/mmap.rst:72 ../../library/mmap.rst:174
 msgid ""
@@ -134,6 +168,9 @@ msgid ""
 "maximum length of the map will be the current size of the file when :class:"
 "`~mmap.mmap` is called."
 msgstr ""
+"**（Unix 版本）** 從檔案描述器 *fileno* 指定的檔案對映 *length* 個位元組，並"
+"回傳一個 mmap 物件。如果 *length* 為 ``0``，對映的最大長度將是呼叫 :class:"
+"`~mmap.mmap` 時檔案的目前大小。"
 
 #: ../../library/mmap.rst:83
 msgid ""
@@ -145,6 +182,10 @@ msgid ""
 "possible flags with the full list specified in :ref:`MAP_* constants <map-"
 "constants>`."
 msgstr ""
+"*flags* 指定對映的性質。:const:`MAP_PRIVATE` 會建立私有的寫入時複製對映，因此"
+"對 mmap 物件內容的變更將僅限於此行程，而 :const:`MAP_SHARED` 會建立與所有其他"
+"對映相同檔案區域之行程共享的對映。預設值為 :const:`MAP_SHARED`。某些系統有額"
+"外的可用旗標，完整列表請參閱 :ref:`MAP_* 常數 <map-constants>`。"
 
 #: ../../library/mmap.rst:91
 msgid ""
@@ -153,6 +194,9 @@ msgid ""
 "that the pages may be read or written.  *prot* defaults to :const:`PROT_READ "
 "\\| PROT_WRITE`."
 msgstr ""
+"*prot* 若有指定，則會給予所需的記憶體保護；最常用的兩個值是 :const:`PROT_READ` "
+"和 :const:`PROT_WRITE`，用於指定分頁可以被讀取或寫入。*prot* 預設為 :const:"
+"`PROT_READ \\| PROT_WRITE`。"
 
 #: ../../library/mmap.rst:96
 msgid ""
@@ -161,6 +205,9 @@ msgid ""
 "*access*.  See the description of *access* above for information on how to "
 "use this parameter."
 msgstr ""
+"*access* 可以作為可選的關鍵字參數來指定，以代替 *flags* 和 *prot*。同時指定 "
+"*flags*、*prot* 和 *access* 會產生錯誤。關於如何使用此參數的資訊，請參閱上面 "
+"*access* 的說明。"
 
 #: ../../library/mmap.rst:101
 msgid ""
@@ -169,6 +216,9 @@ msgid ""
 "defaults to 0. *offset* must be a multiple of :const:`ALLOCATIONGRANULARITY` "
 "which is equal to :const:`PAGESIZE` on Unix systems."
 msgstr ""
+"*offset* 可以指定為非負整數偏移量。mmap 的參照將相對於從檔案開頭算起的偏移"
+"量。*offset* 預設為 0。*offset* 必須是 :const:`ALLOCATIONGRANULARITY` 的倍數，"
+"且在 Unix 系統上等於 :const:`PAGESIZE`。"
 
 #: ../../library/mmap.rst:106
 msgid ""
@@ -178,6 +228,10 @@ msgid ""
 "mmap.size` and :meth:`~mmap.mmap.resize` methods will fail. This mode is "
 "useful to limit the number of open file descriptors."
 msgstr ""
+"如果 *trackfd* 為 ``False``，由 *fileno* 指定的檔案描述器將不會被複製，且產生"
+"的 :class:`!mmap` 物件將不會與對映的底層檔案關聯。這意味著 :meth:`~mmap.mmap."
+"size` 和 :meth:`~mmap.mmap.resize` 方法會失敗。此模式對於限制開啟的檔案描述器"
+"數量很有用。"
 
 #: ../../library/mmap.rst:113
 msgid ""
@@ -185,14 +239,16 @@ msgid ""
 "descriptor *fileno* is internally automatically synchronized with the "
 "physical backing store on macOS."
 msgstr ""
+"為了確保建立的記憶體對映有效，在 macOS 上由描述器 *fileno* 指定的檔案會在內部"
+"自動與實體備份儲存同步。"
 
 #: ../../library/mmap.rst:117
 msgid "The *trackfd* parameter was added."
-msgstr ""
+msgstr "新增 *trackfd* 參數。"
 
 #: ../../library/mmap.rst:120
 msgid "This example shows a simple way of using :class:`~mmap.mmap`::"
-msgstr ""
+msgstr "這個範例示範了使用 :class:`~mmap.mmap` 的簡單方式： ::"
 
 #: ../../library/mmap.rst:122
 msgid ""
@@ -218,12 +274,33 @@ msgid ""
 "    # close the map\n"
 "    mm.close()"
 msgstr ""
+"import mmap\n"
+"\n"
+"# 寫入一個簡單的範例檔案\n"
+"with open(\"hello.txt\", \"wb\") as f:\n"
+"    f.write(b\"Hello Python!\\n\")\n"
+"\n"
+"with open(\"hello.txt\", \"r+b\") as f:\n"
+"    # 對映檔案到記憶體，size 0 表示整個檔案\n"
+"    mm = mmap.mmap(f.fileno(), 0)\n"
+"    # 透過標準檔案方法讀取內容\n"
+"    print(mm.readline())  # 印出 b\"Hello Python!\\n\"\n"
+"    # 透過切片標記法讀取內容\n"
+"    print(mm[:5])  # 印出 b\"Hello\"\n"
+"    # 使用切片標記法更新內容；\n"
+"    # 注意新內容必須有相同的大小\n"
+"    mm[6:] = b\" world!\\n\"\n"
+"    # ... 然後再次使用標準檔案方法讀取\n"
+"    mm.seek(0)\n"
+"    print(mm.readline())  # 印出 b\"Hello  world!\\n\"\n"
+"    # 關閉對映\n"
+"    mm.close()"
 
 #: ../../library/mmap.rst:145
 msgid ""
 ":class:`~mmap.mmap` can also be used as a context manager in a :keyword:"
 "`with` statement::"
-msgstr ""
+msgstr ":class:`~mmap.mmap` 也可以在 :keyword:`with` 陳述式中作為情境管理器使用： ::"
 
 #: ../../library/mmap.rst:148
 msgid ""
@@ -239,13 +316,13 @@ msgstr ""
 
 #: ../../library/mmap.rst:153
 msgid "Context manager support."
-msgstr ""
+msgstr "情境管理器的支援。"
 
 #: ../../library/mmap.rst:157
 msgid ""
 "The next example demonstrates how to create an anonymous map and exchange "
 "data between the parent and child processes::"
-msgstr ""
+msgstr "下一個範例展示了如何建立匿名對映並在父行程與子行程之間交換資料： ::"
 
 #: ../../library/mmap.rst:160
 msgid ""
@@ -279,13 +356,15 @@ msgstr ""
 
 #: ../../library/mmap.rst:176
 msgid "Memory-mapped file objects support the following methods:"
-msgstr ""
+msgstr "記憶體對映檔案物件支援以下方法："
 
 #: ../../library/mmap.rst:180
 msgid ""
 "Closes the mmap. Subsequent calls to other methods of the object will result "
 "in a ValueError exception being raised. This will not close the open file."
 msgstr ""
+"關閉 mmap。後續對物件其他方法的呼叫將導致 ValueError 例外被引發。這不會關閉已"
+"開啟的檔案。"
 
 #: ../../library/mmap.rst:187
 msgid "``True`` if the file is closed."
@@ -298,11 +377,14 @@ msgid ""
 "arguments *start* and *end* are interpreted as in slice notation. Returns "
 "``-1`` on failure."
 msgstr ""
+"回傳物件中找到子序列 *sub* 的最小索引，使得 *sub* 包含在範圍 [*start*, "
+"*end*] 中。可選引數 *start* 和 *end* 的直譯方式與切片標記法相同。失敗時回傳 "
+"``-1``。"
 
 #: ../../library/mmap.rst:199 ../../library/mmap.rst:292
 #: ../../library/mmap.rst:332
 msgid "Writable :term:`bytes-like object` is now accepted."
-msgstr ""
+msgstr "現在接受可寫入的\\ :term:`類位元組物件 <bytes-like object>`。"
 
 #: ../../library/mmap.rst:206
 msgid ""
@@ -313,12 +395,16 @@ msgid ""
 "extent of the mapping is flushed.  *offset* must be a multiple of the :const:"
 "`PAGESIZE` or :const:`ALLOCATIONGRANULARITY`."
 msgstr ""
+"將對檔案之記憶體內副本 (in-memory copy) 所做的變更給排清 (flush) 回磁碟。若不使用此呼叫，"
+"則無法保證在物件被銷毀之前變更會被寫回。如果指定了 *offset* 和 *size*，則只有給定位元組範圍的變"
+"更會被排清到磁碟；否則會排清整個對映範圍。*offset* 必須是 :const:`PAGESIZE` "
+"或 :const:`ALLOCATIONGRANULARITY` 的倍數。"
 
 #: ../../library/mmap.rst:213
 msgid ""
 "``None`` is returned to indicate success.  An exception is raised when the "
 "call failed."
-msgstr ""
+msgstr "回傳 ``None`` 表示成功。呼叫失敗時會引發例外。"
 
 #: ../../library/mmap.rst:216
 msgid ""
@@ -326,6 +412,8 @@ msgid ""
 "error under Windows.  A zero value was returned on success; an exception was "
 "raised on error under Unix."
 msgstr ""
+"以前在 Windows 上成功時會回傳非零值，錯誤時回傳零。在 Unix 上成功時回傳零值，"
+"錯誤時引發例外。"
 
 #: ../../library/mmap.rst:224
 msgid ""
@@ -335,10 +423,14 @@ msgid ""
 "and *length* are omitted, the entire mapping is spanned.  On some systems "
 "(including Linux), *start* must be a multiple of the :const:`PAGESIZE`."
 msgstr ""
+"向核心 (kernel) 發送關於從 *start* 開始並延伸 *length* 個位元組之記憶體區域的建議 "
+"*option*。*option* 必須是系統上可用的 :ref:`MADV_* 常數 <madvise-constants>` "
+"之一。如果省略 *start* 和 *length*，則會涵蓋整個對映。在某些系統（包括 "
+"Linux）上，*start* 必須是 :const:`PAGESIZE` 的倍數。"
 
 #: ../../library/mmap.rst:231
 msgid "Availability: Systems with the ``madvise()`` system call."
-msgstr ""
+msgstr "可用性：具有 ``madvise()`` 系統呼叫的系統。"
 
 #: ../../library/mmap.rst:238
 msgid ""
@@ -346,6 +438,9 @@ msgid ""
 "*dest*.  If the mmap was created with :const:`ACCESS_READ`, then calls to "
 "move will raise a :exc:`TypeError` exception."
 msgstr ""
+"將從偏移量 *src* 開始的 *count* 個位元組複製到目的地索引 *dest*。如果 mmap "
+"是以 :const:`ACCESS_READ` 建立的，則對 move 的呼叫會引發 :exc:`TypeError` 例"
+"外。"
 
 #: ../../library/mmap.rst:245
 msgid ""
@@ -354,16 +449,19 @@ msgid ""
 "bytes from the current file position to the end of the mapping. The file "
 "position is updated to point after the bytes that were returned."
 msgstr ""
+"回傳一個從目前檔案位置開始、包含最多 *n* 個位元組的 :class:`bytes`。如果引"
+"數被省略、為 ``None`` 或為負數，則回傳從目前檔案位置到對映結尾的所有位元組。檔案位"
+"置會被更新為指向回傳的位元組之後。"
 
 #: ../../library/mmap.rst:251
 msgid "Argument can be omitted or ``None``."
-msgstr ""
+msgstr "引數可以省略或為 ``None``。"
 
 #: ../../library/mmap.rst:256
 msgid ""
 "Returns a byte at the current file position as an integer, and advances the "
 "file position by 1."
-msgstr ""
+msgstr "以整數形式回傳目前檔案位置的位元組，並將檔案位置前進 1。"
 
 #: ../../library/mmap.rst:262
 msgid ""
@@ -371,10 +469,12 @@ msgid ""
 "next newline. The file position is updated to point after the bytes that "
 "were returned."
 msgstr ""
+"回傳從目前檔案位置開始到下一個換行符號的單一行。檔案位置會被更新為指向回傳的位"
+"元組之後。"
 
 #: ../../library/mmap.rst:269
 msgid "Resizes the map and the underlying file, if any."
-msgstr ""
+msgstr "調整對映和底層檔案（如果有的話）的大小。"
 
 #: ../../library/mmap.rst:271
 msgid ""
@@ -383,6 +483,9 @@ msgid ""
 "created with *trackfd* set to ``False``, will raise a :exc:`ValueError` "
 "exception."
 msgstr ""
+"調整以 *access* 為 :const:`ACCESS_READ` 或 :const:`ACCESS_COPY` 建立的對映大"
+"小會引發 :exc:`TypeError` 例外。調整以 *trackfd* 設定為 ``False`` 建立的對映"
+"大小會引發 :exc:`ValueError` 例外。"
 
 #: ../../library/mmap.rst:276
 msgid ""
@@ -391,12 +494,15 @@ msgid ""
 "against the pagefile) will silently create a new map with the original data "
 "copied over up to the length of the new size."
 msgstr ""
+"**在 Windows 上**：如果有其他對映指向同一個具名檔案，調整對映大小會引發 :exc:"
+"`OSError`。調整匿名對映（即指向分頁檔案）的大小會靜默地建立一個新對映，並將原"
+"始資料複製到新大小的長度。"
 
 #: ../../library/mmap.rst:281
 msgid ""
 "Correctly fails if attempting to resize when another map is held Allows "
 "resize against an anonymous map on Windows"
-msgstr ""
+msgstr "當持有另一個對映時嘗試調整大小會正確失敗；在 Windows 上允許對匿名對映調整大小"
 
 #: ../../library/mmap.rst:287
 msgid ""
@@ -405,6 +511,9 @@ msgid ""
 "arguments *start* and *end* are interpreted as in slice notation. Returns "
 "``-1`` on failure."
 msgstr ""
+"回傳物件中找到子序列 *sub* 的最大索引，使得 *sub* 包含在範圍 [*start*, "
+"*end*] 中。可選引數 *start* 和 *end* 的直譯方式與切片標記法相同。失敗時回傳 "
+"``-1``。"
 
 #: ../../library/mmap.rst:298
 msgid ""
@@ -413,26 +522,29 @@ msgid ""
 "``os.SEEK_CUR`` or ``1`` (seek relative to the current position) and ``os."
 "SEEK_END`` or ``2`` (seek relative to the file's end)."
 msgstr ""
+"設定檔案的目前位置。*whence* 引數是可選的，預設為 ``os.SEEK_SET`` 或 ``0``\\ "
+"（絕對檔案定位）；其他值為 ``os.SEEK_CUR`` 或 ``1``\\ （相對於目前位置的定位）"
+"和 ``os.SEEK_END`` 或 ``2``\\ （相對於檔案結尾的定位）。"
 
 #: ../../library/mmap.rst:303
 msgid "Return the new absolute position instead of ``None``."
-msgstr ""
+msgstr "回傳新的絕對位置而非 ``None``。"
 
 #: ../../library/mmap.rst:308
 msgid ""
 "Return whether the file supports seeking, and the return value is always "
 "``True``."
-msgstr ""
+msgstr "回傳檔案是否支援定位 (seeking)，回傳值永遠為 ``True``。"
 
 #: ../../library/mmap.rst:314
 msgid ""
 "Return the length of the file, which can be larger than the size of the "
 "memory-mapped area."
-msgstr ""
+msgstr "回傳檔案的長度，該長度可以大於記憶體對映區域的大小。"
 
 #: ../../library/mmap.rst:320
 msgid "Returns the current position of the file pointer."
-msgstr ""
+msgstr "回傳檔案指標的目前位置。"
 
 #: ../../library/mmap.rst:325
 msgid ""
@@ -443,10 +555,14 @@ msgid ""
 "written.  If the mmap was created with :const:`ACCESS_READ`, then writing to "
 "it will raise a :exc:`TypeError` exception."
 msgstr ""
+"將 *bytes* 中的位元組寫入檔案指標目前位置的記憶體，並回傳寫入的位元組數（絕不"
+"會少於 ``len(bytes)``，因為如果寫入失敗，會引發 :exc:`ValueError`）。檔案位置"
+"會被更新為指向寫入的位元組之後。如果 mmap 是以 :const:`ACCESS_READ` 建立的，則"
+"對其寫入會引發 :exc:`TypeError` 例外。"
 
 #: ../../library/mmap.rst:335
 msgid "The number of bytes written is now returned."
-msgstr ""
+msgstr "現在會回傳寫入的位元組數。"
 
 #: ../../library/mmap.rst:341
 msgid ""
@@ -455,6 +571,8 @@ msgid ""
 "with :const:`ACCESS_READ`, then writing to it will raise a :exc:`TypeError` "
 "exception."
 msgstr ""
+"將整數 *byte* 寫入檔案指標目前位置的記憶體；檔案位置會前進 ``1``。如果 mmap "
+"是以 :const:`ACCESS_READ` 建立的，則對其寫入會引發 :exc:`TypeError` 例外。"
 
 #: ../../library/mmap.rst:349
 msgid "MADV_* Constants"
@@ -465,10 +583,11 @@ msgid ""
 "These options can be passed to :meth:`mmap.madvise`.  Not every option will "
 "be present on every system."
 msgstr ""
+"這些選項可以傳遞給 :meth:`mmap.madvise`。並非每個選項都會出現在每個系統上。"
 
 #: ../../library/mmap.rst:379
 msgid "Availability: Systems with the madvise() system call."
-msgstr ""
+msgstr "可用性：具有 madvise() 系統呼叫的系統。"
 
 #: ../../library/mmap.rst:386
 msgid "MAP_* Constants"
@@ -481,6 +600,9 @@ msgid ""
 "only available at OpenBSD.  Note that some options might not be present on "
 "some systems."
 msgstr ""
+"這些是可以傳遞給 :meth:`mmap.mmap` 的各種旗標。:data:`MAP_ALIGNED_SUPER` 僅"
+"在 FreeBSD 上可用，而 :data:`MAP_CONCEAL` 僅在 OpenBSD 上可用。請注意，某些選"
+"項可能不會出現在某些系統上。"
 
 #: ../../library/mmap.rst:414
 msgid "Added :data:`MAP_POPULATE` constant."
@@ -501,3 +623,7 @@ msgid ""
 "`MAP_RESILIENT_CODESIGN`, :data:`MAP_RESILIENT_MEDIA`, :data:`MAP_TPRO`, :"
 "data:`MAP_TRANSLATED_ALLOW_EXECUTE`, and :data:`MAP_UNIX03` constants."
 msgstr ""
+"新增 :data:`MAP_32BIT`、:data:`MAP_HASSEMAPHORE`、:data:`MAP_JIT`、:data:"
+"`MAP_NOCACHE`、:data:`MAP_NOEXTEND`、:data:`MAP_NORESERVE`、:data:"
+"`MAP_RESILIENT_CODESIGN`、:data:`MAP_RESILIENT_MEDIA`、:data:`MAP_TPRO`、:"
+"data:`MAP_TRANSLATED_ALLOW_EXECUTE` 和 :data:`MAP_UNIX03` 常數。"
