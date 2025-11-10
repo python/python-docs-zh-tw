@@ -395,13 +395,12 @@ msgstr ""
 
 #: ../../c-api/intro.rst:241 ../../c-api/intro.rst:252
 #: ../../c-api/intro.rst:297
-#, fuzzy
 msgid "For example::"
 msgstr "範例： ::"
 
 #: ../../c-api/intro.rst:243
 msgid "Py_BUILD_ASSERT(sizeof(PyTime_t) == sizeof(int64_t));"
-msgstr ""
+msgstr "Py_BUILD_ASSERT(sizeof(PyTime_t) == sizeof(int64_t));"
 
 #: ../../c-api/intro.rst:249
 msgid ""
@@ -415,14 +414,15 @@ msgid ""
 "#define foo_to_char(foo) \\\n"
 "    ((char *)(foo) + Py_BUILD_ASSERT_EXPR(offsetof(struct foo, string) == 0))"
 msgstr ""
+"#define foo_to_char(foo) \\\n"
+"    ((char *)(foo) + Py_BUILD_ASSERT_EXPR(offsetof(struct foo, string) == 0))"
 
 #: ../../c-api/intro.rst:261
-#, fuzzy
 msgid ""
 "Creates a variable with name *name* that can be used in docstrings. If "
 "Python is built without docstrings, the value will be empty."
 msgstr ""
-"建立一個名為 ``name`` 的變數，可以在文件字串中使用。如果 Python 是在沒有文件"
+"建立一個名為 *name* 的變數，可以在文件字串中使用。如果 Python 是在沒有文件"
 "字串的情況下建置，則該值將為空。"
 
 #: ../../c-api/intro.rst:264
@@ -443,6 +443,13 @@ msgid ""
 "    // ...\n"
 "}"
 msgstr ""
+"PyDoc_STRVAR(pop_doc, \"Remove and return the rightmost element.\");\n"
+"\n"
+"static PyMethodDef deque_methods[] = {\n"
+"    // ...\n"
+"    {\"pop\", (PyCFunction)deque_pop, METH_NOARGS, pop_doc},\n"
+"    // ...\n"
+"}"
 
 #: ../../c-api/intro.rst:279
 msgid ""
@@ -466,6 +473,11 @@ msgid ""
 "    {NULL, NULL}\n"
 "};"
 msgstr ""
+"static PyMethodDef pysqlite_row_methods[] = {\n"
+"    {\"keys\", (PyCFunction)pysqlite_row_keys, METH_NOARGS,\n"
+"        PyDoc_STR(\"Returns the keys of the row.\")},\n"
+"    {NULL, NULL}\n"
+"};"
 
 #: ../../c-api/intro.rst:295
 msgid "Declares a static character array variable with the given name *name*."
@@ -478,6 +490,10 @@ msgid ""
 "                                  \"to the tropics and subtropics of the "
 "Eastern Hemisphere.\");"
 msgstr ""
+"PyDoc_VAR(python_doc) = PyDoc_STR(\"A genus of constricting snakes in the "
+"Pythonidae family native \"\n"
+"                                  \"to the tropics and subtropics of the "
+"Eastern Hemisphere.\");"
 
 #: ../../c-api/intro.rst:306
 msgid "Objects, Types and Reference Counts"
@@ -890,6 +906,27 @@ msgid ""
 "    return total;\n"
 "}"
 msgstr ""
+"long\n"
+"sum_list(PyObject *list)\n"
+"{\n"
+"    Py_ssize_t i, n;\n"
+"    long total = 0, value;\n"
+"    PyObject *item;\n"
+"\n"
+"    n = PyList_Size(list);\n"
+"    if (n < 0)\n"
+"        return -1; /* 不是 list */\n"
+"    for (i = 0; i < n; i++) {\n"
+"        item = PyList_GetItem(list, i); /* 不會失敗 */\n"
+"        if (!PyLong_Check(item)) continue; /* 跳過非整數 */\n"
+"        value = PyLong_AsLong(item);\n"
+"        if (value == -1 && PyErr_Occurred())\n"
+"            /* 整數太大，無法放入 C long，退出 */\n"
+"            return -1;\n"
+"        total += value;\n"
+"    }\n"
+"    return total;\n"
+"}"
 
 #: ../../c-api/intro.rst:547
 msgid ""
@@ -921,6 +958,33 @@ msgid ""
 "    return total;\n"
 "}"
 msgstr ""
+"long\n"
+"sum_sequence(PyObject *sequence)\n"
+"{\n"
+"    Py_ssize_t i, n;\n"
+"    long total = 0, value;\n"
+"    PyObject *item;\n"
+"    n = PySequence_Length(sequence);\n"
+"    if (n < 0)\n"
+"        return -1; /* 沒有長度 */\n"
+"    for (i = 0; i < n; i++) {\n"
+"        item = PySequence_GetItem(sequence, i);\n"
+"        if (item == NULL)\n"
+"            return -1; /* 不是序列或其他錯誤 */\n"
+"        if (PyLong_Check(item)) {\n"
+"            value = PyLong_AsLong(item);\n"
+"            Py_DECREF(item);\n"
+"            if (value == -1 && PyErr_Occurred())\n"
+"                /* 整數太大，無法放入 C long，退出 */\n"
+"                return -1;\n"
+"            total += value;\n"
+"        }\n"
+"        else {\n"
+"            Py_DECREF(item); /* 丟棄參照所有權 */\n"
+"        }\n"
+"    }\n"
+"    return total;\n"
+"}"
 
 #: ../../c-api/intro.rst:581
 msgid "Types"
@@ -1345,45 +1409,46 @@ msgstr ""
 
 #: ../../c-api/intro.rst:862
 msgid "Recommended third party tools"
-msgstr ""
+msgstr "建議的第三方工具"
 
 #: ../../c-api/intro.rst:864
 msgid ""
 "The following third party tools offer both simpler and more sophisticated "
 "approaches to creating C, C++ and Rust extensions for Python:"
 msgstr ""
+"以下第三方工具提供了更簡單且更細緻的方法來為 Python 建立 C、C++ 和 Rust 擴充模組："
 
 #: ../../c-api/intro.rst:867
 msgid "`Cython <https://cython.org/>`_"
-msgstr ""
+msgstr "`Cython <https://cython.org/>`_"
 
 #: ../../c-api/intro.rst:868
 msgid "`cffi <https://cffi.readthedocs.io>`_"
-msgstr ""
+msgstr "`cffi <https://cffi.readthedocs.io>`_"
 
 #: ../../c-api/intro.rst:869
 msgid "`HPy <https://hpyproject.org/>`_"
-msgstr ""
+msgstr "`HPy <https://hpyproject.org/>`_"
 
 #: ../../c-api/intro.rst:870
 msgid "`nanobind <https://github.com/wjakob/nanobind>`_ (C++)"
-msgstr ""
+msgstr "`nanobind <https://github.com/wjakob/nanobind>`_ (C++)"
 
 #: ../../c-api/intro.rst:871
 msgid "`Numba <https://numba.pydata.org/>`_"
-msgstr ""
+msgstr "`Numba <https://numba.pydata.org/>`_"
 
 #: ../../c-api/intro.rst:872
 msgid "`pybind11 <https://pybind11.readthedocs.io/>`_ (C++)"
-msgstr ""
+msgstr "`pybind11 <https://pybind11.readthedocs.io/>`_ (C++)"
 
 #: ../../c-api/intro.rst:873
 msgid "`PyO3 <https://pyo3.rs/>`_ (Rust)"
-msgstr ""
+msgstr "`PyO3 <https://pyo3.rs/>`_ (Rust)"
 
 #: ../../c-api/intro.rst:874
 msgid "`SWIG <https://www.swig.org>`_"
-msgstr ""
+msgstr "`SWIG <https://www.swig.org>`_"
 
 #: ../../c-api/intro.rst:876
 msgid ""
