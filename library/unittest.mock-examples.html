@@ -641,13 +641,8 @@
 </section>
 <section id="partial-mocking">
 <h3>部分 mocking<a class="headerlink" href="#partial-mocking" title="連結到這個標頭">¶</a></h3>
-<p>For some tests, you may want to mock out a call to <a class="reference internal" href="datetime.html#datetime.date.today" title="datetime.date.today"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datetime.date.today()</span></code></a>
-to return a known date, but don't want to prevent the code under test from
-creating new date objects. Unfortunately <a class="reference internal" href="datetime.html#datetime.date" title="datetime.date"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.date</span></code></a> is written in C,
-so you cannot just monkey-patch out the static <a class="reference internal" href="datetime.html#datetime.date.today" title="datetime.date.today"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datetime.date.today()</span></code></a> method.</p>
-<p>Instead, you can effectively wrap the date
-class with a mock, while passing through calls to the constructor to the real
-class (and returning real instances).</p>
+<p>對於某些測試，你可能會想 mock 對 <a class="reference internal" href="datetime.html#datetime.date.today" title="datetime.date.today"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datetime.date.today()</span></code></a> 的呼叫以回傳一個已知日期，但不想阻止測試中的程式碼建立新的日期物件。不幸的是 <a class="reference internal" href="datetime.html#datetime.date" title="datetime.date"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.date</span></code></a> 是用 C 語言寫的，所以們我不能 monkey patch 靜態的 <a class="reference internal" href="datetime.html#datetime.date.today" title="datetime.date.today"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datetime.date.today()</span></code></a> 方法。</p>
+<p>然而你可以使用一個 mock 有效地包裝日期類別，同時將對建構函式的呼叫傳遞給真實的類別（並回傳真實的實例）。</p>
 <p>這裡使用 <a class="reference internal" href="unittest.mock.html#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch</span> <span class="pre">裝飾器</span></code></a> 來 mock 被測模組中的 <code class="docutils literal notranslate"><span class="pre">date</span></code> 類別。然後，mock 日期類別上的 <a class="reference internal" href="unittest.mock.html#unittest.mock.Mock.side_effect" title="unittest.mock.Mock.side_effect"><code class="xref py py-attr docutils literal notranslate"><span class="pre">side_effect</span></code></a> 屬性會被設定為回傳真實日期的 lambda 函式。當 mock 日期類別被呼叫時，將透過 <code class="docutils literal notranslate"><span class="pre">side_effect</span></code> 建構並回傳真實日期。：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">date</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">patch</span><span class="p">(</span><span class="s1">&#39;mymodule.date&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">mock_date</span><span class="p">:</span>
@@ -745,23 +740,8 @@ class (and returning real instances).</p>
 </section>
 <section id="mocking-unbound-methods">
 <h3>Mock Unbound Methods （未繫結方法）<a class="headerlink" href="#mocking-unbound-methods" title="連結到這個標頭">¶</a></h3>
-<p>Sometimes a test needs to patch an <em>unbound method</em>, which means patching the
-method on the class rather than on the instance. In order to make assertions
-about which objects were calling this particular method, you need to pass
-<code class="docutils literal notranslate"><span class="pre">self</span></code> as the first argument. The issue is that you can't patch with a mock for
-this, because if you replace an unbound method with a mock it doesn't become
-a bound method when fetched from the instance, and so it doesn't get <code class="docutils literal notranslate"><span class="pre">self</span></code>
-passed in. The workaround is to patch the unbound method with a real function
-instead. The <a class="reference internal" href="unittest.mock.html#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> decorator makes it so simple to patch out methods
-with a mock that having to create a real function becomes a nuisance.</p>
-<p>If you pass <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code> to patch then it does the patching with a
-<em>real</em> function object. This function object has the same signature as the one
-it is replacing, but delegates to a mock under the hood. You still get your
-mock auto-created in exactly the same way as before. What it means though, is
-that if you use it to patch out an unbound method on a class the mocked
-function will be turned into a bound method if it is fetched from an instance.
-It will have <code class="docutils literal notranslate"><span class="pre">self</span></code> passed in as the first argument, which is exactly what
-was needed:</p>
+<p>有時候測試會需要 patch 一個<em>未繫結方法</em>，即為 patch 類別上的方法而不是實例上的方法。為了斷言哪些物件正在呼叫這個特定方法，你需要將 <code class="docutils literal notranslate"><span class="pre">self</span></code> 作為第一個引數傳入。問題是你無法為此使用 mock 進行 patch，因為就算你用一個 mock 替換未繫結方法，從實例取得它時它也不會成為一個繫結方法，因此 <code class="docutils literal notranslate"><span class="pre">self</span></code> 並不會被傳遞。解決方法是使用真實的函式來 patch 未繫結方法。<a class="reference internal" href="unittest.mock.html#unittest.mock.patch" title="unittest.mock.patch"><code class="xref py py-func docutils literal notranslate"><span class="pre">patch()</span></code></a> 裝飾器使得用 mock 來 patch out 方法是如此的簡單，以至於建立一個真正的函式相對變得很麻煩。</p>
+<p>如果你將 <code class="docutils literal notranslate"><span class="pre">autospec=True</span></code> 傳遞給 patch，那麼它會使用<em>真的</em>函式物件來進行 patch。此函式物件與它所替換的函式物件具有相同的簽名，但實際上委託給 mock。你仍然會以與之前完全相同的方式自動建立 mock。但這意味著，如果你使用它來 patch 類別上的未繫結方法，則從實例取得的 mock 函式將轉換為繫結方法。<code class="docutils literal notranslate"><span class="pre">self</span></code> 會作為其第一個引數傳入，而這正是我們需要的：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">Foo</span><span class="p">:</span>
 <span class="gp">... </span>  <span class="k">def</span><span class="w"> </span><span class="nf">foo</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="gp">... </span>    <span class="k">pass</span>
@@ -1368,7 +1348,7 @@ was needed:</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 11月 14, 2025 (19:39 UTC)。
+      最後更新於 11月 14, 2025 (20:00 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
