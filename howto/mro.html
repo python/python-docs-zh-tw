@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>The Python 2.3 Method Resolution Order &#8212; Python 3.14.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python 2.3 方法解析順序 &#8212; Python 3.14.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
@@ -89,13 +89,13 @@
   <div>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
-<li><a class="reference internal" href="#">The Python 2.3 Method Resolution Order</a><ul>
-<li><a class="reference internal" href="#the-beginning">The beginning</a></li>
-<li><a class="reference internal" href="#the-c3-method-resolution-order">The C3 Method Resolution Order</a></li>
+<li><a class="reference internal" href="#">Python 2.3 方法解析順序</a><ul>
+<li><a class="reference internal" href="#the-beginning">開端</a></li>
+<li><a class="reference internal" href="#the-c3-method-resolution-order">C3 方法解析順序</a></li>
 <li><a class="reference internal" href="#examples">範例</a></li>
-<li><a class="reference internal" href="#bad-method-resolution-orders">Bad Method Resolution Orders</a></li>
-<li><a class="reference internal" href="#the-end">The end</a></li>
-<li><a class="reference internal" href="#resources">Resources</a></li>
+<li><a class="reference internal" href="#bad-method-resolution-orders">不良的方法解析順序</a></li>
+<li><a class="reference internal" href="#the-end">結語</a></li>
+<li><a class="reference internal" href="#resources">資源</a></li>
 </ul>
 </li>
 </ul>
@@ -157,7 +157,7 @@
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 如何達成任務</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">The Python 2.3 Method Resolution Order</a></li>
+        <li class="nav-item nav-item-this"><a href="">Python 2.3 方法解析順序</a></li>
                 <li class="right">
                     
 
@@ -188,103 +188,46 @@
           <div class="body" role="main">
             
   <section id="the-python-2-3-method-resolution-order">
-<span id="python-2-3-mro"></span><h1>The Python 2.3 Method Resolution Order<a class="headerlink" href="#the-python-2-3-method-resolution-order" title="連結到這個標頭">¶</a></h1>
+<span id="python-2-3-mro"></span><h1>Python 2.3 方法解析順序<a class="headerlink" href="#the-python-2-3-method-resolution-order" title="連結到這個標頭">¶</a></h1>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>This is a historical document, provided as an appendix to the official
-documentation.
-The Method Resolution Order discussed here was <em>introduced</em> in Python 2.3,
-but it is still used in later versions -- including Python 3.</p>
+<p>這是一份歷史文件，作為正式文件的附錄提供。此處討論的方法解析順序 (Method Resolution Order) 是在 Python 2.3 中 <em>引入</em> 的，但仍在後續版本中使用，包括 Python 3。</p>
 </div>
-<p>By <a class="reference external" href="https://www.phyast.pitt.edu/~micheles/">Michele Simionato</a>.</p>
+<p>作者：<a class="reference external" href="https://www.phyast.pitt.edu/~micheles/">Michele Simionato</a>。</p>
 <dl class="field-list simple">
 <dt class="field-odd">摘要<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>This document is intended for Python programmers who want to
-understand the C3 Method Resolution Order used in Python 2.3.
-Although it is not intended for newbies, it is quite pedagogical with
-many worked out examples.  I am not aware of other publicly available
-documents with the same scope, therefore it should be useful.</em></p>
+<dd class="field-odd"><p><em>此文件適用於想要了解 Python 2.3 中使用的 C3 方法解析順序的 Python 程式設計師。雖然它不是為初學者準備的，但透過許多實際範例進行教學。我沒找到其他具有相同範圍的公開文件，因此這應該很有用。</em></p>
 </dd>
 </dl>
-<p>Disclaimer:</p>
+<p>免責聲明：</p>
 <blockquote>
-<div><p><em>I donate this document to the Python Software Foundation, under the
-Python 2.3 license.  As usual in these circumstances, I warn the
-reader that what follows</em> should <em>be correct, but I don't give any
-warranty.  Use it at your own risk and peril!</em></p>
+<div><p><em>我根據 Python 2.3 授權條款將此文件捐贈給 Python 軟體基金會。如同往常，我警告讀者，以下內容 *應該</em> 是正確的，但我不提供任何保證。使用時風險自負！*</p>
 </div></blockquote>
-<p>致謝</p>
+<p>致謝：</p>
 <blockquote>
-<div><p><em>All the people of the Python mailing list who sent me their support.
-Paul Foley who pointed out various imprecisions and made me to add the
-part on local precedence ordering. David Goodger for help with the
-formatting in reStructuredText. David Mertz for help with the editing.
-Finally, Guido van Rossum who enthusiastically added this document to
-the official Python 2.3 home-page.</em></p>
+<div><p><em>感謝 Python 郵件列表中所有給予我支持的人。Paul Foley 指出了各種不精確之處，並促使我加入了區域優先順序（local precedence ordering）的部分。David Goodger 協助 reStructuredText 的格式化。David Mertz 協助編輯。最後，Guido van Rossum 熱情地將此文件加入到 Python 2.3 官方首頁。</em></p>
 </div></blockquote>
 <section id="the-beginning">
-<h2>The beginning<a class="headerlink" href="#the-beginning" title="連結到這個標頭">¶</a></h2>
+<h2>開端<a class="headerlink" href="#the-beginning" title="連結到這個標頭">¶</a></h2>
 <blockquote>
 <div><p><em>Felix qui potuit rerum cognoscere causas</em> -- Virgilius</p>
 </div></blockquote>
-<p>Everything started with a post by Samuele Pedroni to the Python
-development mailing list <a class="footnote-reference brackets" href="#id4" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.  In his post, Samuele showed that the
-Python 2.2 method resolution order is not monotonic and he proposed to
-replace it with the C3 method resolution order.  Guido agreed with his
-arguments and therefore now Python 2.3 uses C3.  The C3 method itself
-has nothing to do with Python, since it was invented by people working
-on Dylan and it is described in a paper intended for lispers <a class="footnote-reference brackets" href="#id5" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>.  The
-present paper gives a (hopefully) readable discussion of the C3
-algorithm for Pythonistas who want to understand the reasons for the
-change.</p>
-<p>First of all, let me point out that what I am going to say only applies
-to the <em>new style classes</em> introduced in Python 2.2:  <em>classic classes</em>
-maintain their old method resolution order, depth first and then left to
-right.  Therefore, there is no breaking of old code for classic classes;
-and even if in principle there could be breaking of code for Python 2.2
-new style classes, in practice the cases in which the C3 resolution
-order differs from the Python 2.2 method resolution order are so rare
-that no real breaking of code is expected.  Therefore:</p>
+<p>一切始於 Samuele Pedroni 向 Python 開發郵件列表發表的貼文 <a class="footnote-reference brackets" href="#id4" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>。在他的貼文中，Samuele 指出 Python 2.2 的方法解析順序不具單調性（monotonic），並提議以 C3 方法解析順序來取代。Guido 同意他的論點，因此 Python 2.3 現在使用 C3。C3 方法本身與 Python 無關，因為它是由研究 Dylan 語言的人所發明，並在一篇針對 Lisp 程式設計師的論文 <a class="footnote-reference brackets" href="#id5" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a> 中描述。本文為想要了解此變更原因的 Python 程式設計師提供了 C3 演算法（希望是）易讀的討論。</p>
+<p>首先讓我指出，我要說的僅適用於 Python 2.2 中引入的 <em>新式類別（new style classes）</em>：<em>經典類別（classic classes）</em> 維持其舊有的方法解析順序，即深度優先然後由左至右。因此，經典類別的舊程式碼不會受到影響；即使原則上 Python 2.2 新式類別的程式碼可能會受影響，但實際上 C3 解析順序與 Python 2.2 方法解析順序不同的情況極為罕見，因此預期不會真正破壞程式碼。因此：</p>
 <blockquote>
-<div><p><em>Don't be scared!</em></p>
+<div><p><em>別怕！</em></p>
 </div></blockquote>
-<p>Moreover, unless you make strong use of multiple inheritance and you
-have non-trivial hierarchies, you don't need to understand the C3
-algorithm, and you can easily skip this paper.  On the other hand, if
-you really want to know how multiple inheritance works, then this paper
-is for you.  The good news is that things are not as complicated as you
-might expect.</p>
-<p>Let me begin with some basic definitions.</p>
+<p>此外，除非你大量使用多重繼承且有複雜的類別階層，否則你無需了解 C3 演算法，可以輕鬆跳過本文。另一方面，如果你真的想知道多重繼承如何運作，那麼本文就是為你準備的。好消息是，事情並不像你想像的那樣複雜。</p>
+<p>讓我從一些基本定義開始。</p>
 <ol class="arabic simple">
-<li><p>Given a class C in a complicated multiple inheritance hierarchy, it
-is a non-trivial task to specify the order in which methods are
-overridden, i.e. to specify the order of the ancestors of C.</p></li>
-<li><p>The list of the ancestors of a class C, including the class itself,
-ordered from the nearest ancestor to the furthest, is called the
-class precedence list or the <em>linearization</em> of C.</p></li>
-<li><p>The <em>Method Resolution Order</em> (MRO) is the set of rules that
-construct the linearization.  In the Python literature, the idiom
-&quot;the MRO of C&quot; is also used as a synonymous for the linearization of
-the class C.</p></li>
-<li><p>For instance, in the case of single inheritance hierarchy, if C is a
-subclass of C1, and C1 is a subclass of C2, then the linearization of
-C is simply the list [C, C1 , C2].  However, with multiple
-inheritance hierarchies, the construction of the linearization is
-more cumbersome, since it is more difficult to construct a
-linearization that respects <em>local precedence ordering</em> and
-<em>monotonicity</em>.</p></li>
-<li><p>I will discuss the local precedence ordering later, but I can give
-the definition of monotonicity here.  A MRO is monotonic when the
-following is true:  <em>if C1 precedes C2 in the linearization of C,
-then C1 precedes C2 in the linearization of any subclass of C</em>.
-Otherwise, the innocuous operation of deriving a new class could
-change the resolution order of methods, potentially introducing very
-subtle bugs.  Examples where this happens will be shown later.</p></li>
-<li><p>Not all classes admit a linearization.  There are cases, in
-complicated hierarchies, where it is not possible to derive a class
-such that its linearization respects all the desired properties.</p></li>
+<li><p>給定複雜多重繼承階層中的類別 C，要指定方法被覆寫（override）的順序並非易事，也就是要指定 C 的祖先順序。</p></li>
+<li><p>類別 C 的祖先串列（包含類別本身），從最近的祖先到最遠的祖先排序，稱為類別優先串列（class precedence list）或 C 的<em>線性化（linearization）</em>。</p></li>
+<li><p><em>方法解析順序 (Method Resolution Order, MRO)</em> 是建構線性化的一組規則。在 Python 文獻中，習慣用語「C 的 MRO」也是 C 類別線性化的同義詞。</p></li>
+<li><p>例如，在單一繼承階層的情況下，如果 C 是 C1 的子類別，而 C1 是 C2 的子類別，那麼 C 的線性化就是串列 [C, C1, C2]。然而，在多重繼承階層中，線性化的建構更加複雜，因為要建構一個遵守<em>區域優先順序（local precedence ordering）</em> 和<em>單調性（monotonicity）</em> 的線性化更加困難。</p></li>
+<li><p>我將在稍後討論區域優先順序，但可以在此給出單調性的定義。當以下條件為真時，MRO 具有單調性：<em>如果 C1 在 C 的線性化中先於 C2，那麼 C1 在 C 的任何子類別的線性化中也先於 C2</em>。否則，衍生新類別這個看似無害的操作可能會改變方法的解析順序，進而引入非常微妙的錯誤。稍後將展示發生這種情況的範例。</p></li>
+<li><p>並非所有類別都能進行線性化。在複雜的階層結構中，有些情況下無法衍生出一個類別，使其線性化遵守所有所需的屬性。</p></li>
 </ol>
-<p>Here I give an example of this situation. Consider the hierarchy</p>
+<p>以下是這種情況的範例。考慮以下階層結構</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="nb">object</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">X</span><span class="p">(</span><span class="n">O</span><span class="p">):</span> <span class="k">pass</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">Y</span><span class="p">(</span><span class="n">O</span><span class="p">):</span> <span class="k">pass</span>
@@ -292,9 +235,7 @@ such that its linearization respects all the desired properties.</p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="n">X</span><span class="p">):</span> <span class="k">pass</span>
 </pre></div>
 </div>
-<p>which can be represented with the following inheritance graph, where I
-have denoted with O the <code class="docutils literal notranslate"><span class="pre">object</span></code> class, which is the beginning of any
-hierarchy for new style classes:</p>
+<p>可以用以下繼承圖來表示，其中我用 O 標示 <code class="docutils literal notranslate"><span class="pre">object</span></code> 類別，這是新式類別的任何階層結構的起點：</p>
 <blockquote>
 <div><div class="highlight-text notranslate"><div class="highlight"><pre><span></span> -----------
 |           |
@@ -309,81 +250,56 @@ hierarchy for new style classes:</p>
 </pre></div>
 </div>
 </div></blockquote>
-<p>In this case, it is not possible to derive a new class C from A and B,
-since X precedes Y in A, but Y precedes X in B, therefore the method
-resolution order would be ambiguous in C.</p>
-<p>Python 2.3 raises an exception in this situation (TypeError:  MRO
-conflict among bases Y, X) forbidding the naive programmer from creating
-ambiguous hierarchies.  Python 2.2 instead does not raise an exception,
-but chooses an <em>ad hoc</em> ordering (CABXYO in this case).</p>
+<p>在這種情況下，不可能從 A 和 B 衍生出新的類別 C，因為 X 在 A 中先於 Y，但 Y 在 B 中先於 X，因此 C 的方法解析順序會產生歧義。</p>
+<p>Python 2.3 在這種情況下會引發例外（TypeError: MRO conflict among bases Y, X），防止程式設計師建立有歧義的階層結構。Python 2.2 則不會引發例外，而是選擇 <em>ad hoc</em> 順序（在這種情況下為 CABXYO）。</p>
 </section>
 <section id="the-c3-method-resolution-order">
-<h2>The C3 Method Resolution Order<a class="headerlink" href="#the-c3-method-resolution-order" title="連結到這個標頭">¶</a></h2>
-<p>Let me introduce a few simple notations which will be useful for the
-following discussion.  I will use the shortcut notation:</p>
+<h2>C3 方法解析順序<a class="headerlink" href="#the-c3-method-resolution-order" title="連結到這個標頭">¶</a></h2>
+<p>讓我介紹一些簡單的符號標示法，這對以下討論很有用。我將使用簡寫符號：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">C1</span> <span class="n">C2</span> <span class="o">...</span> <span class="n">CN</span>
 </pre></div>
 </div>
-<p>to indicate the list of classes [C1, C2, ... , CN].</p>
-<p>The <em>head</em> of the list is its first element:</p>
+<p>用來表示類別串列 [C1, C2, ... , CN]。</p>
+<p>串列的 <em>head</em>（頭部）是其第一個元素：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">head</span> <span class="o">=</span> <span class="n">C1</span>
 </pre></div>
 </div>
-<p>whereas the <em>tail</em> is the rest of the list:</p>
+<p>而 <em>tail</em>（尾部）是串列的其餘部分：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">tail</span> <span class="o">=</span> <span class="n">C2</span> <span class="o">...</span> <span class="n">CN</span><span class="o">.</span>
 </pre></div>
 </div>
-<p>I shall also use the notation:</p>
+<p>我還將使用以下符號：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">C</span> <span class="o">+</span> <span class="p">(</span><span class="n">C1</span> <span class="n">C2</span> <span class="o">...</span> <span class="n">CN</span><span class="p">)</span> <span class="o">=</span> <span class="n">C</span> <span class="n">C1</span> <span class="n">C2</span> <span class="o">...</span> <span class="n">CN</span>
 </pre></div>
 </div>
-<p>to denote the sum of the lists [C] + [C1, C2, ... ,CN].</p>
-<p>Now I can explain how the MRO works in Python 2.3.</p>
-<p>Consider a class C in a multiple inheritance hierarchy, with C
-inheriting from the base classes B1, B2, ...  , BN.  We want to
-compute the linearization L[C] of the class C. The rule is the
-following:</p>
+<p>標示串列的和 [C] + [C1, C2, ..., CN]。</p>
+<p>現在我就可以繼續解釋 MRO 在 Python 2.3 中的運作方式。</p>
+<p>考慮多重繼承階層結構中的類別 C，C 從基底類別 B1、B2、...、BN 繼承。我們想計算類別 C 的線性化 L[C]。規則如下：</p>
 <blockquote>
-<div><p><em>the linearization of C is the sum of C plus the merge of the
-linearizations of the parents and the list of the parents.</em></p>
+<div><p><em>C 的線性化是 C 加上父類別線性化的合併以及父類別串列的和。</em></p>
 </div></blockquote>
-<p>In symbolic notation:</p>
+<p>用符號標示：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="n">C</span><span class="p">(</span><span class="n">B1</span> <span class="o">...</span> <span class="n">BN</span><span class="p">)]</span> <span class="o">=</span> <span class="n">C</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">B1</span><span class="p">]</span> <span class="o">...</span> <span class="n">L</span><span class="p">[</span><span class="n">BN</span><span class="p">],</span> <span class="n">B1</span> <span class="o">...</span> <span class="n">BN</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>In particular, if C is the <code class="docutils literal notranslate"><span class="pre">object</span></code> class, which has no parents, the
-linearization is trivial:</p>
+<p>特別是如果 C 是沒有父類別的 <code class="docutils literal notranslate"><span class="pre">object</span></code> 類別，那麼線性化是簡單的：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="nb">object</span><span class="p">]</span> <span class="o">=</span> <span class="nb">object</span><span class="o">.</span>
 </pre></div>
 </div>
-<p>However, in general one has to compute the merge according to the following
-prescription:</p>
+<p>然而，一般來說必須根據以下規則來計算合併：</p>
 <blockquote>
-<div><p><em>take the head of the first list, i.e L[B1][0]; if this head is not in
-the tail of any of the other lists, then add it to the linearization
-of C and remove it from the lists in the merge, otherwise look at the
-head of the next list and take it, if it is a good head.  Then repeat
-the operation until all the class are removed or it is impossible to
-find good heads.  In this case, it is impossible to construct the
-merge, Python 2.3 will refuse to create the class C and will raise an
-exception.</em></p>
+<div><p><em>取第一個串列的頭部，即 L[B1][0]；如果此頭部不在其他任何串列的尾部中，那麼將它加入到 C 的線性化中，並從合併中的所有串列移除它；否則查看下一個串列的頭部，如果它是一個好的頭部就取它。然後重複此操作，直到所有類別都被移除或無法找到好的頭部。在後面這種情況下，無法建構合併，Python 2.3 將拒絕建立類別 C 並引發例外。</em></p>
 </div></blockquote>
-<p>This prescription ensures that the merge operation <em>preserves</em> the
-ordering, if the ordering can be preserved.  On the other hand, if the
-order cannot be preserved (as in the example of serious order
-disagreement discussed above) then the merge cannot be computed.</p>
-<p>The computation of the merge is trivial if C has only one parent
-(single inheritance); in this case:</p>
+<p>此規則確保合併操作<em>保留</em>順序（如果順序可以被保留）。另一方面，如果無法保留順序（如上面討論的嚴重順序分歧的範例），則無法計算合併。</p>
+<p>如果 C 只有一個父類別（單一繼承），則合併的計算是微不足道的。在這種情況下：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="n">C</span><span class="p">(</span><span class="n">B</span><span class="p">)]</span> <span class="o">=</span> <span class="n">C</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">L</span><span class="p">[</span><span class="n">B</span><span class="p">],</span><span class="n">B</span><span class="p">)</span> <span class="o">=</span> <span class="n">C</span> <span class="o">+</span> <span class="n">L</span><span class="p">[</span><span class="n">B</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>However, in the case of multiple inheritance things are more cumbersome
-and I don't expect you can understand the rule without a couple of
-examples ;-)</p>
+<p>但是，在多重繼承的情況下，事情更加複雜，我不指望你能在沒有幾個範例的情況下理解這個規則 ;-)</p>
 </section>
 <section id="examples">
 <h2>範例<a class="headerlink" href="#examples" title="連結到這個標頭">¶</a></h2>
-<p>First example. Consider the following hierarchy:</p>
+<p>第一個例子，請參考以下階層結構：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="nb">object</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">F</span><span class="p">(</span><span class="n">O</span><span class="p">):</span> <span class="k">pass</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">E</span><span class="p">(</span><span class="n">O</span><span class="p">):</span> <span class="k">pass</span>
@@ -393,11 +309,11 @@ examples ;-)</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="n">C</span><span class="p">):</span> <span class="k">pass</span>
 </pre></div>
 </div>
-<p>In this case the inheritance graph can be drawn as:</p>
+<p>在這種情況下，繼承圖可以繪製為：</p>
 <blockquote>
 <div><div class="highlight-text notranslate"><div class="highlight"><pre><span></span>                          6
                          ---
-Level 3                 | O |                  (more general)
+Level 3                 | O |                  （更廣泛）
                       /  ---  \
                      /    |    \                      |
                     /     |     \                     |
@@ -414,38 +330,34 @@ Level 1            1 | B |    | C | 2                 |
                         \      /                      |
                          \    /                      \ /
                            ---
-Level 0                 0 | A |                (more specialized)
+Level 0                 0 | A |                （更專精）
                            ---
 </pre></div>
 </div>
 </div></blockquote>
-<p>The linearizations of O,D,E and F are trivial:</p>
+<p>O、D、E 和 F 的線性化很簡單：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="n">O</span><span class="p">]</span> <span class="o">=</span> <span class="n">O</span>
 <span class="n">L</span><span class="p">[</span><span class="n">D</span><span class="p">]</span> <span class="o">=</span> <span class="n">D</span> <span class="n">O</span>
 <span class="n">L</span><span class="p">[</span><span class="n">E</span><span class="p">]</span> <span class="o">=</span> <span class="n">E</span> <span class="n">O</span>
 <span class="n">L</span><span class="p">[</span><span class="n">F</span><span class="p">]</span> <span class="o">=</span> <span class="n">F</span> <span class="n">O</span>
 </pre></div>
 </div>
-<p>The linearization of B can be computed as:</p>
+<p>B 的線性化可以計算為：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="n">B</span><span class="p">]</span> <span class="o">=</span> <span class="n">B</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">DO</span><span class="p">,</span> <span class="n">EO</span><span class="p">,</span> <span class="n">DE</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>We see that D is a good head, therefore we take it and we are reduced to
-compute <code class="docutils literal notranslate"><span class="pre">merge(O,EO,E)</span></code>.  Now O is not a good head, since it is in the
-tail of the sequence EO.  In this case the rule says that we have to
-skip to the next sequence.  Then we see that E is a good head; we take
-it and we are reduced to compute <code class="docutils literal notranslate"><span class="pre">merge(O,O)</span></code> which gives O. Therefore:</p>
+<p>我們看到 D 是一個好的頭部，因此我們取它，並將其簡化為 <code class="docutils literal notranslate"><span class="pre">merge(O,EO,E)</span></code>。現在 O 不是一個好的頭部，因為它位於序列 EO 的尾部。在這種情況下，規則說我們必須跳到下一個序列。然後我們看到 E 是一個好的頭部；我們取它，並簡化為計算 <code class="docutils literal notranslate"><span class="pre">merge(O,</span> <span class="pre">O)</span></code> 得出 O。因此：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="n">B</span><span class="p">]</span> <span class="o">=</span>  <span class="n">B</span> <span class="n">D</span> <span class="n">E</span> <span class="n">O</span>
 </pre></div>
 </div>
-<p>Using the same procedure one finds:</p>
+<p>使用相同的程序可以發現：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="n">C</span><span class="p">]</span> <span class="o">=</span> <span class="n">C</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">DO</span><span class="p">,</span><span class="n">FO</span><span class="p">,</span><span class="n">DF</span><span class="p">)</span>
      <span class="o">=</span> <span class="n">C</span> <span class="o">+</span> <span class="n">D</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">O</span><span class="p">,</span><span class="n">FO</span><span class="p">,</span><span class="n">F</span><span class="p">)</span>
      <span class="o">=</span> <span class="n">C</span> <span class="o">+</span> <span class="n">D</span> <span class="o">+</span> <span class="n">F</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">O</span><span class="p">,</span><span class="n">O</span><span class="p">)</span>
      <span class="o">=</span> <span class="n">C</span> <span class="n">D</span> <span class="n">F</span> <span class="n">O</span>
 </pre></div>
 </div>
-<p>Now we can compute:</p>
+<p>現在我們可以計算出：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="n">A</span><span class="p">]</span> <span class="o">=</span> <span class="n">A</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">BDEO</span><span class="p">,</span><span class="n">CDFO</span><span class="p">,</span><span class="n">BC</span><span class="p">)</span>
      <span class="o">=</span> <span class="n">A</span> <span class="o">+</span> <span class="n">B</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">DEO</span><span class="p">,</span><span class="n">CDFO</span><span class="p">,</span><span class="n">C</span><span class="p">)</span>
      <span class="o">=</span> <span class="n">A</span> <span class="o">+</span> <span class="n">B</span> <span class="o">+</span> <span class="n">C</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">DEO</span><span class="p">,</span><span class="n">DFO</span><span class="p">)</span>
@@ -455,12 +367,8 @@ it and we are reduced to compute <code class="docutils literal notranslate"><spa
      <span class="o">=</span> <span class="n">A</span> <span class="n">B</span> <span class="n">C</span> <span class="n">D</span> <span class="n">E</span> <span class="n">F</span> <span class="n">O</span>
 </pre></div>
 </div>
-<p>In this example, the linearization is ordered in a pretty nice way
-according to the inheritance level, in the sense that lower levels (i.e.
-more specialized classes) have higher precedence (see the inheritance
-graph).  However, this is not the general case.</p>
-<p>I leave as an exercise for the reader to compute the linearization for
-my second example:</p>
+<p>在此範例中，線性化是根據繼承層級以相當不錯的方式排序的，因為較低層級（即更專精的類別）具有更高的優先級（請參見繼承圖）。但是這不是一般情況。</p>
+<p>第二個範例的線性化之計算我留給讀者當作練習：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">O</span> <span class="o">=</span> <span class="nb">object</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">F</span><span class="p">(</span><span class="n">O</span><span class="p">):</span> <span class="k">pass</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">E</span><span class="p">(</span><span class="n">O</span><span class="p">):</span> <span class="k">pass</span>
@@ -470,9 +378,7 @@ my second example:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="n">C</span><span class="p">):</span> <span class="k">pass</span>
 </pre></div>
 </div>
-<p>The only difference with the previous example is the change B(D,E) --&gt;
-B(E,D); however even such a little modification completely changes the
-ordering of the hierarchy:</p>
+<p>與上一個範例的唯一區別是 B(D,E) --&gt; B(E,D) 的變化；但是即使是這樣小小的修改，也完全改變了階層結構的順序：</p>
 <blockquote>
 <div><div class="highlight-text notranslate"><div class="highlight"><pre><span></span>                           6
                           ---
@@ -498,21 +404,15 @@ Level 0                0 | A |
 </pre></div>
 </div>
 </div></blockquote>
-<p>Notice that the class E, which is in the second level of the hierarchy,
-precedes the class C, which is in the first level of the hierarchy, i.e.
-E is more specialized than C, even if it is in a higher level.</p>
-<p>A lazy programmer can obtain the MRO directly from Python 2.2, since in
-this case it coincides with the Python 2.3 linearization.  It is enough
-to invoke the <a class="reference internal" href="../reference/datamodel.html#type.mro" title="type.mro"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mro()</span></code></a> method of class A:</p>
+<p>請注意，階層結構的第二層中的類別 E，先於階層結構第一層的類別 C，即 E 比 C 更專精，即使它處於更高層。</p>
+<p>懶惰的程式設計師可以直接從 Python 2.2 取得 MRO，因為在這種情況下，它與 Python 2.3 線性化一致。呼叫類別 A 的 <a class="reference internal" href="../reference/datamodel.html#type.mro" title="type.mro"><code class="xref py py-meth docutils literal notranslate"><span class="pre">mro()</span></code></a> 方法就足夠了：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">A</span><span class="o">.</span><span class="n">mro</span><span class="p">()</span>
 <span class="go">[&lt;class &#39;A&#39;&gt;, &lt;class &#39;B&#39;&gt;, &lt;class &#39;E&#39;&gt;,</span>
 <span class="go">&lt;class &#39;C&#39;&gt;, &lt;class &#39;D&#39;&gt;, &lt;class &#39;F&#39;&gt;,</span>
 <span class="go">&lt;class &#39;object&#39;&gt;]</span>
 </pre></div>
 </div>
-<p>Finally, let me consider the example discussed in the first section,
-involving a serious order disagreement.  In this case, it is
-straightforward to compute the linearizations of O, X, Y, A and B:</p>
+<p>最後，讓我考慮第一部分中討論的範例，涉及嚴重的順序分歧。在這種情況下，計算 O、X、Y、A 和 B 的線性化是很簡單的：</p>
 <blockquote>
 <div><div class="highlight-text notranslate"><div class="highlight"><pre><span></span>L[O] = 0
 L[X] = X O
@@ -522,32 +422,24 @@ L[B] = B Y X O
 </pre></div>
 </div>
 </div></blockquote>
-<p>However, it is impossible to compute the linearization for a class C
-that inherits from A and B:</p>
+<p>但是，我們不可能計算出從 A 和 B 繼承的類別 C 的線性化：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="n">C</span><span class="p">]</span> <span class="o">=</span> <span class="n">C</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">AXYO</span><span class="p">,</span> <span class="n">BYXO</span><span class="p">,</span> <span class="n">AB</span><span class="p">)</span>
      <span class="o">=</span> <span class="n">C</span> <span class="o">+</span> <span class="n">A</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">XYO</span><span class="p">,</span> <span class="n">BYXO</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
      <span class="o">=</span> <span class="n">C</span> <span class="o">+</span> <span class="n">A</span> <span class="o">+</span> <span class="n">B</span> <span class="o">+</span> <span class="n">merge</span><span class="p">(</span><span class="n">XYO</span><span class="p">,</span> <span class="n">YXO</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>At this point we cannot merge the lists XYO and YXO, since X is in the
-tail of YXO whereas Y is in the tail of XYO:  therefore there are no
-good heads and the C3 algorithm stops.  Python 2.3 raises an error and
-refuses to create the class C.</p>
+<p>在這一點上，我們無法合併串列 XYO 和 YXO，因為 X 位於 YXO 的尾部，而 Y 則位於 XYO 的尾部：因此，沒有好的頭部，C3 演算法停止。Python 2.3 會引發錯誤而拒絕建立類別 C。</p>
 </section>
 <section id="bad-method-resolution-orders">
-<h2>Bad Method Resolution Orders<a class="headerlink" href="#bad-method-resolution-orders" title="連結到這個標頭">¶</a></h2>
-<p>A MRO is <em>bad</em> when it breaks such fundamental properties as local
-precedence ordering and monotonicity.  In this section, I will show
-that both the MRO for classic classes and the MRO for new style classes
-in Python 2.2 are bad.</p>
-<p>It is easier to start with the local precedence ordering.  Consider the
-following example:</p>
+<h2>不良的方法解析順序<a class="headerlink" href="#bad-method-resolution-orders" title="連結到這個標頭">¶</a></h2>
+<p>當 MRO 打破諸如區域優先順序和單調性之類的基本屬性時，MRO 是<em>不良</em>的。在本節中，我將證明經典類別的 MRO 和 Python 2.2 的新式類別的 MRO 都是不好的。</p>
+<p>從區域優先順序開始更容易。考慮以下範例：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">F</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="s1">&#39;Food&#39;</span><span class="p">,(),{</span><span class="s1">&#39;remember2buy&#39;</span><span class="p">:</span><span class="s1">&#39;spam&#39;</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">E</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="s1">&#39;Eggs&#39;</span><span class="p">,(</span><span class="n">F</span><span class="p">,),{</span><span class="s1">&#39;remember2buy&#39;</span><span class="p">:</span><span class="s1">&#39;eggs&#39;</span><span class="p">})</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">=</span><span class="nb">type</span><span class="p">(</span><span class="s1">&#39;GoodFood&#39;</span><span class="p">,(</span><span class="n">F</span><span class="p">,</span><span class="n">E</span><span class="p">),{})</span> <span class="c1"># under Python 2.3 this is an error!</span>
 </pre></div>
 </div>
-<p>with inheritance diagram</p>
+<p>包含繼承圖</p>
 <blockquote>
 <div><div class="highlight-text notranslate"><div class="highlight"><pre><span></span>             O
              |
@@ -561,25 +453,16 @@ following example:</p>
 </pre></div>
 </div>
 </div></blockquote>
-<p>We see that class G inherits from F and E, with F <em>before</em> E:  therefore
-we would expect the attribute <em>G.remember2buy</em> to be inherited by
-<em>F.remember2buy</em> and not by <em>E.remember2buy</em>:  nevertheless Python 2.2
-gives</p>
+<p>我們看到類別 G 從 F 和 E 繼承，F 在 E <em>之前</em>：因此，我們希望屬性 <em>G.remember2buy</em> 被 <em>F.remember2buy</em> 繼承，而不是 <em>E.remember2buy</em>：儘管如此，Python 2.2 給出</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">G</span><span class="o">.</span><span class="n">remember2buy</span>
 <span class="go">&#39;eggs&#39;</span>
 </pre></div>
 </div>
-<p>This is a breaking of local precedence ordering since the order in the
-local precedence list, i.e. the list of the parents of G, is not
-preserved in the Python 2.2 linearization of G:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="n">G</span><span class="p">,</span><span class="n">P22</span><span class="p">]</span><span class="o">=</span> <span class="n">G</span> <span class="n">E</span> <span class="n">F</span> <span class="nb">object</span>   <span class="c1"># F *follows* E</span>
+<p>這是區域優先順序的破壞，因為區域優先串列中的順序，即 G 的父類別串列，在 Python 2.2 的 G 的線性化中不被保留：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="n">G</span><span class="p">,</span><span class="n">P22</span><span class="p">]</span><span class="o">=</span> <span class="n">G</span> <span class="n">E</span> <span class="n">F</span> <span class="nb">object</span>   <span class="c1"># F *跟隨* E</span>
 </pre></div>
 </div>
-<p>One could argue that the reason why F follows E in the Python 2.2
-linearization is that F is less specialized than E, since F is the
-superclass of E; nevertheless the breaking of local precedence ordering
-is quite non-intuitive and error prone.  This is particularly true since
-it is a different from old style classes:</p>
+<p>有人可能會說，F 在 Python 2.2 線性化中跟隨 E 的原因是 F 比 E 特化程度較低，因為 F 是 E 的超類別；然而，局部優先順序的破壞非常不直覺且容易出錯。尤其如此，因為它與舊式類別不同：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">F</span><span class="p">:</span> <span class="n">remember2buy</span><span class="o">=</span><span class="s1">&#39;spam&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">E</span><span class="p">(</span><span class="n">F</span><span class="p">):</span> <span class="n">remember2buy</span><span class="o">=</span><span class="s1">&#39;eggs&#39;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">G</span><span class="p">(</span><span class="n">F</span><span class="p">,</span><span class="n">E</span><span class="p">):</span> <span class="k">pass</span>
@@ -587,22 +470,13 @@ it is a different from old style classes:</p>
 <span class="go">&#39;spam&#39;</span>
 </pre></div>
 </div>
-<p>In this case the MRO is GFEF and the local precedence ordering is
-preserved.</p>
-<p>As a general rule, hierarchies such as the previous one should be
-avoided, since it is unclear if F should override E or vice-versa.
-Python 2.3 solves the ambiguity by raising an exception in the creation
-of class G, effectively stopping the programmer from generating
-ambiguous hierarchies.  The reason for that is that the C3 algorithm
-fails when the merge:</p>
+<p>在這種情況下，MRO 是 GFEF 並且保留區域優先順序。</p>
+<p>通常應避免諸如上一個等階層結構，因為尚不清楚 F 是否應覆蓋 E 或反過來。 Python 2.3 透過在建立類別 G 時引發例外來解決歧義，從而有效地阻止程式設計師產生模棱兩可的階層結構。原因是當這樣合併時 C3 演算法會失敗：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">merge</span><span class="p">(</span><span class="n">FO</span><span class="p">,</span><span class="n">EFO</span><span class="p">,</span><span class="n">FE</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>cannot be computed, because F is in the tail of EFO and E is in the tail
-of FE.</p>
-<p>The real solution is to design a non-ambiguous hierarchy, i.e. to derive
-G from E and F (the more specific first) and not from F and E; in this
-case the MRO is GEF without any doubt.</p>
+<p>無法計算，因為 F 在 EFO 的尾部，而 E 在 FE 的尾部。</p>
+<p>真正的解決方案是設計一個非歧義的階層結構，即源自 E 和 F（更具體的第一）而不是 F 和 E；在這種情況下，MRO 毫無疑問是 GEF。</p>
 <blockquote>
 <div><div class="highlight-text notranslate"><div class="highlight"><pre><span></span>           O
            |
@@ -615,11 +489,8 @@ case the MRO is GEF without any doubt.</p>
 </pre></div>
 </div>
 </div></blockquote>
-<p>Python 2.3 forces the programmer to write good hierarchies (or, at
-least, less error-prone ones).</p>
-<p>On a related note, let me point out that the Python 2.3 algorithm is
-smart enough to recognize obvious mistakes, as the duplication of
-classes in the list of parents:</p>
+<p>Python 2.3 迫使程式設計師要編寫良好（或至少較不易於出錯）的階層結構。</p>
+<p>與之相關的是，我指出 Python 2.3 演算法足夠聰明，可以識別出明顯的錯誤，例如父類別串列中類別的重複：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span> <span class="k">pass</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">C</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">A</span><span class="p">):</span> <span class="k">pass</span> <span class="c1"># error</span>
 <span class="gt">Traceback (most recent call last):</span>
@@ -627,22 +498,14 @@ classes in the list of parents:</p>
 <span class="gr">TypeError</span>: <span class="n">duplicate base class A</span>
 </pre></div>
 </div>
-<p>Python 2.2 (both for classic classes and new style classes) in this
-situation, would not raise any exception.</p>
-<p>Finally, I would like to point out two lessons we have learned from this
-example:</p>
+<p>在這種情況下，Python 2.2（無論是經典類別還是新式類別）不會引發任何例外。</p>
+<p>最後，我想指出我們從這個範例中學到的兩個教訓：</p>
 <ol class="arabic simple">
-<li><p>despite the name, the MRO determines the resolution order of
-attributes, not only of methods;</p></li>
-<li><p>the default food for Pythonistas is spam !  (but you already knew
-that ;-)</p></li>
+<li><p>儘管名稱如此，但不僅是方法的解析順序，MRO 也決定了屬性的解析順序；</p></li>
+<li><p>Pythonistas 的預設食物是 spam！（但是你已經知道 ;-)</p></li>
 </ol>
-<p>Having discussed the issue of local precedence ordering, let me now
-consider the issue of monotonicity.  My goal is to show that neither the
-MRO for classic classes nor that for Python 2.2 new style classes is
-monotonic.</p>
-<p>To prove that the MRO for classic classes is non-monotonic is rather
-trivial, it is enough to look at the diamond diagram:</p>
+<p>在討論了區域優先順序的問題之後，現在讓我考慮單調性問題。我的目標是表明經典類別的 MRO 或 Python 2.2 新式類別都不是單調的。</p>
+<p>為了證明經典類別的 MRO 是非單調的，查看鑽石圖就足夠了：</p>
 <blockquote>
 <div><div class="highlight-text notranslate"><div class="highlight"><pre><span></span>   C
   / \
@@ -654,24 +517,17 @@ A     B
 </pre></div>
 </div>
 </div></blockquote>
-<p>One easily discerns the inconsistency:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="n">B</span><span class="p">,</span><span class="n">P21</span><span class="p">]</span> <span class="o">=</span> <span class="n">B</span> <span class="n">C</span>        <span class="c1"># B precedes C : B&#39;s methods win</span>
-<span class="n">L</span><span class="p">[</span><span class="n">D</span><span class="p">,</span><span class="n">P21</span><span class="p">]</span> <span class="o">=</span> <span class="n">D</span> <span class="n">A</span> <span class="n">C</span> <span class="n">B</span> <span class="n">C</span>  <span class="c1"># B follows C  : C&#39;s methods win!</span>
+<p>可以很容易地辨別出這種不一致：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="n">B</span><span class="p">,</span><span class="n">P21</span><span class="p">]</span> <span class="o">=</span> <span class="n">B</span> <span class="n">C</span>        <span class="c1"># B 優先於 C：B 的方法勝出</span>
+<span class="n">L</span><span class="p">[</span><span class="n">D</span><span class="p">,</span><span class="n">P21</span><span class="p">]</span> <span class="o">=</span> <span class="n">D</span> <span class="n">A</span> <span class="n">C</span> <span class="n">B</span> <span class="n">C</span>  <span class="c1"># B 跟隨 C：C 的方法勝出！</span>
 </pre></div>
 </div>
-<p>On the other hand, there are no problems with the Python 2.2 and 2.3
-MROs, they give both:</p>
+<p>另一方面，Python 2.2 和 2.3 MRO 沒有問題，它們兩個都給出了：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="n">D</span><span class="p">]</span> <span class="o">=</span> <span class="n">D</span> <span class="n">A</span> <span class="n">B</span> <span class="n">C</span>
 </pre></div>
 </div>
-<p>Guido points out in his essay <a class="footnote-reference brackets" href="#id6" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a> that the classic MRO is not so bad in
-practice, since one can typically avoids diamonds for classic classes.
-But all new style classes inherit from <code class="docutils literal notranslate"><span class="pre">object</span></code>, therefore diamonds are
-unavoidable and inconsistencies shows up in every multiple inheritance
-graph.</p>
-<p>The MRO of Python 2.2 makes breaking monotonicity difficult, but not
-impossible.  The following example, originally provided by Samuele
-Pedroni, shows that the MRO of Python 2.2 is non-monotonic:</p>
+<p>Guido 在他的文章 <a class="footnote-reference brackets" href="#id6" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a> 中指出，經典的 MRO 在實踐中還不錯，因為通常可以避開經典類別的鑽石圖。但是所有新式類別都從 <code class="docutils literal notranslate"><span class="pre">object</span></code> 繼承，因此鑽石圖是不可避免的，並且在每個多重繼承圖中都出現了不一致之處。</p>
+<p>Python 2.2 的 MRO 讓打破單調性變得困難，但並非不可能。以下最初由 Samuele Pedroni 提供的範例展示 Python 2.2 的 MRO 是非單調的：</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span> <span class="k">pass</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span> <span class="k">pass</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">C</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span> <span class="k">pass</span>
@@ -683,9 +539,7 @@ Pedroni, shows that the MRO of Python 2.2 is non-monotonic:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">Z</span><span class="p">(</span><span class="n">K1</span><span class="p">,</span><span class="n">K2</span><span class="p">,</span><span class="n">K3</span><span class="p">):</span> <span class="k">pass</span>
 </pre></div>
 </div>
-<p>Here are the linearizations according to the C3 MRO (the reader should
-verify these linearizations as an exercise and draw the inheritance
-diagram ;-)</p>
+<p>以下是根據 C3 MRO 的線性化（讀者應練習驗證這些線性化並繪製繼承圖 ;-) ：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="n">A</span><span class="p">]</span> <span class="o">=</span> <span class="n">A</span> <span class="n">O</span>
 <span class="n">L</span><span class="p">[</span><span class="n">B</span><span class="p">]</span> <span class="o">=</span> <span class="n">B</span> <span class="n">O</span>
 <span class="n">L</span><span class="p">[</span><span class="n">C</span><span class="p">]</span> <span class="o">=</span> <span class="n">C</span> <span class="n">O</span>
@@ -697,56 +551,37 @@ diagram ;-)</p>
 <span class="n">L</span><span class="p">[</span><span class="n">Z</span><span class="p">]</span> <span class="o">=</span> <span class="n">Z</span> <span class="n">K1</span> <span class="n">K2</span> <span class="n">K3</span> <span class="n">D</span> <span class="n">A</span> <span class="n">B</span> <span class="n">C</span> <span class="n">E</span> <span class="n">O</span>
 </pre></div>
 </div>
-<p>Python 2.2 gives exactly the same linearizations for A, B, C, D, E, K1,
-K2 and K3, but a different linearization for Z:</p>
+<p>Python 2.2 給出了 A、B、C、D、E、K1、K2 和 K3 完全相同的線性化，但是 Z 的線性化卻不同：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">L</span><span class="p">[</span><span class="n">Z</span><span class="p">,</span><span class="n">P22</span><span class="p">]</span> <span class="o">=</span> <span class="n">Z</span> <span class="n">K1</span> <span class="n">K3</span> <span class="n">A</span> <span class="n">K2</span> <span class="n">D</span> <span class="n">B</span> <span class="n">C</span> <span class="n">E</span> <span class="n">O</span>
 </pre></div>
 </div>
-<p>It is clear that this linearization is <em>wrong</em>, since A comes before D
-whereas in the linearization of K3 A comes <em>after</em> D. In other words, in
-K3 methods derived by D override methods derived by A, but in Z, which
-still is a subclass of K3, methods derived by A override methods derived
-by D!  This is a violation of monotonicity.  Moreover, the Python 2.2
-linearization of Z is also inconsistent with local precedence ordering,
-since the local precedence list of the class Z is [K1, K2, K3] (K2
-precedes K3), whereas in the linearization of Z K2 <em>follows</em> K3.  These
-problems explain why the 2.2 rule has been dismissed in favor of the C3
-rule.</p>
+<p>顯然，這種線性化是<em>錯誤</em>的，因為 A 在 D 之前，而在 K3 的線性化中，A 在 D <em>之後</em>。換句話說，在 K3 中由 D 衍生的方法會覆寫由 A 衍生的方法，但在 Z 中（它仍然是 K3 的子類別），由 A 衍生的方法卻覆寫由 D 衍生的方法！這是對單調性的違反。此外，Z 的 Python 2.2 線性化也與局部優先順序不一致，因為類別 Z 的局部優先串列是 [K1, K2, K3]（K2 先於 K3），但在 Z 的線性化中 K2 <em>跟隨</em> K3。這些問題解釋了為什麼 2.2 規則被摒棄而採用 C3 規則。</p>
 </section>
 <section id="the-end">
-<h2>The end<a class="headerlink" href="#the-end" title="連結到這個標頭">¶</a></h2>
-<p>This section is for the impatient reader, who skipped all the previous
-sections and jumped immediately to the end.  This section is for the
-lazy programmer too, who didn't want to exercise her/his brain.
-Finally, it is for the programmer with some hubris, otherwise s/he would
-not be reading a paper on the C3 method resolution order in multiple
-inheritance hierarchies ;-) These three virtues taken all together (and
-<em>not</em> separately) deserve a prize:  the prize is a short Python 2.2
-script that allows you to compute the 2.3 MRO without risk to your
-brain.  Simply change the last line to play with the various examples I
-have discussed in this paper.:</p>
+<h2>結語<a class="headerlink" href="#the-end" title="連結到這個標頭">¶</a></h2>
+<p>本節適用於那些不耐煩、所有先前部分都跳過並直接滑到最後的讀者，也適用於懶得鍛鍊大腦的程式設計師。最後，這也是針對一些自負的程式設計師，不然她/他也不會想閱讀有關多重繼承階層中 C3 方法解析順序的文章；-)擁有這三種美德（注意是同時擁有，不是分開）就值得獲得獎品：獎品是一個簡短的 Python 2.2 腳本，可以幫你計算 2.3 MRO 而不用傷腦筋。只需更改最後一行就可以試跑我在本文中討論的各種範例。</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1">#&lt;mro.py&gt;</span>
 
-<span class="sd">&quot;&quot;&quot;C3 algorithm by Samuele Pedroni (with readability enhanced by me).&quot;&quot;&quot;</span>
+<span class="sd">&quot;&quot;&quot;Samuele Pedroni 撰寫的 C3 演算法（由我改善了可讀性）。&quot;&quot;&quot;</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">__metaclass__</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
-    <span class="s2">&quot;All classes are metamagically modified to be nicely printed&quot;</span>
+    <span class="s2">&quot;所有類別都會被神奇地修改以便美觀地列印&quot;</span>
     <span class="fm">__repr__</span> <span class="o">=</span> <span class="k">lambda</span> <span class="bp">cls</span><span class="p">:</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">ex_2</span><span class="p">:</span>
-    <span class="s2">&quot;Serious order disagreement&quot;</span> <span class="c1">#From Guido</span>
+    <span class="s2">&quot;嚴重的順序分歧&quot;</span> <span class="c1"># 來自 Guido</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">O</span><span class="p">:</span> <span class="k">pass</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">X</span><span class="p">(</span><span class="n">O</span><span class="p">):</span> <span class="k">pass</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">Y</span><span class="p">(</span><span class="n">O</span><span class="p">):</span> <span class="k">pass</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">X</span><span class="p">,</span><span class="n">Y</span><span class="p">):</span> <span class="k">pass</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">Y</span><span class="p">,</span><span class="n">X</span><span class="p">):</span> <span class="k">pass</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="k">class</span><span class="w"> </span><span class="nc">Z</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">):</span> <span class="k">pass</span> <span class="c1">#creates Z(A,B) in Python 2.2</span>
+        <span class="k">class</span><span class="w"> </span><span class="nc">Z</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="n">B</span><span class="p">):</span> <span class="k">pass</span> <span class="c1"># 在 Python 2.2 中會建立 Z(A,B)</span>
     <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-        <span class="k">pass</span> <span class="c1"># Z(A,B) cannot be created in Python 2.3</span>
+        <span class="k">pass</span> <span class="c1"># 在 Python 2.3 中無法建立 Z(A,B)</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">ex_5</span><span class="p">:</span>
-    <span class="s2">&quot;My first example&quot;</span>
+    <span class="s2">&quot;我的第一個範例&quot;</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">O</span><span class="p">:</span> <span class="k">pass</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">F</span><span class="p">(</span><span class="n">O</span><span class="p">):</span> <span class="k">pass</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">E</span><span class="p">(</span><span class="n">O</span><span class="p">):</span> <span class="k">pass</span>
@@ -756,7 +591,7 @@ have discussed in this paper.:</p>
     <span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="n">C</span><span class="p">):</span> <span class="k">pass</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">ex_6</span><span class="p">:</span>
-    <span class="s2">&quot;My second example&quot;</span>
+    <span class="s2">&quot;我的第二個範例&quot;</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">O</span><span class="p">:</span> <span class="k">pass</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">F</span><span class="p">(</span><span class="n">O</span><span class="p">):</span> <span class="k">pass</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">E</span><span class="p">(</span><span class="n">O</span><span class="p">):</span> <span class="k">pass</span>
@@ -766,7 +601,7 @@ have discussed in this paper.:</p>
     <span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">B</span><span class="p">,</span><span class="n">C</span><span class="p">):</span> <span class="k">pass</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">ex_9</span><span class="p">:</span>
-    <span class="s2">&quot;Difference between Python 2.2 MRO and C3&quot;</span> <span class="c1">#From Samuele</span>
+    <span class="s2">&quot;Python 2.2 MRO 與 C3 的差異&quot;</span> <span class="c1"># 來自 Samuele</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">O</span><span class="p">:</span> <span class="k">pass</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">A</span><span class="p">(</span><span class="n">O</span><span class="p">):</span> <span class="k">pass</span>
     <span class="k">class</span><span class="w"> </span><span class="nc">B</span><span class="p">(</span><span class="n">O</span><span class="p">):</span> <span class="k">pass</span>
@@ -785,18 +620,18 @@ have discussed in this paper.:</p>
       <span class="n">nonemptyseqs</span><span class="o">=</span><span class="p">[</span><span class="n">seq</span> <span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">seqs</span> <span class="k">if</span> <span class="n">seq</span><span class="p">]</span>
       <span class="k">if</span> <span class="ow">not</span> <span class="n">nonemptyseqs</span><span class="p">:</span> <span class="k">return</span> <span class="n">res</span>
       <span class="n">i</span><span class="o">+=</span><span class="mi">1</span><span class="p">;</span> <span class="nb">print</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span><span class="n">i</span><span class="p">,</span><span class="s1">&#39;round: candidates...&#39;</span><span class="p">,</span>
-      <span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">nonemptyseqs</span><span class="p">:</span> <span class="c1"># find merge candidates among seq heads</span>
+      <span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">nonemptyseqs</span><span class="p">:</span> <span class="c1"># 在序列頭部中尋找合併候選者</span>
           <span class="n">cand</span> <span class="o">=</span> <span class="n">seq</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span> <span class="nb">print</span> <span class="s1">&#39; &#39;</span><span class="p">,</span><span class="n">cand</span><span class="p">,</span>
           <span class="n">nothead</span><span class="o">=</span><span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">nonemptyseqs</span> <span class="k">if</span> <span class="n">cand</span> <span class="ow">in</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
-          <span class="k">if</span> <span class="n">nothead</span><span class="p">:</span> <span class="n">cand</span><span class="o">=</span><span class="kc">None</span> <span class="c1">#reject candidate</span>
+          <span class="k">if</span> <span class="n">nothead</span><span class="p">:</span> <span class="n">cand</span><span class="o">=</span><span class="kc">None</span> <span class="c1"># 拒絕候選者</span>
           <span class="k">else</span><span class="p">:</span> <span class="k">break</span>
-      <span class="k">if</span> <span class="ow">not</span> <span class="n">cand</span><span class="p">:</span> <span class="k">raise</span> <span class="s2">&quot;Inconsistent hierarchy&quot;</span>
+      <span class="k">if</span> <span class="ow">not</span> <span class="n">cand</span><span class="p">:</span> <span class="k">raise</span> <span class="s2">&quot;不一致的階層結構&quot;</span>
       <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cand</span><span class="p">)</span>
-      <span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">nonemptyseqs</span><span class="p">:</span> <span class="c1"># remove cand</span>
+      <span class="k">for</span> <span class="n">seq</span> <span class="ow">in</span> <span class="n">nonemptyseqs</span><span class="p">:</span> <span class="c1"># 移除候選者</span>
           <span class="k">if</span> <span class="n">seq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">cand</span><span class="p">:</span> <span class="k">del</span> <span class="n">seq</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">mro</span><span class="p">(</span><span class="n">C</span><span class="p">):</span>
-    <span class="s2">&quot;Compute the class precedence list (mro) according to C3&quot;</span>
+    <span class="s2">&quot;根據 C3 計算類別優先串列 (mro)&quot;</span>
     <span class="k">return</span> <span class="n">merge</span><span class="p">([[</span><span class="n">C</span><span class="p">]]</span><span class="o">+</span><span class="nb">map</span><span class="p">(</span><span class="n">mro</span><span class="p">,</span><span class="n">C</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">)</span><span class="o">+</span><span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">C</span><span class="o">.</span><span class="vm">__bases__</span><span class="p">)])</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">print_mro</span><span class="p">(</span><span class="n">C</span><span class="p">):</span>
@@ -808,28 +643,25 @@ have discussed in this paper.:</p>
 <span class="c1">#&lt;/mro.py&gt;</span>
 </pre></div>
 </div>
-<p>That's all folks,</p>
+<p>就這樣，各位，</p>
 <blockquote>
-<div><p>enjoy !</p>
+<div><p>祝使用愉快！</p>
 </div></blockquote>
 </section>
 <section id="resources">
-<h2>Resources<a class="headerlink" href="#resources" title="連結到這個標頭">¶</a></h2>
+<h2>資源<a class="headerlink" href="#resources" title="連結到這個標頭">¶</a></h2>
 <aside class="footnote-list brackets">
 <aside class="footnote brackets" id="id4" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
-<p>The thread on python-dev started by Samuele Pedroni:
-<a class="reference external" href="https://mail.python.org/pipermail/python-dev/2002-October/029035.html">https://mail.python.org/pipermail/python-dev/2002-October/029035.html</a></p>
+<p>Samuele Pedroni 發起的 python-dev 主題討論：<a class="reference external" href="https://mail.python.org/pipermail/python-dev/2002-October/029035.html">https://mail.python.org/pipermail/python-dev/2002-October/029035.html</a></p>
 </aside>
 <aside class="footnote brackets" id="id5" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
-<p>The paper <em>A Monotonic Superclass Linearization for Dylan</em>:
-<a class="reference external" href="https://doi.org/10.1145/236337.236343">https://doi.org/10.1145/236337.236343</a></p>
+<p>論文 <em>A Monotonic Superclass Linearization for Dylan</em>: <a class="reference external" href="https://doi.org/10.1145/236337.236343">https://doi.org/10.1145/236337.236343</a></p>
 </aside>
 <aside class="footnote brackets" id="id6" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">3</a><span class="fn-bracket">]</span></span>
-<p>Guido van Rossum's essay, <em>Unifying types and classes in Python 2.2</em>:
-<a class="reference external" href="https://web.archive.org/web/20140210194412/http://www.python.org/download/releases/2.2.2/descrintro">https://web.archive.org/web/20140210194412/http://www.python.org/download/releases/2.2.2/descrintro</a></p>
+<p>Guido van Rossum 的文章 <em>Unifying types and classes in Python 2.2</em>：<a class="reference external" href="https://web.archive.org/web/20140210194412/http://www.python.org/download/releases/2.2.2/descrintro">https://web.archive.org/web/20140210194412/http://www.python.org/download/releases/2.2.2/descrintro</a></p>
 </aside>
 </aside>
 </section>
@@ -845,13 +677,13 @@ have discussed in this paper.:</p>
   <div>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
-<li><a class="reference internal" href="#">The Python 2.3 Method Resolution Order</a><ul>
-<li><a class="reference internal" href="#the-beginning">The beginning</a></li>
-<li><a class="reference internal" href="#the-c3-method-resolution-order">The C3 Method Resolution Order</a></li>
+<li><a class="reference internal" href="#">Python 2.3 方法解析順序</a><ul>
+<li><a class="reference internal" href="#the-beginning">開端</a></li>
+<li><a class="reference internal" href="#the-c3-method-resolution-order">C3 方法解析順序</a></li>
 <li><a class="reference internal" href="#examples">範例</a></li>
-<li><a class="reference internal" href="#bad-method-resolution-orders">Bad Method Resolution Orders</a></li>
-<li><a class="reference internal" href="#the-end">The end</a></li>
-<li><a class="reference internal" href="#resources">Resources</a></li>
+<li><a class="reference internal" href="#bad-method-resolution-orders">不良的方法解析順序</a></li>
+<li><a class="reference internal" href="#the-end">結語</a></li>
+<li><a class="reference internal" href="#resources">資源</a></li>
 </ul>
 </li>
 </ul>
@@ -916,7 +748,7 @@ have discussed in this paper.:</p>
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 如何達成任務</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">The Python 2.3 Method Resolution Order</a></li>
+        <li class="nav-item nav-item-this"><a href="">Python 2.3 方法解析順序</a></li>
                 <li class="right">
                     
 
@@ -957,7 +789,7 @@ have discussed in this paper.:</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 11月 13, 2025 (23:18 UTC)。
+      最後更新於 11月 14, 2025 (10:46 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
