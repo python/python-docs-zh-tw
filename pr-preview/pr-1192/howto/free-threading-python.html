@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Python 自由執行緒的支援 &#8212; Python 3.14.2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=4eb63a40" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
+    
+    <script src="../_static/documentation_options.js?v=f006b4cd"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.14.2 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權所有" href="../copyright.html" />
+    <link rel="next" title="支援自由執行緒的 C API 擴充" href="free-threading-extensions.html" />
+    <link rel="prev" title="Python 2.3 方法解析順序" href="mro.html" />
+    
+      
+      <link rel="canonical" href="https://docs.python.org/3/howto/free-threading-python.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="../_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="../_static/py.svg">
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script>
+            <script type="text/javascript" src="../_static/search-focus.js"></script>
+            <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="選單">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="../_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"></span>
+            <form role="search" class="search" action="../search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q">
+                <input type="submit" value="前往">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+            
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Python 自由執行緒的支援</a><ul>
+<li><a class="reference internal" href="#installation">安裝</a></li>
+<li><a class="reference internal" href="#identifying-free-threaded-python">Identifying free-threaded Python</a></li>
+<li><a class="reference internal" href="#the-global-interpreter-lock-in-free-threaded-python">The global interpreter lock in free-threaded Python</a></li>
+<li><a class="reference internal" href="#thread-safety">執行緒安全</a></li>
+<li><a class="reference internal" href="#known-limitations">已知限制</a><ul>
+<li><a class="reference internal" href="#immortalization">不滅化 (Immortalization)</a></li>
+<li><a class="reference internal" href="#frame-objects">Frame objects</a></li>
+<li><a class="reference internal" href="#iterators">疊代器</a></li>
+<li><a class="reference internal" href="#single-threaded-performance">單執行緒效能</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#behavioral-changes">Behavioral changes</a><ul>
+<li><a class="reference internal" href="#context-variables">Context variables</a></li>
+<li><a class="reference internal" href="#warning-filters">Warning filters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="mro.html"
+                          title="上一章">Python 2.3 方法解析順序</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="free-threading-extensions.html"
+                          title="下一章">支援自由執行緒的 C API 擴充</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/free-threading-python.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/howto/free-threading-python.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="free-threading-extensions.html" title="支援自由執行緒的 C API 擴充"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="mro.html" title="Python 2.3 方法解析順序"
+             accesskey="P">上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.2 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 如何達成任務</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Python 自由執行緒的支援</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="python-support-for-free-threading">
+<span id="freethreading-python-howto"></span><h1>Python 自由執行緒的支援<a class="headerlink" href="#python-support-for-free-threading" title="連結到這個標頭">¶</a></h1>
+<p>Starting with the 3.13 release, CPython has support for a build of
+Python called <a class="reference internal" href="../glossary.html#term-free-threading"><span class="xref std std-term">free threading</span></a> where the <a class="reference internal" href="../glossary.html#term-global-interpreter-lock"><span class="xref std std-term">global interpreter lock</span></a>
+(GIL) is disabled.  Free-threaded execution allows for full utilization of the
+available processing power by running threads in parallel on available CPU cores.
+While not all software will benefit from this automatically, programs
+designed with threading in mind will run faster on multi-core hardware.</p>
+<p>Some third-party packages, in particular ones
+with an <a class="reference internal" href="../glossary.html#term-extension-module"><span class="xref std std-term">extension module</span></a>, may not be ready for use in a
+free-threaded build, and will re-enable the <a class="reference internal" href="../glossary.html#term-GIL"><span class="xref std std-term">GIL</span></a>.</p>
+<p>This document describes the implications of free threading
+for Python code.  See <a class="reference internal" href="free-threading-extensions.html#freethreading-extensions-howto"><span class="std std-ref">支援自由執行緒的 C API 擴充</span></a> for information on
+how to write C extensions that support the free-threaded build.</p>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0703/"><strong>PEP 703</strong></a> – Making the Global Interpreter Lock Optional in CPython for an
+overall description of free-threaded Python.</p>
+</div>
+<section id="installation">
+<h2>安裝<a class="headerlink" href="#installation" title="連結到這個標頭">¶</a></h2>
+<p>Starting with Python 3.13, the official macOS and Windows installers
+optionally support installing free-threaded Python binaries.  The installers
+are available at <a class="reference external" href="https://www.python.org/downloads/">https://www.python.org/downloads/</a>.</p>
+<p>For information on other platforms, see the <a class="reference external" href="https://py-free-threading.github.io/installing-cpython/">Installing a Free-Threaded Python</a>, a
+community-maintained installation guide for installing free-threaded Python.</p>
+<p>When building CPython from source, the <a class="reference internal" href="../using/configure.html#cmdoption-disable-gil"><code class="xref std std-option docutils literal notranslate"><span class="pre">--disable-gil</span></code></a> configure option
+should be used to build a free-threaded Python interpreter.</p>
+</section>
+<section id="identifying-free-threaded-python">
+<h2>Identifying free-threaded Python<a class="headerlink" href="#identifying-free-threaded-python" title="連結到這個標頭">¶</a></h2>
+<p>To check if the current interpreter supports free-threading, <a class="reference internal" href="../using/cmdline.html#cmdoption-V"><code class="xref std std-option docutils literal notranslate"><span class="pre">python</span> <span class="pre">-VV</span></code></a>
+and <a class="reference internal" href="../library/sys.html#sys.version" title="sys.version"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.version</span></code></a> contain &quot;free-threading build&quot;.
+The new <a class="reference internal" href="../library/sys.html#sys._is_gil_enabled" title="sys._is_gil_enabled"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys._is_gil_enabled()</span></code></a> function can be used to check whether
+the GIL is actually disabled in the running process.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">sysconfig.get_config_var(&quot;Py_GIL_DISABLED&quot;)</span></code> configuration variable can
+be used to determine whether the build supports free threading.  If the variable
+is set to <code class="docutils literal notranslate"><span class="pre">1</span></code>, then the build supports free threading.  This is the recommended
+mechanism for decisions related to the build configuration.</p>
+</section>
+<section id="the-global-interpreter-lock-in-free-threaded-python">
+<h2>The global interpreter lock in free-threaded Python<a class="headerlink" href="#the-global-interpreter-lock-in-free-threaded-python" title="連結到這個標頭">¶</a></h2>
+<p>Free-threaded builds of CPython support optionally running with the GIL enabled
+at runtime using the environment variable <span class="target" id="index-1"></span><a class="reference internal" href="../using/cmdline.html#envvar-PYTHON_GIL"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHON_GIL</span></code></a> or
+the command-line option <a class="reference internal" href="../using/cmdline.html#cmdoption-X"><code class="xref std std-option docutils literal notranslate"><span class="pre">-X</span> <span class="pre">gil</span></code></a>.</p>
+<p>The GIL may also automatically be enabled when importing a C-API extension
+module that is not explicitly marked as supporting free threading.  A warning
+will be printed in this case.</p>
+<p>In addition to individual package documentation, the following websites track
+the status of popular packages support for free threading:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://py-free-threading.github.io/tracking/">https://py-free-threading.github.io/tracking/</a></p></li>
+<li><p><a class="reference external" href="https://hugovk.github.io/free-threaded-wheels/">https://hugovk.github.io/free-threaded-wheels/</a></p></li>
+</ul>
+</section>
+<section id="thread-safety">
+<h2>執行緒安全<a class="headerlink" href="#thread-safety" title="連結到這個標頭">¶</a></h2>
+<p>The free-threaded build of CPython aims to provide similar thread-safety
+behavior at the Python level to the default GIL-enabled build.  Built-in
+types like <a class="reference internal" href="../library/stdtypes.html#dict" title="dict"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <a class="reference internal" href="../library/stdtypes.html#list" title="list"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>, and <a class="reference internal" href="../library/stdtypes.html#set" title="set"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a> use internal locks
+to protect against concurrent modifications in ways that behave similarly to
+the GIL.  However, Python has not historically guaranteed specific behavior for
+concurrent modifications to these built-in types, so this should be treated
+as a description of the current implementation, not a guarantee of current or
+future behavior.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>It's recommended to use the <a class="reference internal" href="../library/threading.html#threading.Lock" title="threading.Lock"><code class="xref py py-class docutils literal notranslate"><span class="pre">threading.Lock</span></code></a> or other synchronization
+primitives instead of relying on the internal locks of built-in types, when
+possible.</p>
+</div>
+</section>
+<section id="known-limitations">
+<h2>已知限制<a class="headerlink" href="#known-limitations" title="連結到這個標頭">¶</a></h2>
+<p>This section describes known limitations of the free-threaded CPython build.</p>
+<section id="immortalization">
+<h3>不滅化 (Immortalization)<a class="headerlink" href="#immortalization" title="連結到這個標頭">¶</a></h3>
+<p>In the free-threaded build, some objects are <a class="reference internal" href="../glossary.html#term-immortal"><span class="xref std std-term">immortal</span></a>.
+Immortal objects are not deallocated and have reference counts that are
+never modified.  This is done to avoid reference count contention that would
+prevent efficient multi-threaded scaling.</p>
+<p>As of the 3.14 release, immortalization is limited to:</p>
+<ul class="simple">
+<li><p>Code constants: numeric literals, string literals, and tuple literals
+composed of other constants.</p></li>
+<li><p>Strings interned by <a class="reference internal" href="../library/sys.html#sys.intern" title="sys.intern"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.intern()</span></code></a>.</p></li>
+</ul>
+</section>
+<section id="frame-objects">
+<h3>Frame objects<a class="headerlink" href="#frame-objects" title="連結到這個標頭">¶</a></h3>
+<p>It is not safe to access <a class="reference internal" href="../reference/datamodel.html#frame.f_locals" title="frame.f_locals"><code class="xref py py-attr docutils literal notranslate"><span class="pre">frame.f_locals</span></code></a> from a <a class="reference internal" href="../reference/datamodel.html#frame-objects"><span class="std std-ref">frame</span></a>
+object if that frame is currently executing in another thread, and doing so may
+crash the interpreter.</p>
+</section>
+<section id="iterators">
+<h3>疊代器<a class="headerlink" href="#iterators" title="連結到這個標頭">¶</a></h3>
+<p>It is generally not thread-safe to access the same iterator object from
+multiple threads concurrently, and threads may see duplicate or missing
+elements.</p>
+</section>
+<section id="single-threaded-performance">
+<h3>單執行緒效能<a class="headerlink" href="#single-threaded-performance" title="連結到這個標頭">¶</a></h3>
+<p>The free-threaded build has additional overhead when executing Python code
+compared to the default GIL-enabled build.  The amount of overhead depends
+on the workload and hardware.  On the pyperformance benchmark suite, the
+average overhead ranges from about 1% on macOS aarch64 to 8% on x86-64 Linux
+systems.</p>
+</section>
+</section>
+<section id="behavioral-changes">
+<h2>Behavioral changes<a class="headerlink" href="#behavioral-changes" title="連結到這個標頭">¶</a></h2>
+<p>This section describes CPython behavioural changes with the free-threaded
+build.</p>
+<section id="context-variables">
+<h3>Context variables<a class="headerlink" href="#context-variables" title="連結到這個標頭">¶</a></h3>
+<p>In the free-threaded build, the flag <a class="reference internal" href="../library/sys.html#sys.flags.thread_inherit_context" title="sys.flags.thread_inherit_context"><code class="xref py py-data docutils literal notranslate"><span class="pre">thread_inherit_context</span></code></a>
+is set to true by default which causes threads created with
+<a class="reference internal" href="../library/threading.html#threading.Thread" title="threading.Thread"><code class="xref py py-class docutils literal notranslate"><span class="pre">threading.Thread</span></code></a> to start with a copy of the
+<a class="reference internal" href="../library/contextvars.html#contextvars.Context" title="contextvars.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context()</span></code></a> of the caller of
+<a class="reference internal" href="../library/threading.html#threading.Thread.start" title="threading.Thread.start"><code class="xref py py-meth docutils literal notranslate"><span class="pre">start()</span></code></a>.  In the default GIL-enabled build, the flag
+defaults to false so threads start with an
+empty <a class="reference internal" href="../library/contextvars.html#contextvars.Context" title="contextvars.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context()</span></code></a>.</p>
+</section>
+<section id="warning-filters">
+<h3>Warning filters<a class="headerlink" href="#warning-filters" title="連結到這個標頭">¶</a></h3>
+<p>In the free-threaded build, the flag <a class="reference internal" href="../library/sys.html#sys.flags.context_aware_warnings" title="sys.flags.context_aware_warnings"><code class="xref py py-data docutils literal notranslate"><span class="pre">context_aware_warnings</span></code></a>
+is set to true by default.  In the default GIL-enabled build, the flag defaults
+to false.  If the flag is true then the <a class="reference internal" href="../library/warnings.html#warnings.catch_warnings" title="warnings.catch_warnings"><code class="xref py py-class docutils literal notranslate"><span class="pre">warnings.catch_warnings</span></code></a>
+context manager uses a context variable for warning filters.  If the flag is
+false then <a class="reference internal" href="../library/warnings.html#warnings.catch_warnings" title="warnings.catch_warnings"><code class="xref py py-class docutils literal notranslate"><span class="pre">catch_warnings</span></code></a> modifies the global filters list,
+which is not thread-safe.  See the <a class="reference internal" href="../library/warnings.html#module-warnings" title="warnings: Issue warning messages and control their disposition."><code class="xref py py-mod docutils literal notranslate"><span class="pre">warnings</span></code></a> module for more details.</p>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Python 自由執行緒的支援</a><ul>
+<li><a class="reference internal" href="#installation">安裝</a></li>
+<li><a class="reference internal" href="#identifying-free-threaded-python">Identifying free-threaded Python</a></li>
+<li><a class="reference internal" href="#the-global-interpreter-lock-in-free-threaded-python">The global interpreter lock in free-threaded Python</a></li>
+<li><a class="reference internal" href="#thread-safety">執行緒安全</a></li>
+<li><a class="reference internal" href="#known-limitations">已知限制</a><ul>
+<li><a class="reference internal" href="#immortalization">不滅化 (Immortalization)</a></li>
+<li><a class="reference internal" href="#frame-objects">Frame objects</a></li>
+<li><a class="reference internal" href="#iterators">疊代器</a></li>
+<li><a class="reference internal" href="#single-threaded-performance">單執行緒效能</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#behavioral-changes">Behavioral changes</a><ul>
+<li><a class="reference internal" href="#context-variables">Context variables</a></li>
+<li><a class="reference internal" href="#warning-filters">Warning filters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="mro.html"
+                          title="上一章">Python 2.3 方法解析順序</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="free-threading-extensions.html"
+                          title="下一章">支援自由執行緒的 C API 擴充</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/free-threading-python.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/howto/free-threading-python.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="free-threading-extensions.html" title="支援自由執行緒的 C API 擴充"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="mro.html" title="Python 2.3 方法解析順序"
+             >上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.2 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 如何達成任務</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Python 自由執行緒的支援</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; <a href="../copyright.html">版權所有</a> 2001 Python Software Foundation.
+    <br>
+    此頁面採用 Python 軟體基金會授權條款第 2 版。
+    <br>
+    文件中的範例、應用技巧與其他程式碼額外採用了 Zero Clause BSD 授權條款。
+    <br>
+    
+      更多訊息請見<a href="/license.html">歷史與授權條款</a>。<br>
+    
+    
+    <br>
+
+    Python 軟體基金會是一家非營利法人。
+<a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
+<br>
+    <br>
+      最後更新於 1月 22, 2026 (16:53 UTC)。
+    
+      <a href="/bugs.html">發現 bug</a>？
+    
+    <br>
+
+    以 <a href="https://www.sphinx-doc.org/">Sphinx</a>8.2.3建立。 
+    </div>
+
+  </body>
+</html>
