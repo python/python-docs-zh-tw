@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>2. 詞法分析 &#8212; Python 3.14.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2. 詞法分析 &#8212; Python 3.14.2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
-    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=8cd84f99" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=4eb63a40" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
     
-    <script src="../_static/documentation_options.js?v=d58accf9"></script>
+    <script src="../_static/documentation_options.js?v=f006b4cd"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,7 +20,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.14.0 說明文件 中搜尋"
+          title="在 Python 3.14.2 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -108,6 +108,7 @@
 <li><a class="reference internal" href="#keywords">2.3.1. 關鍵字</a></li>
 <li><a class="reference internal" href="#soft-keywords">2.3.2. 軟關鍵字</a></li>
 <li><a class="reference internal" href="#reserved-classes-of-identifiers">2.3.3. Reserved classes of identifiers</a></li>
+<li><a class="reference internal" href="#non-ascii-characters-in-names">2.3.4. 名稱中的非 ASCII 字元</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#literals">2.4. Literals</a></li>
@@ -129,6 +130,7 @@
 <li><a class="reference internal" href="#raw-string-literals">2.5.6. 原始字串常數</a></li>
 <li><a class="reference internal" href="#formatted-string-literals">2.5.7. f-string（f 字串）</a></li>
 <li><a class="reference internal" href="#template-string-literals">2.5.8. t-string（t 字串）</a></li>
+<li><a class="reference internal" href="#formal-grammar-for-f-strings">2.5.9. Formal grammar for f-strings</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#numeric-literals">2.6. Numeric literals</a><ul>
@@ -162,6 +164,12 @@
             rel="nofollow">顯示原始碼
         </a>
       </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/reference/lexical_analysis.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
     </ul>
   </div>
         </nav>
@@ -195,7 +203,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.0 Documentation</a> &#187;
+      <a href="../index.html">3.14.2 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 語言參考手冊</a> &#187;</li>
@@ -560,7 +568,11 @@ not match a level popped off the stack.)</p>
 <span id="whitespace"></span><h3><span class="section-number">2.1.9. </span>Whitespace between tokens<a class="headerlink" href="#whitespace-between-tokens" title="連結到這個標頭">¶</a></h3>
 <p>Except at the beginning of a logical line or in string literals, the whitespace
 characters space, tab and formfeed can be used interchangeably to separate
-tokens.  Whitespace is needed between two tokens only if their concatenation
+tokens:</p>
+<pre class="highlight">
+<strong id="grammar-token-python-grammar-whitespace">whitespace</strong>:  <span class="sx">' '</span> | tab | formfeed
+</pre>
+<p>Whitespace is needed between two tokens only if their concatenation
 could otherwise be interpreted as a different token. For example, <code class="docutils literal notranslate"><span class="pre">ab</span></code> is one
 token, but <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">b</span></code> is two tokens. However, <code class="docutils literal notranslate"><span class="pre">+a</span></code> and <code class="docutils literal notranslate"><span class="pre">+</span> <span class="pre">a</span></code> both produce
 two tokens, <code class="docutils literal notranslate"><span class="pre">+</span></code> and <code class="docutils literal notranslate"><span class="pre">a</span></code>, as <code class="docutils literal notranslate"><span class="pre">+a</span></code> is not a valid token.</p>
@@ -587,61 +599,28 @@ forms a legal token, when read from left to right.</p>
 <span id="identifiers"></span><h2><span class="section-number">2.3. </span>Names (identifiers and keywords)<a class="headerlink" href="#names-identifiers-and-keywords" title="連結到這個標頭">¶</a></h2>
 <p id="index-9"><a class="reference internal" href="../library/token.html#token.NAME" title="token.NAME"><code class="xref py py-data docutils literal notranslate"><span class="pre">NAME</span></code></a> tokens represent <em>identifiers</em>, <em>keywords</em>, and
 <em>soft keywords</em>.</p>
-<p>Within the ASCII range (U+0001..U+007F), the valid characters for names
-include the uppercase and lowercase letters (<code class="docutils literal notranslate"><span class="pre">A-Z</span></code> and <code class="docutils literal notranslate"><span class="pre">a-z</span></code>),
-the underscore <code class="docutils literal notranslate"><span class="pre">_</span></code> and, except for the first character, the digits
-<code class="docutils literal notranslate"><span class="pre">0</span></code> through <code class="docutils literal notranslate"><span class="pre">9</span></code>.</p>
+<p>Names are composed of the following characters:</p>
+<ul class="simple">
+<li><p>uppercase and lowercase letters (<code class="docutils literal notranslate"><span class="pre">A-Z</span></code> and <code class="docutils literal notranslate"><span class="pre">a-z</span></code>),</p></li>
+<li><p>底線 (<code class="docutils literal notranslate"><span class="pre">_</span></code>)，</p></li>
+<li><p>digits (<code class="docutils literal notranslate"><span class="pre">0</span></code> through <code class="docutils literal notranslate"><span class="pre">9</span></code>), which cannot appear as the first character, and</p></li>
+<li><p>non-ASCII characters. Valid names may only contain &quot;letter-like&quot; and
+&quot;digit-like&quot; characters; see <a class="reference internal" href="#lexical-names-nonascii"><span class="std std-ref">名稱中的非 ASCII 字元</span></a> for details.</p></li>
+</ul>
 <p>Names must contain at least one character, but have no upper length limit.
 Case is significant.</p>
-<p>Besides <code class="docutils literal notranslate"><span class="pre">A-Z</span></code>, <code class="docutils literal notranslate"><span class="pre">a-z</span></code>, <code class="docutils literal notranslate"><span class="pre">_</span></code> and <code class="docutils literal notranslate"><span class="pre">0-9</span></code>, names can also use &quot;letter-like&quot;
-and &quot;number-like&quot; characters from outside the ASCII range, as detailed below.</p>
-<p>All identifiers are converted into the <a class="reference external" href="https://www.unicode.org/reports/tr15/#Norm_Forms">normalization form</a> NFKC while
-parsing; comparison of identifiers is based on NFKC.</p>
-<p>Formally, the first character of a normalized identifier must belong to the
-set <code class="docutils literal notranslate"><span class="pre">id_start</span></code>, which is the union of:</p>
-<ul class="simple">
-<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Lu&gt;</span></code> - uppercase letters (includes <code class="docutils literal notranslate"><span class="pre">A</span></code> to <code class="docutils literal notranslate"><span class="pre">Z</span></code>)</p></li>
-<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Ll&gt;</span></code> - lowercase letters (includes <code class="docutils literal notranslate"><span class="pre">a</span></code> to <code class="docutils literal notranslate"><span class="pre">z</span></code>)</p></li>
-<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Lt&gt;</span></code> - titlecase letters</p></li>
-<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Lm&gt;</span></code> - modifier letters</p></li>
-<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Lo&gt;</span></code> - other letters</p></li>
-<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Nl&gt;</span></code> - letter numbers</p></li>
-<li><p>{<code class="docutils literal notranslate"><span class="pre">&quot;_&quot;</span></code>} - 底線</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&lt;Other_ID_Start&gt;</span></code> - an explicit set of characters in <a class="reference external" href="https://www.unicode.org/Public/16.0.0/ucd/PropList.txt">PropList.txt</a>
-to support backwards compatibility</p></li>
-</ul>
-<p>The remaining characters must belong to the set <code class="docutils literal notranslate"><span class="pre">id_continue</span></code>, which is the
-union of:</p>
-<ul class="simple">
-<li><p>all characters in <code class="docutils literal notranslate"><span class="pre">id_start</span></code></p></li>
-<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Nd&gt;</span></code> - decimal numbers (includes <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">9</span></code>)</p></li>
-<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Pc&gt;</span></code> - connector punctuations</p></li>
-<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Mn&gt;</span></code> - nonspacing marks</p></li>
-<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Mc&gt;</span></code> - spacing combining marks</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">&lt;Other_ID_Continue&gt;</span></code> - another explicit set of characters in
-<a class="reference external" href="https://www.unicode.org/Public/16.0.0/ucd/PropList.txt">PropList.txt</a> to support backwards compatibility</p></li>
-</ul>
-<p>Unicode categories use the version of the Unicode Character Database as
-included in the <a class="reference internal" href="../library/unicodedata.html#module-unicodedata" title="unicodedata: Access the Unicode Database."><code class="xref py py-mod docutils literal notranslate"><span class="pre">unicodedata</span></code></a> module.</p>
-<p>These sets are based on the Unicode standard annex <a class="reference external" href="https://www.unicode.org/reports/tr31/">UAX-31</a>.
-See also <span class="target" id="index-10"></span><a class="pep reference external" href="https://peps.python.org/pep-3131/"><strong>PEP 3131</strong></a> for further details.</p>
-<p>Even more formally, names are described by the following lexical definitions:</p>
+<p>Formally, names are described by the following lexical definitions:</p>
 <pre class="highlight">
-<strong id="grammar-token-python-grammar-NAME">NAME</strong>:         <a class="reference internal" href="#grammar-token-python-grammar-xid_start"><code class="xref docutils literal notranslate"><span class="pre">xid_start</span></code></a> <a class="reference internal" href="#grammar-token-python-grammar-xid_continue"><code class="xref docutils literal notranslate"><span class="pre">xid_continue</span></code></a>*
-<strong id="grammar-token-python-grammar-id_start">id_start</strong>:     &lt;Lu&gt; | &lt;Ll&gt; | &lt;Lt&gt; | &lt;Lm&gt; | &lt;Lo&gt; | &lt;Nl&gt; | <span class="sx">&quot;_&quot;</span> | &lt;Other_ID_Start&gt;
-<strong id="grammar-token-python-grammar-id_continue">id_continue</strong>:  <a class="reference internal" href="#grammar-token-python-grammar-id_start"><code class="xref docutils literal notranslate"><span class="pre">id_start</span></code></a> | &lt;Nd&gt; | &lt;Pc&gt; | &lt;Mn&gt; | &lt;Mc&gt; | &lt;Other_ID_Continue&gt;
-<strong id="grammar-token-python-grammar-xid_start">xid_start</strong>:    &lt;all characters in <a class="reference internal" href="#grammar-token-python-grammar-id_start"><code class="xref docutils literal notranslate"><span class="pre">id_start</span></code></a> whose NFKC normalization is
-               in (<a class="reference internal" href="#grammar-token-python-grammar-id_start"><code class="xref docutils literal notranslate"><span class="pre">id_start</span></code></a> <a class="reference internal" href="#grammar-token-python-grammar-xid_continue"><code class="xref docutils literal notranslate"><span class="pre">xid_continue</span></code></a>*)&quot;&gt;
-<strong id="grammar-token-python-grammar-xid_continue">xid_continue</strong>: &lt;all characters in <a class="reference internal" href="#grammar-token-python-grammar-id_continue"><code class="xref docutils literal notranslate"><span class="pre">id_continue</span></code></a> whose NFKC normalization is
-               in (<a class="reference internal" href="#grammar-token-python-grammar-id_continue"><code class="xref docutils literal notranslate"><span class="pre">id_continue</span></code></a>*)&quot;&gt;
-<strong id="grammar-token-python-grammar-identifier">identifier</strong>:   &lt;<a class="reference internal" href="#grammar-token-python-grammar-NAME"><code class="xref docutils literal notranslate"><span class="pre">NAME</span></code></a>, except keywords&gt;
+<strong id="grammar-token-python-grammar-NAME">NAME</strong>:          <a class="reference internal" href="#grammar-token-python-grammar-name_start"><code class="xref docutils literal notranslate"><span class="pre">name_start</span></code></a> <a class="reference internal" href="#grammar-token-python-grammar-name_continue"><code class="xref docutils literal notranslate"><span class="pre">name_continue</span></code></a>*
+<strong id="grammar-token-python-grammar-name_start">name_start</strong>:    <span class="sx">&quot;a&quot;</span>...<span class="sx">&quot;z&quot;</span> | <span class="sx">&quot;A&quot;</span>...<span class="sx">&quot;Z&quot;</span> | <span class="sx">&quot;_&quot;</span> | &lt;non-ASCII character&gt;
+<strong id="grammar-token-python-grammar-name_continue">name_continue</strong>: name_start | <span class="sx">&quot;0&quot;</span>...<span class="sx">&quot;9&quot;</span>
+<strong id="grammar-token-python-grammar-identifier">identifier</strong>:    &lt;<a class="reference internal" href="#grammar-token-python-grammar-NAME"><code class="xref docutils literal notranslate"><span class="pre">NAME</span></code></a>, except keywords&gt;
 </pre>
-<p>A non-normative listing of all valid identifier characters as defined by
-Unicode is available in the <a class="reference external" href="https://www.unicode.org/Public/16.0.0/ucd/DerivedCoreProperties.txt">DerivedCoreProperties.txt</a> file in the Unicode
-Character Database.</p>
+<p>Note that not all names matched by this grammar are valid; see
+<a class="reference internal" href="#lexical-names-nonascii"><span class="std std-ref">名稱中的非 ASCII 字元</span></a> for details.</p>
 <section id="keywords">
 <span id="id9"></span><h3><span class="section-number">2.3.1. </span>關鍵字<a class="headerlink" href="#keywords" title="連結到這個標頭">¶</a></h3>
-<p id="index-11">The following names are used as reserved words, or <em>keywords</em> of the
+<p id="index-10">The following names are used as reserved words, or <em>keywords</em> of the
 language, and cannot be used as ordinary identifiers.  They must be spelled
 exactly as written here:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>False      await      else       import     pass
@@ -656,7 +635,7 @@ async      elif       if         or         yield
 </section>
 <section id="soft-keywords">
 <span id="id10"></span><h3><span class="section-number">2.3.2. </span>軟關鍵字<a class="headerlink" href="#soft-keywords" title="連結到這個標頭">¶</a></h3>
-<div class="versionadded" id="index-12">
+<div class="versionadded" id="index-11">
 <p><span class="versionmodified added">在 3.10 版被加入.</span></p>
 </div>
 <p>Some names are only reserved under specific contexts. These are known as
@@ -675,7 +654,7 @@ identifier names.</p>
 </div>
 </section>
 <section id="reserved-classes-of-identifiers">
-<span id="id-classes"></span><span id="index-13"></span><h3><span class="section-number">2.3.3. </span>Reserved classes of identifiers<a class="headerlink" href="#reserved-classes-of-identifiers" title="連結到這個標頭">¶</a></h3>
+<span id="id-classes"></span><span id="index-12"></span><h3><span class="section-number">2.3.3. </span>Reserved classes of identifiers<a class="headerlink" href="#reserved-classes-of-identifiers" title="連結到這個標頭">¶</a></h3>
 <p>Certain classes of identifiers (besides keywords) have special meanings.  These
 classes are identified by the patterns of leading and trailing underscore
 characters:</p>
@@ -713,10 +692,85 @@ clashes between &quot;private&quot; attributes of base and derived classes. See 
 </dd>
 </dl>
 </section>
+<section id="non-ascii-characters-in-names">
+<span id="lexical-names-nonascii"></span><h3><span class="section-number">2.3.4. </span>名稱中的非 ASCII 字元<a class="headerlink" href="#non-ascii-characters-in-names" title="連結到這個標頭">¶</a></h3>
+<p>Names that contain non-ASCII characters need additional normalization
+and validation beyond the rules and grammar explained
+<a class="reference internal" href="#identifiers"><span class="std std-ref">above</span></a>.
+For example, <code class="docutils literal notranslate"><span class="pre">ř_1</span></code>, <code class="docutils literal notranslate"><span class="pre">蛇</span></code>, or <code class="docutils literal notranslate"><span class="pre">साँप</span></code>  are valid names, but <code class="docutils literal notranslate"><span class="pre">r〰2</span></code>,
+<code class="docutils literal notranslate"><span class="pre">€</span></code>, or <code class="docutils literal notranslate"><span class="pre">🐍</span></code> are not.</p>
+<p>This section explains the exact rules.</p>
+<p>All names are converted into the <a class="reference external" href="https://www.unicode.org/reports/tr15/#Norm_Forms">normalization form</a> NFKC while parsing.
+This means that, for example, some typographic variants of characters are
+converted to their &quot;basic&quot; form. For example, <code class="docutils literal notranslate"><span class="pre">ﬁⁿₐˡᵢᶻₐᵗᵢᵒₙ</span></code> normalizes to
+<code class="docutils literal notranslate"><span class="pre">finalization</span></code>, so Python treats them as the same name:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ﬁⁿₐˡᵢᶻₐᵗᵢᵒₙ</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">finalization</span>
+<span class="go">3</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Normalization is done at the lexical level only.
+Run-time functions that take names as <em>strings</em> generally do not normalize
+their arguments.
+For example, the variable defined above is accessible at run time in the
+<a class="reference internal" href="../library/functions.html#globals" title="globals"><code class="xref py py-func docutils literal notranslate"><span class="pre">globals()</span></code></a> dictionary as <code class="docutils literal notranslate"><span class="pre">globals()[&quot;finalization&quot;]</span></code> but not
+<code class="docutils literal notranslate"><span class="pre">globals()[&quot;ﬁⁿₐˡᵢᶻₐᵗᵢᵒₙ&quot;]</span></code>.</p>
+</div>
+<p>Similarly to how ASCII-only names must contain only letters, digits and
+the underscore, and cannot start with a digit, a valid name must
+start with a character in the &quot;letter-like&quot; set <code class="docutils literal notranslate"><span class="pre">xid_start</span></code>,
+and the remaining characters must be in the &quot;letter- and digit-like&quot; set
+<code class="docutils literal notranslate"><span class="pre">xid_continue</span></code>.</p>
+<p>These sets based on the <em>XID_Start</em> and <em>XID_Continue</em> sets as defined by the
+Unicode standard annex <a class="reference external" href="https://www.unicode.org/reports/tr31/">UAX-31</a>.
+Python's <code class="docutils literal notranslate"><span class="pre">xid_start</span></code> additionally includes the underscore (<code class="docutils literal notranslate"><span class="pre">_</span></code>).
+Note that Python does not necessarily conform to <a class="reference external" href="https://www.unicode.org/reports/tr31/">UAX-31</a>.</p>
+<p>A non-normative listing of characters in the <em>XID_Start</em> and <em>XID_Continue</em>
+sets as defined by Unicode is available in the <a class="reference external" href="https://www.unicode.org/Public/16.0.0/ucd/DerivedCoreProperties.txt">DerivedCoreProperties.txt</a>
+file in the Unicode Character Database.
+For reference, the construction rules for the <code class="docutils literal notranslate"><span class="pre">xid_*</span></code> sets are given below.</p>
+<p>The set <code class="docutils literal notranslate"><span class="pre">id_start</span></code> is defined as the union of:</p>
+<ul class="simple">
+<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Lu&gt;</span></code> - uppercase letters (includes <code class="docutils literal notranslate"><span class="pre">A</span></code> to <code class="docutils literal notranslate"><span class="pre">Z</span></code>)</p></li>
+<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Ll&gt;</span></code> - lowercase letters (includes <code class="docutils literal notranslate"><span class="pre">a</span></code> to <code class="docutils literal notranslate"><span class="pre">z</span></code>)</p></li>
+<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Lt&gt;</span></code> - titlecase letters</p></li>
+<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Lm&gt;</span></code> - modifier letters</p></li>
+<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Lo&gt;</span></code> - other letters</p></li>
+<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Nl&gt;</span></code> - letter numbers</p></li>
+<li><p>{<code class="docutils literal notranslate"><span class="pre">&quot;_&quot;</span></code>} - 底線</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;Other_ID_Start&gt;</span></code> - an explicit set of characters in <a class="reference external" href="https://www.unicode.org/Public/16.0.0/ucd/PropList.txt">PropList.txt</a>
+to support backwards compatibility</p></li>
+</ul>
+<p>The set <code class="docutils literal notranslate"><span class="pre">xid_start</span></code> then closes this set under NFKC normalization, by
+removing all characters whose normalization is not of the form
+<code class="docutils literal notranslate"><span class="pre">id_start</span> <span class="pre">id_continue*</span></code>.</p>
+<p>The set <code class="docutils literal notranslate"><span class="pre">id_continue</span></code> is defined as the union of:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">id_start</span></code> (see above)</p></li>
+<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Nd&gt;</span></code> - decimal numbers (includes <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">9</span></code>)</p></li>
+<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Pc&gt;</span></code> - connector punctuations</p></li>
+<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Mn&gt;</span></code> - nonspacing marks</p></li>
+<li><p>Unicode category <code class="docutils literal notranslate"><span class="pre">&lt;Mc&gt;</span></code> - spacing combining marks</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&lt;Other_ID_Continue&gt;</span></code> - another explicit set of characters in
+<a class="reference external" href="https://www.unicode.org/Public/16.0.0/ucd/PropList.txt">PropList.txt</a> to support backwards compatibility</p></li>
+</ul>
+<p>Again, <code class="docutils literal notranslate"><span class="pre">xid_continue</span></code> closes this set under NFKC normalization.</p>
+<p>Unicode categories use the version of the Unicode Character Database as
+included in the <a class="reference internal" href="../library/unicodedata.html#module-unicodedata" title="unicodedata: Access the Unicode Database."><code class="xref py py-mod docutils literal notranslate"><span class="pre">unicodedata</span></code></a> module.</p>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<ul class="simple">
+<li><p><span class="target" id="index-13"></span><a class="pep reference external" href="https://peps.python.org/pep-3131/"><strong>PEP 3131</strong></a> -- Supporting Non-ASCII Identifiers</p></li>
+<li><p><span class="target" id="index-14"></span><a class="pep reference external" href="https://peps.python.org/pep-0672/"><strong>PEP 672</strong></a> -- Unicode-related Security Considerations for Python</p></li>
+</ul>
+</div>
+</section>
 </section>
 <section id="literals">
 <span id="id11"></span><h2><span class="section-number">2.4. </span>Literals<a class="headerlink" href="#literals" title="連結到這個標頭">¶</a></h2>
-<p id="index-14">Literals are notations for constant values of some built-in types.</p>
+<p id="index-15">Literals are notations for constant values of some built-in types.</p>
 <p>In terms of lexical analysis, Python has <a class="reference internal" href="#strings"><span class="std std-ref">string, bytes</span></a>
 and <a class="reference internal" href="#numbers"><span class="std std-ref">numeric</span></a> literals.</p>
 <p>Other &quot;literals&quot; are lexically denoted using <a class="reference internal" href="#keywords"><span class="std std-ref">keywords</span></a>
@@ -724,7 +778,7 @@ and <a class="reference internal" href="#numbers"><span class="std std-ref">nume
 <a class="reference internal" href="#lexical-ellipsis"><span class="std std-ref">ellipsis token</span></a> (<code class="docutils literal notranslate"><span class="pre">...</span></code>).</p>
 </section>
 <section id="string-and-bytes-literals">
-<span id="strings"></span><span id="index-15"></span><h2><span class="section-number">2.5. </span>String and Bytes literals<a class="headerlink" href="#string-and-bytes-literals" title="連結到這個標頭">¶</a></h2>
+<span id="strings"></span><span id="index-16"></span><h2><span class="section-number">2.5. </span>String and Bytes literals<a class="headerlink" href="#string-and-bytes-literals" title="連結到這個標頭">¶</a></h2>
 <p>String literals are text enclosed in single quotes (<code class="docutils literal notranslate"><span class="pre">'</span></code>) or double
 quotes (<code class="docutils literal notranslate"><span class="pre">&quot;</span></code>). For example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="s2">&quot;spam&quot;</span>
@@ -752,7 +806,7 @@ the string:</p>
 <p>See <a class="reference internal" href="#escape-sequences"><span class="std std-ref">escape sequences</span></a> below for a full list of such
 sequences, and more details.</p>
 <section id="triple-quoted-strings">
-<span id="index-16"></span><h3><span class="section-number">2.5.1. </span>三引號字串<a class="headerlink" href="#triple-quoted-strings" title="連結到這個標頭">¶</a></h3>
+<span id="index-17"></span><h3><span class="section-number">2.5.1. </span>三引號字串<a class="headerlink" href="#triple-quoted-strings" title="連結到這個標頭">¶</a></h3>
 <p>Strings can also be enclosed in matching groups of three single or double
 quotes.
 These are generally referred to as <em class="dfn">triple-quoted strings</em>:</p>
@@ -772,7 +826,7 @@ if they are of the same kind (<code class="docutils literal notranslate"><span c
 </div>
 </section>
 <section id="string-prefixes">
-<span id="index-17"></span><h3><span class="section-number">2.5.2. </span>String prefixes<a class="headerlink" href="#string-prefixes" title="連結到這個標頭">¶</a></h3>
+<span id="index-18"></span><h3><span class="section-number">2.5.2. </span>String prefixes<a class="headerlink" href="#string-prefixes" title="連結到這個標頭">¶</a></h3>
 <p>String literals can have an optional <em class="dfn">prefix</em> that influences how the
 content of the literal is parsed, for example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sa">b</span><span class="s2">&quot;data&quot;</span>
@@ -796,7 +850,7 @@ The '<code class="docutils literal notranslate"><span class="pre">r</span></code
 of <code class="docutils literal notranslate"><span class="pre">'br'</span></code>.</p>
 <p>Support for the unicode legacy literal (<code class="docutils literal notranslate"><span class="pre">u'value'</span></code>) was reintroduced
 to simplify the maintenance of dual Python 2.x and 3.x codebases.
-See <span class="target" id="index-18"></span><a class="pep reference external" href="https://peps.python.org/pep-0414/"><strong>PEP 414</strong></a> for more information.</p>
+See <span class="target" id="index-19"></span><a class="pep reference external" href="https://peps.python.org/pep-0414/"><strong>PEP 414</strong></a> for more information.</p>
 </div>
 </section>
 <section id="formal-grammar">
@@ -824,7 +878,7 @@ In particular, the prefix (if any) must be immediately followed by the starting
 quote.</p>
 </section>
 <section id="escape-sequences">
-<span id="index-19"></span><span id="id12"></span><h3><span class="section-number">2.5.4. </span>跳脫序列<a class="headerlink" href="#escape-sequences" title="連結到這個標頭">¶</a></h3>
+<span id="index-20"></span><span id="id12"></span><h3><span class="section-number">2.5.4. </span>跳脫序列<a class="headerlink" href="#escape-sequences" title="連結到這個標頭">¶</a></h3>
 <p>Unless an '<code class="docutils literal notranslate"><span class="pre">r</span></code>' or '<code class="docutils literal notranslate"><span class="pre">R</span></code>' prefix is present, escape sequences in string and
 bytes literals are interpreted according to rules similar to those used by
 Standard C.  The recognized escape sequences are:</p>
@@ -976,7 +1030,7 @@ The latter can encode any Unicode character.</p>
 <p>These sequences cannot appear in <a class="reference internal" href="#bytes-literal"><span class="std std-ref">bytes literals</span></a>.</p>
 </section>
 <section id="unrecognized-escape-sequences">
-<span id="index-20"></span><h4><span class="section-number">2.5.4.7. </span>無法辨識的跳脫序列<a class="headerlink" href="#unrecognized-escape-sequences" title="連結到這個標頭">¶</a></h4>
+<span id="index-21"></span><h4><span class="section-number">2.5.4.7. </span>無法辨識的跳脫序列<a class="headerlink" href="#unrecognized-escape-sequences" title="連結到這個標頭">¶</a></h4>
 <p>Unlike in Standard C, all unrecognized escape sequences are left in the string
 unchanged, that is, <em>the backslash is left in the result</em>:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="s1">&#39;\q&#39;</span><span class="p">)</span>
@@ -998,7 +1052,7 @@ In a future Python version they will raise a <a class="reference internal" href=
 </section>
 </section>
 <section id="bytes-literals">
-<span id="bytes-literal"></span><span id="index-21"></span><h3><span class="section-number">2.5.5. </span>位元組常數<a class="headerlink" href="#bytes-literals" title="連結到這個標頭">¶</a></h3>
+<span id="bytes-literal"></span><span id="index-22"></span><h3><span class="section-number">2.5.5. </span>位元組常數<a class="headerlink" href="#bytes-literals" title="連結到這個標頭">¶</a></h3>
 <p><em class="dfn">Bytes literals</em> are always prefixed with '<code class="docutils literal notranslate"><span class="pre">b</span></code>' or '<code class="docutils literal notranslate"><span class="pre">B</span></code>'; they produce an
 instance of the <a class="reference internal" href="../library/stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a> type instead of the <a class="reference internal" href="../library/stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> type.
 They may only contain ASCII characters; bytes with a numeric value of 128
@@ -1014,7 +1068,7 @@ or greater must be expressed with escape sequences (typically
 <code class="docutils literal notranslate"><span class="pre">\0</span></code> or <code class="docutils literal notranslate"><span class="pre">\x00</span></code>).</p>
 </section>
 <section id="raw-string-literals">
-<span id="raw-strings"></span><span id="index-22"></span><h3><span class="section-number">2.5.6. </span>原始字串常數<a class="headerlink" href="#raw-string-literals" title="連結到這個標頭">¶</a></h3>
+<span id="raw-strings"></span><span id="index-23"></span><h3><span class="section-number">2.5.6. </span>原始字串常數<a class="headerlink" href="#raw-string-literals" title="連結到這個標頭">¶</a></h3>
 <p>Both string and bytes literals may optionally be prefixed with a letter '<code class="docutils literal notranslate"><span class="pre">r</span></code>'
 or '<code class="docutils literal notranslate"><span class="pre">R</span></code>'; such constructs are called <em class="dfn">raw string literals</em>
 and <em class="dfn">raw bytes literals</em> respectively and treat backslashes as
@@ -1035,114 +1089,64 @@ that a single backslash followed by a newline is interpreted as those two
 characters as part of the literal, <em>not</em> as a line continuation.</p>
 </section>
 <section id="formatted-string-literals">
-<span id="f-strings"></span><span id="index-23"></span><span id="id13"></span><h3><span class="section-number">2.5.7. </span>f-string（f 字串）<a class="headerlink" href="#formatted-string-literals" title="連結到這個標頭">¶</a></h3>
+<span id="f-strings"></span><span id="index-24"></span><span id="id13"></span><h3><span class="section-number">2.5.7. </span>f-string（f 字串）<a class="headerlink" href="#formatted-string-literals" title="連結到這個標頭">¶</a></h3>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.6 版被加入.</span></p>
 </div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.7 版的變更: </span>The <a class="reference internal" href="expressions.html#await"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">await</span></code></a> and <a class="reference internal" href="compound_stmts.html#async-for"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">async</span> <span class="pre">for</span></code></a> can be used in expressions
+within f-strings.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.8 版的變更: </span>Added the debug specifier (<code class="docutils literal notranslate"><span class="pre">=</span></code>)</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>Many restrictions on expressions within f-strings have been removed.
+Notably, nested strings, comments, and backslashes are now permitted.</p>
+</div>
 <p>A <em class="dfn">formatted string literal</em> or <em class="dfn">f-string</em> is a string literal
-that is prefixed with '<code class="docutils literal notranslate"><span class="pre">f</span></code>' or '<code class="docutils literal notranslate"><span class="pre">F</span></code>'.  These strings may contain
-replacement fields, which are expressions delimited by curly braces <code class="docutils literal notranslate"><span class="pre">{}</span></code>.
-While other string literals always have a constant value, formatted strings
-are really expressions evaluated at run time.</p>
-<p>Escape sequences are decoded like in ordinary string literals (except when
-a literal is also marked as a raw string).  After decoding, the grammar
-for the contents of the string is:</p>
-<pre class="highlight">
-<strong id="grammar-token-python-grammar-f_string">f_string</strong>:          (<a class="reference internal" href="#grammar-token-python-grammar-literal_char"><code class="xref docutils literal notranslate"><span class="pre">literal_char</span></code></a> | <span class="sx">&quot;{{&quot;</span> | <span class="sx">&quot;}}&quot;</span> | <a class="reference internal" href="#grammar-token-python-grammar-replacement_field"><code class="xref docutils literal notranslate"><span class="pre">replacement_field</span></code></a>)*
-<strong id="grammar-token-python-grammar-replacement_field">replacement_field</strong>: <span class="sx">&quot;{&quot;</span> <a class="reference internal" href="#grammar-token-python-grammar-f_expression"><code class="xref docutils literal notranslate"><span class="pre">f_expression</span></code></a> [<span class="sx">&quot;=&quot;</span>] [<span class="sx">&quot;!&quot;</span> <a class="reference internal" href="#grammar-token-python-grammar-conversion"><code class="xref docutils literal notranslate"><span class="pre">conversion</span></code></a>] [<span class="sx">&quot;:&quot;</span> <a class="reference internal" href="#grammar-token-python-grammar-format_spec"><code class="xref docutils literal notranslate"><span class="pre">format_spec</span></code></a>] <span class="sx">&quot;}&quot;</span>
-<strong id="grammar-token-python-grammar-f_expression">f_expression</strong>:      (<a class="reference internal" href="expressions.html#grammar-token-python-grammar-conditional_expression"><code class="xref docutils literal notranslate"><span class="pre">conditional_expression</span></code></a> | <span class="sx">&quot;*&quot;</span> <a class="reference internal" href="expressions.html#grammar-token-python-grammar-or_expr"><code class="xref docutils literal notranslate"><span class="pre">or_expr</span></code></a>)
-                     (<span class="sx">&quot;,&quot;</span> <a class="reference internal" href="expressions.html#grammar-token-python-grammar-conditional_expression"><code class="xref docutils literal notranslate"><span class="pre">conditional_expression</span></code></a> | <span class="sx">&quot;,&quot;</span> <span class="sx">&quot;*&quot;</span> <a class="reference internal" href="expressions.html#grammar-token-python-grammar-or_expr"><code class="xref docutils literal notranslate"><span class="pre">or_expr</span></code></a>)* [<span class="sx">&quot;,&quot;</span>]
-                   | <a class="reference internal" href="expressions.html#grammar-token-python-grammar-yield_expression"><code class="xref docutils literal notranslate"><span class="pre">yield_expression</span></code></a>
-<strong id="grammar-token-python-grammar-conversion">conversion</strong>:        <span class="sx">&quot;s&quot;</span> | <span class="sx">&quot;r&quot;</span> | <span class="sx">&quot;a&quot;</span>
-<strong id="grammar-token-python-grammar-format_spec">format_spec</strong>:       (<a class="reference internal" href="#grammar-token-python-grammar-literal_char"><code class="xref docutils literal notranslate"><span class="pre">literal_char</span></code></a> | <a class="reference internal" href="#grammar-token-python-grammar-replacement_field"><code class="xref docutils literal notranslate"><span class="pre">replacement_field</span></code></a>)*
-<strong id="grammar-token-python-grammar-literal_char">literal_char</strong>:      &lt;any code point except <span class="sx">&quot;{&quot;</span>, <span class="sx">&quot;}&quot;</span> or NULL&gt;
-</pre>
-<p>The parts of the string outside curly braces are treated literally,
-except that any doubled curly braces <code class="docutils literal notranslate"><span class="pre">'{{'</span></code> or <code class="docutils literal notranslate"><span class="pre">'}}'</span></code> are replaced
-with the corresponding single curly brace.  A single opening curly
-bracket <code class="docutils literal notranslate"><span class="pre">'{'</span></code> marks a replacement field, which starts with a
-Python expression. To display both the expression text and its value after
-evaluation, (useful in debugging), an equal sign <code class="docutils literal notranslate"><span class="pre">'='</span></code> may be added after the
-expression. A conversion field, introduced by an exclamation point <code class="docutils literal notranslate"><span class="pre">'!'</span></code> may
-follow.  A format specifier may also be appended, introduced by a colon <code class="docutils literal notranslate"><span class="pre">':'</span></code>.
-A replacement field ends with a closing curly bracket <code class="docutils literal notranslate"><span class="pre">'}'</span></code>.</p>
-<p>Expressions in formatted string literals are treated like regular
-Python expressions surrounded by parentheses, with a few exceptions.
-An empty expression is not allowed, and both <a class="reference internal" href="expressions.html#lambda"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">lambda</span></code></a>  and
-assignment expressions <code class="docutils literal notranslate"><span class="pre">:=</span></code> must be surrounded by explicit parentheses.
-Each expression is evaluated in the context where the formatted string literal
-appears, in order from left to right.  Replacement expressions can contain
-newlines in both single-quoted and triple-quoted f-strings and they can contain
-comments.  Everything that comes after a <code class="docutils literal notranslate"><span class="pre">#</span></code> inside a replacement field
-is a comment (even closing braces and quotes). In that case, replacement fields
-must be closed in a different line.</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; f&quot;abc{a # This is a comment }&quot;
-... + 3}&quot;
-&#39;abc5&#39;
+that is prefixed with '<code class="docutils literal notranslate"><span class="pre">f</span></code>' or '<code class="docutils literal notranslate"><span class="pre">F</span></code>'.
+Unlike other string literals, f-strings do not have a constant value.
+They may contain <em>replacement fields</em> delimited by curly braces <code class="docutils literal notranslate"><span class="pre">{}</span></code>.
+Replacement fields contain expressions which are evaluated at run time.
+For example:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">who</span> <span class="o">=</span> <span class="s1">&#39;nobody&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nationality</span> <span class="o">=</span> <span class="s1">&#39;Spanish&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">who</span><span class="o">.</span><span class="n">title</span><span class="p">()</span><span class="si">}</span><span class="s1"> expects the </span><span class="si">{</span><span class="n">nationality</span><span class="si">}</span><span class="s1"> Inquisition!&#39;</span>
+<span class="go">&#39;Nobody expects the Spanish Inquisition!&#39;</span>
 </pre></div>
 </div>
-<div class="versionchanged">
-<p><span class="versionmodified changed">在 3.7 版的變更: </span>Prior to Python 3.7, an <a class="reference internal" href="expressions.html#await"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">await</span></code></a> expression and comprehensions
-containing an <a class="reference internal" href="compound_stmts.html#async-for"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">async</span> <span class="pre">for</span></code></a> clause were illegal in the expressions
-in formatted string literals due to a problem with the implementation.</p>
+<p>Any doubled curly braces (<code class="docutils literal notranslate"><span class="pre">{{</span></code> or <code class="docutils literal notranslate"><span class="pre">}}</span></code>) outside replacement fields
+are replaced with the corresponding single curly brace:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="se">{{</span><span class="s1">...</span><span class="se">}}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="go">{...}</span>
+</pre></div>
 </div>
-<div class="versionchanged">
-<p><span class="versionmodified changed">在 3.12 版的變更: </span>Prior to Python 3.12, comments were not allowed inside f-string replacement
-fields.</p>
+<p>Other characters outside replacement fields are treated like in ordinary
+string literals.
+This means that escape sequences are decoded (except when a literal is
+also marked as a raw string), and newlines are possible in triple-quoted
+f-strings:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Galahad&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">favorite_color</span> <span class="o">=</span> <span class="s1">&#39;blue&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">:</span><span class="se">\t</span><span class="si">{</span><span class="n">favorite_color</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="go">Galahad:       blue</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">rf</span><span class="s2">&quot;C:\Users\</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="go">C:\Users\Galahad</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;&#39;&#39;Three shall be the number of the counting</span>
+<span class="gp">... </span><span class="s1">and the number of the counting shall be three.&#39;&#39;&#39;</span><span class="p">)</span>
+<span class="go">Three shall be the number of the counting</span>
+<span class="go">and the number of the counting shall be three.</span>
+</pre></div>
 </div>
-<p>When the equal sign <code class="docutils literal notranslate"><span class="pre">'='</span></code> is provided, the output will have the expression
-text, the <code class="docutils literal notranslate"><span class="pre">'='</span></code> and the evaluated value. Spaces after the opening brace
-<code class="docutils literal notranslate"><span class="pre">'{'</span></code>, within the expression and after the <code class="docutils literal notranslate"><span class="pre">'='</span></code> are all retained in the
-output. By default, the <code class="docutils literal notranslate"><span class="pre">'='</span></code> causes the <a class="reference internal" href="../library/functions.html#repr" title="repr"><code class="xref py py-func docutils literal notranslate"><span class="pre">repr()</span></code></a> of the expression to be
-provided, unless there is a format specified. When a format is specified it
-defaults to the <a class="reference internal" href="../library/stdtypes.html#str" title="str"><code class="xref py py-func docutils literal notranslate"><span class="pre">str()</span></code></a> of the expression unless a conversion <code class="docutils literal notranslate"><span class="pre">'!r'</span></code> is
-declared.</p>
-<div class="versionadded">
-<p><span class="versionmodified added">在 3.8 版被加入: </span>等號 <code class="docutils literal notranslate"><span class="pre">'='</span></code>。</p>
-</div>
-<p>If a conversion is specified, the result of evaluating the expression
-is converted before formatting.  Conversion <code class="docutils literal notranslate"><span class="pre">'!s'</span></code> calls <a class="reference internal" href="../library/stdtypes.html#str" title="str"><code class="xref py py-func docutils literal notranslate"><span class="pre">str()</span></code></a> on
-the result, <code class="docutils literal notranslate"><span class="pre">'!r'</span></code> calls <a class="reference internal" href="../library/functions.html#repr" title="repr"><code class="xref py py-func docutils literal notranslate"><span class="pre">repr()</span></code></a>, and <code class="docutils literal notranslate"><span class="pre">'!a'</span></code> calls <a class="reference internal" href="../library/functions.html#ascii" title="ascii"><code class="xref py py-func docutils literal notranslate"><span class="pre">ascii()</span></code></a>.</p>
-<p>The result is then formatted using the <a class="reference internal" href="../library/functions.html#format" title="format"><code class="xref py py-func docutils literal notranslate"><span class="pre">format()</span></code></a> protocol.  The
-format specifier is passed to the <a class="reference internal" href="datamodel.html#object.__format__" title="object.__format__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__format__()</span></code></a> method of the
-expression or conversion result.  An empty string is passed when the
-format specifier is omitted.  The formatted result is then included in
-the final value of the whole string.</p>
-<p>Top-level format specifiers may include nested replacement fields. These nested
-fields may include their own conversion fields and <a class="reference internal" href="../library/string.html#formatspec"><span class="std std-ref">format specifiers</span></a>, but may not include more deeply nested replacement fields. The
-<a class="reference internal" href="../library/string.html#formatspec"><span class="std std-ref">format specifier mini-language</span></a> is the same as that used by
-the <a class="reference internal" href="../library/stdtypes.html#str.format" title="str.format"><code class="xref py py-meth docutils literal notranslate"><span class="pre">str.format()</span></code></a> method.</p>
-<p>Formatted string literals may be concatenated, but replacement fields
-cannot be split across literals.</p>
-<p>Some examples of formatted string literals:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;Fred&quot;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s2">&quot;He said his name is </span><span class="si">{</span><span class="n">name</span><span class="si">!r}</span><span class="s2">.&quot;</span>
-<span class="go">&quot;He said his name is &#39;Fred&#39;.&quot;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s2">&quot;He said his name is </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>  <span class="c1"># repr() is equivalent to !r</span>
-<span class="go">&quot;He said his name is &#39;Fred&#39;.&quot;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">width</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">precision</span> <span class="o">=</span> <span class="mi">4</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">value</span> <span class="o">=</span> <span class="n">decimal</span><span class="o">.</span><span class="n">Decimal</span><span class="p">(</span><span class="s2">&quot;12.34567&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s2">&quot;result: </span><span class="si">{</span><span class="n">value</span><span class="si">:{</span><span class="n">width</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">precision</span><span class="si">}}</span><span class="s2">&quot;</span>  <span class="c1"># nested fields</span>
-<span class="go">&#39;result:      12.35&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">today</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="mi">2017</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">day</span><span class="o">=</span><span class="mi">27</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">today</span><span class="si">:</span><span class="s2">%B %d, %Y</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># using date format specifier</span>
-<span class="go">&#39;January 27, 2017&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">today</span><span class="si">=:</span><span class="s2">%B %d, %Y</span><span class="si">}</span><span class="s2">&quot;</span> <span class="c1"># using date format specifier and debugging</span>
-<span class="go">&#39;today=January 27, 2017&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">number</span> <span class="o">=</span> <span class="mi">1024</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">number</span><span class="si">:</span><span class="s2">#0x</span><span class="si">}</span><span class="s2">&quot;</span>  <span class="c1"># using integer format specifier</span>
-<span class="go">&#39;0x400&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span> <span class="o">=</span> <span class="s2">&quot;bar&quot;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="w"> </span><span class="n">foo</span><span class="w"> </span><span class="si">= }</span><span class="s2">&quot;</span> <span class="c1"># preserves whitespace</span>
-<span class="go">&quot; foo = &#39;bar&#39;&quot;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">line</span> <span class="o">=</span> <span class="s2">&quot;The mill&#39;s closed&quot;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">line</span><span class="w"> </span><span class="si">= }</span><span class="s2">&quot;</span>
-<span class="go">&#39;line = &quot;The mill\&#39;s closed&quot;&#39;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">line</span><span class="w"> </span><span class="si">= :</span><span class="s2">20</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="go">&quot;line = The mill&#39;s closed   &quot;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">line</span><span class="w"> </span><span class="si">= !r:</span><span class="s2">20</span><span class="si">}</span><span class="s2">&quot;</span>
-<span class="go">&#39;line = &quot;The mill\&#39;s closed&quot; &#39;</span>
+<p>Expressions in formatted string literals are treated like regular
+Python expressions.
+Each expression is evaluated in the context where the formatted string literal
+appears, in order from left to right.
+An empty expression is not allowed, and both <a class="reference internal" href="expressions.html#lambda"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">lambda</span></code></a> and
+assignment expressions <code class="docutils literal notranslate"><span class="pre">:=</span></code> must be surrounded by explicit parentheses:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="p">(</span><span class="n">half</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="mi">1</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">, </span><span class="si">{</span><span class="n">half</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">42</span><span class="si">}</span><span class="s1">&#39;</span>
+<span class="go">&#39;0.5, 21.0&#39;</span>
 </pre></div>
 </div>
 <p>Reusing the outer f-string quoting type inside a replacement field is
@@ -1151,10 +1155,6 @@ permitted:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s2">&quot;abc </span><span class="si">{</span><span class="n">a</span><span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">]</span><span class="si">}</span><span class="s2"> def&quot;</span>
 <span class="go">&#39;abc 2 def&#39;</span>
 </pre></div>
-</div>
-<div class="versionchanged">
-<p><span class="versionmodified changed">在 3.12 版的變更: </span>Prior to Python 3.12, reuse of the same quoting type of the outer f-string
-inside a replacement field was not possible.</p>
 </div>
 <p>Backslashes are also allowed in replacement fields and are evaluated the same
 way as in any other context:</p>
@@ -1166,21 +1166,81 @@ way as in any other context:</p>
 <span class="go">c</span>
 </pre></div>
 </div>
-<div class="versionchanged">
-<p><span class="versionmodified changed">在 3.12 版的變更: </span>Prior to Python 3.12, backslashes were not permitted inside an f-string
-replacement field.</p>
+<p>It is possible to nest f-strings:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;world&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s1">&#39;Repeated:</span><span class="si">{</span><span class="sa">f</span><span class="s1">&#39; hello </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mi">3</span><span class="si">}</span><span class="s1">&#39;</span>
+<span class="go">&#39;Repeated: hello world hello world hello world&#39;</span>
+</pre></div>
 </div>
-<p>Formatted string literals cannot be used as docstrings, even if they do not
-include expressions.</p>
+<p>Portable Python programs should not use more than 5 levels of nesting.</p>
+<div class="impl-detail compound">
+<p><strong>CPython 實作細節：</strong> CPython does not limit nesting of f-strings.</p>
+</div>
+<p>Replacement expressions can contain newlines in both single-quoted and
+triple-quoted f-strings and they can contain comments.
+Everything that comes after a <code class="docutils literal notranslate"><span class="pre">#</span></code> inside a replacement field
+is a comment (even closing braces and quotes).
+This means that replacement fields with comments must be closed in a
+different line:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>&gt;&gt;&gt; a = 2
+&gt;&gt;&gt; f&quot;abc{a  # This comment  }&quot;  continues until the end of the line
+...       + 3}&quot;
+&#39;abc5&#39;
+</pre></div>
+</div>
+<p>After the expression, replacement fields may optionally contain:</p>
+<ul class="simple">
+<li><p>a <em>debug specifier</em> -- an equal sign (<code class="docutils literal notranslate"><span class="pre">=</span></code>), optionally surrounded by
+whitespace on one or both sides;</p></li>
+<li><p>a <em>conversion specifier</em> -- <code class="docutils literal notranslate"><span class="pre">!s</span></code>, <code class="docutils literal notranslate"><span class="pre">!r</span></code> or <code class="docutils literal notranslate"><span class="pre">!a</span></code>; and/or</p></li>
+<li><p>a <em>format specifier</em> prefixed with a colon (<code class="docutils literal notranslate"><span class="pre">:</span></code>).</p></li>
+</ul>
+<p>See the <a class="reference internal" href="../library/stdtypes.html#stdtypes-fstrings"><span class="std std-ref">Standard Library section on f-strings</span></a>
+for details on how these fields are evaluated.</p>
+<p>As that section explains, <em>format specifiers</em> are passed as the second argument
+to the <a class="reference internal" href="../library/functions.html#format" title="format"><code class="xref py py-func docutils literal notranslate"><span class="pre">format()</span></code></a> function to format a replacement field value.
+For example, they can be used to specify a field width and padding characters
+using the <a class="reference internal" href="../library/string.html#formatspec"><span class="std std-ref">Format Specification Mini-Language</span></a>:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">number</span> <span class="o">=</span> <span class="mf">14.3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">number</span><span class="si">:</span><span class="s1">20.7f</span><span class="si">}</span><span class="s1">&#39;</span>
+<span class="go">&#39;          14.3000000&#39;</span>
+</pre></div>
+</div>
+<p>Top-level format specifiers may include nested replacement fields:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">field_size</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">precision</span> <span class="o">=</span> <span class="mi">7</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">number</span><span class="si">:{</span><span class="n">field_size</span><span class="si">}</span><span class="s1">.</span><span class="si">{</span><span class="n">precision</span><span class="si">}</span><span class="s1">f</span><span class="si">}</span><span class="s1">&#39;</span>
+<span class="go">&#39;          14.3000000&#39;</span>
+</pre></div>
+</div>
+<p>These nested fields may include their own conversion fields and
+<a class="reference internal" href="../library/string.html#formatspec"><span class="std std-ref">format specifiers</span></a>:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">number</span> <span class="o">=</span> <span class="mi">3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">number</span><span class="si">:{</span><span class="n">field_size</span><span class="si">}}</span><span class="s1">&#39;</span>
+<span class="go">&#39;                   3&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">number</span><span class="si">:{</span><span class="n">field_size</span><span class="si">:</span><span class="s1">05</span><span class="se">}}</span><span class="s1">&#39;</span>
+<span class="go">&#39;00000000000000000003&#39;</span>
+</pre></div>
+</div>
+<p>However, these nested fields may not include more deeply nested replacement
+fields.</p>
+<p>Formatted string literals cannot be used as <a class="reference internal" href="../glossary.html#term-docstring"><span class="xref std std-term">docstrings</span></a>,
+even if they do not include expressions:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">foo</span><span class="p">():</span>
 <span class="gp">... </span>    <span class="sa">f</span><span class="s2">&quot;Not a docstring&quot;</span>
 <span class="gp">...</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">foo</span><span class="o">.</span><span class="vm">__doc__</span> <span class="ow">is</span> <span class="kc">None</span>
-<span class="go">True</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">foo</span><span class="o">.</span><span class="vm">__doc__</span><span class="p">)</span>
+<span class="go">None</span>
 </pre></div>
 </div>
-<p>See also <span class="target" id="index-24"></span><a class="pep reference external" href="https://peps.python.org/pep-0498/"><strong>PEP 498</strong></a> for the proposal that added formatted string literals,
-and <a class="reference internal" href="../library/stdtypes.html#str.format" title="str.format"><code class="xref py py-meth docutils literal notranslate"><span class="pre">str.format()</span></code></a>, which uses a related format string mechanism.</p>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<ul class="simple">
+<li><p><span class="target" id="index-25"></span><a class="pep reference external" href="https://peps.python.org/pep-0498/"><strong>PEP 498</strong></a> -- Literal String Interpolation</p></li>
+<li><p><span class="target" id="index-26"></span><a class="pep reference external" href="https://peps.python.org/pep-0701/"><strong>PEP 701</strong></a> -- Syntactic formalization of f-strings</p></li>
+<li><p><a class="reference internal" href="../library/stdtypes.html#str.format" title="str.format"><code class="xref py py-meth docutils literal notranslate"><span class="pre">str.format()</span></code></a>, which uses a related format string mechanism.</p></li>
+</ul>
+</div>
 </section>
 <section id="template-string-literals">
 <span id="t-strings"></span><span id="id14"></span><h3><span class="section-number">2.5.8. </span>t-string（t 字串）<a class="headerlink" href="#template-string-literals" title="連結到這個標頭">¶</a></h3>
@@ -1189,39 +1249,93 @@ and <a class="reference internal" href="../library/stdtypes.html#str.format" tit
 </div>
 <p>A <em class="dfn">template string literal</em> or <em class="dfn">t-string</em> is a string literal
 that is prefixed with '<code class="docutils literal notranslate"><span class="pre">t</span></code>' or '<code class="docutils literal notranslate"><span class="pre">T</span></code>'.
-These strings follow the same syntax and evaluation rules as
-<a class="reference internal" href="#f-strings"><span class="std std-ref">formatted string literals</span></a>, with the following differences:</p>
-<ul class="simple">
-<li><p>Rather than evaluating to a <code class="docutils literal notranslate"><span class="pre">str</span></code> object, template string literals evaluate
-to a <a class="reference internal" href="../library/string.templatelib.html#string.templatelib.Template" title="string.templatelib.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">string.templatelib.Template</span></code></a> object.</p></li>
-<li><p>The <a class="reference internal" href="../library/functions.html#format" title="format"><code class="xref py py-func docutils literal notranslate"><span class="pre">format()</span></code></a> protocol is not used.
-Instead, the format specifier and conversions (if any) are passed to
-a new <a class="reference internal" href="../library/string.templatelib.html#string.templatelib.Interpolation" title="string.templatelib.Interpolation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interpolation</span></code></a> object that is created
-for each evaluated expression.
-It is up to code that processes the resulting <a class="reference internal" href="../library/string.templatelib.html#string.templatelib.Template" title="string.templatelib.Template"><code class="xref py py-class docutils literal notranslate"><span class="pre">Template</span></code></a>
-object to decide how to handle format specifiers and conversions.</p></li>
-<li><p>Format specifiers containing nested replacement fields are evaluated eagerly,
-prior to being passed to the <a class="reference internal" href="../library/string.templatelib.html#string.templatelib.Interpolation" title="string.templatelib.Interpolation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interpolation</span></code></a> object.
-For instance, an interpolation of the form <code class="docutils literal notranslate"><span class="pre">{amount:.{precision}f}</span></code> will
-evaluate the inner expression <code class="docutils literal notranslate"><span class="pre">{precision}</span></code> to determine the value of the
-<code class="docutils literal notranslate"><span class="pre">format_spec</span></code> attribute.
-If <code class="docutils literal notranslate"><span class="pre">precision</span></code> were to be <code class="docutils literal notranslate"><span class="pre">2</span></code>, the resulting format specifier
-would be <code class="docutils literal notranslate"><span class="pre">'.2f'</span></code>.</p></li>
-<li><p>When the equals sign <code class="docutils literal notranslate"><span class="pre">'='</span></code> is provided in an interpolation expression,
-the text of the expression is appended to the literal string that precedes
-the relevant interpolation.
-This includes the equals sign and any surrounding whitespace.
-The <code class="xref py py-class docutils literal notranslate"><span class="pre">Interpolation</span></code> instance for the expression will be created as
-normal, except that <a class="reference internal" href="../library/string.templatelib.html#string.templatelib.Interpolation.conversion" title="string.templatelib.Interpolation.conversion"><code class="xref py py-attr docutils literal notranslate"><span class="pre">conversion</span></code></a> will
-be set to '<code class="docutils literal notranslate"><span class="pre">r</span></code>' (<a class="reference internal" href="../library/functions.html#repr" title="repr"><code class="xref py py-func docutils literal notranslate"><span class="pre">repr()</span></code></a>) by default.
-If an explicit conversion or format specifier are provided,
-this will override the default behaviour.</p></li>
+These strings follow the same syntax rules as
+<a class="reference internal" href="#f-strings"><span class="std std-ref">formatted string literals</span></a>.
+For differences in evaluation rules, see the
+<a class="reference internal" href="../library/stdtypes.html#stdtypes-tstrings"><span class="std std-ref">Standard Library section on t-strings</span></a></p>
+</section>
+<section id="formal-grammar-for-f-strings">
+<h3><span class="section-number">2.5.9. </span>Formal grammar for f-strings<a class="headerlink" href="#formal-grammar-for-f-strings" title="連結到這個標頭">¶</a></h3>
+<p>F-strings are handled partly by the <a class="reference internal" href="../glossary.html#term-lexical-analyzer"><span class="xref std std-term">lexical analyzer</span></a>, which produces the
+tokens <a class="reference internal" href="../library/token.html#token.FSTRING_START" title="token.FSTRING_START"><code class="xref py py-data docutils literal notranslate"><span class="pre">FSTRING_START</span></code></a>, <a class="reference internal" href="../library/token.html#token.FSTRING_MIDDLE" title="token.FSTRING_MIDDLE"><code class="xref py py-data docutils literal notranslate"><span class="pre">FSTRING_MIDDLE</span></code></a>
+and <a class="reference internal" href="../library/token.html#token.FSTRING_END" title="token.FSTRING_END"><code class="xref py py-data docutils literal notranslate"><span class="pre">FSTRING_END</span></code></a>, and partly by the parser, which handles
+expressions in the replacement field.
+The exact way the work is split is a CPython implementation detail.</p>
+<p>Correspondingly, the f-string grammar is a mix of
+<a class="reference internal" href="introduction.html#notation-lexical-vs-syntactic"><span class="std std-ref">lexical and syntactic definitions</span></a>.</p>
+<p>Whitespace is significant in these situations:</p>
+<ul>
+<li><p>There may be no whitespace in <a class="reference internal" href="../library/token.html#token.FSTRING_START" title="token.FSTRING_START"><code class="xref py py-data docutils literal notranslate"><span class="pre">FSTRING_START</span></code></a> (between
+the prefix and quote).</p></li>
+<li><p>Whitespace in <a class="reference internal" href="../library/token.html#token.FSTRING_MIDDLE" title="token.FSTRING_MIDDLE"><code class="xref py py-data docutils literal notranslate"><span class="pre">FSTRING_MIDDLE</span></code></a> is part of the literal
+string contents.</p></li>
+<li><p>In <code class="docutils literal notranslate"><span class="pre">fstring_replacement_field</span></code>, if <code class="docutils literal notranslate"><span class="pre">f_debug_specifier</span></code> is present,
+all whitespace after the opening brace until the <code class="docutils literal notranslate"><span class="pre">f_debug_specifier</span></code>,
+as well as whitespace immediately following <code class="docutils literal notranslate"><span class="pre">f_debug_specifier</span></code>,
+is retained as part of the expression.</p>
+<div class="impl-detail compound">
+<p><strong>CPython 實作細節：</strong> The expression is not handled in the tokenization phase; it is
+retrieved from the source code using locations of the <code class="docutils literal notranslate"><span class="pre">{</span></code> token
+and the token after <code class="docutils literal notranslate"><span class="pre">=</span></code>.</p>
+</div>
+</li>
 </ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">FSTRING_MIDDLE</span></code> definition uses
+<a class="reference internal" href="introduction.html#lexical-lookaheads"><span class="std std-ref">negative lookaheads</span></a> (<code class="docutils literal notranslate"><span class="pre">!</span></code>)
+to indicate special characters (backslash, newline, <code class="docutils literal notranslate"><span class="pre">{</span></code>, <code class="docutils literal notranslate"><span class="pre">}</span></code>) and
+sequences (<code class="docutils literal notranslate"><span class="pre">f_quote</span></code>).</p>
+<pre class="highlight">
+<strong id="grammar-token-python-grammar-fstring">fstring</strong>:    <a class="reference internal" href="#grammar-token-python-grammar-FSTRING_START"><code class="xref docutils literal notranslate"><span class="pre">FSTRING_START</span></code></a> <a class="reference internal" href="#grammar-token-python-grammar-fstring_middle"><code class="xref docutils literal notranslate"><span class="pre">fstring_middle</span></code></a>* <a class="reference internal" href="#grammar-token-python-grammar-FSTRING_END"><code class="xref docutils literal notranslate"><span class="pre">FSTRING_END</span></code></a>
+
+<strong id="grammar-token-python-grammar-FSTRING_START">FSTRING_START</strong>:      <a class="reference internal" href="#grammar-token-python-grammar-fstringprefix"><code class="xref docutils literal notranslate"><span class="pre">fstringprefix</span></code></a> (<span class="sx">&quot;'&quot;</span> | <span class="sx">'&quot;'</span> | <span class="sx">&quot;'''&quot;</span> | <span class="sx">'&quot;&quot;&quot;'</span>)
+<strong id="grammar-token-python-grammar-FSTRING_END">FSTRING_END</strong>:        <a class="reference internal" href="#grammar-token-python-grammar-f_quote"><code class="xref docutils literal notranslate"><span class="pre">f_quote</span></code></a>
+<strong id="grammar-token-python-grammar-fstringprefix">fstringprefix</strong>:      &lt;(<span class="sx">&quot;f&quot;</span> | <span class="sx">&quot;fr&quot;</span> | <span class="sx">&quot;rf&quot;</span>), case-insensitive&gt;
+<strong id="grammar-token-python-grammar-f_debug_specifier">f_debug_specifier</strong>:  <span class="sx">'='</span>
+<strong id="grammar-token-python-grammar-f_quote">f_quote</strong>:            &lt;the quote character(s) used in FSTRING_START&gt;
+
+<strong id="grammar-token-python-grammar-fstring_middle">fstring_middle</strong>:
+   | <a class="reference internal" href="#grammar-token-python-grammar-fstring_replacement_field"><code class="xref docutils literal notranslate"><span class="pre">fstring_replacement_field</span></code></a>
+   | <a class="reference internal" href="#grammar-token-python-grammar-FSTRING_MIDDLE"><code class="xref docutils literal notranslate"><span class="pre">FSTRING_MIDDLE</span></code></a>
+<strong id="grammar-token-python-grammar-FSTRING_MIDDLE">FSTRING_MIDDLE</strong>:
+   | (!<span class="sx">&quot;\&quot;</span> !<a class="reference internal" href="#grammar-token-python-grammar-newline"><code class="xref docutils literal notranslate"><span class="pre">newline</span></code></a> !<span class="sx">'{'</span> !<span class="sx">'}'</span> !<a class="reference internal" href="#grammar-token-python-grammar-f_quote"><code class="xref docutils literal notranslate"><span class="pre">f_quote</span></code></a>) <a class="reference internal" href="#grammar-token-python-grammar-source_character"><code class="xref docutils literal notranslate"><span class="pre">source_character</span></code></a>
+   | <a class="reference internal" href="#grammar-token-python-grammar-stringescapeseq"><code class="xref docutils literal notranslate"><span class="pre">stringescapeseq</span></code></a>
+   | <span class="sx">&quot;{{&quot;</span>
+   | <span class="sx">&quot;}}&quot;</span>
+   | &lt;newline, in triple-quoted f-strings only&gt;
+<strong id="grammar-token-python-grammar-fstring_replacement_field">fstring_replacement_field</strong>:
+   | <span class="sx">'{'</span> <a class="reference internal" href="#grammar-token-python-grammar-f_expression"><code class="xref docutils literal notranslate"><span class="pre">f_expression</span></code></a> [<a class="reference internal" href="#grammar-token-python-grammar-f_debug_specifier"><code class="xref docutils literal notranslate"><span class="pre">f_debug_specifier</span></code></a>] [<a class="reference internal" href="#grammar-token-python-grammar-fstring_conversion"><code class="xref docutils literal notranslate"><span class="pre">fstring_conversion</span></code></a>]
+         [<a class="reference internal" href="#grammar-token-python-grammar-fstring_full_format_spec"><code class="xref docutils literal notranslate"><span class="pre">fstring_full_format_spec</span></code></a>] <span class="sx">'}'</span>
+<strong id="grammar-token-python-grammar-fstring_conversion">fstring_conversion</strong>:
+   | <span class="sx">&quot;!&quot;</span> (<span class="sx">&quot;s&quot;</span> | <span class="sx">&quot;r&quot;</span> | <span class="sx">&quot;a&quot;</span>)
+<strong id="grammar-token-python-grammar-fstring_full_format_spec">fstring_full_format_spec</strong>:
+   | <span class="sx">':'</span> <a class="reference internal" href="#grammar-token-python-grammar-fstring_format_spec"><code class="xref docutils literal notranslate"><span class="pre">fstring_format_spec</span></code></a>*
+<strong id="grammar-token-python-grammar-fstring_format_spec">fstring_format_spec</strong>:
+   | <a class="reference internal" href="#grammar-token-python-grammar-FSTRING_MIDDLE"><code class="xref docutils literal notranslate"><span class="pre">FSTRING_MIDDLE</span></code></a>
+   | <a class="reference internal" href="#grammar-token-python-grammar-fstring_replacement_field"><code class="xref docutils literal notranslate"><span class="pre">fstring_replacement_field</span></code></a>
+<strong id="grammar-token-python-grammar-f_expression">f_expression</strong>:
+   | <span class="sx">','</span>.(<a class="reference internal" href="expressions.html#grammar-token-python-grammar-conditional_expression"><code class="xref docutils literal notranslate"><span class="pre">conditional_expression</span></code></a> | <span class="sx">&quot;*&quot;</span> <a class="reference internal" href="expressions.html#grammar-token-python-grammar-or_expr"><code class="xref docutils literal notranslate"><span class="pre">or_expr</span></code></a>)+ [<span class="sx">&quot;,&quot;</span>]
+   | <a class="reference internal" href="expressions.html#grammar-token-python-grammar-yield_expression"><code class="xref docutils literal notranslate"><span class="pre">yield_expression</span></code></a>
+</pre>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>In the above grammar snippet, the <code class="docutils literal notranslate"><span class="pre">f_quote</span></code> and <code class="docutils literal notranslate"><span class="pre">FSTRING_MIDDLE</span></code> rules
+are context-sensitive -- they depend on the contents of <code class="docutils literal notranslate"><span class="pre">FSTRING_START</span></code>
+of the nearest enclosing <code class="docutils literal notranslate"><span class="pre">fstring</span></code>.</p>
+<p>Constructing a more traditional formal grammar from this template is left
+as an exercise for the reader.</p>
+</div>
+<p>The grammar for t-strings is identical to the one for f-strings, with <em>t</em>
+instead of <em>f</em> at the beginning of rule and token names and in the prefix.</p>
+<pre class="highlight">
+<strong id="grammar-token-python-grammar-tstring">tstring</strong>:    TSTRING_START tstring_middle* TSTRING_END
+
+&lt;rest of the t-string grammar is omitted; see above&gt;
+</pre>
 </section>
 </section>
 <section id="numeric-literals">
 <span id="numbers"></span><h2><span class="section-number">2.6. </span>Numeric literals<a class="headerlink" href="#numeric-literals" title="連結到這個標頭">¶</a></h2>
-<p id="index-25"><a class="reference internal" href="../library/token.html#token.NUMBER" title="token.NUMBER"><code class="xref py py-data docutils literal notranslate"><span class="pre">NUMBER</span></code></a> tokens represent numeric literals, of which there are
+<p id="index-27"><a class="reference internal" href="../library/token.html#token.NUMBER" title="token.NUMBER"><code class="xref py py-data docutils literal notranslate"><span class="pre">NUMBER</span></code></a> tokens represent numeric literals, of which there are
 three types: integers, floating-point numbers, and imaginary numbers.</p>
 <pre class="highlight">
 <strong id="grammar-token-python-grammar-NUMBER">NUMBER</strong>: <a class="reference internal" href="#grammar-token-python-grammar-integer"><code class="xref docutils literal notranslate"><span class="pre">integer</span></code></a> | <a class="reference internal" href="#grammar-token-python-grammar-floatnumber"><code class="xref docutils literal notranslate"><span class="pre">floatnumber</span></code></a> | <a class="reference internal" href="#grammar-token-python-grammar-imagnumber"><code class="xref docutils literal notranslate"><span class="pre">imagnumber</span></code></a>
@@ -1234,7 +1348,7 @@ Note that not all valid inputs for those constructors are also valid literals.</
 actually an expression composed of the unary operator '<code class="docutils literal notranslate"><span class="pre">-</span></code>' and the literal
 <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
 <section id="integer-literals">
-<span id="integers"></span><span id="index-26"></span><h3><span class="section-number">2.6.1. </span>Integer literals<a class="headerlink" href="#integer-literals" title="連結到這個標頭">¶</a></h3>
+<span id="integers"></span><span id="index-28"></span><h3><span class="section-number">2.6.1. </span>Integer literals<a class="headerlink" href="#integer-literals" title="連結到這個標頭">¶</a></h3>
 <p>Integer literals denote whole numbers. For example:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="mi">7</span>
 <span class="mi">3</span>
@@ -1294,7 +1408,7 @@ before version 3.0.</p>
 </div>
 </section>
 <section id="floating-point-literals">
-<span id="floating"></span><span id="index-27"></span><h3><span class="section-number">2.6.2. </span>浮點數常數 (Floating-point literals)<a class="headerlink" href="#floating-point-literals" title="連結到這個標頭">¶</a></h3>
+<span id="floating"></span><span id="index-29"></span><h3><span class="section-number">2.6.2. </span>浮點數常數 (Floating-point literals)<a class="headerlink" href="#floating-point-literals" title="連結到這個標頭">¶</a></h3>
 <p>Floating-point (float) literals, such as <code class="docutils literal notranslate"><span class="pre">3.14</span></code> or <code class="docutils literal notranslate"><span class="pre">1.5</span></code>, denote
 <a class="reference internal" href="datamodel.html#datamodel-float"><span class="std std-ref">approximations of real numbers</span></a>.</p>
 <p>They consist of <em>integer</em> and <em>fraction</em> parts, each composed of decimal digits.
@@ -1346,7 +1460,7 @@ lexical definitions:</p>
 </div>
 </section>
 <section id="imaginary-literals">
-<span id="imaginary"></span><span id="index-28"></span><h3><span class="section-number">2.6.3. </span>Imaginary literals<a class="headerlink" href="#imaginary-literals" title="連結到這個標頭">¶</a></h3>
+<span id="imaginary"></span><span id="index-30"></span><h3><span class="section-number">2.6.3. </span>Imaginary literals<a class="headerlink" href="#imaginary-literals" title="連結到這個標頭">¶</a></h3>
 <p>Python has <a class="reference internal" href="../library/stdtypes.html#typesnumeric"><span class="std std-ref">complex number</span></a> objects, but no complex
 literals.
 Instead, <em>imaginary literals</em> denote complex numbers with a zero
@@ -1401,7 +1515,7 @@ That means you can use <code class="docutils literal notranslate"><span class="p
 </section>
 <section id="operators-and-delimiters">
 <span id="lexical-ellipsis"></span><span id="operators"></span><span id="delimiters"></span><h2><span class="section-number">2.7. </span>Operators and delimiters<a class="headerlink" href="#operators-and-delimiters" title="連結到這個標頭">¶</a></h2>
-<p id="index-29">The following grammar defines <em class="dfn">operator</em> and <em class="dfn">delimiter</em> tokens,
+<p id="index-31">The following grammar defines <em class="dfn">operator</em> and <em class="dfn">delimiter</em> tokens,
 that is, the generic <a class="reference internal" href="../library/token.html#token.OP" title="token.OP"><code class="xref py py-data docutils literal notranslate"><span class="pre">OP</span></code></a> token type.
 A <a class="reference internal" href="../library/token.html#token-operators-delimiters"><span class="std std-ref">list of these tokens and their names</span></a>
 is also available in the <code class="xref py py-mod docutils literal notranslate"><span class="pre">token</span></code> module documentation.</p>
@@ -1474,6 +1588,7 @@ meaning as an <a class="reference internal" href="../library/constants.html#Elli
 <li><a class="reference internal" href="#keywords">2.3.1. 關鍵字</a></li>
 <li><a class="reference internal" href="#soft-keywords">2.3.2. 軟關鍵字</a></li>
 <li><a class="reference internal" href="#reserved-classes-of-identifiers">2.3.3. Reserved classes of identifiers</a></li>
+<li><a class="reference internal" href="#non-ascii-characters-in-names">2.3.4. 名稱中的非 ASCII 字元</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#literals">2.4. Literals</a></li>
@@ -1495,6 +1610,7 @@ meaning as an <a class="reference internal" href="../library/constants.html#Elli
 <li><a class="reference internal" href="#raw-string-literals">2.5.6. 原始字串常數</a></li>
 <li><a class="reference internal" href="#formatted-string-literals">2.5.7. f-string（f 字串）</a></li>
 <li><a class="reference internal" href="#template-string-literals">2.5.8. t-string（t 字串）</a></li>
+<li><a class="reference internal" href="#formal-grammar-for-f-strings">2.5.9. Formal grammar for f-strings</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#numeric-literals">2.6. Numeric literals</a><ul>
@@ -1528,6 +1644,12 @@ meaning as an <a class="reference internal" href="../library/constants.html#Elli
             rel="nofollow">顯示原始碼
         </a>
       </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/reference/lexical_analysis.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
     </ul>
   </div>
         </div>
@@ -1564,7 +1686,7 @@ meaning as an <a class="reference internal" href="../library/constants.html#Elli
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.0 Documentation</a> &#187;
+      <a href="../index.html">3.14.2 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 語言參考手冊</a> &#187;</li>
@@ -1609,7 +1731,7 @@ meaning as an <a class="reference internal" href="../library/constants.html#Elli
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 11月 20, 2025 (18:58 UTC)。
+      最後更新於 1月 22, 2026 (16:51 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
