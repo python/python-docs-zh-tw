@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>concurrent.interpreters --- 在同一個行程中使用多個直譯器 &#8212; Python 3.14.2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=4eb63a40" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
+    
+    <script src="../_static/documentation_options.js?v=f006b4cd"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.14.2 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權所有" href="../copyright.html" />
+    <link rel="next" title="subprocess --- 子行程管理" href="subprocess.html" />
+    <link rel="prev" title="concurrent.futures --- 啟動平行任務" href="concurrent.futures.html" />
+    
+      
+      <link rel="canonical" href="https://docs.python.org/3/library/concurrent.interpreters.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="../_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="../_static/py.svg">
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script>
+            <script type="text/javascript" src="../_static/search-focus.js"></script>
+            <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="選單">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="../_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"></span>
+            <form role="search" class="search" action="../search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q">
+                <input type="submit" value="前往">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+            
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">concurrent.interpreters</span></code> --- 在同一個行程中使用多個直譯器</a><ul>
+<li><a class="reference internal" href="#key-details">Key details</a></li>
+<li><a class="reference internal" href="#introduction">Introduction</a><ul>
+<li><a class="reference internal" href="#multiple-interpreters-and-isolation">Multiple Interpreters and Isolation</a></li>
+<li><a class="reference internal" href="#running-in-an-interpreter">Running in an Interpreter</a></li>
+<li><a class="reference internal" href="#concurrency-and-parallelism">Concurrency and Parallelism</a></li>
+<li><a class="reference internal" href="#communication-between-interpreters">直譯器之間的溝通</a></li>
+<li><a class="reference internal" href="#sharing-objects">&quot;Sharing&quot; Objects</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#reference">Reference</a><ul>
+<li><a class="reference internal" href="#interpreter-objects">Interpreter objects</a></li>
+<li><a class="reference internal" href="#exceptions">例外</a></li>
+<li><a class="reference internal" href="#communicating-between-interpreters">在直譯器之間溝通</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#basic-usage">基本用法</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="concurrent.futures.html"
+                          title="上一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">concurrent.futures</span></code> --- 啟動平行任務</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="subprocess.html"
+                          title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">subprocess</span></code> --- 子行程管理</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/concurrent.interpreters.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/library/concurrent.interpreters.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="subprocess.html" title="subprocess --- 子行程管理"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="concurrent.futures.html" title="concurrent.futures --- 啟動平行任務"
+             accesskey="P">上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.2 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="concurrency.html" accesskey="U">並行執行 (Concurrent Execution)</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">concurrent.interpreters</span></code> --- 在同一個行程中使用多個直譯器</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-concurrent.interpreters">
+<span id="concurrent-interpreters-multiple-interpreters-in-the-same-process"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">concurrent.interpreters</span></code> --- 在同一個行程中使用多個直譯器<a class="headerlink" href="#module-concurrent.interpreters" title="連結到這個標頭">¶</a></h1>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.14 版被加入.</span></p>
+</div>
+<p><strong>原始碼：</strong><a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.14/Lib/concurrent/interpreters">Lib/concurrent/interpreters</a></p>
+<hr class="docutils" />
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">concurrent.interpreters</span></code> module constructs higher-level
+interfaces on top of the lower level <code class="xref py py-mod docutils literal notranslate"><span class="pre">_interpreters</span></code> module.</p>
+<p>The module is primarily meant to provide a basic API for managing
+interpreters (AKA &quot;subinterpreters&quot;) and running things in them.
+Running mostly involves switching to an interpreter (in the current
+thread) and calling a function in that execution context.</p>
+<p>For concurrency, interpreters themselves (and this module) don't
+provide much more than isolation, which on its own isn't useful.
+Actual concurrency is available separately through
+<a class="reference internal" href="threading.html#module-threading" title="threading: Thread-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">threads</span></code></a>  See <a class="reference internal" href="#interp-concurrency">below</a></p>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<dl class="simple">
+<dt><a class="reference internal" href="concurrent.futures.html#concurrent.futures.InterpreterPoolExecutor" title="concurrent.futures.InterpreterPoolExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">InterpreterPoolExecutor</span></code></a></dt><dd><p>Combines threads with interpreters in a familiar interface.</p>
+</dd>
+</dl>
+<dl class="simple">
+<dt><a class="reference internal" href="../howto/isolating-extensions.html#isolating-extensions-howto"><span class="std std-ref">隔離擴充模組</span></a></dt><dd><p>How to update an extension module to support multiple interpreters.</p>
+</dd>
+</dl>
+<p><span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0554/"><strong>PEP 554</strong></a></p>
+<p><span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0734/"><strong>PEP 734</strong></a></p>
+<p><span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0684/"><strong>PEP 684</strong></a></p>
+</div>
+<div class="availability docutils container">
+<p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: not WASI.</p>
+<p>This module does not work or is not available on WebAssembly. See
+<a class="reference internal" href="intro.html#wasm-availability"><span class="std std-ref">WebAssembly 平台</span></a> for more information.</p>
+</div>
+<section id="key-details">
+<h2>Key details<a class="headerlink" href="#key-details" title="連結到這個標頭">¶</a></h2>
+<p>Before we dive in further, there are a small number of details
+to keep in mind about using multiple interpreters:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#interp-isolation">isolated</a>, by default</p></li>
+<li><p>no implicit threads</p></li>
+<li><p>not all PyPI packages support use in multiple interpreters yet</p></li>
+</ul>
+</section>
+<section id="introduction">
+<span id="interpreters-intro"></span><h2>Introduction<a class="headerlink" href="#introduction" title="連結到這個標頭">¶</a></h2>
+<p>An &quot;interpreter&quot; is effectively the execution context of the Python
+runtime.  It contains all of the state the runtime needs to execute
+a program.  This includes things like the import state and builtins.
+(Each thread, even if there's only the main thread, has some extra
+runtime state, in addition to the current interpreter, related to
+the current exception and the bytecode eval loop.)</p>
+<p>The concept and functionality of the interpreter have been a part of
+Python since version 2.2, but the feature was only available through
+the C-API and not well known, and the <a class="reference internal" href="#interp-isolation">isolation</a>
+was relatively incomplete until version 3.12.</p>
+<section id="multiple-interpreters-and-isolation">
+<span id="interp-isolation"></span><h3>Multiple Interpreters and Isolation<a class="headerlink" href="#multiple-interpreters-and-isolation" title="連結到這個標頭">¶</a></h3>
+<p>A Python implementation may support using multiple interpreters in the
+same process.  CPython has this support.  Each interpreter is
+effectively isolated from the others (with a limited number of
+carefully managed process-global exceptions to the rule).</p>
+<p>That isolation is primarily useful as a strong separation between
+distinct logical components of a program, where you want to have
+careful control of how those components interact.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Interpreters in the same process can technically never be strictly
+isolated from one another since there are few restrictions on memory
+access within the same process.  The Python runtime makes a best
+effort at isolation but extension modules may easily violate that.
+Therefore, do not use multiple interpreters in security-sensitive
+situations, where they shouldn't have access to each other's data.</p>
+</div>
+</section>
+<section id="running-in-an-interpreter">
+<h3>Running in an Interpreter<a class="headerlink" href="#running-in-an-interpreter" title="連結到這個標頭">¶</a></h3>
+<p>Running in a different interpreter involves switching to it in the
+current thread and then calling some function.  The runtime will
+execute the function using the current interpreter's state.  The
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">concurrent.interpreters</span></code> module provides a basic API for
+creating and managing interpreters, as well as the switch-and-call
+operation.</p>
+<p>No other threads are automatically started for the operation.
+There is <a class="reference internal" href="#interp-call-in-thread">a helper</a> for that though.
+There is another dedicated helper for calling the builtin
+<a class="reference internal" href="functions.html#exec" title="exec"><code class="xref py py-func docutils literal notranslate"><span class="pre">exec()</span></code></a> in an interpreter.</p>
+<p>When <a class="reference internal" href="functions.html#exec" title="exec"><code class="xref py py-func docutils literal notranslate"><span class="pre">exec()</span></code></a> (or <a class="reference internal" href="functions.html#eval" title="eval"><code class="xref py py-func docutils literal notranslate"><span class="pre">eval()</span></code></a>) are called in an interpreter,
+they run using the interpreter's <code class="xref py py-mod docutils literal notranslate"><span class="pre">__main__</span></code> module as the
+&quot;globals&quot; namespace.  The same is true for functions that aren't
+associated with any module.  This is the same as how scripts invoked
+from the command-line run in the <code class="xref py py-mod docutils literal notranslate"><span class="pre">__main__</span></code> module.</p>
+</section>
+<section id="concurrency-and-parallelism">
+<span id="interp-concurrency"></span><h3>Concurrency and Parallelism<a class="headerlink" href="#concurrency-and-parallelism" title="連結到這個標頭">¶</a></h3>
+<p>As noted earlier, interpreters do not provide any concurrency
+on their own.  They strictly represent the isolated execution
+context the runtime will use <em>in the current thread</em>.  That isolation
+makes them similar to processes, but they still enjoy in-process
+efficiency, like threads.</p>
+<p>All that said, interpreters do naturally support certain flavors of
+concurrency.
+There's a powerful side effect of that isolation.  It enables a
+different approach to concurrency than you can take with async or
+threads.  It's a similar concurrency model to CSP or the actor model,
+a model which is relatively easy to reason about.</p>
+<p>You can take advantage of that concurrency model in a single thread,
+switching back and forth between interpreters, Stackless-style.
+However, this model is more useful when you combine interpreters
+with multiple threads.  This mostly involves starting a new thread,
+where you switch to another interpreter and run what you want there.</p>
+<p>Each actual thread in Python, even if you're only running in the main
+thread, has its own <em>current</em> execution context.  Multiple threads can
+use the same interpreter or different ones.</p>
+<p>At a high level, you can think of the combination of threads and
+interpreters as threads with opt-in sharing.</p>
+<p>As a significant bonus, interpreters are sufficiently isolated that
+they do not share the <a class="reference internal" href="../glossary.html#term-GIL"><span class="xref std std-term">GIL</span></a>, which means combining threads with
+multiple interpreters enables full multi-core parallelism.
+(This has been the case since Python 3.12.)</p>
+</section>
+<section id="communication-between-interpreters">
+<h3>直譯器之間的溝通<a class="headerlink" href="#communication-between-interpreters" title="連結到這個標頭">¶</a></h3>
+<p>In practice, multiple interpreters are useful only if we have a way
+to communicate between them.  This usually involves some form of
+message passing, but can even mean sharing data in some carefully
+managed way.</p>
+<p>With this in mind, the <code class="xref py py-mod docutils literal notranslate"><span class="pre">concurrent.interpreters</span></code> module provides
+a <a class="reference internal" href="queue.html#queue.Queue" title="queue.Queue"><code class="xref py py-class docutils literal notranslate"><span class="pre">queue.Queue</span></code></a> implementation, available through
+<a class="reference internal" href="#concurrent.interpreters.create_queue" title="concurrent.interpreters.create_queue"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_queue()</span></code></a>.</p>
+</section>
+<section id="sharing-objects">
+<span id="interp-object-sharing"></span><h3>&quot;Sharing&quot; Objects<a class="headerlink" href="#sharing-objects" title="連結到這個標頭">¶</a></h3>
+<p>Any data actually shared between interpreters loses the thread-safety
+provided by the <a class="reference internal" href="../glossary.html#term-GIL"><span class="xref std std-term">GIL</span></a>.  There are various options for dealing with
+this in extension modules.  However, from Python code the lack of
+thread-safety means objects can't actually be shared, with a few
+exceptions.  Instead, a copy must be created, which means mutable
+objects won't stay in sync.</p>
+<p>By default, most objects are copied with <a class="reference internal" href="pickle.html#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> when they are
+passed to another interpreter.  Nearly all of the immutable builtin
+objects are either directly shared or copied efficiently.  For example:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="constants.html#None" title="None"><code class="xref py py-const docutils literal notranslate"><span class="pre">None</span></code></a></p></li>
+<li><p><a class="reference internal" href="functions.html#bool" title="bool"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>（<a class="reference internal" href="constants.html#True" title="True"><code class="xref py py-const docutils literal notranslate"><span class="pre">True</span></code></a> 和 <a class="reference internal" href="constants.html#False" title="False"><code class="xref py py-const docutils literal notranslate"><span class="pre">False</span></code></a>）</p></li>
+<li><p><a class="reference internal" href="stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a></p></li>
+<li><p><a class="reference internal" href="stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p></li>
+<li><p><a class="reference internal" href="functions.html#int" title="int"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p></li>
+<li><p><a class="reference internal" href="functions.html#float" title="float"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p></li>
+<li><p><a class="reference internal" href="stdtypes.html#tuple" title="tuple"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a> (of similarly supported objects)</p></li>
+</ul>
+<p>There is a small number of Python types that actually share mutable
+data between interpreters:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="stdtypes.html#memoryview" title="memoryview"><code class="xref py py-class docutils literal notranslate"><span class="pre">memoryview</span></code></a></p></li>
+<li><p><a class="reference internal" href="#concurrent.interpreters.Queue" title="concurrent.interpreters.Queue"><code class="xref py py-class docutils literal notranslate"><span class="pre">Queue</span></code></a></p></li>
+</ul>
+</section>
+</section>
+<section id="reference">
+<h2>Reference<a class="headerlink" href="#reference" title="連結到這個標頭">¶</a></h2>
+<p>This module defines the following functions:</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="concurrent.interpreters.list_all">
+<span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">list_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.list_all" title="連結到這個定義">¶</a></dt>
+<dd><p>Return a <a class="reference internal" href="stdtypes.html#list" title="list"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> of <a class="reference internal" href="#concurrent.interpreters.Interpreter" title="concurrent.interpreters.Interpreter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interpreter</span></code></a> objects,
+one for each existing interpreter.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="concurrent.interpreters.get_current">
+<span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">get_current</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.get_current" title="連結到這個定義">¶</a></dt>
+<dd><p>Return an <a class="reference internal" href="#concurrent.interpreters.Interpreter" title="concurrent.interpreters.Interpreter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interpreter</span></code></a> object for the currently running
+interpreter.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="concurrent.interpreters.get_main">
+<span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">get_main</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.get_main" title="連結到這個定義">¶</a></dt>
+<dd><p>Return an <a class="reference internal" href="#concurrent.interpreters.Interpreter" title="concurrent.interpreters.Interpreter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interpreter</span></code></a> object for the main interpreter.
+This is the interpreter the runtime created to run the <a class="reference internal" href="../glossary.html#term-REPL"><span class="xref std std-term">REPL</span></a>
+or the script given at the command-line.  It is usually the only one.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="concurrent.interpreters.create">
+<span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">create</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.create" title="連結到這個定義">¶</a></dt>
+<dd><p>Initialize a new (idle) Python interpreter
+and return a <a class="reference internal" href="#concurrent.interpreters.Interpreter" title="concurrent.interpreters.Interpreter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interpreter</span></code></a> object for it.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="concurrent.interpreters.create_queue">
+<span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">create_queue</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.create_queue" title="連結到這個定義">¶</a></dt>
+<dd><p>Initialize a new cross-interpreter queue and return a <a class="reference internal" href="#concurrent.interpreters.Queue" title="concurrent.interpreters.Queue"><code class="xref py py-class docutils literal notranslate"><span class="pre">Queue</span></code></a>
+object for it.</p>
+</dd></dl>
+
+<section id="interpreter-objects">
+<h3>Interpreter objects<a class="headerlink" href="#interpreter-objects" title="連結到這個標頭">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="concurrent.interpreters.Interpreter">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">Interpreter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Interpreter" title="連結到這個定義">¶</a></dt>
+<dd><p>A single interpreter in the current process.</p>
+<p>Generally, <a class="reference internal" href="#concurrent.interpreters.Interpreter" title="concurrent.interpreters.Interpreter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Interpreter</span></code></a> shouldn't be called directly.
+Instead, use <a class="reference internal" href="#concurrent.interpreters.create" title="concurrent.interpreters.create"><code class="xref py py-func docutils literal notranslate"><span class="pre">create()</span></code></a> or one of the other module functions.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="concurrent.interpreters.Interpreter.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#concurrent.interpreters.Interpreter.id" title="連結到這個定義">¶</a></dt>
+<dd><p>(read-only)</p>
+<p>The underlying interpreter's ID.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="concurrent.interpreters.Interpreter.whence">
+<span class="sig-name descname"><span class="pre">whence</span></span><a class="headerlink" href="#concurrent.interpreters.Interpreter.whence" title="連結到這個定義">¶</a></dt>
+<dd><p>(read-only)</p>
+<p>A string describing where the interpreter came from.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="concurrent.interpreters.Interpreter.is_running">
+<span class="sig-name descname"><span class="pre">is_running</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Interpreter.is_running" title="連結到這個定義">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the interpreter is currently executing code
+in its <code class="xref py py-mod docutils literal notranslate"><span class="pre">__main__</span></code> module and <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="concurrent.interpreters.Interpreter.close">
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Interpreter.close" title="連結到這個定義">¶</a></dt>
+<dd><p>Finalize and destroy the interpreter.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="concurrent.interpreters.Interpreter.prepare_main">
+<span class="sig-name descname"><span class="pre">prepare_main</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Interpreter.prepare_main" title="連結到這個定義">¶</a></dt>
+<dd><p>Bind objects in the interpreter's <code class="xref py py-mod docutils literal notranslate"><span class="pre">__main__</span></code> module.</p>
+<p>Some objects are actually shared and some are copied efficiently,
+but most are copied via <a class="reference internal" href="pickle.html#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a>.  See <a class="reference internal" href="#interp-object-sharing"><span class="std std-ref">&quot;Sharing&quot; Objects</span></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="concurrent.interpreters.Interpreter.exec">
+<span class="sig-name descname"><span class="pre">exec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">dedent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Interpreter.exec" title="連結到這個定義">¶</a></dt>
+<dd><p>Run the given source code in the interpreter (in the current thread).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="concurrent.interpreters.Interpreter.call">
+<span class="sig-name descname"><span class="pre">call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callable</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Interpreter.call" title="連結到這個定義">¶</a></dt>
+<dd><p>Return the result of calling running the given function in the
+interpreter (in the current thread).</p>
+</dd></dl>
+
+<dl class="py method" id="interp-call-in-thread">
+<dt class="sig sig-object py" id="concurrent.interpreters.Interpreter.call_in_thread">
+<span class="sig-name descname"><span class="pre">call_in_thread</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">callable</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Interpreter.call_in_thread" title="連結到這個定義">¶</a></dt>
+<dd><p>Run the given function in the interpreter (in a new thread).</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="exceptions">
+<h3>例外<a class="headerlink" href="#exceptions" title="連結到這個標頭">¶</a></h3>
+<dl class="py exception">
+<dt class="sig sig-object py" id="concurrent.interpreters.InterpreterError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">InterpreterError</span></span><a class="headerlink" href="#concurrent.interpreters.InterpreterError" title="連結到這個定義">¶</a></dt>
+<dd><p>This exception, a subclass of <a class="reference internal" href="exceptions.html#Exception" title="Exception"><code class="xref py py-exc docutils literal notranslate"><span class="pre">Exception</span></code></a>, is raised when
+an interpreter-related error happens.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="concurrent.interpreters.InterpreterNotFoundError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">InterpreterNotFoundError</span></span><a class="headerlink" href="#concurrent.interpreters.InterpreterNotFoundError" title="連結到這個定義">¶</a></dt>
+<dd><p>This exception, a subclass of <a class="reference internal" href="#concurrent.interpreters.InterpreterError" title="concurrent.interpreters.InterpreterError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">InterpreterError</span></code></a>, is raised when
+the targeted interpreter no longer exists.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="concurrent.interpreters.ExecutionFailed">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">ExecutionFailed</span></span><a class="headerlink" href="#concurrent.interpreters.ExecutionFailed" title="連結到這個定義">¶</a></dt>
+<dd><p>This exception, a subclass of <a class="reference internal" href="#concurrent.interpreters.InterpreterError" title="concurrent.interpreters.InterpreterError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">InterpreterError</span></code></a>, is raised when
+the running code raised an uncaught exception.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="concurrent.interpreters.ExecutionFailed.excinfo">
+<span class="sig-name descname"><span class="pre">excinfo</span></span><a class="headerlink" href="#concurrent.interpreters.ExecutionFailed.excinfo" title="連結到這個定義">¶</a></dt>
+<dd><p>A basic snapshot of the exception raised in the other interpreter.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="concurrent.interpreters.NotShareableError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">NotShareableError</span></span><a class="headerlink" href="#concurrent.interpreters.NotShareableError" title="連結到這個定義">¶</a></dt>
+<dd><p>This exception, a subclass of <a class="reference internal" href="exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a>, is raised when
+an object cannot be sent to another interpreter.</p>
+</dd></dl>
+
+</section>
+<section id="communicating-between-interpreters">
+<h3>在直譯器之間溝通<a class="headerlink" href="#communicating-between-interpreters" title="連結到這個標頭">¶</a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="concurrent.interpreters.Queue">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">Queue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Queue" title="連結到這個定義">¶</a></dt>
+<dd><p>A wrapper around a low-level, cross-interpreter queue, which
+implements the <a class="reference internal" href="queue.html#queue.Queue" title="queue.Queue"><code class="xref py py-class docutils literal notranslate"><span class="pre">queue.Queue</span></code></a> interface.  The underlying queue
+can only be created through <a class="reference internal" href="#concurrent.interpreters.create_queue" title="concurrent.interpreters.create_queue"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_queue()</span></code></a>.</p>
+<p>Some objects are actually shared and some are copied efficiently,
+but most are copied via <a class="reference internal" href="pickle.html#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a>.  See <a class="reference internal" href="#interp-object-sharing"><span class="std std-ref">&quot;Sharing&quot; Objects</span></a>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="concurrent.interpreters.Queue.id">
+<span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#concurrent.interpreters.Queue.id" title="連結到這個定義">¶</a></dt>
+<dd><p>(read-only)</p>
+<p>The queue's ID.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="concurrent.interpreters.QueueEmptyError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">QueueEmptyError</span></span><a class="headerlink" href="#concurrent.interpreters.QueueEmptyError" title="連結到這個定義">¶</a></dt>
+<dd><p>This exception, a subclass of <a class="reference internal" href="queue.html#queue.Empty" title="queue.Empty"><code class="xref py py-exc docutils literal notranslate"><span class="pre">queue.Empty</span></code></a>, is raised from
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">Queue.get()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">Queue.get_nowait()</span></code> when the queue
+is empty.</p>
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="concurrent.interpreters.QueueFullError">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">QueueFullError</span></span><a class="headerlink" href="#concurrent.interpreters.QueueFullError" title="連結到這個定義">¶</a></dt>
+<dd><p>This exception, a subclass of <a class="reference internal" href="queue.html#queue.Full" title="queue.Full"><code class="xref py py-exc docutils literal notranslate"><span class="pre">queue.Full</span></code></a>, is raised from
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">Queue.put()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">Queue.put_nowait()</span></code> when the queue
+is full.</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="basic-usage">
+<h2>基本用法<a class="headerlink" href="#basic-usage" title="連結到這個標頭">¶</a></h2>
+<p>建立一個直譯器並在其中運行程式碼：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">concurrent</span><span class="w"> </span><span class="kn">import</span> <span class="n">interpreters</span>
+
+<span class="n">interp</span> <span class="o">=</span> <span class="n">interpreters</span><span class="o">.</span><span class="n">create</span><span class="p">()</span>
+
+<span class="c1"># Run in the current OS thread.</span>
+
+<span class="n">interp</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span><span class="s1">&#39;print(&quot;spam!&quot;)&#39;</span><span class="p">)</span>
+
+<span class="n">interp</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;if True:</span>
+<span class="s2">    print(&#39;spam!&#39;)</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">textwrap</span><span class="w"> </span><span class="kn">import</span> <span class="n">dedent</span>
+<span class="n">interp</span><span class="o">.</span><span class="n">exec</span><span class="p">(</span><span class="n">dedent</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span>
+<span class="s2">    print(&#39;spam!&#39;)</span>
+<span class="s2">    &quot;&quot;&quot;</span><span class="p">))</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">arg</span>
+
+<span class="n">res</span> <span class="o">=</span> <span class="n">interp</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">run</span><span class="p">,</span> <span class="s1">&#39;spam!&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;spam!&#39;</span><span class="p">)</span>
+
+<span class="n">interp</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
+
+<span class="c1"># Run in new OS thread.</span>
+
+<span class="n">t</span> <span class="o">=</span> <span class="n">interp</span><span class="o">.</span><span class="n">call_in_thread</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
+<span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">concurrent.interpreters</span></code> --- 在同一個行程中使用多個直譯器</a><ul>
+<li><a class="reference internal" href="#key-details">Key details</a></li>
+<li><a class="reference internal" href="#introduction">Introduction</a><ul>
+<li><a class="reference internal" href="#multiple-interpreters-and-isolation">Multiple Interpreters and Isolation</a></li>
+<li><a class="reference internal" href="#running-in-an-interpreter">Running in an Interpreter</a></li>
+<li><a class="reference internal" href="#concurrency-and-parallelism">Concurrency and Parallelism</a></li>
+<li><a class="reference internal" href="#communication-between-interpreters">直譯器之間的溝通</a></li>
+<li><a class="reference internal" href="#sharing-objects">&quot;Sharing&quot; Objects</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#reference">Reference</a><ul>
+<li><a class="reference internal" href="#interpreter-objects">Interpreter objects</a></li>
+<li><a class="reference internal" href="#exceptions">例外</a></li>
+<li><a class="reference internal" href="#communicating-between-interpreters">在直譯器之間溝通</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#basic-usage">基本用法</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="concurrent.futures.html"
+                          title="上一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">concurrent.futures</span></code> --- 啟動平行任務</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="subprocess.html"
+                          title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">subprocess</span></code> --- 子行程管理</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/concurrent.interpreters.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/library/concurrent.interpreters.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="subprocess.html" title="subprocess --- 子行程管理"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="concurrent.futures.html" title="concurrent.futures --- 啟動平行任務"
+             >上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.2 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="concurrency.html" >並行執行 (Concurrent Execution)</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">concurrent.interpreters</span></code> --- 在同一個行程中使用多個直譯器</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; <a href="../copyright.html">版權所有</a> 2001 Python Software Foundation.
+    <br>
+    此頁面採用 Python 軟體基金會授權條款第 2 版。
+    <br>
+    文件中的範例、應用技巧與其他程式碼額外採用了 Zero Clause BSD 授權條款。
+    <br>
+    
+      更多訊息請見<a href="/license.html">歷史與授權條款</a>。<br>
+    
+    
+    <br>
+
+    Python 軟體基金會是一家非營利法人。
+<a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
+<br>
+    <br>
+      最後更新於 1月 22, 2026 (16:56 UTC)。
+    
+      <a href="/bugs.html">發現 bug</a>？
+    
+    <br>
+
+    以 <a href="https://www.sphinx-doc.org/">Sphinx</a>8.2.3建立。 
+    </div>
+
+  </body>
+</html>
