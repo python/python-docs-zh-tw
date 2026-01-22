@@ -92,7 +92,7 @@ $(VENV)/bin/activate:
 	uv venv $(VENV)
 
 $(VENV)/bin/sphinx-build: $(VENV)/bin/activate
-	. $(VENV)/bin/activate; uv pip install sphinx python-docs-theme
+	. $(VENV)/bin/activate; uv pip install "sphinx<9.0" python-docs-theme
 
 $(VENV)/bin/sphinx-lint: $(VENV)/bin/activate
 	. $(VENV)/bin/activate; uv pip install sphinx-lint
@@ -103,7 +103,7 @@ $(VENV)/bin/blurb: $(VENV)/bin/activate
 
 .PHONY: upgrade_venv
 upgrade_venv: $(VENV)/bin/activate ## Upgrade the venv that compiles the doc
-	@. $(VENV)/bin/activate; uv pip install -q --upgrade sphinx python-docs-theme blurb sphinx-lint
+	@. $(VENV)/bin/activate; uv pip install -q --upgrade "sphinx<9.0" python-docs-theme blurb sphinx-lint
 
 
 .PHONY: progress
