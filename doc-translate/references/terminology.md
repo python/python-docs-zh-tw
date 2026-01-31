@@ -2,6 +2,147 @@
 
 以下內容為術語表/翻譯對照摘錄，翻譯時請優先參考此處與 `glossary.po`。
 
+## 簡易對照表
+以下為本檔案中出現的「英→中」快速對照（擷取自條目標題），便於快速查找；完整說明請見後文。
+
+| English | 中文 |
+| --- | --- |
+| abstract base class | 抽象基底類別 |
+| annotate function | 註釋函式 |
+| annotation | 註釋 |
+| argument | 引數 |
+| asynchronous context manager | 非同步情境管理器 |
+| asynchronous generator | 非同步產生器 |
+| asynchronous generator iterator | 非同步產生器疊代器 |
+| asynchronous iterable | 非同步可疊代物件 |
+| asynchronous iterator | 非同步疊代器 |
+| attribute | 屬性 |
+| awaitable | 可等待物件 |
+| binary file | 二進位檔案 |
+| borrowed reference | 借用參照 |
+| bytes-like object | 類位元組串物件 |
+| bytecode | 位元組碼 |
+| callable | 可呼叫物件 |
+| callback | 回呼 |
+| class | 類別 |
+| class variable | 類別變數 |
+| closure variable | 閉包變數 |
+| complex number | 複數 |
+| concurrency | 並行性 |
+| context | 情境 |
+| context management protocol | 情境管理協定 |
+| context manager | 情境管理器 |
+| context variable | 情境變數 |
+| contiguous | 連續的 |
+| coroutine | 協程 |
+| coroutine function | 協程函式 |
+| decorator | 裝飾器 |
+| descriptor | 描述器 |
+| dictionary | 字典 |
+| dictionary comprehension | 字典綜合運算 |
+| dictionary view | 字典檢視 |
+| docstring | 說明字串 |
+| duck-typing | 鴨子型別 |
+| dunder | 雙底線 |
+| evaluate function | 求值函式 |
+| expression | 運算式 |
+| extension module | 擴充模組 |
+| f-string | f 字串 |
+| f-strings | f 字串 |
+| file object | 檔案物件 |
+| file-like object | 類檔案物件 |
+| filesystem encoding and error handler | 檔案系統編碼和錯誤處理函式 |
+| finder | 尋檢器 |
+| floor division | 向下取整除法 |
+| free threading | 自由執行緒 |
+| free variable | 自由變數 |
+| function | 函式 |
+| function annotation | 函式註釋 |
+| garbage collection | 垃圾回收 |
+| generator | 產生器 |
+| generator iterator | 產生器疊代器 |
+| generator expression | 產生器運算式 |
+| generic function | 泛型函式 |
+| generic type | 泛型型別 |
+| global interpreter lock | 全域直譯器鎖 |
+| hash-based pyc | 雜湊架構的 pyc |
+| hashable | 可雜湊的 |
+| immortal | 不滅 |
+| immutable | 不可變物件 |
+| import path | 引入路徑 |
+| importing | 引入 |
+| importer | 引入器 |
+| interactive | 互動的 |
+| interpreted | 直譯的 |
+| interpreter shutdown | 直譯器關閉 |
+| iterable | 可疊代物件 |
+| iterator | 疊代器 |
+| key function | 鍵函式 |
+| keyword argument | 關鍵字引數 |
+| lexical analyzer | 詞法分析器 |
+| list | 串列 |
+| list comprehension | 串列綜合運算 |
+| lock | 鎖 |
+| loader | 載入器 |
+| locale encoding | 區域編碼 |
+| magic method | 魔術方法 |
+| mapping | 對映 |
+| meta path finder | 元路徑尋檢器 |
+| metaclass | 元類別 |
+| method | 方法 |
+| method resolution order | 方法解析順序 |
+| module | 模組 |
+| module spec | 模組規格 |
+| mutable | 可變物件 |
+| named tuple | 附名元組 |
+| namespace | 命名空間 |
+| namespace package | 命名空間套件 |
+| nested scope | 巢狀作用域 |
+| new-style class | 新式類別 |
+| object | 物件 |
+| optimized scope | 最佳化作用域 |
+| optional module | 可選模組 |
+| package | 套件 |
+| parameter | 參數 |
+| path entry | 路徑項目 |
+| path entry finder | 路徑項目尋檢器 |
+| path entry hook | 路徑項目鉤 |
+| path based finder | 基於路徑的尋檢器 |
+| path-like object | 類路徑物件 |
+| portion | 部分 |
+| positional argument | 位置引數 |
+| provisional API | 暫行 API |
+| provisional package | 暫行套件 |
+| Pythonic | Python 風格的 |
+| qualified name | 限定名稱 |
+| reference count | 參照計數 |
+| regular package | 正規套件 |
+| sequence | 序列 |
+| set comprehension | 集合綜合運算 |
+| single dispatch | 單一調度 |
+| slice | 切片 |
+| soft deprecated | 軟性棄用 |
+| special method | 特殊方法 |
+| statement | 陳述式 |
+| static type checker | 靜態型別檢查器 |
+| stdlib | 標準函式庫 |
+| strong reference | 強參照 |
+| t-string | t 字串 |
+| t-strings | t 字串 |
+| text encoding | 文字編碼 |
+| text file | 文字檔案 |
+| triple-quoted string | 三引號內字串 |
+| type | 型別 |
+| type alias | 型別別名 |
+| type hint | 型別提示 |
+| universal newlines | 通用換行字元 |
+| variable annotation | 變數註釋 |
+| virtual environment | 虛擬環境 |
+| virtual machine | 虛擬機器 |
+| walrus operator | 海象運算子 |
+| Zen of Python | Python 之禪 |
+
+## 條目詳述
 互動式 shell 的預設 Python 提示字元。常見於能在直譯器中以互動方式被執行的程式碼範例。
 
 可以表示：
