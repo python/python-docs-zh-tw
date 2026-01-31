@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_TOOL_INPUT\" | grep -q '\\.po\"'; then echo '[Translation Context] Remember: Use skills translate-po, terminology-check, validate-translation. Check doc-translate/references/terminology.md for terms.'; fi"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_TOOL_INPUT\" | grep -q '\\.po\"'; then echo '[Post-Edit Reminder] Run: make lint to verify reST syntax. Check terminology with terminology-check skill.'; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$CLAUDE_TOOL_INPUT\" | grep -q '\\.po\"'; then echo '[Post-Write Reminder] PO file modified. Verify: 1) Line length <= 79 chars, 2) Terminology consistency, 3) reST syntax with make lint'; fi"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(make lint)",
+      "Bash(make build *)",
+      "Bash(make fuzzy)",
+      "Bash(make todo)",
+      "Bash(make progress)",
+      "Bash(powrap *)"
+    ]
+  }
+}
