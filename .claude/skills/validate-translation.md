@@ -57,6 +57,11 @@ metadata:
 | Inconsistent term | WARNING | Same term translated differently |
 | High-freq term translated | INFO | Terms like `int`, `list` should stay English |
 
+### 7. Context-Dependent Decisions
+| Check | Severity | Description |
+|-------|----------|-------------|
+| Reviewer context rule | INFO | If a reviewer decides a term/pattern depends on nearby context, record it in the Context Decision Log in `terminology-check` for future reference. |
+
 ## Validation Process
 
 1. **Read the PO entry** - Parse msgid, msgstr, comments, and flags
@@ -65,7 +70,8 @@ metadata:
 4. **Check spacing** - Verify CJK-Latin spacing
 5. **Check line length** - Ensure <= 79 characters
 6. **Check reST** - Validate roles, links, escaping
-7. **Check terminology** - Cross-reference with glossary
+7. **Check terminology** - Cross-reference with glossary and Context Decision Log
+8. **Record context rules** - If a decision depends on nearby context, add it to the Context Decision Log
 
 ## Output Format
 

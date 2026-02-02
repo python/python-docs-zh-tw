@@ -80,6 +80,28 @@ These Simplified Chinese terms MUST be converted:
 | 轉義 | 跳脫 | escape |
 | 基類 | 基底類別 | base class |
 
+## Context Decision Log (Rule)
+When a reviewer decides a translation depends on nearby context (above/below),
+record the decision here for future reference. Keep entries short and specific.
+
+Format:
+- **Term/pattern:** ...
+- **Decision:** ...
+- **Context cue:** ...
+- **Example:** `source` -> `translation`
+
+Example:
+- **Term/pattern:** 類型 / 型別
+- **Decision:** 用語依上下文；Python 型別物件用「型別」，一般分類用「類型」
+- **Context cue:** 出現 `int/str/dict/type` 或 "type object"
+- **Example:** "two types of packages" -> "兩種類型的套件"
+
+Decision Log:
+- **Term/pattern:** 類型 / 型別
+- **Decision:** 用語依上下文；Python 型別物件用「型別」，一般分類用「類型」
+- **Context cue:** 出現 `int/str/dict/type` 或 "type object"
+- **Example:** "two types of packages" -> "兩種類型的套件"
+
 ## High-Frequency Terms (Keep in English)
 
 These terms should NOT be translated, even if glossary has translations:
@@ -143,9 +165,10 @@ Core Python terms with required zh_TW translations:
 
 1. **Extract terms** - Parse msgstr for Chinese phrases and English words
 2. **Check forbidden** - Flag any zh_CN variants from the forbidden list
-3. **Check consistency** - Compare with other translations of same term
-4. **Check glossary** - Verify against official glossary.po
-5. **Report issues** - List violations with suggestions
+3. **Consult context log** - Check the Context Decision Log for any applicable rules
+4. **Check consistency** - Compare with other translations of same term
+5. **Check glossary** - Verify against official glossary.po
+6. **Report issues** - List violations with suggestions
 
 ## Output Format
 
@@ -156,6 +179,9 @@ FORBIDDEN TERMS (must fix):
   Line 42: "函數" -> "函式" (function)
   Line 78: "返回" -> "回傳" (return)
   Line 156: "對象" -> "物件" (object)
+
+REVIEW (context-dependent):
+  Line 88: "類型" (see Context Decision Log)
 
 INCONSISTENT TERMS (review):
   "iterator" translated as:
