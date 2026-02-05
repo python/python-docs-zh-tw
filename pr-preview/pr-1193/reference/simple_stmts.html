@@ -261,18 +261,17 @@ attributes or items of mutable objects:</p>
                  | <span class="sx">&quot;[&quot;</span> [<a class="reference internal" href="#grammar-token-python-grammar-target_list"><code class="xref docutils literal notranslate"><span class="pre">target_list</span></code></a>] <span class="sx">&quot;]&quot;</span>
                  | <a class="reference internal" href="expressions.html#grammar-token-python-grammar-attributeref"><code class="xref docutils literal notranslate"><span class="pre">attributeref</span></code></a>
                  | <a class="reference internal" href="expressions.html#grammar-token-python-grammar-subscription"><code class="xref docutils literal notranslate"><span class="pre">subscription</span></code></a>
-                 | <a class="reference internal" href="expressions.html#grammar-token-python-grammar-slicing"><code class="xref docutils literal notranslate"><span class="pre">slicing</span></code></a>
                  | <span class="sx">&quot;*&quot;</span> <a class="reference internal" href="#grammar-token-python-grammar-target"><code class="xref docutils literal notranslate"><span class="pre">target</span></code></a>
 </pre>
-<p>(See section <a class="reference internal" href="expressions.html#primaries"><span class="std std-ref">Primaries</span></a> for the syntax definitions for <em>attributeref</em>,
-<em>subscription</em>, and <em>slicing</em>.)</p>
+<p>(See section <a class="reference internal" href="expressions.html#primaries"><span class="std std-ref">Primaries</span></a> for the syntax definitions for <em>attributeref</em>
+and <em>subscription</em>.)</p>
 <p>An assignment statement evaluates the expression list (remember that this can be
 a single expression or a comma-separated list, the latter yielding a tuple) and
 assigns the single resulting object to each of the target lists, from left to
 right.</p>
 <p id="index-5">Assignment is defined recursively depending on the form of the target (list).
-When a target is part of a mutable object (an attribute reference, subscription
-or slicing), the mutable object must ultimately perform the assignment and
+When a target is part of a mutable object (an attribute reference or
+subscription), the mutable object must ultimately perform the assignment and
 decide about its validity, and may raise an exception if the assignment is
 unacceptable.  The rules observed by various types and the exceptions raised are
 given with the definition of the object types (see section <a class="reference internal" href="datamodel.html#types"><span class="std std-ref">標準型別階層</span></a>).</p>
@@ -334,9 +333,13 @@ assignment:</p>
 properties created with <a class="reference internal" href="../library/functions.html#property" title="property"><code class="xref py py-func docutils literal notranslate"><span class="pre">property()</span></code></a>.</p>
 </li>
 <li id="index-9"><p>If the target is a subscription: The primary expression in the reference is
-evaluated.  It should yield either a mutable sequence object (such as a list)
-or a mapping object (such as a dictionary).  Next, the subscript expression is
-evaluated.</p>
+evaluated.
+Next, the subscript expression is evaluated.
+Then, the primary's <a class="reference internal" href="datamodel.html#object.__setitem__" title="object.__setitem__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__setitem__()</span></code></a> method is called with
+two arguments: the subscript and the assigned object.</p>
+<p>Typically, <a class="reference internal" href="datamodel.html#object.__setitem__" title="object.__setitem__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__setitem__()</span></code></a> is defined on mutable sequence objects
+(such as lists) and mapping objects (such as dictionaries), and behaves as
+follows.</p>
 <p id="index-10">If the primary is a mutable sequence object (such as a list), the subscript
 must yield an integer.  If it is negative, the sequence's length is added to
 it.  The resulting value must be a nonnegative integer less than the
@@ -348,26 +351,19 @@ have a type compatible with the mapping's key type, and the mapping is then
 asked to create a key/value pair which maps the subscript to the assigned
 object.  This can either replace an existing key/value pair with the same key
 value, or insert a new key/value pair (if no key with the same value existed).</p>
-<p>For user-defined objects, the <a class="reference internal" href="datamodel.html#object.__setitem__" title="object.__setitem__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__setitem__()</span></code></a> method is called with
-appropriate arguments.</p>
-</li>
-<li id="index-12"><p>If the target is a slicing: The primary expression in the reference is
-evaluated.  It should yield a mutable sequence object (such as a list).  The
-assigned object should be a sequence object of the same type.  Next, the lower
-and upper bound expressions are evaluated, insofar they are present; defaults
-are zero and the sequence's length.  The bounds should evaluate to integers.
+<p id="index-12">If the target is a slicing: The primary expression should evaluate to
+a mutable sequence object (such as a list).
+The assigned object should be <a class="reference internal" href="../glossary.html#term-iterable"><span class="xref std std-term">iterable</span></a>.
+The slicing's lower and upper bounds should be integers; if they are <code class="docutils literal notranslate"><span class="pre">None</span></code>
+(or not present), the defaults are zero and the sequence's length.
 If either bound is negative, the sequence's length is added to it.  The
 resulting bounds are clipped to lie between zero and the sequence's length,
 inclusive.  Finally, the sequence object is asked to replace the slice with
 the items of the assigned sequence.  The length of the slice may be different
 from the length of the assigned sequence, thus changing the length of the
-target sequence, if the target sequence allows it.</p></li>
+target sequence, if the target sequence allows it.</p>
+</li>
 </ul>
-<div class="impl-detail compound">
-<p><strong>CPython 實作細節：</strong> In the current implementation, the syntax for targets is taken to be the same
-as for expressions, and invalid syntax is rejected during the code generation
-phase, causing less detailed error messages.</p>
-</div>
 <p>Although the definition of assignment implies that overlaps between the
 left-hand side and the right-hand side are 'simultaneous' (for example <code class="docutils literal notranslate"><span class="pre">a,</span> <span class="pre">b</span> <span class="pre">=</span>
 <span class="pre">b,</span> <span class="pre">a</span></code> swaps two variables), overlaps <em>within</em> the collection of assigned-to
@@ -392,7 +388,7 @@ the following program prints <code class="docutils literal notranslate"><span cl
 operation and an assignment statement:</p>
 <pre class="highlight">
 <strong id="grammar-token-python-grammar-augmented_assignment_stmt">augmented_assignment_stmt</strong>: <a class="reference internal" href="#grammar-token-python-grammar-augtarget"><code class="xref docutils literal notranslate"><span class="pre">augtarget</span></code></a> <a class="reference internal" href="#grammar-token-python-grammar-augop"><code class="xref docutils literal notranslate"><span class="pre">augop</span></code></a> (<a class="reference internal" href="expressions.html#grammar-token-python-grammar-expression_list"><code class="xref docutils literal notranslate"><span class="pre">expression_list</span></code></a> | <a class="reference internal" href="expressions.html#grammar-token-python-grammar-yield_expression"><code class="xref docutils literal notranslate"><span class="pre">yield_expression</span></code></a>)
-<strong id="grammar-token-python-grammar-augtarget">augtarget</strong>:                 <a class="reference internal" href="lexical_analysis.html#grammar-token-python-grammar-identifier"><code class="xref docutils literal notranslate"><span class="pre">identifier</span></code></a> | <a class="reference internal" href="expressions.html#grammar-token-python-grammar-attributeref"><code class="xref docutils literal notranslate"><span class="pre">attributeref</span></code></a> | <a class="reference internal" href="expressions.html#grammar-token-python-grammar-subscription"><code class="xref docutils literal notranslate"><span class="pre">subscription</span></code></a> | <a class="reference internal" href="expressions.html#grammar-token-python-grammar-slicing"><code class="xref docutils literal notranslate"><span class="pre">slicing</span></code></a>
+<strong id="grammar-token-python-grammar-augtarget">augtarget</strong>:                 <a class="reference internal" href="lexical_analysis.html#grammar-token-python-grammar-identifier"><code class="xref docutils literal notranslate"><span class="pre">identifier</span></code></a> | <a class="reference internal" href="expressions.html#grammar-token-python-grammar-attributeref"><code class="xref docutils literal notranslate"><span class="pre">attributeref</span></code></a> | <a class="reference internal" href="expressions.html#grammar-token-python-grammar-subscription"><code class="xref docutils literal notranslate"><span class="pre">subscription</span></code></a>
 <strong id="grammar-token-python-grammar-augop">augop</strong>:                     <span class="sx">&quot;+=&quot;</span> | <span class="sx">&quot;-=&quot;</span> | <span class="sx">&quot;*=&quot;</span> | <span class="sx">&quot;&#64;=&quot;</span> | <span class="sx">&quot;/=&quot;</span> | <span class="sx">&quot;//=&quot;</span> | <span class="sx">&quot;%=&quot;</span> | <span class="sx">&quot;**=&quot;</span>
                            | <span class="sx">&quot;&gt;&gt;=&quot;</span> | <span class="sx">&quot;&lt;&lt;=&quot;</span> | <span class="sx">&quot;&amp;=&quot;</span> | <span class="sx">&quot;^=&quot;</span> | <span class="sx">&quot;|=&quot;</span>
 </pre>
@@ -522,7 +518,7 @@ Rather than spelling it out in full details, here are some hints.</p>
 namespace, depending on whether the name occurs in a <a class="reference internal" href="#global"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">global</span></code></a> statement
 in the same code block.  Trying to delete an unbound name raises a
 <a class="reference internal" href="../library/exceptions.html#NameError" title="NameError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NameError</span></code></a> exception.</p>
-<p id="index-23">Deletion of attribute references, subscriptions and slicings is passed to the
+<p id="index-23">Deletion of attribute references and subscriptions is passed to the
 primary object involved; deletion of a slicing is in general equivalent to
 assignment of an empty slice of the right type (but even this is determined by
 the sliced object).</p>
@@ -1112,7 +1108,7 @@ generic classes and functions.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 2月 05, 2026 (00:25 UTC)。
+      最後更新於 2月 05, 2026 (14:16 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
