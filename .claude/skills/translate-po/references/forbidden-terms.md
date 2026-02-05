@@ -40,7 +40,7 @@ These Simplified Chinese (zh_CN) terms MUST be converted to Traditional Chinese 
 | 內存 | 記憶體 | memory |
 | 打印 | 印出 | print |
 | 異步 | 非同步 | async |
-| 調試 | 除錯 | debug |
+| 調試 | 除錯、偵錯 | debug |
 | 堆棧 | 堆疊 | stack |
 | 回調 | 回呼 | callback |
 | 公共 | 公開 | public |
