@@ -76,3 +76,6 @@ Decision Log:
 
 - `../translate-po/references/terminology.md` - Complete term translations (186 terms)
 - `references/keep-in-english.md` - Terms that stay in English
+- [術語列表 Wiki](https://github.com/python/python-docs-zh-tw/wiki/%E8%A1%93%E8%AA%9E%E5%88%97%E8%A1%A8) - Project terminology wiki
+- [l10n-tw Glossaries](https://hackmd.io/@l10n-tw/glossaries) - Taiwan localization glossaries
+- [兩岸術語對照表](https://zh.wikibooks.org/zh/%E5%A4%A7%E9%99%86%E5%8F%B0%E6%B9%BE%E8%AE%A1%E7%AE%97%E6%9C%BA%E6%9C%AF%E8%AF%AD%E5%AF%B9%E7%85%A7%E8%A1%A8) - Cross-strait terminology comparison
