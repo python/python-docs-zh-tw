@@ -565,28 +565,32 @@ sourcing an activate script in its bin directory.
 <span class="kn">from</span><span class="w"> </span><span class="nn">subprocess</span><span class="w"> </span><span class="kn">import</span> <span class="n">Popen</span><span class="p">,</span> <span class="n">PIPE</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">threading</span><span class="w"> </span><span class="kn">import</span> <span class="n">Thread</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlparse</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlsplit</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">urllib.request</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlretrieve</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">venv</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">ExtendedEnvBuilder</span><span class="p">(</span><span class="n">venv</span><span class="o">.</span><span class="n">EnvBuilder</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    此建構子會安裝 setuptools 和 pip，使你能夠使用 pip 或</span>
-<span class="sd">    easy_install 安裝其他套件到建立的虛擬環境中。</span>
+<span class="sd">    This builder installs setuptools and pip so that you can pip or</span>
+<span class="sd">    easy_install other packages into the created virtual environment.</span>
 
-<span class="sd">    :param nodist: 若為 true，則不會安裝 setuptools 和 pip 至</span>
-<span class="sd">                   所建立的虛擬環境中。</span>
-<span class="sd">    :param nopip: 若為 true，則不會安裝 pip 至所建立的</span>
-<span class="sd">                  虛擬環境中。</span>
-<span class="sd">    :param progress: 若安裝了 setuptools 或 pip，可透過傳入 progress</span>
-<span class="sd">                     可呼叫物件來監控安裝進度。若有指定，該可呼叫物件會接收兩個引數：</span>
-<span class="sd">                     一個表示進度的字串，以及一個表示該字串來源的情境。</span>
-<span class="sd">                     context 引數可能有三種值：</span>
-<span class="sd">                     &#39;main&#39; 表示該呼叫來自 virtualize() 本身，</span>
-<span class="sd">                     &#39;stdout&#39; 與 &#39;stderr&#39; 則分別表示從子行程輸出資料串流中</span>
-<span class="sd">                     讀取的輸出內容，該子行程用於安裝應用程式。</span>
+<span class="sd">    :param nodist: If true, setuptools and pip are not installed into the</span>
+<span class="sd">                   created virtual environment.</span>
+<span class="sd">    :param nopip: If true, pip is not installed into the created</span>
+<span class="sd">                  virtual environment.</span>
+<span class="sd">    :param progress: If setuptools or pip are installed, the progress of the</span>
+<span class="sd">                     installation can be monitored by passing a progress</span>
+<span class="sd">                     callable. If specified, it is called with two</span>
+<span class="sd">                     arguments: a string indicating some progress, and a</span>
+<span class="sd">                     context indicating where the string is coming from.</span>
+<span class="sd">                     The context argument can have one of three values:</span>
+<span class="sd">                     &#39;main&#39;, indicating that it is called from virtualize()</span>
+<span class="sd">                     itself, and &#39;stdout&#39; and &#39;stderr&#39;, which are obtained</span>
+<span class="sd">                     by reading lines from the output streams of a subprocess</span>
+<span class="sd">                     which is used to install the app.</span>
 
-<span class="sd">                     若未指定可呼叫物件，則預設的進度資訊會輸出至 sys.stderr。</span>
+<span class="sd">                     If a callable is not specified, default progress</span>
+<span class="sd">                     information is output to sys.stderr.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -598,20 +602,23 @@ sourcing an activate script in its bin directory.
 
     <span class="k">def</span><span class="w"> </span><span class="nf">post_setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        設定在建立虛擬環境時需預先安裝的套件。</span>
+<span class="sd">        Set up any packages which need to be pre-installed into the</span>
+<span class="sd">        virtual environment being created.</span>
 
-<span class="sd">        :param context: 處理中的虛擬環境建立請求所需的資訊。</span>
+<span class="sd">        :param context: The information for the virtual environment</span>
+<span class="sd">                        creation request being processed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s1">&#39;VIRTUAL_ENV&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">env_dir</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodist</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">install_setuptools</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
-       <span class="c1"># 沒有 setuptools 就無法安裝 pip</span>
+        <span class="c1"># Can&#39;t install pip without setuptools</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">nopip</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodist</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">install_pip</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">reader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        從子行程的輸出串流中讀取每一列，並將其傳遞給進度回呼函式（若有指定），或將進度資訊寫入 sys.stderr。</span>
+<span class="sd">        Read lines from a subprocess&#39; output stream and either pass to a progress</span>
+<span class="sd">        callable (if specified) or write progress information to sys.stderr.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">progress</span>
         <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
@@ -629,11 +636,11 @@ sourcing an activate script in its bin directory.
         <span class="n">stream</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">install_script</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">url</span><span class="p">):</span>
-        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">urlsplit</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
         <span class="n">fn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">binpath</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">bin_path</span>
         <span class="n">distpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">binpath</span><span class="p">,</span> <span class="n">fn</span><span class="p">)</span>
-        <span class="c1"># 將腳本下載到虛擬環境的執行檔資料夾中</span>
+        <span class="c1"># Download script into the virtual environment&#39;s binaries folder</span>
         <span class="n">urlretrieve</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">distpath</span><span class="p">)</span>
         <span class="n">progress</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">progress</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbose</span><span class="p">:</span>
@@ -645,7 +652,7 @@ sourcing an activate script in its bin directory.
         <span class="k">else</span><span class="p">:</span>
             <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Installing </span><span class="si">%s</span><span class="s1"> ...</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">term</span><span class="p">))</span>
             <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-        <span class="c1"># 安裝到虛擬環境中</span>
+        <span class="c1"># Install in the virtual environment</span>
         <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">context</span><span class="o">.</span><span class="n">env_exe</span><span class="p">,</span> <span class="n">fn</span><span class="p">]</span>
         <span class="n">p</span> <span class="o">=</span> <span class="n">Popen</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">binpath</span><span class="p">)</span>
         <span class="n">t1</span> <span class="o">=</span> <span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span> <span class="s1">&#39;stdout&#39;</span><span class="p">))</span>
@@ -659,7 +666,7 @@ sourcing an activate script in its bin directory.
             <span class="n">progress</span><span class="p">(</span><span class="s1">&#39;done.&#39;</span><span class="p">,</span> <span class="s1">&#39;main&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;done.</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-        <span class="c1"># 清理——不再需要</span>
+        <span class="c1"># Clean up - no longer needed</span>
         <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">distpath</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">install_setuptools</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
@@ -671,7 +678,7 @@ sourcing an activate script in its bin directory.
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">url</span> <span class="o">=</span> <span class="s2">&quot;https://bootstrap.pypa.io/ez_setup.py&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">install_script</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="s1">&#39;setuptools&#39;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
-        <span class="c1"># 清除已下載的 setuptools 檔案</span>
+        <span class="c1"># clear up the setuptools archive which gets downloaded</span>
         <span class="n">pred</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">o</span><span class="p">:</span> <span class="n">o</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;setuptools-&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">o</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.tar.gz&#39;</span><span class="p">)</span>
         <span class="n">files</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="n">pred</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">bin_path</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
@@ -680,9 +687,10 @@ sourcing an activate script in its bin directory.
 
     <span class="k">def</span><span class="w"> </span><span class="nf">install_pip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        在虛擬環境中安裝 pip。</span>
+<span class="sd">        Install pip in the virtual environment.</span>
 
-<span class="sd">        :param context: 處理中的虛擬環境建立請求相關資訊。</span>
+<span class="sd">        :param context: The information for the virtual environment</span>
+<span class="sd">                        creation request being processed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;https://bootstrap.pypa.io/get-pip.py&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">install_script</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="s1">&#39;pip&#39;</span><span class="p">,</span> <span class="n">url</span><span class="p">)</span>
@@ -891,7 +899,7 @@ sourcing an activate script in its bin directory.
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 2月 05, 2026 (14:16 UTC)。
+      最後更新於 2月 06, 2026 (00:24 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
