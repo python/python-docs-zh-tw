@@ -4,7 +4,7 @@ description: Reviews translated PO entries for quality, checking terminology, pu
 argument-hint: <path-to-po-file>
 ---
 
-# review-translation
+# validate-translation
 
 Validate translated PO entries against project rules and report issues.
 
