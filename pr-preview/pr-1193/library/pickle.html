@@ -217,7 +217,14 @@
 <span id="pickle-python-object-serialization"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> --- Python 物件序列化<a class="headerlink" href="#module-pickle" title="連結到這個標頭">¶</a></h1>
 <p><strong>原始碼：</strong><a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.14/Lib/pickle.py">Lib/pickle.py</a></p>
 <hr class="docutils" id="index-0" />
-<p><a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 模組實作的是一個在二進位層級上對 Python 物件進行序列化（serialize）或去序列化（de-serialize）。<em>&quot;Pickling&quot;</em> 用於專門指摘將一個 Python 物件轉換為一個二進位串流的過程，<em>&quot;unpickling&quot;</em> 則相反，指的是將一個（來自 <a class="reference internal" href="../glossary.html#term-binary-file"><span class="xref std std-term">binary file</span></a> 或 <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a> 的）二進位串流轉換回 Python 物件的過程。Pickling（和 unpickling）的過程也可能被稱作 &quot;serialization&quot;, &quot;marshalling,&quot; <a class="footnote-reference brackets" href="#id7" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> 或 &quot;flattening&quot;。不過，為了避免混淆，本文件將統一稱作封裝（pickling）、拆封（unpickling）。</p>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> module implements binary protocols for serializing and
+de-serializing a Python object structure.  <em>&quot;Pickling&quot;</em> is the process
+whereby a Python object hierarchy is converted into a byte stream, and
+<em>&quot;unpickling&quot;</em> is the inverse operation, whereby a byte stream
+(from a <a class="reference internal" href="../glossary.html#term-binary-file"><span class="xref std std-term">binary file</span></a> or <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a>) is converted
+back into an object hierarchy.  Pickling (and unpickling) is alternatively
+known as &quot;serialization&quot;, &quot;marshalling,&quot; <a class="footnote-reference brackets" href="#id7" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> or &quot;flattening&quot;; however, to
+avoid confusion, the terms used here are &quot;pickling&quot; and &quot;unpickling&quot;.</p>
 <div class="admonition warning">
 <p class="admonition-title">警告</p>
 <p><code class="docutils literal notranslate"><span class="pre">pickle</span></code> 模組<strong>並不安全</strong>，切記只拆封你信任的資料。</p>
@@ -229,11 +236,24 @@
 <h2>和其他 Python 模組的關係<a class="headerlink" href="#relationship-to-other-python-modules" title="連結到這個標頭">¶</a></h2>
 <section id="comparison-with-marshal">
 <h3>和 <code class="docutils literal notranslate"><span class="pre">marshal</span></code> 的比較<a class="headerlink" href="#comparison-with-marshal" title="連結到這個標頭">¶</a></h3>
-<p>Python 有另一個比較原始的序列化模組叫 <a class="reference internal" href="marshal.html#module-marshal" title="marshal: Convert Python objects to streams of bytes and back (with different constraints)."><code class="xref py py-mod docutils literal notranslate"><span class="pre">marshal</span></code></a>，不過其設計目的是為了支援 Python 的預編譯功能 <code class="file docutils literal notranslate"><span class="pre">.pyc</span></code> 的運作。總地來說，請盡可能地使用 <a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a>，沒事不要用 <a class="reference internal" href="marshal.html#module-marshal" title="marshal: Convert Python objects to streams of bytes and back (with different constraints)."><code class="xref py py-mod docutils literal notranslate"><span class="pre">marshal</span></code></a>。</p>
-<p><a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 和 <a class="reference internal" href="marshal.html#module-marshal" title="marshal: Convert Python objects to streams of bytes and back (with different constraints)."><code class="xref py py-mod docutils literal notranslate"><span class="pre">marshal</span></code></a> 有幾個明顯不同的地方：</p>
+<p>Python has a more primitive serialization module called <a class="reference internal" href="marshal.html#module-marshal" title="marshal: Convert Python objects to streams of bytes and back (with different constraints)."><code class="xref py py-mod docutils literal notranslate"><span class="pre">marshal</span></code></a>, but in
+general <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> should always be the preferred way to serialize Python
+objects.  <a class="reference internal" href="marshal.html#module-marshal" title="marshal: Convert Python objects to streams of bytes and back (with different constraints)."><code class="xref py py-mod docutils literal notranslate"><span class="pre">marshal</span></code></a> exists primarily to support Python's <code class="file docutils literal notranslate"><span class="pre">.pyc</span></code>
+files.</p>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> module differs from <a class="reference internal" href="marshal.html#module-marshal" title="marshal: Convert Python objects to streams of bytes and back (with different constraints)."><code class="xref py py-mod docutils literal notranslate"><span class="pre">marshal</span></code></a> in several significant ways:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="marshal.html#module-marshal" title="marshal: Convert Python objects to streams of bytes and back (with different constraints)."><code class="xref py py-mod docutils literal notranslate"><span class="pre">marshal</span></code></a> 無法序列化使用者自訂的類別和的實例。<a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 則可以讓使用者儲存並還原自訂的類別實例，前提是儲存時該類別的定義存在於與要被儲存的物件所在的模組中、且可以被引入（import）。</p></li>
-<li><p><a class="reference internal" href="marshal.html#module-marshal" title="marshal: Convert Python objects to streams of bytes and back (with different constraints)."><code class="xref py py-mod docutils literal notranslate"><span class="pre">marshal</span></code></a> 序列化格式無法保證能在不同版本的 Python 之間移植。因為其主要的作用是支援 <code class="file docutils literal notranslate"><span class="pre">.pyc</span></code> 檔案的運作，Python 的實作人員會在需要時實作無法前向相容的序列化方式。但只要選擇了相容的 pickle 協定，且處理了 Python 2 和 Python 3 之間的資料類型差異，<a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 序列化協定能保證在不同 Python 版本間的相容性。</p></li>
+<li><p><a class="reference internal" href="marshal.html#module-marshal" title="marshal: Convert Python objects to streams of bytes and back (with different constraints)."><code class="xref py py-mod docutils literal notranslate"><span class="pre">marshal</span></code></a> cannot be used to serialize user-defined classes and their
+instances.  <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> can save and restore class instances transparently,
+however the class definition must be importable and live in the same module as
+when the object was stored.</p></li>
+<li><p>The <a class="reference internal" href="marshal.html#module-marshal" title="marshal: Convert Python objects to streams of bytes and back (with different constraints)."><code class="xref py py-mod docutils literal notranslate"><span class="pre">marshal</span></code></a> serialization format is not guaranteed to be portable
+across Python versions.  Because its primary job in life is to support
+<code class="file docutils literal notranslate"><span class="pre">.pyc</span></code> files, the Python implementers reserve the right to change the
+serialization format in non-backwards compatible ways should the need arise.
+The <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> serialization format is guaranteed to be backwards compatible
+across Python releases provided a compatible pickle protocol is chosen and
+pickling and unpickling code deals with Python 2 to Python 3 type differences
+if your data is crossing that unique breaking change language boundary.</p></li>
 </ul>
 </section>
 <section id="comparison-with-json">
@@ -254,9 +274,16 @@
 </section>
 <section id="data-stream-format">
 <span id="pickle-protocols"></span><h2>資料串流格式<a class="headerlink" href="#data-stream-format" title="連結到這個標頭">¶</a></h2>
-<p id="index-1"><a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 使用的資料格式是針對 Python 而設計的。好處是他不會受到外部標準（像是 JSON，無法紀錄指標共用）的限制；不過這也代表其他不是 Python 的程式可能無法重建 pickle 封裝的 Python 物件。</p>
-<p>以預設設定來說，<a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 使用相對緊湊的二進位形式來儲存資料。如果你需要盡可能地縮小檔案大小，你可以<a class="reference internal" href="archiving.html"><span class="doc">壓縮</span></a>封裝的資料。</p>
-<p><a class="reference internal" href="pickletools.html#module-pickletools" title="pickletools: Contains extensive comments about the pickle protocols and pickle-machine opcodes, as well as some useful functions."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickletools</span></code></a> 含有工具可分析 <a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 所產生的資料流。<a class="reference internal" href="pickletools.html#module-pickletools" title="pickletools: Contains extensive comments about the pickle protocols and pickle-machine opcodes, as well as some useful functions."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickletools</span></code></a> 的源始碼詳細地記載了所有 pickle 協定的操作碼（opcode）。</p>
+<p id="index-1">The data format used by <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> is Python-specific.  This has the
+advantage that there are no restrictions imposed by external standards such as
+JSON (which can't represent pointer sharing); however it means that
+non-Python programs may not be able to reconstruct pickled Python objects.</p>
+<p>By default, the <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> data format uses a relatively compact binary
+representation.  If you need optimal size characteristics, you can efficiently
+<a class="reference internal" href="archiving.html"><span class="doc">compress</span></a> pickled data.</p>
+<p>The module <a class="reference internal" href="pickletools.html#module-pickletools" title="pickletools: Contains extensive comments about the pickle protocols and pickle-machine opcodes, as well as some useful functions."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickletools</span></code></a> contains tools for analyzing data streams
+generated by <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code>.  <a class="reference internal" href="pickletools.html#module-pickletools" title="pickletools: Contains extensive comments about the pickle protocols and pickle-machine opcodes, as well as some useful functions."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickletools</span></code></a> source code has extensive
+comments about opcodes used by pickle protocols.</p>
 <p>截至目前為止，共有六種不同版本的協定可用於封裝 pickle。數字越大版本代表你需要使用越新的 Python 版本來拆封相應的 pickle 封裝。</p>
 <ul class="simple">
 <li><p>版本 0 的協定是最初「人類可讀」的版本，且可以向前支援早期版本的 Python。</p></li>
@@ -268,13 +295,22 @@
 </ul>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>資料序列化是一個比資料持久化更早出現的概念；雖然 <a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 可以讀寫檔案物件，但它並不處理命名持久物件的問題，也不處理對持久物件的並行存取、一個更棘手的問題。<a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 模組可以將複雜物件轉換成位元組串流，也可以將位元組串流轉換回具有相同原始內部結構的物件。對這些位元組串流最常見的處理方式是將它們寫入檔案中，但也可以將它們透過網路傳送或儲存在一個資料庫中。<a class="reference internal" href="shelve.html#module-shelve" title="shelve: Python object persistence."><code class="xref py py-mod docutils literal notranslate"><span class="pre">shelve</span></code></a> 模組提供了一個簡單的介面來讓使用者在 DBM 風格的資料庫檔案中對物件進行封裝和拆封的操作。</p>
+<p>Serialization is a more primitive notion than persistence; although
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> reads and writes file objects, it does not handle the issue of
+naming persistent objects, nor the (even more complicated) issue of concurrent
+access to persistent objects.  The <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> module can transform a complex
+object into a byte stream and it can transform the byte stream into an object
+with the same internal structure.  Perhaps the most obvious thing to do with
+these byte streams is to write them onto a file, but it is also conceivable to
+send them across a network or store them in a database.  The <a class="reference internal" href="shelve.html#module-shelve" title="shelve: Python object persistence."><code class="xref py py-mod docutils literal notranslate"><span class="pre">shelve</span></code></a>
+module provides a simple interface to pickle and unpickle objects on
+DBM-style database files.</p>
 </div>
 </section>
 <section id="module-interface">
 <h2>模組介面<a class="headerlink" href="#module-interface" title="連結到這個標頭">¶</a></h2>
 <p>想要序列化一個物件，你只需要呼叫 <a class="reference internal" href="#pickle.dumps" title="pickle.dumps"><code class="xref py py-func docutils literal notranslate"><span class="pre">dumps()</span></code></a> 函式。而當你想要去序列化一個資料流時，你只需要呼叫 <a class="reference internal" href="#pickle.loads" title="pickle.loads"><code class="xref py py-func docutils literal notranslate"><span class="pre">loads()</span></code></a> 即可。不過，若你希望能各自對序列化和去序列化的過程中有更多的掌控度，你可以自訂一個 <a class="reference internal" href="#pickle.Pickler" title="pickle.Pickler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pickler</span></code></a> 或 <a class="reference internal" href="#pickle.Unpickler" title="pickle.Unpickler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Unpickler</span></code></a> 物件。</p>
-<p><a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 模組提供以下常數：</p>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> module provides the following constants:</p>
 <dl class="py data">
 <dt class="sig sig-object py" id="pickle.HIGHEST_PROTOCOL">
 <span class="sig-prename descclassname"><span class="pre">pickle.</span></span><span class="sig-name descname"><span class="pre">HIGHEST_PROTOCOL</span></span><a class="headerlink" href="#pickle.HIGHEST_PROTOCOL" title="連結到這個定義">¶</a></dt>
@@ -296,7 +332,8 @@
 </div>
 </dd></dl>
 
-<p><a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 模組提供下列函式來簡化封裝的過程：</p>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> module provides the following functions to make the pickling
+process more convenient:</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="pickle.dump">
 <span class="sig-prename descclassname"><span class="pre">pickle.</span></span><span class="sig-name descname"><span class="pre">dump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">fix_imports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pickle.dump" title="連結到這個定義">¶</a></dt>
@@ -339,7 +376,7 @@
 </div>
 </dd></dl>
 
-<p><a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 模組定義了以下三種例外：</p>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> module defines three exceptions:</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="pickle.PickleError">
 <em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pickle.</span></span><span class="sig-name descname"><span class="pre">PickleError</span></span><a class="headerlink" href="#pickle.PickleError" title="連結到這個定義">¶</a></dt>
@@ -360,7 +397,8 @@
 <p>拆封的時候還是可能會遭遇其他不在此列的例外（例如：AttributeError、EOFError、ImportError、或 IndexError），請注意。</p>
 </dd></dl>
 
-<p>引入模組 <a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 時會帶來三個類別：<a class="reference internal" href="#pickle.Pickler" title="pickle.Pickler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pickler</span></code></a>、<a class="reference internal" href="#pickle.Unpickler" title="pickle.Unpickler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Unpickler</span></code></a> 和 <a class="reference internal" href="#pickle.PickleBuffer" title="pickle.PickleBuffer"><code class="xref py py-class docutils literal notranslate"><span class="pre">PickleBuffer</span></code></a>：</p>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> module exports three classes, <a class="reference internal" href="#pickle.Pickler" title="pickle.Pickler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pickler</span></code></a>,
+<a class="reference internal" href="#pickle.Unpickler" title="pickle.Unpickler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Unpickler</span></code></a> and <a class="reference internal" href="#pickle.PickleBuffer" title="pickle.PickleBuffer"><code class="xref py py-class docutils literal notranslate"><span class="pre">PickleBuffer</span></code></a>:</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="pickle.Pickler">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pickle.</span></span><span class="sig-name descname"><span class="pre">Pickler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">protocol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">fix_imports</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer_callback</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pickle.Pickler" title="連結到這個定義">¶</a></dt>
@@ -612,8 +650,15 @@ useful when re-using picklers.</p>
 
 <section id="persistence-of-external-objects">
 <span id="pickle-persistent"></span><h3>外部物件持久化<a class="headerlink" href="#persistence-of-external-objects" title="連結到這個標頭">¶</a></h3>
-<p id="index-7">為了方便物件持久化，<a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 模組支援對被封裝資料串流以外的物件參照。被參照的物件是透過一個持久化 ID 來參照的，這個 ID 應該要是字母數字字元（alphanumeric）組成的字串（協定 0） <a class="footnote-reference brackets" href="#id11" id="id6" role="doc-noteref"><span class="fn-bracket">[</span>5<span class="fn-bracket">]</span></a> 或者是任意的物件（任何較新的協定）。</p>
-<p><a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 沒有定義要如何解決或分派這個持久化 ID 的問題；故其處理方式有賴使用者自行定義在封裝器（pickler）以及拆封器（unpickler）中。方法的名稱各自為 <a class="reference internal" href="#pickle.Pickler.persistent_id" title="pickle.Pickler.persistent_id"><code class="xref py py-meth docutils literal notranslate"><span class="pre">persistent_id()</span></code></a> 和 <a class="reference internal" href="#pickle.Unpickler.persistent_load" title="pickle.Unpickler.persistent_load"><code class="xref py py-meth docutils literal notranslate"><span class="pre">persistent_load()</span></code></a>。</p>
+<p id="index-7">For the benefit of object persistence, the <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> module supports the
+notion of a reference to an object outside the pickled data stream.  Such
+objects are referenced by a persistent ID, which should be either a string of
+alphanumeric characters (for protocol 0) <a class="footnote-reference brackets" href="#id11" id="id6" role="doc-noteref"><span class="fn-bracket">[</span>5<span class="fn-bracket">]</span></a> or just an arbitrary object (for
+any newer protocol).</p>
+<p>The resolution of such persistent IDs is not defined by the <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code>
+module; it will delegate this resolution to the user-defined methods on the
+pickler and unpickler, <a class="reference internal" href="#pickle.Pickler.persistent_id" title="pickle.Pickler.persistent_id"><code class="xref py py-meth docutils literal notranslate"><span class="pre">persistent_id()</span></code></a> and
+<a class="reference internal" href="#pickle.Unpickler.persistent_load" title="pickle.Unpickler.persistent_load"><code class="xref py py-meth docutils literal notranslate"><span class="pre">persistent_load()</span></code></a> respectively.</p>
 <p>要封裝具有外部持久化 ID 的物件，封裝器（pickler）必須擁有一個自訂的方法 <a class="reference internal" href="#pickle.Pickler.persistent_id" title="pickle.Pickler.persistent_id"><code class="xref py py-meth docutils literal notranslate"><span class="pre">persistent_id()</span></code></a>，這個方法將接收一個物件作為參數，並回傳 <code class="docutils literal notranslate"><span class="pre">None</span></code> 或該物件的持久化 ID。當回傳 <code class="docutils literal notranslate"><span class="pre">None</span></code> 時，封裝器會正常地封裝該物件。當回傳一個持久化 ID 字串時，封裝器會封裝該物件並加上一個標記，讓拆封器（unpickler）能識別它是一個持久化 ID。</p>
 <p>要拆封外部物件，拆封器（unpickler）必須有一個自訂的 <a class="reference internal" href="#pickle.Unpickler.persistent_load" title="pickle.Unpickler.persistent_load"><code class="xref py py-meth docutils literal notranslate"><span class="pre">persistent_load()</span></code></a> 方法，該方法應接受一個持久化 ID 物件，並回傳相對應的物件。</p>
 <p>以下是一個完整的範例，用以說明如何使用持久化 ID 來封裝具外部參照的物件。</p>
@@ -829,12 +874,21 @@ useful when re-using picklers.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.8 版被加入.</span></p>
 </div>
-<p><a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 模組會被用於用於傳輸龐大的資料。此時，將複製記憶體的次數降到最低以保持效能變得很重要。然而，<a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 模組的正常操作過程中，當它將物件的圖狀結構（graph-like structure）轉換為連續的位元組串流時，本質上就涉及將資料複製到封裝流以及從封裝流複製資料。</p>
+<p>In some contexts, the <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> module is used to transfer massive amounts
+of data.  Therefore, it can be important to minimize the number of memory
+copies, to preserve performance and resource consumption.  However, normal
+operation of the <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> module, as it transforms a graph-like structure
+of objects into a sequential stream of bytes, intrinsically involves copying
+data to and from the pickle stream.</p>
 <p>如果<em>供給者</em>（被傳遞物件的型別的實作）與<em>消費者</em>（資訊交換系統的實作）都支援由 pickle 協定 5 或更高版本提供的帶外傳輸功能，則可以避免此一先天限制。</p>
 <section id="provider-api">
 <h3>供給者 API<a class="headerlink" href="#provider-api" title="連結到這個標頭">¶</a></h3>
 <p>要封裝的大型資料物件，則必須實作一個針對 5 版協定及以上的 <a class="reference internal" href="#object.__reduce_ex__" title="object.__reduce_ex__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__reduce_ex__()</span></code></a> 方法，該方法應回傳一個 <a class="reference internal" href="#pickle.PickleBuffer" title="pickle.PickleBuffer"><code class="xref py py-class docutils literal notranslate"><span class="pre">PickleBuffer</span></code></a> 實例來處理任何大型資料（而非回傳如 <a class="reference internal" href="stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a> 物件）。</p>
-<p>一個 <a class="reference internal" href="#pickle.PickleBuffer" title="pickle.PickleBuffer"><code class="xref py py-class docutils literal notranslate"><span class="pre">PickleBuffer</span></code></a> 物件<em>指示</em>了當下底層的緩衝區狀態適合進行帶外資料傳輸。這些物件仍然相容 <a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 模組的一般使用方式。消費者程式也可以選擇介入，指示 <a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 他們將自行處理這些緩衝區。</p>
+<p>A <a class="reference internal" href="#pickle.PickleBuffer" title="pickle.PickleBuffer"><code class="xref py py-class docutils literal notranslate"><span class="pre">PickleBuffer</span></code></a> object <em>signals</em> that the underlying buffer is
+eligible for out-of-band data transfer.  Those objects remain compatible
+with normal usage of the <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> module.  However, consumers can also
+opt-in to tell <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> that they will handle those buffers by
+themselves.</p>
 </section>
 <section id="consumer-api">
 <h3>消費者 API<a class="headerlink" href="#consumer-api" title="連結到這個標頭">¶</a></h3>
@@ -950,7 +1004,9 @@ useful when re-using picklers.</p>
 </section>
 <section id="performance">
 <h2>效能<a class="headerlink" href="#performance" title="連結到這個標頭">¶</a></h2>
-<p>較近期的 pickle 協定版本（從 2 版協定開始）為多種常見功能和內建型別提供了高效率的二進位編碼。此外，<a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 模組還具備一個透明化的、以 C 語言編寫的最佳化工具。</p>
+<p>Recent versions of the pickle protocol (from protocol 2 and upwards) feature
+efficient binary encodings for several common features and built-in types.
+Also, the <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> module has a transparent optimizer written in C.</p>
 </section>
 <section id="examples">
 <span id="pickle-example"></span><h2>範例<a class="headerlink" href="#examples" title="連結到這個標頭">¶</a></h2>
@@ -980,7 +1036,7 @@ useful when re-using picklers.</p>
 </section>
 <section id="command-line-interface">
 <span id="pickle-cli"></span><h2>命令列介面<a class="headerlink" href="#command-line-interface" title="連結到這個標頭">¶</a></h2>
-<p>The <a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> module can be invoked as a script from the command line,
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code> module can be invoked as a script from the command line,
 it will display contents of the pickle files. However, when the pickle file
 that you want to examine comes from an untrusted source, <code class="docutils literal notranslate"><span class="pre">-m</span> <span class="pre">pickletools</span></code>
 is a safer option because it does not execute pickle bytecode, see
@@ -1002,7 +1058,7 @@ is a safer option because it does not execute pickle bytecode, see
 </dd>
 <dt><a class="reference internal" href="pickletools.html#module-pickletools" title="pickletools: Contains extensive comments about the pickle protocols and pickle-machine opcodes, as well as some useful functions."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickletools</span></code></a> 模組</dt><dd><p>用於分析或處裡被封裝資料的工具。</p>
 </dd>
-<dt><a class="reference internal" href="shelve.html#module-shelve" title="shelve: Python object persistence."><code class="xref py py-mod docutils literal notranslate"><span class="pre">shelve</span></code></a> 模組</dt><dd><p>索引式資料庫；使用 <a class="reference internal" href="#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a> 實作。</p>
+<dt><a class="reference internal" href="shelve.html#module-shelve" title="shelve: Python object persistence."><code class="xref py py-mod docutils literal notranslate"><span class="pre">shelve</span></code></a> 模組</dt><dd><p>Indexed databases of objects; uses <code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code>.</p>
 </dd>
 <dt><a class="reference internal" href="copy.html#module-copy" title="copy: Shallow and deep copy operations."><code class="xref py py-mod docutils literal notranslate"><span class="pre">copy</span></code></a> 模組</dt><dd><p>物件的淺層或深度拷貝。</p>
 </dd>
@@ -1184,7 +1240,7 @@ is a safer option because it does not execute pickle bytecode, see
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 2月 06, 2026 (00:24 UTC)。
+      最後更新於 2月 07, 2026 (00:25 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
