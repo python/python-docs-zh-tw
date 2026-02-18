@@ -542,7 +542,8 @@ useful when re-using picklers.</p>
 <li><p>元組（tuple）、串列（list）、集合（set）和僅含有可封裝物件的字典；</p></li>
 <li><p>在模組最表面的層級就能被存取的函式（內建或自訂的皆可，不過僅限使用 <a class="reference internal" href="../reference/compound_stmts.html#def"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">def</span></code></a> 定義的函式，<a class="reference internal" href="../reference/expressions.html#lambda"><code class="xref std std-keyword docutils literal notranslate"><span class="pre">lambda</span></code></a> 函式不適用）；</p></li>
 <li><p>在模組最表面的層級就能被存取的類別；</p></li>
-<li><p>實例，只要在呼叫了 <a class="reference internal" href="#object.__getstate__" title="object.__getstate__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__getstate__()</span></code></a> 後其回傳值全都是可封裝物件。（詳情請參閱 <a class="reference internal" href="#pickle-inst"><span class="std std-ref">Pickling 類別實例</span></a>）。</p></li>
+<li><p>instances of such classes for which the result of calling <a class="reference internal" href="#object.__getstate__" title="object.__getstate__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__getstate__()</span></code></a>
+is picklable  (see section <a class="reference internal" href="#pickle-inst"><span class="std std-ref">Pickling 類別實例</span></a> for details).</p></li>
 </ul>
 <p>嘗試封裝無法封裝的物件會引發 <a class="reference internal" href="#pickle.PicklingError" title="pickle.PicklingError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">PicklingError</span></code></a> 例外；注意當這種情況發生時，可能已經有未知數量的位元組已被寫入到檔案。嘗試封裝深度遞迴的資料結構可能會導致其超出最大遞迴深度，在這種情況下會引發 <a class="reference internal" href="exceptions.html#RecursionError" title="RecursionError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RecursionError</span></code></a> 例外。你可以（小心地）使用 <a class="reference internal" href="sys.html#sys.setrecursionlimit" title="sys.setrecursionlimit"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.setrecursionlimit()</span></code></a> 來提高此上限。</p>
 <p>請注意，函式（內建及自訂兩者皆是）是依據完整的 <a class="reference internal" href="../glossary.html#term-qualified-name"><span class="xref std std-term">限定名稱</span></a> 來封裝，而非依其值。<a class="footnote-reference brackets" href="#id8" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a> 這意味著封裝時只有函式名稱、所屬的模組和所屬的類別名稱會被封裝。函式本身的程式碼及其附帶的任何屬性均不會被封裝。因此，在拆封該物件的環境中，定義此函式的模組必須可被引入，且該模組必須包含具此命名之物件，否則將引發例外。 <a class="footnote-reference brackets" href="#id9" id="id4" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a></p>
@@ -573,7 +574,13 @@ useful when re-using picklers.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="object.__getnewargs_ex__">
 <span class="sig-prename descclassname"><span class="pre">object.</span></span><span class="sig-name descname"><span class="pre">__getnewargs_ex__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#object.__getnewargs_ex__" title="連結到這個定義">¶</a></dt>
-<dd><p>在第 2 版協定或更新的版本中，有實作 <a class="reference internal" href="#object.__getnewargs_ex__" title="object.__getnewargs_ex__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__getnewargs_ex__()</span></code></a> 方法的類別，可以決定在拆封時要傳遞給 <a class="reference internal" href="../reference/datamodel.html#object.__new__" title="object.__new__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__new__()</span></code></a> 方法的值。該方法必須回傳一個 <code class="docutils literal notranslate"><span class="pre">(args,</span> <span class="pre">kwargs)</span></code> 的組合，其中 <em>args</em> 是一個位置引數的元組（tuple），<em>kwargs</em> 是一個用於建構物件的命名引數字典。這些資訊將在拆封時傳遞給 <a class="reference internal" href="../reference/datamodel.html#object.__new__" title="object.__new__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__new__()</span></code></a> 方法。</p>
+<dd><p>In protocols 2 and newer, classes that implement the
+<a class="reference internal" href="#object.__getnewargs_ex__" title="object.__getnewargs_ex__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__getnewargs_ex__()</span></code></a> method can dictate the values passed to the
+<a class="reference internal" href="../reference/datamodel.html#object.__new__" title="object.__new__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__new__()</span></code></a> method upon unpickling.  The method must return a pair
+<code class="docutils literal notranslate"><span class="pre">(args,</span> <span class="pre">kwargs)</span></code> where <em>args</em> is a tuple of positional arguments
+and <em>kwargs</em> a dictionary of named arguments for constructing the
+object.  Those will be passed to the <a class="reference internal" href="../reference/datamodel.html#object.__new__" title="object.__new__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__new__()</span></code></a> method upon
+unpickling.</p>
 <p>如果目標類別的方法 <a class="reference internal" href="../reference/datamodel.html#object.__new__" title="object.__new__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__new__()</span></code></a> 需要僅限關鍵字的參數時，你應該實作此方法。否則，為了提高相容性，建議你改為實作 <a class="reference internal" href="#object.__getnewargs__" title="object.__getnewargs__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__getnewargs__()</span></code></a>。</p>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.6 版的變更: </span>在第 2、3 版的協定中現在改為使用 <a class="reference internal" href="#object.__getnewargs_ex__" title="object.__getnewargs_ex__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__getnewargs_ex__()</span></code></a>。</p>
@@ -1240,7 +1247,7 @@ is a safer option because it does not execute pickle bytecode, see
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 2月 13, 2026 (00:27 UTC)。
+      最後更新於 2月 18, 2026 (00:26 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
