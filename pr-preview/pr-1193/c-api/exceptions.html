@@ -939,24 +939,38 @@ references of all three arguments.</p>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.PyErr_CheckSignals">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyErr_CheckSignals</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyErr_CheckSignals" title="連結到這個定義">¶</a><br /></dt>
-<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p id="index-1">This function interacts with Python's signal handling.</p>
-<p>If the function is called from the main thread and under the main Python
-interpreter, it checks whether a signal has been sent to the processes
-and if so, invokes the corresponding signal handler.  If the <a class="reference internal" href="../library/signal.html#module-signal" title="signal: Set handlers for asynchronous events."><code class="xref py py-mod docutils literal notranslate"><span class="pre">signal</span></code></a>
-module is supported, this can invoke a signal handler written in Python.</p>
-<p>The function attempts to handle all pending signals, and then returns <code class="docutils literal notranslate"><span class="pre">0</span></code>.
-However, if a Python signal handler raises an exception, the error
-indicator is set and the function returns <code class="docutils literal notranslate"><span class="pre">-1</span></code> immediately (such that
-other pending signals may not have been handled yet: they will be on the
-next <a class="reference internal" href="#c.PyErr_CheckSignals" title="PyErr_CheckSignals"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_CheckSignals()</span></code></a> invocation).</p>
-<p>If the function is called from a non-main thread, or under a non-main
-Python interpreter, it does nothing and returns <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
-<p>This function can be called by long-running C code that wants to
-be interruptible by user requests (such as by pressing Ctrl-C).</p>
-<div class="admonition note">
-<p class="admonition-title">備註</p>
-<p>The default Python signal handler for <code class="xref c c-macro docutils literal notranslate"><span class="pre">SIGINT</span></code> raises the
-<a class="reference internal" href="../library/exceptions.html#KeyboardInterrupt" title="KeyboardInterrupt"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyboardInterrupt</span></code></a> exception.</p>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p id="index-1">Handle external interruptions, such as signals or activating a debugger,
+whose processing has been delayed until it is safe
+to run Python code and/or raise exceptions.</p>
+<p>For example, pressing <kbd class="kbd docutils literal notranslate">Ctrl</kbd>-<kbd class="kbd docutils literal notranslate">C</kbd> causes a terminal to send the
+<a class="reference internal" href="../library/signal.html#signal.SIGINT" title="signal.SIGINT"><code class="xref py py-data docutils literal notranslate"><span class="pre">signal.SIGINT</span></code></a> signal.
+This function executes the corresponding Python signal handler, which,
+by default, raises the <a class="reference internal" href="../library/exceptions.html#KeyboardInterrupt" title="KeyboardInterrupt"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyboardInterrupt</span></code></a> exception.</p>
+<p><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_CheckSignals()</span></code> should be called by long-running C code
+frequently enough so that the response appears immediate to humans.</p>
+<p>Handlers invoked by this function currently include:</p>
+<ul>
+<li><p>Signal handlers, including Python functions registered using
+the <a class="reference internal" href="../library/signal.html#module-signal" title="signal: Set handlers for asynchronous events."><code class="xref py py-mod docutils literal notranslate"><span class="pre">signal</span></code></a> module.</p>
+<p>Signal handlers are only run in the main thread of the main interpreter.</p>
+<p>(This is where the function got the name: originally, signals
+were the only way to interrupt the interpreter.)</p>
+</li>
+<li><p>Running the garbage collector, if necessary.</p></li>
+<li><p>Executing a pending <a class="reference internal" href="../howto/remote_debugging.html#remote-debugging"><span class="std std-ref">remote debugger</span></a> script.</p></li>
+</ul>
+<p>If any handler raises an exception, immediately return <code class="docutils literal notranslate"><span class="pre">-1</span></code> with that
+exception set.
+Any remaining interruptions are left to be processed on the next
+<a class="reference internal" href="#c.PyErr_CheckSignals" title="PyErr_CheckSignals"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_CheckSignals()</span></code></a> invocation, if appropriate.</p>
+<p>If all handlers finish successfully, or there are no handlers to run,
+return <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>This function may now invoke the garbage collector.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.14 版的變更: </span>This function may now execute a remote debugger script, if remote
+debugging is enabled.</p>
 </div>
 </dd></dl>
 
@@ -2187,7 +2201,7 @@ exception set on failure.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 2月 21, 2026 (00:25 UTC)。
+      最後更新於 2月 22, 2026 (00:24 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
