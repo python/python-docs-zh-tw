@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>weakref --- 弱參照 &#8212; Python 3.14.3 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>weakref --- Weak references &#8212; Python 3.14.3 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
@@ -89,7 +89,7 @@
   <div>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
-<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code> --- 弱參照</a><ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code> --- Weak references</a><ul>
 <li><a class="reference internal" href="#weak-reference-objects">弱參照物件</a></li>
 <li><a class="reference internal" href="#example">範例</a></li>
 <li><a class="reference internal" href="#finalizer-objects">最終化器物件</a></li>
@@ -109,10 +109,25 @@
     <p class="topless"><a href="types.html"
                           title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">types</span></code> --- 動態型別建立與內建型別名稱</a></p>
   </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "library/weakref.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
   <div role="note" aria-label="source link">
     <h3>此頁面</h3>
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">Improve this page</a></li>
       <li>
         <a href="https://github.com/python/cpython/blob/main/Doc/library/weakref.rst?plain=1"
             rel="nofollow">顯示原始碼
@@ -162,7 +177,7 @@
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="datatypes.html" accesskey="U">資料型別</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code> --- 弱參照</a></li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code> --- Weak references</a></li>
                 <li class="right">
                     
 
@@ -193,17 +208,32 @@
           <div class="body" role="main">
             
   <section id="module-weakref">
-<span id="weakref-weak-references"></span><span id="mod-weakref"></span><h1><a class="reference internal" href="#module-weakref" title="weakref: Support for weak references and weak dictionaries."><code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code></a> --- 弱參照<a class="headerlink" href="#module-weakref" title="連結到這個標頭">¶</a></h1>
+<span id="weakref-weak-references"></span><span id="mod-weakref"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code> --- Weak references<a class="headerlink" href="#module-weakref" title="連結到這個標頭">¶</a></h1>
 <p><strong>原始碼：</strong><a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.14/Lib/weakref.py">Lib/weakref.py</a></p>
 <hr class="docutils" />
-<p><a class="reference internal" href="#module-weakref" title="weakref: Support for weak references and weak dictionaries."><code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code></a> 模組允許 Python 程式設計師建立對物件的 <em class="dfn">弱參照</em>。</p>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code> module allows the Python programmer to create <em class="dfn">weak
+references</em> to objects.</p>
 <p>在以下文章中，術語 <em class="dfn">參照目標 (referent)</em> 表示被弱參照所參考的物件。</p>
 <p>對物件的弱參照不足以使物件保持存在：當對參照目標的唯一剩下的參照是弱參照時，<a class="reference internal" href="../glossary.html#term-garbage-collection"><span class="xref std std-term">garbage collection</span></a> 可以自由地銷毀參照目標並將其記憶體重新用於其他用途。然而，在物件被確實銷毀之前，即使沒有對該物件的強參照 (strong reference)，弱參照也可能會回傳該物件。</p>
 <p>弱參照的主要用途是實作保存大型物件的快取或對映，其不希望大型物件僅僅因為它出現在快取或對映中而保持存在。</p>
-<p>例如，如果你有許多大型的二進位影像物件，你可能會想要為每個物件關聯 (associate) 一個名稱。如果你使用 Python 字典將名稱對映到影像，或將影像對映到名稱，則影像物件將保持存活，僅因為它們在字典中作為值 (value) 或鍵 (key) 出現。<a class="reference internal" href="#module-weakref" title="weakref: Support for weak references and weak dictionaries."><code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code></a> 模組提供的 <a class="reference internal" href="#weakref.WeakKeyDictionary" title="weakref.WeakKeyDictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeakKeyDictionary</span></code></a> 和 <a class="reference internal" href="#weakref.WeakValueDictionary" title="weakref.WeakValueDictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeakValueDictionary</span></code></a> 類別是另一種選擇，它們使用弱參照來建構對映，這些對映不會僅因為物件出現在對映物件中而使物件保持存活。例如，如果一個影像物件是 <a class="reference internal" href="#weakref.WeakValueDictionary" title="weakref.WeakValueDictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeakValueDictionary</span></code></a> 中的一個值，那麼當對該影像物件最後的參照是弱對映 (weak mapping) 所持有的弱參照時，垃圾回收 (garbage collection) 可以回收該物件，且其對應的條目在弱對映中會被完全地刪除。</p>
+<p>For example, if you have a number of large binary image objects, you may wish to
+associate a name with each.  If you used a Python dictionary to map names to
+images, or images to names, the image objects would remain alive just because
+they appeared as values or keys in the dictionaries.  The
+<a class="reference internal" href="#weakref.WeakKeyDictionary" title="weakref.WeakKeyDictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeakKeyDictionary</span></code></a> and <a class="reference internal" href="#weakref.WeakValueDictionary" title="weakref.WeakValueDictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeakValueDictionary</span></code></a> classes supplied by
+the <code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code> module are an alternative, using weak references to construct
+mappings that don't keep objects alive solely because they appear in the mapping
+objects.  If, for example, an image object is a value in a
+<a class="reference internal" href="#weakref.WeakValueDictionary" title="weakref.WeakValueDictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeakValueDictionary</span></code></a>, then when the last remaining references to that
+image object are the weak references held by weak mappings, garbage collection
+can reclaim the object, and its corresponding entries in weak mappings are
+simply deleted.</p>
 <p><a class="reference internal" href="#weakref.WeakKeyDictionary" title="weakref.WeakKeyDictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeakKeyDictionary</span></code></a> 和 <a class="reference internal" href="#weakref.WeakValueDictionary" title="weakref.WeakValueDictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeakValueDictionary</span></code></a> 在其實作中使用弱參照，在弱參照上設定回呼函式，此弱參照在垃圾回收取回鍵或值時通知弱字典。<a class="reference internal" href="#weakref.WeakSet" title="weakref.WeakSet"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeakSet</span></code></a> 實作了 <a class="reference internal" href="stdtypes.html#set" title="set"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a> 介面，但保留對其元素的弱參照，就像 <a class="reference internal" href="#weakref.WeakKeyDictionary" title="weakref.WeakKeyDictionary"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeakKeyDictionary</span></code></a> 一樣。</p>
 <p><a class="reference internal" href="#weakref.finalize" title="weakref.finalize"><code class="xref py py-class docutils literal notranslate"><span class="pre">finalize</span></code></a> 提供了一種直接的方法來註冊在物件被垃圾回收時呼叫的清理函式。這比在原始弱參照上設定回呼函式更容易使用，因為模組在物件被回收前會自動確保最終化器 (finalizer) 保持存活。</p>
-<p>大多數程式應該發現使用這些弱容器種類之一或 <a class="reference internal" href="#weakref.finalize" title="weakref.finalize"><code class="xref py py-class docutils literal notranslate"><span class="pre">finalize</span></code></a> 就足夠了—通常不需要直接建立自己的弱參照。低層級的機制由 <a class="reference internal" href="#module-weakref" title="weakref: Support for weak references and weak dictionaries."><code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code></a> 模組公開，以利於進階用途。</p>
+<p>Most programs should find that using one of these weak container types
+or <a class="reference internal" href="#weakref.finalize" title="weakref.finalize"><code class="xref py py-class docutils literal notranslate"><span class="pre">finalize</span></code></a> is all they need -- it's not usually necessary to
+create your own weak references directly.  The low-level machinery is
+exposed by the <code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code> module for the benefit of advanced uses.</p>
 <p>並非所有物件都可以被弱參照。支援弱參照的物件包括類別實例、用 Python （但不是C）編寫的函式、實例方法、集合、凍結集合 (frozenset)、一些<a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">檔案物件</span></a>、<a class="reference internal" href="../glossary.html#term-generator"><span class="xref std std-term">產生器</span></a>、類型物件、socket、陣列、雙向佇列、正規表示式模式物件和程式碼物件。</p>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.2 版的變更: </span>新增了對 thread.lock、threading.Lock 和程式碼物件的支援。</p>
@@ -617,7 +647,7 @@
   <div>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
-<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code> --- 弱參照</a><ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code> --- Weak references</a><ul>
 <li><a class="reference internal" href="#weak-reference-objects">弱參照物件</a></li>
 <li><a class="reference internal" href="#example">範例</a></li>
 <li><a class="reference internal" href="#finalizer-objects">最終化器物件</a></li>
@@ -637,10 +667,25 @@
     <p class="topless"><a href="types.html"
                           title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">types</span></code> --- 動態型別建立與內建型別名稱</a></p>
   </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "library/weakref.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
   <div role="note" aria-label="source link">
     <h3>此頁面</h3>
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">Improve this page</a></li>
       <li>
         <a href="https://github.com/python/cpython/blob/main/Doc/library/weakref.rst?plain=1"
             rel="nofollow">顯示原始碼
@@ -693,7 +738,7 @@
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="datatypes.html" >資料型別</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code> --- 弱參照</a></li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">weakref</span></code> --- Weak references</a></li>
                 <li class="right">
                     
 
@@ -734,7 +779,7 @@
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 2月 11, 2026 (03:43 UTC)。
+      最後更新於 2月 23, 2026 (10:26 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

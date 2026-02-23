@@ -114,10 +114,25 @@
     <p class="topless"><a href="mmap.html"
                           title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mmap</span></code> --- 記憶體對映檔案的支援</a></p>
   </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "library/signal.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
   <div role="note" aria-label="source link">
     <h3>此頁面</h3>
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">Improve this page</a></li>
       <li>
         <a href="https://github.com/python/cpython/blob/main/Doc/library/signal.rst?plain=1"
             rel="nofollow">顯示原始碼
@@ -209,7 +224,11 @@
 <p>在 WebAssembly 平台上，訊號是模擬出來的，故行為不同。有幾個函式和訊號在這些平台上是不可用的。</p>
 <section id="execution-of-python-signal-handlers">
 <h3>Python 訊號處理程式的執行<a class="headerlink" href="#execution-of-python-signal-handlers" title="連結到這個標頭">¶</a></h3>
-<p>Python 訊號處理程式不會在低階（C 語言）訊號處理程式中執行。相反地，低階訊號處理程式會設定一個旗標，告訴<a class="reference internal" href="../glossary.html#term-virtual-machine"><span class="xref std std-term">虛擬機</span></a>在稍後執行相對應的 Python 訊號處理程式（例如在下一個 <a class="reference internal" href="../glossary.html#term-bytecode"><span class="xref std std-term">bytecode</span></a> 指令）。這會有一些後果：</p>
+<p>A Python signal handler does not get executed inside the low-level (C) signal
+handler.  Instead, the low-level signal handler sets a flag which tells the
+<a class="reference internal" href="../glossary.html#term-virtual-machine"><span class="xref std std-term">virtual machine</span></a> to execute the corresponding Python signal handler
+at a later point (for example, at the next <a class="reference internal" href="../glossary.html#term-bytecode"><span class="xref std std-term">bytecode</span></a> instruction).
+This has consequences:</p>
 <ul class="simple">
 <li><p>捕捉像 <a class="reference internal" href="#signal.SIGFPE" title="signal.SIGFPE"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGFPE</span></code></a> 或 <a class="reference internal" href="#signal.SIGSEGV" title="signal.SIGSEGV"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIGSEGV</span></code></a> 這類由 C 程式碼中無效操作所引起的同步錯誤是沒有意義的。Python 將從訊號處理程式中回傳到 C 程式碼，而 C 程式碼很可能再次引發相同的訊號，導致 Python 明顯假當機 (hang)。從 Python 3.3 開始，你可以使用 <a class="reference internal" href="faulthandler.html#module-faulthandler" title="faulthandler: Dump the Python traceback."><code class="xref py py-mod docutils literal notranslate"><span class="pre">faulthandler</span></code></a> 模組來報告同步錯誤。</p></li>
 <li><p>純粹以 C 實作的長時間計算（例如在大量文字上的正規表示式比對）可能會不間斷地運行任意長度的時間而不考慮收到的任何訊號。當計算完成時，Python 訊號處理程式會被呼叫。</p></li>
@@ -220,6 +239,11 @@
 <span id="id1"></span><h3>訊號和執行緒<a class="headerlink" href="#signals-and-threads" title="連結到這個標頭">¶</a></h3>
 <p>Python 訊號處理程式總是在主直譯器的主 Python 執行緒中執行，即使訊號是在另一個執行緒中接收到的。這意味著訊號不能用來做為執行緒間通訊的方式。你可以使用 <a class="reference internal" href="threading.html#module-threading" title="threading: Thread-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code></a> 模組的同步原語 (synchronization primitive) 來代替。</p>
 <p>此外，只有主直譯器的主執行緒才被允許設定新的訊號處理程式。</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>Synchronization primitives such as <a class="reference internal" href="threading.html#threading.Lock" title="threading.Lock"><code class="xref py py-class docutils literal notranslate"><span class="pre">threading.Lock</span></code></a> should not be used
+within signal handlers.  Doing so can lead to unexpected deadlocks.</p>
+</div>
 </section>
 </section>
 <section id="module-contents">
@@ -240,7 +264,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="signal.Handlers">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">Handlers</span></span><a class="headerlink" href="#signal.Handlers" title="連結到這個定義">¶</a></dt>
-<dd><p><a class="reference internal" href="#signal.SIG_DFL" title="signal.SIG_DFL"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_DFL</span></code></a> 和 <a class="reference internal" href="#signal.SIG_IGN" title="signal.SIG_IGN"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_IGN</span></code></a> 常數的 <a class="reference internal" href="enum.html#enum.IntEnum" title="enum.IntEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></a> 集合。</p>
+<dd><p><a class="reference internal" href="enum.html#enum.IntEnum" title="enum.IntEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></a> collection of the constants <a class="reference internal" href="#signal.SIG_DFL" title="signal.SIG_DFL"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_DFL</span></code></a> and <a class="reference internal" href="#signal.SIG_IGN" title="signal.SIG_IGN"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_IGN</span></code></a>.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.5 版被加入.</span></p>
 </div>
@@ -249,7 +273,7 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="signal.Sigmasks">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">signal.</span></span><span class="sig-name descname"><span class="pre">Sigmasks</span></span><a class="headerlink" href="#signal.Sigmasks" title="連結到這個定義">¶</a></dt>
-<dd><p><a class="reference internal" href="#signal.SIG_BLOCK" title="signal.SIG_BLOCK"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_BLOCK</span></code></a>、<a class="reference internal" href="#signal.SIG_UNBLOCK" title="signal.SIG_UNBLOCK"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_UNBLOCK</span></code></a> 和 <a class="reference internal" href="#signal.SIG_SETMASK" title="signal.SIG_SETMASK"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_SETMASK</span></code></a> 常數的 <a class="reference internal" href="enum.html#enum.IntEnum" title="enum.IntEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></a> 集合。</p>
+<dd><p><a class="reference internal" href="enum.html#enum.IntEnum" title="enum.IntEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.IntEnum</span></code></a> collection of the constants <a class="reference internal" href="#signal.SIG_BLOCK" title="signal.SIG_BLOCK"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_BLOCK</span></code></a>, <a class="reference internal" href="#signal.SIG_UNBLOCK" title="signal.SIG_UNBLOCK"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_UNBLOCK</span></code></a> and <a class="reference internal" href="#signal.SIG_SETMASK" title="signal.SIG_SETMASK"><code class="xref py py-const docutils literal notranslate"><span class="pre">SIG_SETMASK</span></code></a>.</p>
 <div class="availability docutils container">
 <p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: Unix.</p>
 <p>更多資訊請見 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/sigprocmask(2)">sigprocmask(2)</a></em> 與 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/pthread_sigmask(3)">pthread_sigmask(3)</a></em> 線上手冊。</p>
@@ -937,10 +961,25 @@
     <p class="topless"><a href="mmap.html"
                           title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">mmap</span></code> --- 記憶體對映檔案的支援</a></p>
   </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "library/signal.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
   <div role="note" aria-label="source link">
     <h3>此頁面</h3>
     <ul class="this-page-menu">
       <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">Improve this page</a></li>
       <li>
         <a href="https://github.com/python/cpython/blob/main/Doc/library/signal.rst?plain=1"
             rel="nofollow">顯示原始碼
@@ -1034,7 +1073,7 @@
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 2月 11, 2026 (03:43 UTC)。
+      最後更新於 2月 23, 2026 (10:26 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
