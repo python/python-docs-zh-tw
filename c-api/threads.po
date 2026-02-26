@@ -1,0 +1,1080 @@
+# Copyright (C) 2001 Python Software Foundation
+# This file is distributed under the same license as the Python package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Python 3.14\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-02-24 00:20+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Chinese - TAIWAN (https://github.com/python/python-docs-zh-"
+"tw)\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../c-api/threads.rst:6
+msgid "Thread states and the global interpreter lock"
+msgstr "執行緒狀態與全域直譯器鎖"
+
+#: ../../c-api/threads.rst:13
+msgid ""
+"Unless on a :term:`free-threaded <free threading>` build of :term:`CPython`, "
+"the Python interpreter is not fully thread-safe.  In order to support multi-"
+"threaded Python programs, there's a global lock, called the :term:`global "
+"interpreter lock` or :term:`GIL`, that must be held by the current thread "
+"before it can safely access Python objects. Without the lock, even the "
+"simplest operations could cause problems in a multi-threaded program: for "
+"example, when two threads simultaneously increment the reference count of "
+"the same object, the reference count could end up being incremented only "
+"once instead of twice."
+msgstr ""
+
+#: ../../c-api/threads.rst:24
+msgid ""
+"Therefore, the rule exists that only the thread that has acquired the :term:"
+"`GIL` may operate on Python objects or call Python/C API functions. In order "
+"to emulate concurrency of execution, the interpreter regularly tries to "
+"switch threads (see :func:`sys.setswitchinterval`).  The lock is also "
+"released around potentially blocking I/O operations like reading or writing "
+"a file, so that other Python threads can run in the meantime."
+msgstr ""
+
+#: ../../c-api/threads.rst:34
+msgid ""
+"The Python interpreter keeps some thread-specific bookkeeping information "
+"inside a data structure called :c:type:`PyThreadState`, known as a :term:"
+"`thread state`. Each OS thread has a thread-local pointer to a :c:type:"
+"`PyThreadState`; a thread state referenced by this pointer is considered to "
+"be :term:`attached <attached thread state>`."
+msgstr ""
+
+#: ../../c-api/threads.rst:39
+msgid ""
+"A thread can only have one :term:`attached thread state` at a time. An "
+"attached thread state is typically analogous with holding the :term:`GIL`, "
+"except on :term:`free-threaded <free threading>` builds.  On builds with "
+"the :term:`GIL` enabled, :term:`attaching <attached thread state>` a thread "
+"state will block until the :term:`GIL` can be acquired. However, even on "
+"builds with the :term:`GIL` disabled, it is still required to have an "
+"attached thread state to call most of the C API."
+msgstr ""
+
+#: ../../c-api/threads.rst:46
+msgid ""
+"In general, there will always be an :term:`attached thread state` when using "
+"Python's C API. Only in some specific cases (such as in a :c:macro:"
+"`Py_BEGIN_ALLOW_THREADS` block) will the thread not have an attached thread "
+"state. If uncertain, check if :c:func:`PyThreadState_GetUnchecked` returns "
+"``NULL``."
+msgstr ""
+
+#: ../../c-api/threads.rst:52
+msgid "Detaching the thread state from extension code"
+msgstr ""
+
+#: ../../c-api/threads.rst:54
+msgid ""
+"Most extension code manipulating the :term:`thread state` has the following "
+"simple structure::"
+msgstr ""
+
+#: ../../c-api/threads.rst:57
+msgid ""
+"Save the thread state in a local variable.\n"
+"... Do some blocking I/O operation ...\n"
+"Restore the thread state from the local variable."
+msgstr ""
+
+#: ../../c-api/threads.rst:61
+msgid "This is so common that a pair of macros exists to simplify it::"
+msgstr ""
+
+#: ../../c-api/threads.rst:63
+msgid ""
+"Py_BEGIN_ALLOW_THREADS\n"
+"... Do some blocking I/O operation ...\n"
+"Py_END_ALLOW_THREADS"
+msgstr ""
+
+#: ../../c-api/threads.rst:71
+msgid ""
+"The :c:macro:`Py_BEGIN_ALLOW_THREADS` macro opens a new block and declares a "
+"hidden local variable; the :c:macro:`Py_END_ALLOW_THREADS` macro closes the "
+"block."
+msgstr ""
+
+#: ../../c-api/threads.rst:75
+msgid "The block above expands to the following code::"
+msgstr ""
+
+#: ../../c-api/threads.rst:77
+msgid ""
+"PyThreadState *_save;\n"
+"\n"
+"_save = PyEval_SaveThread();\n"
+"... Do some blocking I/O operation ...\n"
+"PyEval_RestoreThread(_save);"
+msgstr ""
+
+#: ../../c-api/threads.rst:87
+msgid "Here is how these functions work:"
+msgstr ""
+
+#: ../../c-api/threads.rst:89
+msgid ""
+"The :term:`attached thread state` holds the :term:`GIL` for the entire "
+"interpreter. When detaching the :term:`attached thread state`, the :term:"
+"`GIL` is released, allowing other threads to attach a thread state to their "
+"own thread, thus getting the :term:`GIL` and can start executing. The "
+"pointer to the prior :term:`attached thread state` is stored as a local "
+"variable. Upon reaching :c:macro:`Py_END_ALLOW_THREADS`, the thread state "
+"that was previously :term:`attached <attached thread state>` is passed to :c:"
+"func:`PyEval_RestoreThread`. This function will block until another releases "
+"its :term:`thread state <attached thread state>`, thus allowing the old :"
+"term:`thread state <attached thread state>` to get re-attached and the C API "
+"can be called again."
+msgstr ""
+
+#: ../../c-api/threads.rst:99
+msgid ""
+"For :term:`free-threaded <free threading>` builds, the :term:`GIL` is "
+"normally out of the question, but detaching the :term:`thread state "
+"<attached thread state>` is still required for blocking I/O and long "
+"operations. The difference is that threads don't have to wait for the :term:"
+"`GIL` to be released to attach their thread state, allowing true multi-core "
+"parallelism."
+msgstr ""
+
+#: ../../c-api/threads.rst:105
+msgid ""
+"Calling system I/O functions is the most common use case for detaching the :"
+"term:`thread state <attached thread state>`, but it can also be useful "
+"before calling long-running computations which don't need access to Python "
+"objects, such as compression or cryptographic functions operating over "
+"memory buffers. For example, the standard :mod:`zlib` and :mod:`hashlib` "
+"modules detach the :term:`thread state <attached thread state>` when "
+"compressing or hashing data."
+msgstr ""
+
+#: ../../c-api/threads.rst:113
+msgid "APIs"
+msgstr ""
+
+#: ../../c-api/threads.rst:115
+msgid ""
+"The following macros are normally used without a trailing semicolon; look "
+"for example usage in the Python source distribution."
+msgstr ""
+
+#: ../../c-api/threads.rst:120
+msgid ""
+"These macros are still necessary on the :term:`free-threaded build` to "
+"prevent deadlocks."
+msgstr ""
+
+#: ../../c-api/threads.rst:125
+msgid ""
+"This macro expands to ``{ PyThreadState *_save; _save = PyEval_SaveThread();"
+"``. Note that it contains an opening brace; it must be matched with a "
+"following :c:macro:`Py_END_ALLOW_THREADS` macro.  See above for further "
+"discussion of this macro."
+msgstr ""
+
+#: ../../c-api/threads.rst:133
+msgid ""
+"This macro expands to ``PyEval_RestoreThread(_save); }``. Note that it "
+"contains a closing brace; it must be matched with an earlier :c:macro:"
+"`Py_BEGIN_ALLOW_THREADS` macro.  See above for further discussion of this "
+"macro."
+msgstr ""
+
+#: ../../c-api/threads.rst:141
+msgid ""
+"This macro expands to ``PyEval_RestoreThread(_save);``: it is equivalent to :"
+"c:macro:`Py_END_ALLOW_THREADS` without the closing brace."
+msgstr ""
+
+#: ../../c-api/threads.rst:147
+msgid ""
+"This macro expands to ``_save = PyEval_SaveThread();``: it is equivalent to :"
+"c:macro:`Py_BEGIN_ALLOW_THREADS` without the opening brace and variable "
+"declaration."
+msgstr ""
+
+#: ../../c-api/threads.rst:155
+msgid "Non-Python created threads"
+msgstr ""
+
+#: ../../c-api/threads.rst:157
+msgid ""
+"When threads are created using the dedicated Python APIs (such as the :mod:"
+"`threading` module), a thread state is automatically associated to them and "
+"the code shown above is therefore correct.  However, when threads are "
+"created from C (for example by a third-party library with its own thread "
+"management), they don't hold the :term:`GIL`, because they don't have an :"
+"term:`attached thread state`."
+msgstr ""
+
+#: ../../c-api/threads.rst:164
+msgid ""
+"If you need to call Python code from these threads (often this will be part "
+"of a callback API provided by the aforementioned third-party library), you "
+"must first register these threads with the interpreter by creating an :term:"
+"`attached thread state` before you can start using the Python/C API.  When "
+"you are done, you should detach the :term:`thread state <attached thread "
+"state>`, and finally free it."
+msgstr ""
+
+#: ../../c-api/threads.rst:171
+msgid ""
+"The :c:func:`PyGILState_Ensure` and :c:func:`PyGILState_Release` functions "
+"do all of the above automatically.  The typical idiom for calling into "
+"Python from a C thread is::"
+msgstr ""
+
+#: ../../c-api/threads.rst:175
+msgid ""
+"PyGILState_STATE gstate;\n"
+"gstate = PyGILState_Ensure();\n"
+"\n"
+"/* Perform Python actions here. */\n"
+"result = CallSomeFunction();\n"
+"/* evaluate result or handle exception */\n"
+"\n"
+"/* Release the thread. No Python API allowed beyond this point. */\n"
+"PyGILState_Release(gstate);"
+msgstr ""
+
+#: ../../c-api/threads.rst:185
+msgid ""
+"Note that the ``PyGILState_*`` functions assume there is only one global "
+"interpreter (created automatically by :c:func:`Py_Initialize`).  Python "
+"supports the creation of additional interpreters (using :c:func:"
+"`Py_NewInterpreter`), but mixing multiple interpreters and the "
+"``PyGILState_*`` API is unsupported. This is because :c:func:"
+"`PyGILState_Ensure` and similar functions default to :term:`attaching "
+"<attached thread state>` a :term:`thread state` for the main interpreter, "
+"meaning that the thread can't safely interact with the calling "
+"subinterpreter."
+msgstr ""
+
+#: ../../c-api/threads.rst:195
+msgid "Supporting subinterpreters in non-Python threads"
+msgstr ""
+
+#: ../../c-api/threads.rst:197
+msgid ""
+"If you would like to support subinterpreters with non-Python created "
+"threads, you must use the ``PyThreadState_*`` API instead of the traditional "
+"``PyGILState_*`` API."
+msgstr ""
+
+#: ../../c-api/threads.rst:201
+msgid ""
+"In particular, you must store the interpreter state from the calling "
+"function and pass it to :c:func:`PyThreadState_New`, which will ensure that "
+"the :term:`thread state` is targeting the correct interpreter::"
+msgstr ""
+
+#: ../../c-api/threads.rst:205
+msgid ""
+"/* The return value of PyInterpreterState_Get() from the\n"
+"   function that created this thread. */\n"
+"PyInterpreterState *interp = ThreadData->interp;\n"
+"PyThreadState *tstate = PyThreadState_New(interp);\n"
+"PyThreadState_Swap(tstate);\n"
+"\n"
+"/* GIL of the subinterpreter is now held.\n"
+"   Perform Python actions here. */\n"
+"result = CallSomeFunction();\n"
+"/* evaluate result or handle exception */\n"
+"\n"
+"/* Destroy the thread state. No Python API allowed beyond this point. */\n"
+"PyThreadState_Clear(tstate);\n"
+"PyThreadState_DeleteCurrent();"
+msgstr ""
+
+#: ../../c-api/threads.rst:224
+msgid "Cautions about fork()"
+msgstr ""
+
+#: ../../c-api/threads.rst:226
+msgid ""
+"Another important thing to note about threads is their behaviour in the face "
+"of the C :c:func:`fork` call. On most systems with :c:func:`fork`, after a "
+"process forks only the thread that issued the fork will exist.  This has a "
+"concrete impact both on how locks must be handled and on all stored state in "
+"CPython's runtime."
+msgstr ""
+
+#: ../../c-api/threads.rst:232
+msgid ""
+"The fact that only the \"current\" thread remains means any locks held by "
+"other threads will never be released. Python solves this for :func:`os.fork` "
+"by acquiring the locks it uses internally before the fork, and releasing "
+"them afterwards. In addition, it resets any :ref:`lock-objects` in the "
+"child. When extending or embedding Python, there is no way to inform Python "
+"of additional (non-Python) locks that need to be acquired before or reset "
+"after a fork. OS facilities such as :c:func:`!pthread_atfork` would need to "
+"be used to accomplish the same thing. Additionally, when extending or "
+"embedding Python, calling :c:func:`fork` directly rather than through :func:"
+"`os.fork` (and returning to or calling into Python) may result in a deadlock "
+"by one of Python's internal locks being held by a thread that is defunct "
+"after the fork. :c:func:`PyOS_AfterFork_Child` tries to reset the necessary "
+"locks, but is not always able to."
+msgstr ""
+
+#: ../../c-api/threads.rst:247
+msgid ""
+"The fact that all other threads go away also means that CPython's runtime "
+"state there must be cleaned up properly, which :func:`os.fork` does.  This "
+"means finalizing all other :c:type:`PyThreadState` objects belonging to the "
+"current interpreter and all other :c:type:`PyInterpreterState` objects.  Due "
+"to this and the special nature of the :ref:`\"main\" interpreter <sub-"
+"interpreter-support>`, :c:func:`fork` should only be called in that "
+"interpreter's \"main\" thread, where the CPython global runtime was "
+"originally initialized. The only exception is if :c:func:`exec` will be "
+"called immediately after."
+msgstr ""
+
+#: ../../c-api/threads.rst:260
+msgid "High-level APIs"
+msgstr ""
+
+#: ../../c-api/threads.rst:262
+msgid ""
+"These are the most commonly used types and functions when writing multi-"
+"threaded C extensions."
+msgstr ""
+
+#: ../../c-api/threads.rst:268
+msgid ""
+"This data structure represents the state of a single thread.  The only "
+"public data member is:"
+msgstr ""
+
+#: ../../c-api/threads.rst:273
+msgid "This thread's interpreter state."
+msgstr "這個執行緒的直譯器狀態。"
+
+#: ../../c-api/threads.rst:284
+msgid "Deprecated function which does nothing."
+msgstr "已棄用的函式，什麼也不做。"
+
+#: ../../c-api/threads.rst:286
+msgid ""
+"In Python 3.6 and older, this function created the GIL if it didn't exist."
+msgstr ""
+
+#: ../../c-api/threads.rst:288
+msgid "The function now does nothing."
+msgstr "此函式現在不會做任何事情。"
+
+#: ../../c-api/threads.rst:291
+msgid ""
+"This function is now called by :c:func:`Py_Initialize()`, so you don't have "
+"to call it yourself anymore."
+msgstr ""
+
+#: ../../c-api/threads.rst:295
+msgid ""
+"This function cannot be called before :c:func:`Py_Initialize()` anymore."
+msgstr ""
+
+#: ../../c-api/threads.rst:305
+msgid ""
+"Detach the :term:`attached thread state` and return it. The thread will have "
+"no :term:`thread state` upon returning."
+msgstr ""
+
+#: ../../c-api/threads.rst:311
+msgid ""
+"Set the :term:`attached thread state` to *tstate*. The passed :term:`thread "
+"state` **should not** be :term:`attached <attached thread state>`, otherwise "
+"deadlock ensues. *tstate* will be attached upon returning."
+msgstr ""
+
+#: ../../c-api/threads.rst:316 ../../c-api/threads.rst:600
+msgid ""
+"Calling this function from a thread when the runtime is finalizing will hang "
+"the thread until the program exits, even if the thread was not created by "
+"Python.  Refer to :ref:`cautions-regarding-runtime-finalization` for more "
+"details."
+msgstr ""
+
+#: ../../c-api/threads.rst:321 ../../c-api/threads.rst:408
+#: ../../c-api/threads.rst:610
+msgid ""
+"Hangs the current thread, rather than terminating it, if called while the "
+"interpreter is finalizing."
+msgstr ""
+
+#: ../../c-api/threads.rst:327
+msgid ""
+"Return the :term:`attached thread state`. If the thread has no attached "
+"thread state, (such as when inside of :c:macro:`Py_BEGIN_ALLOW_THREADS` "
+"block), then this issues a fatal error (so that the caller needn't check for "
+"``NULL``)."
+msgstr ""
+
+#: ../../c-api/threads.rst:332
+msgid "See also :c:func:`PyThreadState_GetUnchecked`."
+msgstr "也請見 :c:func:`PyThreadState_GetUnchecked`。"
+
+#: ../../c-api/threads.rst:336
+msgid ""
+"Similar to :c:func:`PyThreadState_Get`, but don't kill the process with a "
+"fatal error if it is NULL. The caller is responsible to check if the result "
+"is NULL."
+msgstr ""
+
+#: ../../c-api/threads.rst:340
+msgid ""
+"In Python 3.5 to 3.12, the function was private and known as "
+"``_PyThreadState_UncheckedGet()``."
+msgstr "在 Python 3.5 到 3.12 中，此函式是私有的，被稱為 ``_PyThreadState_UncheckedGet()``。"
+
+#: ../../c-api/threads.rst:347
+msgid ""
+"Set the :term:`attached thread state` to *tstate*, and return the :term:"
+"`thread state` that was attached prior to calling."
+msgstr ""
+
+#: ../../c-api/threads.rst:350
+msgid ""
+"This function is safe to call without an :term:`attached thread state`; it "
+"will simply return ``NULL`` indicating that there was no prior thread state."
+msgstr ""
+
+#: ../../c-api/threads.rst:354
+msgid ":c:func:`PyEval_ReleaseThread`"
+msgstr ":c:func:`PyEval_ReleaseThread`"
+
+#: ../../c-api/threads.rst:357
+msgid ""
+"Similar to :c:func:`PyGILState_Ensure`, this function will hang the thread "
+"if the runtime is finalizing."
+msgstr ""
+
+#: ../../c-api/threads.rst:362
+msgid "GIL-state APIs"
+msgstr "GIL 狀態 API"
+
+#: ../../c-api/threads.rst:364
+msgid ""
+"The following functions use thread-local storage, and are not compatible "
+"with sub-interpreters:"
+msgstr ""
+
+#: ../../c-api/threads.rst:369
+msgid ""
+"The type of the value returned by :c:func:`PyGILState_Ensure` and passed to :"
+"c:func:`PyGILState_Release`."
+msgstr ""
+
+#: ../../c-api/threads.rst:374
+msgid "The GIL was already held when :c:func:`PyGILState_Ensure` was called."
+msgstr ""
+
+#: ../../c-api/threads.rst:378
+msgid "The GIL was not held when :c:func:`PyGILState_Ensure` was called."
+msgstr ""
+
+#: ../../c-api/threads.rst:382
+msgid ""
+"Ensure that the current thread is ready to call the Python C API regardless "
+"of the current state of Python, or of the :term:`attached thread state`. "
+"This may be called as many times as desired by a thread as long as each call "
+"is matched with a call to :c:func:`PyGILState_Release`. In general, other "
+"thread-related APIs may be used between :c:func:`PyGILState_Ensure` and :c:"
+"func:`PyGILState_Release` calls as long as the thread state is restored to "
+"its previous state before the Release().  For example, normal usage of the :"
+"c:macro:`Py_BEGIN_ALLOW_THREADS` and :c:macro:`Py_END_ALLOW_THREADS` macros "
+"is acceptable."
+msgstr ""
+
+#: ../../c-api/threads.rst:392
+msgid ""
+"The return value is an opaque \"handle\" to the :term:`attached thread "
+"state` when :c:func:`PyGILState_Ensure` was called, and must be passed to :c:"
+"func:`PyGILState_Release` to ensure Python is left in the same state. Even "
+"though recursive calls are allowed, these handles *cannot* be shared - each "
+"unique call to :c:func:`PyGILState_Ensure` must save the handle for its call "
+"to :c:func:`PyGILState_Release`."
+msgstr ""
+
+#: ../../c-api/threads.rst:399
+msgid ""
+"When the function returns, there will be an :term:`attached thread state` "
+"and the thread will be able to call arbitrary Python code.  Failure is a "
+"fatal error."
+msgstr ""
+
+#: ../../c-api/threads.rst:403
+msgid ""
+"Calling this function when the runtime is finalizing is unsafe. Doing so "
+"will either hang the thread until the program ends, or fully crash the "
+"interpreter in rare cases. Refer to :ref:`cautions-regarding-runtime-"
+"finalization` for more details."
+msgstr ""
+
+#: ../../c-api/threads.rst:414
+msgid ""
+"Release any resources previously acquired.  After this call, Python's state "
+"will be the same as it was prior to the corresponding :c:func:"
+"`PyGILState_Ensure` call (but generally this state will be unknown to the "
+"caller, hence the use of the GILState API)."
+msgstr ""
+
+#: ../../c-api/threads.rst:419
+msgid ""
+"Every call to :c:func:`PyGILState_Ensure` must be matched by a call to :c:"
+"func:`PyGILState_Release` on the same thread."
+msgstr ""
+
+#: ../../c-api/threads.rst:424
+msgid ""
+"Get the :term:`attached thread state` for this thread.  May return ``NULL`` "
+"if no GILState API has been used on the current thread.  Note that the main "
+"thread always has such a thread-state, even if no auto-thread-state call has "
+"been made on the main thread.  This is mainly a helper/diagnostic function."
+msgstr ""
+
+#: ../../c-api/threads.rst:430
+msgid ""
+"This function may return non-``NULL`` even when the :term:`thread state` is "
+"detached. Prefer :c:func:`PyThreadState_Get` or :c:func:"
+"`PyThreadState_GetUnchecked` for most cases."
+msgstr ""
+
+#: ../../c-api/threads.rst:435
+msgid ":c:func:`PyThreadState_Get`"
+msgstr ":c:func:`PyThreadState_Get`"
+
+#: ../../c-api/threads.rst:439
+msgid ""
+"Return ``1`` if the current thread is holding the :term:`GIL` and ``0`` "
+"otherwise. This function can be called from any thread at any time. Only if "
+"it has had its :term:`thread state <attached thread state>` initialized via :"
+"c:func:`PyGILState_Ensure` will it return ``1``. This is mainly a helper/"
+"diagnostic function.  It can be useful for example in callback contexts or "
+"memory allocation functions when knowing that the :term:`GIL` is locked can "
+"allow the caller to perform sensitive actions or otherwise behave "
+"differently."
+msgstr ""
+
+#: ../../c-api/threads.rst:449
+msgid ""
+"If the current Python process has ever created a subinterpreter, this "
+"function will *always* return ``1``. Prefer :c:func:"
+"`PyThreadState_GetUnchecked` for most cases."
+msgstr ""
+
+#: ../../c-api/threads.rst:457
+msgid "Low-level APIs"
+msgstr "低階 API"
+
+#: ../../c-api/threads.rst:461
+msgid ""
+"Create a new thread state object belonging to the given interpreter object. "
+"An :term:`attached thread state` is not needed."
+msgstr ""
+
+#: ../../c-api/threads.rst:466
+msgid ""
+"Reset all information in a :term:`thread state` object.  *tstate* must be :"
+"term:`attached <attached thread state>`"
+msgstr ""
+
+#: ../../c-api/threads.rst:469
+msgid ""
+"This function now calls the :c:member:`!PyThreadState.on_delete` callback. "
+"Previously, that happened in :c:func:`PyThreadState_Delete`."
+msgstr ""
+
+#: ../../c-api/threads.rst:473
+msgid "The :c:member:`!PyThreadState.on_delete` callback was removed."
+msgstr ":c:member:`!PyThreadState.on_delete` 回呼已被移除。"
+
+#: ../../c-api/threads.rst:479
+msgid ""
+"Destroy a :term:`thread state` object.  *tstate* should not be :term:"
+"`attached <attached thread state>` to any thread. *tstate* must have been "
+"reset with a previous call to :c:func:`PyThreadState_Clear`."
+msgstr ""
+
+#: ../../c-api/threads.rst:487
+msgid ""
+"Detach the :term:`attached thread state` (which must have been reset with a "
+"previous call to :c:func:`PyThreadState_Clear`) and then destroy it."
+msgstr ""
+
+#: ../../c-api/threads.rst:490
+msgid ""
+"No :term:`thread state` will be :term:`attached <attached thread state>` "
+"upon returning."
+msgstr ""
+
+#: ../../c-api/threads.rst:495
+msgid "Get the current frame of the Python thread state *tstate*."
+msgstr ""
+
+#: ../../c-api/threads.rst:497
+msgid ""
+"Return a :term:`strong reference`. Return ``NULL`` if no frame is currently "
+"executing."
+msgstr ""
+
+#: ../../c-api/threads.rst:500
+msgid "See also :c:func:`PyEval_GetFrame`."
+msgstr "也請見 :c:func:`PyEval_GetFrame`。"
+
+#: ../../c-api/threads.rst:502 ../../c-api/threads.rst:511
+#: ../../c-api/threads.rst:520
+msgid ""
+"*tstate* must not be ``NULL``, and must be :term:`attached <attached thread "
+"state>`."
+msgstr ""
+
+#: ../../c-api/threads.rst:509
+msgid ""
+"Get the unique :term:`thread state` identifier of the Python thread state "
+"*tstate*."
+msgstr ""
+
+#: ../../c-api/threads.rst:518
+msgid "Get the interpreter of the Python thread state *tstate*."
+msgstr ""
+
+#: ../../c-api/threads.rst:527
+msgid "Suspend tracing and profiling in the Python thread state *tstate*."
+msgstr ""
+
+#: ../../c-api/threads.rst:529
+msgid "Resume them using the :c:func:`PyThreadState_LeaveTracing` function."
+msgstr ""
+
+#: ../../c-api/threads.rst:536
+msgid ""
+"Resume tracing and profiling in the Python thread state *tstate* suspended "
+"by the :c:func:`PyThreadState_EnterTracing` function."
+msgstr ""
+
+#: ../../c-api/threads.rst:539
+msgid ""
+"See also :c:func:`PyEval_SetTrace` and :c:func:`PyEval_SetProfile` functions."
+msgstr ""
+
+#: ../../c-api/threads.rst:547
+msgid ""
+"Set the stack protection start address and stack protection size of a Python "
+"thread state."
+msgstr ""
+
+#: ../../c-api/threads.rst:550
+msgid ""
+"On success, return ``0``. On failure, set an exception and return ``-1``."
+msgstr ""
+
+#: ../../c-api/threads.rst:553
+msgid ""
+"CPython implements :ref:`recursion control <recursion>` for C code by "
+"raising :py:exc:`RecursionError` when it notices that the machine execution "
+"stack is close to overflow. See for example the :c:func:"
+"`Py_EnterRecursiveCall` function. For this, it needs to know the location of "
+"the current thread's stack, which it normally gets from the operating "
+"system. When the stack is changed, for example using context switching "
+"techniques like the Boost library's ``boost::context``, you must call :c:"
+"func:`~PyUnstable_ThreadState_SetStackProtection` to inform CPython of the "
+"change."
+msgstr ""
+
+#: ../../c-api/threads.rst:562
+msgid ""
+"Call :c:func:`~PyUnstable_ThreadState_SetStackProtection` either before or "
+"after changing the stack. Do not call any other Python C API between the "
+"call and the stack change."
+msgstr ""
+
+#: ../../c-api/threads.rst:567
+msgid ""
+"See :c:func:`PyUnstable_ThreadState_ResetStackProtection` for undoing this "
+"operation."
+msgstr "若要撤銷此操作，請參見 :c:func:`PyUnstable_ThreadState_ResetStackProtection`。"
+
+#: ../../c-api/threads.rst:574
+msgid ""
+"Reset the stack protection start address and stack protection size of a "
+"Python thread state to the operating system defaults."
+msgstr ""
+
+#: ../../c-api/threads.rst:577
+msgid ""
+"See :c:func:`PyUnstable_ThreadState_SetStackProtection` for an explanation."
+msgstr "請參見 :c:func:`PyUnstable_ThreadState_SetStackProtection` 的說明。"
+
+#: ../../c-api/threads.rst:584
+msgid ""
+"Return a dictionary in which extensions can store thread-specific state "
+"information.  Each extension should use a unique key to use to store state "
+"in the dictionary.  It is okay to call this function when no :term:`thread "
+"state` is :term:`attached <attached thread state>`. If this function returns "
+"``NULL``, no exception has been raised and the caller should assume no "
+"thread state is attached."
+msgstr ""
+
+#: ../../c-api/threads.rst:594
+msgid ""
+":term:`Attach <attached thread state>` *tstate* to the current thread, which "
+"must not be ``NULL`` or already :term:`attached <attached thread state>`."
+msgstr ""
+
+#: ../../c-api/threads.rst:597
+msgid ""
+"The calling thread must not already have an :term:`attached thread state`."
+msgstr ""
+
+#: ../../c-api/threads.rst:605
+msgid ""
+"Updated to be consistent with :c:func:`PyEval_RestoreThread`, :c:func:"
+"`Py_END_ALLOW_THREADS`, and :c:func:`PyGILState_Ensure`, and terminate the "
+"current thread if called while the interpreter is finalizing."
+msgstr ""
+
+#: ../../c-api/threads.rst:614
+msgid ""
+":c:func:`PyEval_RestoreThread` is a higher-level function which is always "
+"available (even when threads have not been initialized)."
+msgstr ""
+
+#: ../../c-api/threads.rst:620
+msgid ""
+"Detach the :term:`attached thread state`. The *tstate* argument, which must "
+"not be ``NULL``, is only used to check that it represents the :term:"
+"`attached thread state` --- if it isn't, a fatal error is reported."
+msgstr ""
+
+#: ../../c-api/threads.rst:625
+msgid ""
+":c:func:`PyEval_SaveThread` is a higher-level function which is always "
+"available (even when threads have not been initialized)."
+msgstr ""
+
+#: ../../c-api/threads.rst:630
+msgid "Asynchronous notifications"
+msgstr ""
+
+#: ../../c-api/threads.rst:632
+msgid ""
+"A mechanism is provided to make asynchronous notifications to the main "
+"interpreter thread.  These notifications take the form of a function pointer "
+"and a void pointer argument."
+msgstr ""
+
+#: ../../c-api/threads.rst:639
+msgid ""
+"Schedule a function to be called from the main interpreter thread.  On "
+"success, ``0`` is returned and *func* is queued for being called in the main "
+"thread.  On failure, ``-1`` is returned without setting any exception."
+msgstr ""
+
+#: ../../c-api/threads.rst:643
+msgid ""
+"When successfully queued, *func* will be *eventually* called from the main "
+"interpreter thread with the argument *arg*.  It will be called "
+"asynchronously with respect to normally running Python code, but with both "
+"these conditions met:"
+msgstr ""
+
+#: ../../c-api/threads.rst:648
+msgid "on a :term:`bytecode` boundary;"
+msgstr ""
+
+#: ../../c-api/threads.rst:649
+msgid ""
+"with the main thread holding an :term:`attached thread state` (*func* can "
+"therefore use the full C API)."
+msgstr ""
+
+#: ../../c-api/threads.rst:652
+msgid ""
+"*func* must return ``0`` on success, or ``-1`` on failure with an exception "
+"set.  *func* won't be interrupted to perform another asynchronous "
+"notification recursively, but it can still be interrupted to switch threads "
+"if the :term:`thread state <attached thread state>` is detached."
+msgstr ""
+
+#: ../../c-api/threads.rst:657
+msgid ""
+"This function doesn't need an :term:`attached thread state`. However, to "
+"call this function in a subinterpreter, the caller must have an :term:"
+"`attached thread state`. Otherwise, the function *func* can be scheduled to "
+"be called from the wrong interpreter."
+msgstr ""
+
+#: ../../c-api/threads.rst:662
+msgid ""
+"This is a low-level function, only useful for very special cases. There is "
+"no guarantee that *func* will be called as quick as possible.  If the main "
+"thread is busy executing a system call, *func* won't be called before the "
+"system call returns.  This function is generally **not** suitable for "
+"calling Python code from arbitrary C threads.  Instead, use the :ref:"
+"`PyGILState API<gilstate>`."
+msgstr ""
+
+#: ../../c-api/threads.rst:671
+msgid ""
+"If this function is called in a subinterpreter, the function *func* is now "
+"scheduled to be called from the subinterpreter, rather than being called "
+"from the main interpreter. Each subinterpreter now has its own list of "
+"scheduled calls."
+msgstr ""
+
+#: ../../c-api/threads.rst:677
+msgid ""
+"This function now always schedules *func* to be run in the main interpreter."
+msgstr ""
+
+#: ../../c-api/threads.rst:684
+msgid ""
+"Execute all pending calls. This is usually executed automatically by the "
+"interpreter."
+msgstr ""
+
+#: ../../c-api/threads.rst:687
+msgid ""
+"This function returns ``0`` on success, and returns ``-1`` with an exception "
+"set on failure."
+msgstr ""
+
+#: ../../c-api/threads.rst:690
+msgid ""
+"If this is not called in the main thread of the main interpreter, this "
+"function does nothing and returns ``0``. The caller must hold an :term:"
+"`attached thread state`."
+msgstr ""
+
+#: ../../c-api/threads.rst:696
+msgid "This function only runs pending calls in the main interpreter."
+msgstr ""
+
+#: ../../c-api/threads.rst:702
+msgid ""
+"Asynchronously raise an exception in a thread. The *id* argument is the "
+"thread id of the target thread; *exc* is the exception object to be raised. "
+"This function does not steal any references to *exc*. To prevent naive "
+"misuse, you must write your own C extension to call this.  Must be called "
+"with an :term:`attached thread state`. Returns the number of thread states "
+"modified; this is normally one, but will be zero if the thread id isn't "
+"found.  If *exc* is ``NULL``, the pending exception (if any) for the thread "
+"is cleared. This raises no exceptions."
+msgstr ""
+
+#: ../../c-api/threads.rst:710
+msgid ""
+"The type of the *id* parameter changed from :c:expr:`long` to :c:expr:"
+"`unsigned long`."
+msgstr ""
+
+#: ../../c-api/threads.rst:716
+msgid "Operating system thread APIs"
+msgstr "作業系統執行緒 API"
+
+#: ../../c-api/threads.rst:720
+msgid "Sentinel value for an invalid thread ID."
+msgstr ""
+
+#: ../../c-api/threads.rst:722
+msgid "This is currently equivalent to ``(unsigned long)-1``."
+msgstr "目前等同於 ``(unsigned long)-1``。"
+
+#: ../../c-api/threads.rst:727
+msgid ""
+"Start function *func* in a new thread with argument *arg*. The resulting "
+"thread is not intended to be joined."
+msgstr ""
+
+#: ../../c-api/threads.rst:730
+msgid "*func* must not be ``NULL``, but *arg* may be ``NULL``."
+msgstr "*func* 不能是 ``NULL``，但 *arg* 可以是 ``NULL``。"
+
+#: ../../c-api/threads.rst:732
+msgid ""
+"On success, this function returns the identifier of the new thread; on "
+"failure, this returns :c:macro:`PYTHREAD_INVALID_THREAD_ID`."
+msgstr ""
+
+#: ../../c-api/threads.rst:735 ../../c-api/threads.rst:819
+#: ../../c-api/threads.rst:827
+msgid "The caller does not need to hold an :term:`attached thread state`."
+msgstr "呼叫者不需擁有一個 :term:`attached thread state`。"
+
+#: ../../c-api/threads.rst:740
+msgid "Return the identifier of the current thread, which will never be zero."
+msgstr ""
+
+#: ../../c-api/threads.rst:742 ../../c-api/threads.rst:774
+msgid ""
+"This function cannot fail, and the caller does not need to hold an :term:"
+"`attached thread state`."
+msgstr ""
+
+#: ../../c-api/threads.rst:746
+msgid ":py:func:`threading.get_ident`"
+msgstr ":py:func:`threading.get_ident`"
+
+#: ../../c-api/threads.rst:751
+msgid ""
+"Get general information about the current thread in the form of a :ref:"
+"`struct sequence <struct-sequence-objects>` object. This information is "
+"accessible as :py:attr:`sys.thread_info` in Python."
+msgstr ""
+
+#: ../../c-api/threads.rst:755
+msgid ""
+"On success, this returns a new :term:`strong reference` to the thread "
+"information; on failure, this returns ``NULL`` with an exception set."
+msgstr ""
+
+#: ../../c-api/threads.rst:758
+msgid "The caller must hold an :term:`attached thread state`."
+msgstr "呼叫者必須擁有一個 :term:`attached thread state`。"
+
+#: ../../c-api/threads.rst:763
+msgid "This macro is defined when the system supports native thread IDs."
+msgstr ""
+
+#: ../../c-api/threads.rst:768
+msgid ""
+"Get the native identifier of the current thread as it was assigned by the "
+"operating system's kernel, which will never be less than zero."
+msgstr ""
+
+#: ../../c-api/threads.rst:771
+msgid ""
+"This function is only available when :c:macro:`PY_HAVE_THREAD_NATIVE_ID` is "
+"defined."
+msgstr ""
+
+#: ../../c-api/threads.rst:778
+msgid ":py:func:`threading.get_native_id`"
+msgstr ":py:func:`threading.get_native_id`"
+
+#: ../../c-api/threads.rst:783
+msgid ""
+"Terminate the current thread. This function is generally considered unsafe "
+"and should be avoided. It is kept solely for backwards compatibility."
+msgstr ""
+
+#: ../../c-api/threads.rst:786
+msgid ""
+"This function is only safe to call if all functions in the full call stack "
+"are written to safely allow it."
+msgstr ""
+
+#: ../../c-api/threads.rst:791
+msgid ""
+"If the current system uses POSIX threads (also known as \"pthreads\"), this "
+"calls :manpage:`pthread_exit(3)`, which attempts to unwind the stack and "
+"call C++ destructors on some libc implementations. However, if a "
+"``noexcept`` function is reached, it may terminate the process. Other "
+"systems, such as macOS, do unwinding."
+msgstr ""
+
+#: ../../c-api/threads.rst:797
+msgid ""
+"On Windows, this function calls ``_endthreadex()``, which kills the thread "
+"without calling C++ destructors."
+msgstr ""
+
+#: ../../c-api/threads.rst:800
+msgid "In any case, there is a risk of corruption on the thread's stack."
+msgstr ""
+
+#: ../../c-api/threads.rst:807
+msgid ""
+"Initialize ``PyThread*`` APIs. Python executes this function automatically, "
+"so there's little need to call it from an extension module."
+msgstr ""
+
+#: ../../c-api/threads.rst:813
+msgid "Set the stack size of the current thread to *size* bytes."
+msgstr ""
+
+#: ../../c-api/threads.rst:815
+msgid ""
+"This function returns ``0`` on success, ``-1`` if *size* is invalid, or "
+"``-2`` if the system does not support changing the stack size. This function "
+"does not set exceptions."
+msgstr ""
+
+#: ../../c-api/threads.rst:824
+msgid ""
+"Return the stack size of the current thread in bytes, or ``0`` if the "
+"system's default stack size is in use."
+msgstr ""
+
+#: ../../c-api/threads.rst:8
+msgid "global interpreter lock"
+msgstr "global interpreter lock（全域直譯器鎖）"
+
+#: ../../c-api/threads.rst:8
+msgid "interpreter lock"
+msgstr "interpreter lock（直譯器鎖）"
+
+#: ../../c-api/threads.rst:8
+msgid "lock, interpreter"
+msgstr "lock, interpreter（鎖、直譯器）"
+
+#: ../../c-api/threads.rst:22
+msgid "setswitchinterval (in module sys)"
+msgstr "setswitchinterval （sys 模組中）"
+
+#: ../../c-api/threads.rst:31
+msgid "PyThreadState (C type)"
+msgstr "PyThreadState（C 型別）"
+
+#: ../../c-api/threads.rst:67
+msgid "Py_BEGIN_ALLOW_THREADS (C macro)"
+msgstr "Py_BEGIN_ALLOW_THREADS（C 巨集）"
+
+#: ../../c-api/threads.rst:67
+msgid "Py_END_ALLOW_THREADS (C macro)"
+msgstr "Py_END_ALLOW_THREADS（C 巨集）"
+
+#: ../../c-api/threads.rst:83
+msgid "PyEval_RestoreThread (C function)"
+msgstr "PyEval_RestoreThread（C 函式）"
+
+#: ../../c-api/threads.rst:83
+msgid "PyEval_SaveThread (C function)"
+msgstr "PyEval_SaveThread（C 函式）"
+
+#: ../../c-api/threads.rst:278
+msgid "PyEval_AcquireThread()"
+msgstr "PyEval_AcquireThread()"
+
+#: ../../c-api/threads.rst:278
+msgid "PyEval_ReleaseThread()"
+msgstr "PyEval_ReleaseThread()"
+
+#: ../../c-api/threads.rst:278
+msgid "PyEval_SaveThread()"
+msgstr "PyEval_SaveThread()"
+
+#: ../../c-api/threads.rst:278
+msgid "PyEval_RestoreThread()"
+msgstr "PyEval_RestoreThread()"
+
+#: ../../c-api/threads.rst:300
+msgid "module"
+msgstr "模組"
+
+#: ../../c-api/threads.rst:300
+msgid "_thread"
+msgstr "_thread"
