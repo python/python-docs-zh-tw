@@ -90,7 +90,7 @@
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#">執行緒安全保證</a><ul>
-<li><a class="reference internal" href="#thread-safety-levels">Thread safety levels</a><ul>
+<li><a class="reference internal" href="#thread-safety-levels">執行緒安全等級</a><ul>
 <li><a class="reference internal" href="#incompatible">Incompatible</a></li>
 <li><a class="reference internal" href="#compatible">Compatible</a></li>
 <li><a class="reference internal" href="#safe-on-distinct-objects">Safe on distinct objects</a></li>
@@ -100,6 +100,7 @@
 </li>
 <li><a class="reference internal" href="#thread-safety-for-list-objects">Thread safety for list objects</a></li>
 <li><a class="reference internal" href="#thread-safety-for-dict-objects">Thread safety for dict objects</a></li>
+<li><a class="reference internal" href="#thread-safety-for-set-objects">Thread safety for set objects</a></li>
 </ul>
 </li>
 </ul>
@@ -221,7 +222,7 @@ operations are implicitly serialized.</p>
 <p>For general guidance on writing thread-safe code in free-threaded Python, see
 <a class="reference internal" href="../howto/free-threading-python.html#freethreading-python-howto"><span class="std std-ref">Python 自由執行緒的支援</span></a>.</p>
 <section id="thread-safety-levels">
-<span id="threadsafety-levels"></span><h2>Thread safety levels<a class="headerlink" href="#thread-safety-levels" title="連結到這個標頭">¶</a></h2>
+<span id="threadsafety-levels"></span><h2>執行緒安全等級<a class="headerlink" href="#thread-safety-levels" title="連結到這個標頭">¶</a></h2>
 <p>The C API documentation uses the following levels to describe the thread
 safety guarantees of each function. The levels are listed from least to
 most safe.</p>
@@ -459,6 +460,101 @@ thread, iterate over a copy:</p>
 <p>Consider external synchronization when sharing <a class="reference internal" href="stdtypes.html#dict" title="dict"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> instances
 across threads.</p>
 </section>
+<section id="thread-safety-for-set-objects">
+<span id="thread-safety-set"></span><h2>Thread safety for set objects<a class="headerlink" href="#thread-safety-for-set-objects" title="連結到這個標頭">¶</a></h2>
+<p>The <a class="reference internal" href="functions.html#len" title="len"><code class="xref py py-func docutils literal notranslate"><span class="pre">len()</span></code></a> function is lock-free and <a class="reference internal" href="../glossary.html#term-atomic-operation"><span class="xref std std-term">atomic</span></a>.</p>
+<p>The following read operation is lock-free. It does not block concurrent
+modifications and may observe intermediate states from operations that
+hold the per-object lock:</p>
+<div class="good highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">elem</span> <span class="ow">in</span> <span class="n">s</span>    <span class="c1"># set.__contains__</span>
+</pre></div>
+</div>
+<p>This operation may compare elements using <a class="reference internal" href="../reference/datamodel.html#object.__eq__" title="object.__eq__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__eq__()</span></code></a>, which can
+execute arbitrary Python code. During such comparisons, the set may be
+modified by another thread. For built-in types like <a class="reference internal" href="stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>,
+<a class="reference internal" href="functions.html#int" title="int"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, and <a class="reference internal" href="functions.html#float" title="float"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">__eq__()</span></code> does not release the
+underlying lock during comparisons and this is not a concern.</p>
+<p>All other operations from here on hold the per-object lock.</p>
+<p>Adding or removing a single element is safe to call from multiple threads
+and will not corrupt the set:</p>
+<div class="good highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">s</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>      <span class="c1"># add element</span>
+<span class="n">s</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>   <span class="c1"># remove element, raise if missing</span>
+<span class="n">s</span><span class="o">.</span><span class="n">discard</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>  <span class="c1"># remove element if present</span>
+<span class="n">s</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>          <span class="c1"># remove and return arbitrary element</span>
+</pre></div>
+</div>
+<p>These operations also compare elements, so the same <a class="reference internal" href="../reference/datamodel.html#object.__eq__" title="object.__eq__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__eq__()</span></code></a>
+considerations as above apply.</p>
+<p>The <a class="reference internal" href="stdtypes.html#set.copy" title="set.copy"><code class="xref py py-meth docutils literal notranslate"><span class="pre">copy()</span></code></a> method returns a new object and holds the per-object lock
+for the duration so that it is always atomic.</p>
+<p>The <a class="reference internal" href="stdtypes.html#set.clear" title="set.clear"><code class="xref py py-meth docutils literal notranslate"><span class="pre">clear()</span></code></a> method holds the lock for its duration. Other
+threads cannot observe elements being removed.</p>
+<p>The following operations only accept <a class="reference internal" href="stdtypes.html#set" title="set"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a> or <a class="reference internal" href="stdtypes.html#frozenset" title="frozenset"><code class="xref py py-class docutils literal notranslate"><span class="pre">frozenset</span></code></a>
+as operands and always lock both objects:</p>
+<div class="good highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">s</span> <span class="o">|=</span> <span class="n">other</span>                   <span class="c1"># other must be set/frozenset</span>
+<span class="n">s</span> <span class="o">&amp;=</span> <span class="n">other</span>                   <span class="c1"># other must be set/frozenset</span>
+<span class="n">s</span> <span class="o">-=</span> <span class="n">other</span>                   <span class="c1"># other must be set/frozenset</span>
+<span class="n">s</span> <span class="o">^=</span> <span class="n">other</span>                   <span class="c1"># other must be set/frozenset</span>
+<span class="n">s</span> <span class="o">&amp;</span> <span class="n">other</span>                    <span class="c1"># other must be set/frozenset</span>
+<span class="n">s</span> <span class="o">|</span> <span class="n">other</span>                    <span class="c1"># other must be set/frozenset</span>
+<span class="n">s</span> <span class="o">-</span> <span class="n">other</span>                    <span class="c1"># other must be set/frozenset</span>
+<span class="n">s</span> <span class="o">^</span> <span class="n">other</span>                    <span class="c1"># other must be set/frozenset</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="stdtypes.html#set.update" title="set.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set.update()</span></code></a>, <a class="reference internal" href="stdtypes.html#set.union" title="set.union"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set.union()</span></code></a>, <a class="reference internal" href="stdtypes.html#set.intersection" title="set.intersection"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set.intersection()</span></code></a> and
+<a class="reference internal" href="stdtypes.html#set.difference" title="set.difference"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set.difference()</span></code></a> can take multiple iterables as arguments. They all
+iterate through all the passed iterables and do the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt><a class="reference internal" href="stdtypes.html#set.update" title="set.update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set.update()</span></code></a> and <a class="reference internal" href="stdtypes.html#set.union" title="set.union"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set.union()</span></code></a> lock both objects only when</dt><dd><p>the other operand is a <a class="reference internal" href="stdtypes.html#set" title="set"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a>, <a class="reference internal" href="stdtypes.html#frozenset" title="frozenset"><code class="xref py py-class docutils literal notranslate"><span class="pre">frozenset</span></code></a>, or <a class="reference internal" href="stdtypes.html#dict" title="dict"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference internal" href="stdtypes.html#set.intersection" title="set.intersection"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set.intersection()</span></code></a> and <a class="reference internal" href="stdtypes.html#set.difference" title="set.difference"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set.difference()</span></code></a> always try to lock</dt><dd><p>all objects.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p><a class="reference internal" href="stdtypes.html#set.symmetric_difference" title="set.symmetric_difference"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set.symmetric_difference()</span></code></a> tries to lock both objects.</p>
+<p>The update variants of the above methods also have some differences between
+them:</p>
+<blockquote>
+<div><ul class="simple">
+<li><dl class="simple">
+<dt><a class="reference internal" href="stdtypes.html#set.difference_update" title="set.difference_update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set.difference_update()</span></code></a> and <a class="reference internal" href="stdtypes.html#set.intersection_update" title="set.intersection_update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set.intersection_update()</span></code></a> try</dt><dd><p>to lock all objects one-by-one.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><a class="reference internal" href="stdtypes.html#set.symmetric_difference_update" title="set.symmetric_difference_update"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set.symmetric_difference_update()</span></code></a> only locks the arguments if it is</dt><dd><p>of type <a class="reference internal" href="stdtypes.html#set" title="set"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a>, <a class="reference internal" href="stdtypes.html#frozenset" title="frozenset"><code class="xref py py-class docutils literal notranslate"><span class="pre">frozenset</span></code></a>, or <a class="reference internal" href="stdtypes.html#dict" title="dict"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<p>The following methods always try to lock both objects:</p>
+<div class="good highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">s</span><span class="o">.</span><span class="n">isdisjoint</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>          <span class="c1"># both locked</span>
+<span class="n">s</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>            <span class="c1"># both locked</span>
+<span class="n">s</span><span class="o">.</span><span class="n">issuperset</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>          <span class="c1"># both locked</span>
+</pre></div>
+</div>
+<p>Operations that involve multiple accesses, as well as iteration, are never
+atomic:</p>
+<div class="bad highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOT atomic: check-then-act</span>
+<span class="k">if</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+      <span class="n">s</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+
+<span class="c1"># NOT thread-safe: iteration while modifying</span>
+<span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">s</span><span class="p">:</span>
+      <span class="n">process</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>  <span class="c1"># another thread may modify s</span>
+</pre></div>
+</div>
+<p>Consider external synchronization when sharing <a class="reference internal" href="stdtypes.html#set" title="set"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a> instances
+across threads.  See <a class="reference internal" href="../howto/free-threading-python.html#freethreading-python-howto"><span class="std std-ref">Python 自由執行緒的支援</span></a> for more information.</p>
+</section>
 </section>
 
 
@@ -472,7 +568,7 @@ across threads.</p>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#">執行緒安全保證</a><ul>
-<li><a class="reference internal" href="#thread-safety-levels">Thread safety levels</a><ul>
+<li><a class="reference internal" href="#thread-safety-levels">執行緒安全等級</a><ul>
 <li><a class="reference internal" href="#incompatible">Incompatible</a></li>
 <li><a class="reference internal" href="#compatible">Compatible</a></li>
 <li><a class="reference internal" href="#safe-on-distinct-objects">Safe on distinct objects</a></li>
@@ -482,6 +578,7 @@ across threads.</p>
 </li>
 <li><a class="reference internal" href="#thread-safety-for-list-objects">Thread safety for list objects</a></li>
 <li><a class="reference internal" href="#thread-safety-for-dict-objects">Thread safety for dict objects</a></li>
+<li><a class="reference internal" href="#thread-safety-for-set-objects">Thread safety for set objects</a></li>
 </ul>
 </li>
 </ul>
@@ -608,7 +705,7 @@ across threads.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 3月 13, 2026 (00:24 UTC)。
+      最後更新於 3月 13, 2026 (17:02 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
