@@ -9,7 +9,7 @@
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
-    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=89a2f22a" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=82640b3f" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
     
     <script src="../_static/documentation_options.js?v=e2c088d7"></script>
@@ -90,6 +90,14 @@
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#">執行緒安全保證</a><ul>
+<li><a class="reference internal" href="#thread-safety-levels">Thread safety levels</a><ul>
+<li><a class="reference internal" href="#incompatible">Incompatible</a></li>
+<li><a class="reference internal" href="#compatible">Compatible</a></li>
+<li><a class="reference internal" href="#safe-on-distinct-objects">Safe on distinct objects</a></li>
+<li><a class="reference internal" href="#safe-on-shared-objects">Safe on shared objects</a></li>
+<li><a class="reference internal" href="#atomic">Atomic</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#thread-safety-for-list-objects">Thread safety for list objects</a></li>
 <li><a class="reference internal" href="#thread-safety-for-dict-objects">Thread safety for dict objects</a></li>
 </ul>
@@ -212,6 +220,63 @@ the <a class="reference internal" href="../glossary.html#term-GIL"><span class="
 operations are implicitly serialized.</p>
 <p>For general guidance on writing thread-safe code in free-threaded Python, see
 <a class="reference internal" href="../howto/free-threading-python.html#freethreading-python-howto"><span class="std std-ref">Python 自由執行緒的支援</span></a>.</p>
+<section id="thread-safety-levels">
+<span id="threadsafety-levels"></span><h2>Thread safety levels<a class="headerlink" href="#thread-safety-levels" title="連結到這個標頭">¶</a></h2>
+<p>The C API documentation uses the following levels to describe the thread
+safety guarantees of each function. The levels are listed from least to
+most safe.</p>
+<section id="incompatible">
+<span id="threadsafety-level-incompatible"></span><h3>Incompatible<a class="headerlink" href="#incompatible" title="連結到這個標頭">¶</a></h3>
+<p>A function or operation that cannot be made safe for concurrent use even
+with external synchronization. Incompatible code typically accesses
+global state in an unsynchronized way and must only be called from a single
+thread throughout the program's lifetime.</p>
+<p>Example: a function that modifies process-wide state such as signal handlers
+or environment variables, where concurrent calls from any threads, even with
+external locking, can conflict with the runtime or other libraries.</p>
+</section>
+<section id="compatible">
+<span id="threadsafety-level-compatible"></span><h3>Compatible<a class="headerlink" href="#compatible" title="連結到這個標頭">¶</a></h3>
+<p>A function or operation that is safe to call from multiple threads
+<em>provided</em> the caller supplies appropriate external synchronization, for
+example by holding a <a class="reference internal" href="../glossary.html#term-lock"><span class="xref std std-term">lock</span></a> for the duration of each call. Without
+such synchronization, concurrent calls may produce <a class="reference internal" href="../glossary.html#term-race-condition"><span class="xref std std-term">race conditions</span></a> or <a class="reference internal" href="../glossary.html#term-data-race"><span class="xref std std-term">data races</span></a>.</p>
+<p>Example: a function that reads from or writes to an object whose internal
+state is not protected by a lock. Callers must ensure that no two threads
+access the same object at the same time.</p>
+</section>
+<section id="safe-on-distinct-objects">
+<span id="threadsafety-level-distinct"></span><h3>Safe on distinct objects<a class="headerlink" href="#safe-on-distinct-objects" title="連結到這個標頭">¶</a></h3>
+<p>A function or operation that is safe to call from multiple threads without
+external synchronization, as long as each thread operates on a <strong>different</strong>
+object. Two threads may call the function at the same time, but they must
+not pass the same object (or objects that share underlying state) as
+arguments.</p>
+<p>Example: a function that modifies fields of a struct using non-atomic
+writes. Two threads can each call the function on their own struct
+instance safely, but concurrent calls on the <em>same</em> instance require
+external synchronization.</p>
+</section>
+<section id="safe-on-shared-objects">
+<span id="threadsafety-level-shared"></span><h3>Safe on shared objects<a class="headerlink" href="#safe-on-shared-objects" title="連結到這個標頭">¶</a></h3>
+<p>A function or operation that is safe for concurrent use on the <strong>same</strong>
+object. The implementation uses internal synchronization (such as
+<a class="reference internal" href="../glossary.html#term-per-object-lock"><span class="xref std std-term">per-object locks</span></a> or
+<a class="reference internal" href="../c-api/synchronization.html#python-critical-section-api"><span class="std std-ref">critical sections</span></a>) to protect shared
+mutable state, so callers do not need to supply their own locking.</p>
+<p>Example: <a class="reference internal" href="../c-api/list.html#c.PyList_GetItemRef" title="PyList_GetItemRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyList_GetItemRef()</span></code></a> can be called from multiple threads on the
+same <a class="reference internal" href="../c-api/list.html#c.PyListObject" title="PyListObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyListObject</span></code></a> - it uses internal synchronization to serialize
+access.</p>
+</section>
+<section id="atomic">
+<span id="threadsafety-level-atomic"></span><h3>Atomic<a class="headerlink" href="#atomic" title="連結到這個標頭">¶</a></h3>
+<p>A function or operation that appears <a class="reference internal" href="../glossary.html#term-atomic-operation"><span class="xref std std-term">atomic</span></a> with
+respect to other threads - it executes instantaneously from the perspective
+of other threads. This is the strongest form of thread safety.</p>
+<p>Example: <a class="reference internal" href="../c-api/synchronization.html#c.PyMutex_IsLocked" title="PyMutex_IsLocked"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMutex_IsLocked()</span></code></a> performs an atomic read of the mutex
+state and can be called from any thread at any time.</p>
+</section>
+</section>
 <section id="thread-safety-for-list-objects">
 <span id="thread-safety-list"></span><h2>Thread safety for list objects<a class="headerlink" href="#thread-safety-for-list-objects" title="連結到這個標頭">¶</a></h2>
 <p>Reading a single element from a <a class="reference internal" href="stdtypes.html#list" title="list"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> is
@@ -407,6 +472,14 @@ across threads.</p>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#">執行緒安全保證</a><ul>
+<li><a class="reference internal" href="#thread-safety-levels">Thread safety levels</a><ul>
+<li><a class="reference internal" href="#incompatible">Incompatible</a></li>
+<li><a class="reference internal" href="#compatible">Compatible</a></li>
+<li><a class="reference internal" href="#safe-on-distinct-objects">Safe on distinct objects</a></li>
+<li><a class="reference internal" href="#safe-on-shared-objects">Safe on shared objects</a></li>
+<li><a class="reference internal" href="#atomic">Atomic</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#thread-safety-for-list-objects">Thread safety for list objects</a></li>
 <li><a class="reference internal" href="#thread-safety-for-dict-objects">Thread safety for dict objects</a></li>
 </ul>
@@ -535,7 +608,7 @@ across threads.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 3月 12, 2026 (00:22 UTC)。
+      最後更新於 3月 13, 2026 (00:24 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
