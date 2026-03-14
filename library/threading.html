@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>threading --- 基於執行緒的平行性 &#8212; Python 3.14.3 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>threading --- 執行緒層級的平行處理 &#8212; Python 3.14.3 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
@@ -89,8 +89,8 @@
   <div>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
-<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> --- 基於執行緒的平行性</a><ul>
-<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> --- 執行緒層級的平行處理</a><ul>
+<li><a class="reference internal" href="#introduction">介紹</a></li>
 <li><a class="reference internal" href="#gil-and-performance-considerations">GIL and performance considerations</a></li>
 <li><a class="reference internal" href="#reference">Reference</a><ul>
 <li><a class="reference internal" href="#thread-local-data">Thread-local data</a></li>
@@ -189,7 +189,7 @@
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="concurrency.html" accesskey="U">並行執行 (Concurrent Execution)</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> --- 基於執行緒的平行性</a></li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> --- 執行緒層級的平行處理</a></li>
                 <li class="right">
                     
 
@@ -220,26 +220,18 @@
           <div class="body" role="main">
             
   <section id="module-threading">
-<span id="threading-thread-based-parallelism"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> --- 基於執行緒的平行性<a class="headerlink" href="#module-threading" title="連結到這個標頭">¶</a></h1>
+<span id="threading-thread-based-parallelism"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> --- 執行緒層級的平行處理<a class="headerlink" href="#module-threading" title="連結到這個標頭">¶</a></h1>
 <p><strong>原始碼：</strong><a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.14/Lib/threading.py">Lib/threading.py</a></p>
 <hr class="docutils" />
-<p>This module constructs higher-level threading interfaces on top of the lower
-level <a class="reference internal" href="_thread.html#module-_thread" title="_thread: Low-level threading API."><code class="xref py py-mod docutils literal notranslate"><span class="pre">_thread</span></code></a> module.</p>
+<p>此模組在較低層的 <a class="reference internal" href="_thread.html#module-_thread" title="_thread: Low-level threading API."><code class="xref py py-mod docutils literal notranslate"><span class="pre">_thread</span></code></a> 模組之上，建構了較高層的執行緒（threading）介面。</p>
 <div class="availability docutils container">
 <p><a class="reference internal" href="intro.html#availability"><span class="std std-ref">可用性</span></a>: not WASI.</p>
 <p>此模組在 WebAssembly 平台上不起作用或無法使用。更多資訊請參閱 <a class="reference internal" href="intro.html#wasm-availability"><span class="std std-ref">WebAssembly 平台</span></a>。</p>
 </div>
 <section id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="連結到這個標頭">¶</a></h2>
-<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> module provides a way to run multiple <a class="reference external" href="https://en.wikipedia.org/wiki/Thread_(computing)">threads</a> (smaller
-units of a process) concurrently within a single process. It allows for the
-creation and management of threads, making it possible to execute tasks in
-parallel, sharing memory space. Threads are particularly useful when tasks are
-I/O bound, such as file operations or making network requests,
-where much of the time is spent waiting for external resources.</p>
-<p>A typical use case for <code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> includes managing a pool of worker
-threads that can process multiple tasks concurrently.  Here's a basic example of
-creating and starting threads using <a class="reference internal" href="#threading.Thread" title="threading.Thread"><code class="xref py py-class docutils literal notranslate"><span class="pre">Thread</span></code></a>:</p>
+<h2>介紹<a class="headerlink" href="#introduction" title="連結到這個標頭">¶</a></h2>
+<p>模組 <code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> 提供了一種方式，能在單一進程（process）中同時執行多個 <a class="reference external" href="https://zh.wikipedia.org/wiki/%E7%BA%BF%E7%A8%8B">執行緒</a> （一個進程中的較小執行單元）。它允許創造與管理執行緒，使多個任務可以平行執行並共享同一個記憶體空間。當任務屬於 I/O 密集型（I/O bound）時，執行緒特別有用，例如檔案操作或網路請求，因為這類任務的大部分時間都花在等待外部資源。</p>
+<p>模組 <code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> 的一個典型使用情境是管理一個工作執行緒（worker threads）池，讓多個任務能夠同時被處理。以下是一個使用 <a class="reference internal" href="#threading.Thread" title="threading.Thread"><code class="xref py py-class docutils literal notranslate"><span class="pre">Thread</span></code></a>: 來創造並啟動執行緒的基本範例：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 
@@ -1545,8 +1537,8 @@ the following snippet:</p>
   <div>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
-<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> --- 基於執行緒的平行性</a><ul>
-<li><a class="reference internal" href="#introduction">Introduction</a></li>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> --- 執行緒層級的平行處理</a><ul>
+<li><a class="reference internal" href="#introduction">介紹</a></li>
 <li><a class="reference internal" href="#gil-and-performance-considerations">GIL and performance considerations</a></li>
 <li><a class="reference internal" href="#reference">Reference</a><ul>
 <li><a class="reference internal" href="#thread-local-data">Thread-local data</a></li>
@@ -1648,7 +1640,7 @@ the following snippet:</p>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="concurrency.html" >並行執行 (Concurrent Execution)</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> --- 基於執行緒的平行性</a></li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code> --- 執行緒層級的平行處理</a></li>
                 <li class="right">
                     
 
@@ -1689,7 +1681,7 @@ the following snippet:</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 3月 13, 2026 (22:17 UTC)。
+      最後更新於 3月 14, 2026 (05:47 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
