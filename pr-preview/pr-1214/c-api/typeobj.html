@@ -3710,6 +3710,19 @@ set <span class="c-expr sig sig-inline c"><span class="n">view</span><span class
 <li><p>Set <span class="c-expr sig sig-inline c"><span class="n">view</span><span class="o">-&gt;</span><span class="n">obj</span></span> to <em>exporter</em> and increment <span class="c-expr sig sig-inline c"><span class="n">view</span><span class="o">-&gt;</span><span class="n">obj</span></span>.</p></li>
 <li><p>回傳 <code class="docutils literal notranslate"><span class="pre">0</span></code>。</p></li>
 </ol>
+<p><strong>Thread safety:</strong></p>
+<p>In the <a class="reference internal" href="../glossary.html#term-free-threaded-build"><span class="xref std std-term">free-threaded build</span></a>, implementations must ensure:</p>
+<ul class="simple">
+<li><p>The export counter increment in step (3) is atomic.</p></li>
+<li><p>The underlying buffer data remains valid and at a stable memory
+location for the lifetime of all exports.</p></li>
+<li><p>For objects that support resizing or reallocation (such as
+<a class="reference internal" href="../library/stdtypes.html#bytearray" title="bytearray"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code></a>), the export counter is checked atomically before
+such operations, and <a class="reference internal" href="../library/exceptions.html#BufferError" title="BufferError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BufferError</span></code></a> is raised if exports exist.</p></li>
+<li><p>The function is safe to call concurrently from multiple threads.</p></li>
+</ul>
+<p>See also <a class="reference internal" href="../library/threadsafety.html#thread-safety-memoryview"><span class="std std-ref">Thread safety for memoryview objects</span></a> for the Python-level
+thread safety guarantees of <a class="reference internal" href="../library/stdtypes.html#memoryview" title="memoryview"><code class="xref py py-class docutils literal notranslate"><span class="pre">memoryview</span></code></a> objects.</p>
 <p>If <em>exporter</em> is part of a chain or tree of buffer providers, two main
 schemes can be used:</p>
 <ul class="simple">
@@ -3751,6 +3764,14 @@ these optional steps:</p>
 <li><p>Decrement an internal counter for the number of exports.</p></li>
 <li><p>If the counter is <code class="docutils literal notranslate"><span class="pre">0</span></code>, free all memory associated with <em>view</em>.</p></li>
 </ol>
+<p><strong>Thread safety:</strong></p>
+<p>In the <a class="reference internal" href="../glossary.html#term-free-threaded-build"><span class="xref std std-term">free-threaded build</span></a>:</p>
+<ul class="simple">
+<li><p>The export counter decrement in step (1) must be atomic.</p></li>
+<li><p>Resource cleanup when the counter reaches zero must be done atomically,
+as the final release may race with concurrent releases from other
+threads and dellocation must only happen once.</p></li>
+</ul>
 <p>The exporter MUST use the <a class="reference internal" href="buffer.html#c.Py_buffer.internal" title="Py_buffer.internal"><code class="xref c c-member docutils literal notranslate"><span class="pre">internal</span></code></a> field to keep
 track of buffer-specific resources. This field is guaranteed to remain
 constant, while a consumer MAY pass a copy of the original buffer as the
@@ -4304,7 +4325,7 @@ to create instances (e.g. uses a separate factory func) using
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 3月 18, 2026 (00:27 UTC)。
+      最後更新於 3月 19, 2026 (00:29 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

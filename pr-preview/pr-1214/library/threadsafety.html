@@ -102,6 +102,7 @@
 <li><a class="reference internal" href="#thread-safety-for-dict-objects">Thread safety for dict objects</a></li>
 <li><a class="reference internal" href="#thread-safety-for-set-objects">Thread safety for set objects</a></li>
 <li><a class="reference internal" href="#thread-safety-for-bytearray-objects">Thread safety for bytearray objects</a></li>
+<li><a class="reference internal" href="#thread-safety-for-memoryview-objects">Thread safety for memoryview objects</a></li>
 </ul>
 </li>
 </ul>
@@ -628,6 +629,51 @@ thread, iterate over a copy:</p>
 across threads.  See <a class="reference internal" href="../howto/free-threading-python.html#freethreading-python-howto"><span class="std std-ref">Python 自由執行緒的支援</span></a> for more information.</p>
 </div></blockquote>
 </section>
+<section id="thread-safety-for-memoryview-objects">
+<span id="thread-safety-memoryview"></span><h2>Thread safety for memoryview objects<a class="headerlink" href="#thread-safety-for-memoryview-objects" title="連結到這個標頭">¶</a></h2>
+<p><a class="reference internal" href="stdtypes.html#memoryview" title="memoryview"><code class="xref py py-class docutils literal notranslate"><span class="pre">memoryview</span></code></a> objects provide access to the internal data of an
+underlying object without copying. Thread safety depends on both the
+memoryview itself and the underlying buffer exporter.</p>
+<p>The memoryview implementation uses atomic operations to track its own
+exports in the <a class="reference internal" href="../glossary.html#term-free-threaded-build"><span class="xref std std-term">free-threaded build</span></a>. Creating and
+releasing a memoryview are thread-safe. Attribute access (e.g.,
+<a class="reference internal" href="stdtypes.html#memoryview.shape" title="memoryview.shape"><code class="xref py py-attr docutils literal notranslate"><span class="pre">shape</span></code></a>, <a class="reference internal" href="stdtypes.html#memoryview.format" title="memoryview.format"><code class="xref py py-attr docutils literal notranslate"><span class="pre">format</span></code></a>) reads fields that
+are immutable for the lifetime of the memoryview, so concurrent reads
+are safe as long as the memoryview has not been released.</p>
+<p>However, the actual data accessed through the memoryview is owned by the
+underlying object. Concurrent access to this data is only safe if the
+underlying object supports it:</p>
+<ul class="simple">
+<li><p>For immutable objects like <a class="reference internal" href="stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>, concurrent reads through
+multiple memoryviews are safe.</p></li>
+<li><p>For mutable objects like <a class="reference internal" href="stdtypes.html#bytearray" title="bytearray"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code></a>, reading and writing the
+same memory region from multiple threads without external
+synchronization is not safe and may result in data corruption.
+Note that even read-only memoryviews of mutable objects do not
+prevent data races if the underlying object is modified from
+another thread.</p></li>
+</ul>
+<div class="bad highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOT safe: concurrent writes to the same buffer</span>
+<span class="n">data</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">view</span> <span class="o">=</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="c1"># Thread 1: view[0:500] = b&#39;x&#39; * 500</span>
+<span class="c1"># Thread 2: view[0:500] = b&#39;y&#39; * 500</span>
+</pre></div>
+</div>
+<div class="good highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Safe: use a lock for concurrent access</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+<span class="n">lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+<span class="n">data</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">view</span> <span class="o">=</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
+    <span class="n">view</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">500</span><span class="p">]</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;x&#39;</span> <span class="o">*</span> <span class="mi">500</span>
+</pre></div>
+</div>
+<p>Resizing or reallocating the underlying object (such as calling
+<a class="reference internal" href="stdtypes.html#bytearray.resize" title="bytearray.resize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bytearray.resize()</span></code></a>) while a memoryview is exported raises
+<a class="reference internal" href="exceptions.html#BufferError" title="BufferError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BufferError</span></code></a>. This is enforced regardless of threading.</p>
+</section>
 </section>
 
 
@@ -653,6 +699,7 @@ across threads.  See <a class="reference internal" href="../howto/free-threading
 <li><a class="reference internal" href="#thread-safety-for-dict-objects">Thread safety for dict objects</a></li>
 <li><a class="reference internal" href="#thread-safety-for-set-objects">Thread safety for set objects</a></li>
 <li><a class="reference internal" href="#thread-safety-for-bytearray-objects">Thread safety for bytearray objects</a></li>
+<li><a class="reference internal" href="#thread-safety-for-memoryview-objects">Thread safety for memoryview objects</a></li>
 </ul>
 </li>
 </ul>
@@ -779,7 +826,7 @@ across threads.  See <a class="reference internal" href="../howto/free-threading
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 3月 18, 2026 (00:27 UTC)。
+      最後更新於 3月 19, 2026 (00:29 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
