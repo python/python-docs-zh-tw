@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>同步原語 &#8212; Python 3.14.4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=82640b3f" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
+    
+    <script src="../_static/documentation_options.js?v=9e923c91"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.14.4 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權所有" href="../copyright.html" />
+    <link rel="next" title="執行緒局部儲存的支援" href="tls.html" />
+    <link rel="prev" title="執行緒狀態與全域直譯器鎖" href="threads.html" />
+    
+      
+      <link rel="canonical" href="https://docs.python.org/3/c-api/synchronization.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="../_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="../_static/py.svg">
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script>
+            <script type="text/javascript" src="../_static/search-focus.js"></script>
+            <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="選單">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="../_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"></span>
+            <form role="search" class="search" action="../search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q">
+                <input type="submit" value="前往">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+            
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">同步原語</a><ul>
+<li><a class="reference internal" href="#python-critical-section-api">Python critical section API</a></li>
+<li><a class="reference internal" href="#legacy-locking-apis">Legacy locking APIs</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="threads.html"
+                          title="上一章">執行緒狀態與全域直譯器鎖</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="tls.html"
+                          title="下一章">執行緒局部儲存的支援</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "c-api/synchronization.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/c-api/synchronization.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/c-api/synchronization.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="tls.html" title="執行緒局部儲存的支援"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="threads.html" title="執行緒狀態與全域直譯器鎖"
+             accesskey="P">上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.4 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python/C API 參考手冊</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">同步原語</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="synchronization-primitives">
+<span id="synchronization"></span><h1>同步原語<a class="headerlink" href="#synchronization-primitives" title="連結到這個標頭">¶</a></h1>
+<p>The C-API provides a basic mutual exclusion lock.</p>
+<dl class="c type">
+<dt class="sig sig-object c" id="c.PyMutex">
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyMutex</span></span></span><a class="headerlink" href="#c.PyMutex" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>A mutual exclusion lock.  The <code class="xref c c-type docutils literal notranslate"><span class="pre">PyMutex</span></code> should be initialized to
+zero to represent the unlocked state.  For example:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyMutex</span><span class="w"> </span><span class="n">mutex</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</pre></div>
+</div>
+<p>Instances of <code class="xref c c-type docutils literal notranslate"><span class="pre">PyMutex</span></code> should not be copied or moved.  Both the
+contents and address of a <code class="xref c c-type docutils literal notranslate"><span class="pre">PyMutex</span></code> are meaningful, and it must
+remain at a fixed, writable location in memory.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>A <code class="xref c c-type docutils literal notranslate"><span class="pre">PyMutex</span></code> currently occupies one byte, but the size should be
+considered unstable.  The size may change in future Python releases
+without a deprecation period.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyMutex_Lock">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyMutex_Lock</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyMutex" title="PyMutex"><span class="n"><span class="pre">PyMutex</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">m</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyMutex_Lock" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="threadsafety threadsafety-shared"> Thread safety: <a class="reference internal" href="../library/threadsafety.html#threadsafety-level-shared"><span class="std std-ref">Safe for concurrent use on the same object</span></a>.</em><p>Lock mutex <em>m</em>.  If another thread has already locked it, the calling
+thread will block until the mutex is unlocked.  While blocked, the thread
+will temporarily detach the <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">thread state</span></a> if one exists.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyMutex_Unlock">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyMutex_Unlock</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyMutex" title="PyMutex"><span class="n"><span class="pre">PyMutex</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">m</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyMutex_Unlock" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="threadsafety threadsafety-shared"> Thread safety: <a class="reference internal" href="../library/threadsafety.html#threadsafety-level-shared"><span class="std std-ref">Safe for concurrent use on the same object</span></a>.</em><p>Unlock mutex <em>m</em>. The mutex must be locked --- otherwise, the function will
+issue a fatal error.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyMutex_IsLocked">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyMutex_IsLocked</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyMutex" title="PyMutex"><span class="n"><span class="pre">PyMutex</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">m</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyMutex_IsLocked" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="threadsafety threadsafety-atomic"> Thread safety: <a class="reference internal" href="../library/threadsafety.html#threadsafety-level-atomic"><span class="std std-ref">Atomic</span></a>.</em><p>Returns non-zero if the mutex <em>m</em> is currently locked, zero otherwise.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>This function is intended for use in assertions and debugging only and
+should not be used to make concurrency control decisions, as the lock
+state may change immediately after the check.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.14 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<section id="python-critical-section-api">
+<span id="id1"></span><h2>Python critical section API<a class="headerlink" href="#python-critical-section-api" title="連結到這個標頭">¶</a></h2>
+<p>The critical section API provides a deadlock avoidance layer on top of
+per-object locks for <a class="reference internal" href="../glossary.html#term-free-threading"><span class="xref std std-term">free-threaded</span></a> CPython.  They are
+intended to replace reliance on the <a class="reference internal" href="../glossary.html#term-global-interpreter-lock"><span class="xref std std-term">global interpreter lock</span></a>, and are
+no-ops in versions of Python with the global interpreter lock.</p>
+<p>Critical sections are intended to be used for custom types implemented
+in C-API extensions. They should generally not be used with built-in types like
+<a class="reference internal" href="../library/stdtypes.html#list" title="list"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a> and <a class="reference internal" href="../library/stdtypes.html#dict" title="dict"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a> because their public C-APIs
+already use critical sections internally, with the notable
+exception of <a class="reference internal" href="dict.html#c.PyDict_Next" title="PyDict_Next"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyDict_Next()</span></code></a>, which requires critical section
+to be acquired externally.</p>
+<p>Critical sections avoid deadlocks by implicitly suspending active critical
+sections, hence, they do not provide exclusive access such as provided by
+traditional locks like <a class="reference internal" href="#c.PyMutex" title="PyMutex"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMutex</span></code></a>.  When a critical section is started,
+the per-object lock for the object is acquired. If the code executed inside the
+critical section calls C-API functions then it can suspend the critical section thereby
+releasing the per-object lock, so other threads can acquire the per-object lock
+for the same object.</p>
+<p>Variants that accept <a class="reference internal" href="#c.PyMutex" title="PyMutex"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMutex</span></code></a> pointers rather than Python objects are also
+available. Use these variants to start a critical section in a situation where
+there is no <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyObject</span></code></a> -- for example, when working with a C type that
+does not extend or wrap <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyObject</span></code></a> but still needs to call into the C
+API in a manner that might lead to deadlocks.</p>
+<p>The functions and structs used by the macros are exposed for cases
+where C macros are not available. They should only be used as in the
+given macro expansions. Note that the sizes and contents of the structures may
+change in future Python versions.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Operations that need to lock two objects at once must use
+<a class="reference internal" href="#c.Py_BEGIN_CRITICAL_SECTION2" title="Py_BEGIN_CRITICAL_SECTION2"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_BEGIN_CRITICAL_SECTION2</span></code></a>.  You <em>cannot</em> use nested critical
+sections to lock more than one object at once, because the inner critical
+section may suspend the outer critical sections.  This API does not provide
+a way to lock more than two objects at once.</p>
+</div>
+<p>範例用法：</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span>
+<span class="nf">set_field</span><span class="p">(</span><span class="n">MyObject</span><span class="w"> </span><span class="o">*</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">value</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">   </span><span class="n">Py_BEGIN_CRITICAL_SECTION</span><span class="p">(</span><span class="n">self</span><span class="p">);</span>
+<span class="w">   </span><span class="n">Py_SETREF</span><span class="p">(</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">field</span><span class="p">,</span><span class="w"> </span><span class="n">Py_XNewRef</span><span class="p">(</span><span class="n">value</span><span class="p">));</span>
+<span class="w">   </span><span class="n">Py_END_CRITICAL_SECTION</span><span class="p">();</span>
+<span class="w">   </span><span class="n">Py_RETURN_NONE</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In the above example, <a class="reference internal" href="refcounting.html#c.Py_SETREF" title="Py_SETREF"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_SETREF</span></code></a> calls <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_DECREF</span></code></a>, which
+can call arbitrary code through an object's deallocation function.  The critical
+section API avoids potential deadlocks due to reentrancy and lock ordering
+by allowing the runtime to temporarily suspend the critical section if the
+code triggered by the finalizer blocks and calls <a class="reference internal" href="threads.html#c.PyEval_SaveThread" title="PyEval_SaveThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SaveThread()</span></code></a>.</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.Py_BEGIN_CRITICAL_SECTION">
+<span class="sig-name descname"><span class="n"><span class="pre">Py_BEGIN_CRITICAL_SECTION</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">op</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_BEGIN_CRITICAL_SECTION" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Acquires the per-object lock for the object <em>op</em> and begins a
+critical section.</p>
+<p>In the free-threaded build, this macro expands to:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="n">PyCriticalSection</span><span class="w"> </span><span class="n">_py_cs</span><span class="p">;</span>
+<span class="w">    </span><span class="n">PyCriticalSection_Begin</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_py_cs</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">PyObject</span><span class="o">*</span><span class="p">)(</span><span class="n">op</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>In the default build, this macro expands to <code class="docutils literal notranslate"><span class="pre">{</span></code>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.Py_BEGIN_CRITICAL_SECTION_MUTEX">
+<span class="sig-name descname"><span class="n"><span class="pre">Py_BEGIN_CRITICAL_SECTION_MUTEX</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">m</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_BEGIN_CRITICAL_SECTION_MUTEX" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Locks the mutex <em>m</em> and begins a critical section.</p>
+<p>In the free-threaded build, this macro expands to:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">     </span><span class="n">PyCriticalSection</span><span class="w"> </span><span class="n">_py_cs</span><span class="p">;</span>
+<span class="w">     </span><span class="n">PyCriticalSection_BeginMutex</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_py_cs</span><span class="p">,</span><span class="w"> </span><span class="n">m</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that unlike <a class="reference internal" href="#c.Py_BEGIN_CRITICAL_SECTION" title="Py_BEGIN_CRITICAL_SECTION"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_BEGIN_CRITICAL_SECTION</span></code></a>, there is no cast for
+the argument of the macro - it must be a <a class="reference internal" href="#c.PyMutex" title="PyMutex"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMutex</span></code></a> pointer.</p>
+<p>On the default build, this macro expands to <code class="docutils literal notranslate"><span class="pre">{</span></code>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.14 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.Py_END_CRITICAL_SECTION">
+<span class="sig-name descname"><span class="n"><span class="pre">Py_END_CRITICAL_SECTION</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_END_CRITICAL_SECTION" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Ends the critical section and releases the per-object lock.</p>
+<p>In the free-threaded build, this macro expands to:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="n">PyCriticalSection_End</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_py_cs</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In the default build, this macro expands to <code class="docutils literal notranslate"><span class="pre">}</span></code>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.Py_BEGIN_CRITICAL_SECTION2">
+<span class="sig-name descname"><span class="n"><span class="pre">Py_BEGIN_CRITICAL_SECTION2</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">a</span></span>, <span class="n"><span class="pre">b</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_BEGIN_CRITICAL_SECTION2" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Acquires the per-object locks for the objects <em>a</em> and <em>b</em> and begins a
+critical section.  The locks are acquired in a consistent order (lowest
+address first) to avoid lock ordering deadlocks.</p>
+<p>In the free-threaded build, this macro expands to:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">    </span><span class="n">PyCriticalSection2</span><span class="w"> </span><span class="n">_py_cs2</span><span class="p">;</span>
+<span class="w">    </span><span class="n">PyCriticalSection2_Begin</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_py_cs2</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">PyObject</span><span class="o">*</span><span class="p">)(</span><span class="n">a</span><span class="p">),</span><span class="w"> </span><span class="p">(</span><span class="n">PyObject</span><span class="o">*</span><span class="p">)(</span><span class="n">b</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>In the default build, this macro expands to <code class="docutils literal notranslate"><span class="pre">{</span></code>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.Py_BEGIN_CRITICAL_SECTION2_MUTEX">
+<span class="sig-name descname"><span class="n"><span class="pre">Py_BEGIN_CRITICAL_SECTION2_MUTEX</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">m1</span></span>, <span class="n"><span class="pre">m2</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_BEGIN_CRITICAL_SECTION2_MUTEX" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Locks the mutexes <em>m1</em> and <em>m2</em> and begins a critical section.</p>
+<p>In the free-threaded build, this macro expands to:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">     </span><span class="n">PyCriticalSection2</span><span class="w"> </span><span class="n">_py_cs2</span><span class="p">;</span>
+<span class="w">     </span><span class="n">PyCriticalSection2_BeginMutex</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_py_cs2</span><span class="p">,</span><span class="w"> </span><span class="n">m1</span><span class="p">,</span><span class="w"> </span><span class="n">m2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that unlike <a class="reference internal" href="#c.Py_BEGIN_CRITICAL_SECTION2" title="Py_BEGIN_CRITICAL_SECTION2"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_BEGIN_CRITICAL_SECTION2</span></code></a>, there is no cast for
+the arguments of the macro - they must be <a class="reference internal" href="#c.PyMutex" title="PyMutex"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMutex</span></code></a> pointers.</p>
+<p>On the default build, this macro expands to <code class="docutils literal notranslate"><span class="pre">{</span></code>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.14 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.Py_END_CRITICAL_SECTION2">
+<span class="sig-name descname"><span class="n"><span class="pre">Py_END_CRITICAL_SECTION2</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_END_CRITICAL_SECTION2" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Ends the critical section and releases the per-object locks.</p>
+<p>In the free-threaded build, this macro expands to:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="n">PyCriticalSection2_End</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_py_cs2</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>In the default build, this macro expands to <code class="docutils literal notranslate"><span class="pre">}</span></code>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
+</section>
+<section id="legacy-locking-apis">
+<h2>Legacy locking APIs<a class="headerlink" href="#legacy-locking-apis" title="連結到這個標頭">¶</a></h2>
+<p>These APIs are obsolete since Python 3.13 with the introduction of
+<a class="reference internal" href="#c.PyMutex" title="PyMutex"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMutex</span></code></a>.</p>
+<dl class="c type">
+<dt class="sig sig-object c" id="c.PyThread_type_lock">
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThread_type_lock</span></span></span><a class="headerlink" href="#c.PyThread_type_lock" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>A pointer to a mutual exclusion lock.</p>
+</dd></dl>
+
+<dl class="c type">
+<dt class="sig sig-object c" id="c.PyLockStatus">
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyLockStatus</span></span></span><a class="headerlink" href="#c.PyLockStatus" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The result of acquiring a lock with a timeout.</p>
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.PY_LOCK_FAILURE">
+<span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PY_LOCK_FAILURE</span></span></span><a class="headerlink" href="#c.PY_LOCK_FAILURE" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Failed to acquire the lock.</p>
+</dd></dl>
+
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.PY_LOCK_ACQUIRED">
+<span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PY_LOCK_ACQUIRED</span></span></span><a class="headerlink" href="#c.PY_LOCK_ACQUIRED" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The lock was successfully acquired.</p>
+</dd></dl>
+
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.PY_LOCK_INTR">
+<span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PY_LOCK_INTR</span></span></span><a class="headerlink" href="#c.PY_LOCK_INTR" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The lock was interrupted by a signal.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThread_allocate_lock">
+<a class="reference internal" href="#c.PyThread_type_lock" title="PyThread_type_lock"><span class="n"><span class="pre">PyThread_type_lock</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThread_allocate_lock</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThread_allocate_lock" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Allocate a new lock.</p>
+<p>On success, this function returns a lock; on failure, this
+function returns <code class="docutils literal notranslate"><span class="pre">0</span></code> without an exception set.</p>
+<p>呼叫者不需擁有一個 <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>。</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThread_free_lock">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThread_free_lock</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThread_type_lock" title="PyThread_type_lock"><span class="n"><span class="pre">PyThread_type_lock</span></span></a><span class="w"> </span><span class="n"><span class="pre">lock</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThread_free_lock" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Destroy <em>lock</em>. The lock should not be held by any thread when calling
+this.</p>
+<p>呼叫者不需擁有一個 <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>。</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThread_acquire_lock_timed">
+<a class="reference internal" href="#c.PyLockStatus" title="PyLockStatus"><span class="n"><span class="pre">PyLockStatus</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThread_acquire_lock_timed</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThread_type_lock" title="PyThread_type_lock"><span class="n"><span class="pre">PyThread_type_lock</span></span></a><span class="w"> </span><span class="n"><span class="pre">lock</span></span>, <span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n"><span class="pre">microseconds</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">intr_flag</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThread_acquire_lock_timed" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Acquire <em>lock</em> with a timeout.</p>
+<p>This will wait for <em>microseconds</em> microseconds to acquire the lock. If the
+timeout expires, this function returns <a class="reference internal" href="#c.PY_LOCK_FAILURE" title="PY_LOCK_FAILURE"><code class="xref c c-enumerator docutils literal notranslate"><span class="pre">PY_LOCK_FAILURE</span></code></a>.
+If <em>microseconds</em> is <code class="docutils literal notranslate"><span class="pre">-1</span></code>, this will wait indefinitely until the lock has
+been released.</p>
+<p>If <em>intr_flag</em> is <code class="docutils literal notranslate"><span class="pre">1</span></code>, acquiring the lock may be interrupted by a signal,
+in which case this function returns <a class="reference internal" href="#c.PY_LOCK_INTR" title="PY_LOCK_INTR"><code class="xref c c-enumerator docutils literal notranslate"><span class="pre">PY_LOCK_INTR</span></code></a>. Upon
+interruption, it's generally expected that the caller makes a call to
+<a class="reference internal" href="threads.html#c.Py_MakePendingCalls" title="Py_MakePendingCalls"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_MakePendingCalls()</span></code></a> to propagate an exception to Python code.</p>
+<p>If the lock is successfully acquired, this function returns
+<a class="reference internal" href="#c.PY_LOCK_ACQUIRED" title="PY_LOCK_ACQUIRED"><code class="xref c c-enumerator docutils literal notranslate"><span class="pre">PY_LOCK_ACQUIRED</span></code></a>.</p>
+<p>呼叫者不需擁有一個 <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>。</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThread_acquire_lock">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThread_acquire_lock</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThread_type_lock" title="PyThread_type_lock"><span class="n"><span class="pre">PyThread_type_lock</span></span></a><span class="w"> </span><span class="n"><span class="pre">lock</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">waitflag</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThread_acquire_lock" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Acquire <em>lock</em>.</p>
+<p>If <em>waitflag</em> is <code class="docutils literal notranslate"><span class="pre">1</span></code> and another thread currently holds the lock, this
+function will wait until the lock can be acquired and will always return
+<code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<p>If <em>waitflag</em> is <code class="docutils literal notranslate"><span class="pre">0</span></code> and another thread holds the lock, this function will
+not wait and instead return <code class="docutils literal notranslate"><span class="pre">0</span></code>. If the lock is not held by any other
+thread, then this function will acquire it and return <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<p>Unlike <a class="reference internal" href="#c.PyThread_acquire_lock_timed" title="PyThread_acquire_lock_timed"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThread_acquire_lock_timed()</span></code></a>, acquiring the lock cannot be
+interrupted by a signal.</p>
+<p>呼叫者不需擁有一個 <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>。</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThread_release_lock">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThread_release_lock</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThread_type_lock" title="PyThread_type_lock"><span class="n"><span class="pre">PyThread_type_lock</span></span></a><span class="w"> </span><span class="n"><span class="pre">lock</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThread_release_lock" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Release <em>lock</em>. If <em>lock</em> is not held, then this function issues a
+fatal error.</p>
+<p>呼叫者不需擁有一個 <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>。</p>
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">同步原語</a><ul>
+<li><a class="reference internal" href="#python-critical-section-api">Python critical section API</a></li>
+<li><a class="reference internal" href="#legacy-locking-apis">Legacy locking APIs</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="threads.html"
+                          title="上一章">執行緒狀態與全域直譯器鎖</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="tls.html"
+                          title="下一章">執行緒局部儲存的支援</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "c-api/synchronization.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/c-api/synchronization.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/c-api/synchronization.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="tls.html" title="執行緒局部儲存的支援"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="threads.html" title="執行緒狀態與全域直譯器鎖"
+             >上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.4 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python/C API 參考手冊</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">同步原語</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; <a href="../copyright.html">版權所有</a> 2001 Python Software Foundation.
+    <br>
+    此頁面採用 Python 軟體基金會授權條款第 2 版。
+    <br>
+    文件中的範例、應用技巧與其他程式碼額外採用了 Zero Clause BSD 授權條款。
+    <br>
+    
+      更多訊息請見<a href="/license.html">歷史與授權條款</a>。<br>
+    
+    
+    <br>
+
+    Python 軟體基金會是一家非營利法人。
+<a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
+<br>
+    <br>
+      最後更新於 4月 08, 2026 (03:53 UTC)。
+    
+      <a href="/bugs.html">發現 bug</a>？
+    
+    <br>
+
+    以 <a href="https://www.sphinx-doc.org/">Sphinx</a>8.2.3建立。 
+    </div>
+
+  </body>
+</html>

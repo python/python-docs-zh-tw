@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>執行緒狀態與全域直譯器鎖 &#8212; Python 3.14.4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=82640b3f" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
+    
+    <script src="../_static/documentation_options.js?v=9e923c91"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.14.4 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權所有" href="../copyright.html" />
+    <link rel="next" title="同步原語" href="synchronization.html" />
+    <link rel="prev" title="直譯器的初始化與終結化" href="interp-lifecycle.html" />
+    
+      
+      <link rel="canonical" href="https://docs.python.org/3/c-api/threads.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="../_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="../_static/py.svg">
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script>
+            <script type="text/javascript" src="../_static/search-focus.js"></script>
+            <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="選單">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="../_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"></span>
+            <form role="search" class="search" action="../search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q">
+                <input type="submit" value="前往">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+            
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">執行緒狀態與全域直譯器鎖</a><ul>
+<li><a class="reference internal" href="#detaching-the-thread-state-from-extension-code">Detaching the thread state from extension code</a><ul>
+<li><a class="reference internal" href="#apis">APIs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#non-python-created-threads">Non-Python created threads</a></li>
+<li><a class="reference internal" href="#legacy-api">Legacy API</a></li>
+<li><a class="reference internal" href="#cautions-about-fork">Cautions about fork()</a></li>
+<li><a class="reference internal" href="#high-level-apis">High-level APIs</a></li>
+<li><a class="reference internal" href="#gil-state-apis">GIL 狀態 API</a></li>
+<li><a class="reference internal" href="#low-level-apis">低階 API</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#asynchronous-notifications">Asynchronous notifications</a></li>
+<li><a class="reference internal" href="#operating-system-thread-apis">作業系統執行緒 API</a></li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="interp-lifecycle.html"
+                          title="上一章">直譯器的初始化與終結化</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="synchronization.html"
+                          title="下一章">同步原語</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "c-api/threads.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/c-api/threads.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/c-api/threads.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="synchronization.html" title="同步原語"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="interp-lifecycle.html" title="直譯器的初始化與終結化"
+             accesskey="P">上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.4 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python/C API 參考手冊</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">執行緒狀態與全域直譯器鎖</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="thread-states-and-the-global-interpreter-lock">
+<span id="threads"></span><h1>執行緒狀態與全域直譯器鎖<a class="headerlink" href="#thread-states-and-the-global-interpreter-lock" title="連結到這個標頭">¶</a></h1>
+<p id="index-0">Unless on a <a class="reference internal" href="../glossary.html#term-free-threaded-build"><span class="xref std std-term">free-threaded build</span></a> of <a class="reference internal" href="../glossary.html#term-CPython"><span class="xref std std-term">CPython</span></a>,
+the Python interpreter is generally not thread-safe.  In order to support
+multi-threaded Python programs, there's a global lock, called the <a class="reference internal" href="../glossary.html#term-global-interpreter-lock"><span class="xref std std-term">global
+interpreter lock</span></a> or <a class="reference internal" href="../glossary.html#term-GIL"><span class="xref std std-term">GIL</span></a>, that must be held by a thread before
+accessing Python objects. Without the lock, even the simplest operations
+could cause problems in a multi-threaded program: for example, when
+two threads simultaneously increment the reference count of the same object, the
+reference count could end up being incremented only once instead of twice.</p>
+<p>As such, only a thread that holds the GIL may operate on Python objects or
+invoke Python's C API.</p>
+<p id="index-1">In order to emulate concurrency, the interpreter regularly tries to switch
+threads between bytecode instructions (see <a class="reference internal" href="../library/sys.html#sys.setswitchinterval" title="sys.setswitchinterval"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.setswitchinterval()</span></code></a>).
+This is why locks are also necessary for thread-safety in pure-Python code.</p>
+<p>Additionally, the global interpreter lock is released around blocking I/O
+operations, such as reading or writing to a file. From the C API, this is done
+by <a class="reference internal" href="#detaching-thread-state"><span class="std std-ref">detaching the thread state</span></a>.</p>
+<p id="index-2">The Python interpreter keeps some thread-local information inside
+a data structure called <a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyThreadState</span></code></a>, known as a <a class="reference internal" href="../glossary.html#term-thread-state"><span class="xref std std-term">thread state</span></a>.
+Each thread has a thread-local pointer to a <a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyThreadState</span></code></a>; a thread state
+referenced by this pointer is considered to be <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached</span></a>.</p>
+<p>A thread can only have one <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a> at a time. An attached
+thread state is typically analogous with holding the GIL, except on
+free-threaded builds.  On builds with the GIL enabled, attaching a thread state
+will block until the GIL can be acquired. However, even on builds with the GIL
+disabled, it is still required to have an attached thread state, as the interpreter
+needs to keep track of which threads may access Python objects.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Even on the free-threaded build, attaching a thread state may block, as the
+GIL can be re-enabled or threads might be temporarily suspended (such as during
+a garbage collection).</p>
+</div>
+<p>Generally, there will always be an attached thread state when using Python's
+C API, including during embedding and when implementing methods, so it's uncommon
+to need to set up a thread state on your own. Only in some specific cases, such
+as in a <a class="reference internal" href="#c.Py_BEGIN_ALLOW_THREADS" title="Py_BEGIN_ALLOW_THREADS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_BEGIN_ALLOW_THREADS</span></code></a> block or in a fresh thread, will the
+thread not have an attached thread state.
+If uncertain, check if <a class="reference internal" href="#c.PyThreadState_GetUnchecked" title="PyThreadState_GetUnchecked"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_GetUnchecked()</span></code></a> returns <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.</p>
+<p>If it turns out that you do need to create a thread state, call <a class="reference internal" href="#c.PyThreadState_New" title="PyThreadState_New"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_New()</span></code></a>
+followed by <a class="reference internal" href="#c.PyThreadState_Swap" title="PyThreadState_Swap"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_Swap()</span></code></a>, or use the dangerous
+<a class="reference internal" href="#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a> function.</p>
+<section id="detaching-the-thread-state-from-extension-code">
+<span id="detaching-thread-state"></span><h2>Detaching the thread state from extension code<a class="headerlink" href="#detaching-the-thread-state-from-extension-code" title="連結到這個標頭">¶</a></h2>
+<p>Most extension code manipulating the <a class="reference internal" href="../glossary.html#term-thread-state"><span class="xref std std-term">thread state</span></a> has the following simple
+structure:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">Save</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="n">in</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="n">variable</span><span class="p">.</span>
+<span class="p">...</span><span class="w"> </span><span class="n">Do</span><span class="w"> </span><span class="n">some</span><span class="w"> </span><span class="n">blocking</span><span class="w"> </span><span class="n">I</span><span class="o">/</span><span class="n">O</span><span class="w"> </span><span class="n">operation</span><span class="w"> </span><span class="p">...</span>
+<span class="n">Restore</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="kr">thread</span><span class="w"> </span><span class="n">state</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">local</span><span class="w"> </span><span class="n">variable</span><span class="p">.</span>
+</pre></div>
+</div>
+<p>This is so common that a pair of macros exists to simplify it:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">Py_BEGIN_ALLOW_THREADS</span>
+<span class="p">...</span><span class="w"> </span><span class="n">Do</span><span class="w"> </span><span class="n">some</span><span class="w"> </span><span class="n">blocking</span><span class="w"> </span><span class="n">I</span><span class="o">/</span><span class="n">O</span><span class="w"> </span><span class="n">operation</span><span class="w"> </span><span class="p">...</span>
+<span class="n">Py_END_ALLOW_THREADS</span>
+</pre></div>
+</div>
+<p id="index-3">The <a class="reference internal" href="#c.Py_BEGIN_ALLOW_THREADS" title="Py_BEGIN_ALLOW_THREADS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_BEGIN_ALLOW_THREADS</span></code></a> macro opens a new block and declares a
+hidden local variable; the <a class="reference internal" href="#c.Py_END_ALLOW_THREADS" title="Py_END_ALLOW_THREADS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_END_ALLOW_THREADS</span></code></a> macro closes the
+block.</p>
+<p>The block above expands to the following code:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyThreadState</span><span class="w"> </span><span class="o">*</span><span class="n">_save</span><span class="p">;</span>
+
+<span class="n">_save</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyEval_SaveThread</span><span class="p">();</span>
+<span class="p">...</span><span class="w"> </span><span class="n">Do</span><span class="w"> </span><span class="n">some</span><span class="w"> </span><span class="n">blocking</span><span class="w"> </span><span class="n">I</span><span class="o">/</span><span class="n">O</span><span class="w"> </span><span class="n">operation</span><span class="w"> </span><span class="p">...</span>
+<span class="n">PyEval_RestoreThread</span><span class="p">(</span><span class="n">_save</span><span class="p">);</span>
+</pre></div>
+</div>
+<p id="index-4">Here is how these functions work:</p>
+<p>The attached thread state implies that the GIL is held for the interpreter.
+To detach it, <a class="reference internal" href="#c.PyEval_SaveThread" title="PyEval_SaveThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SaveThread()</span></code></a> is called and the result is stored
+in a local variable.</p>
+<p>By detaching the thread state, the GIL is released, which allows other threads
+to attach to the interpreter and execute while the current thread performs
+blocking I/O. When the I/O operation is complete, the old thread state is
+reattached by calling <a class="reference internal" href="#c.PyEval_RestoreThread" title="PyEval_RestoreThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_RestoreThread()</span></code></a>, which will wait until
+the GIL can be acquired.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Performing blocking I/O is the most common use case for detaching
+the thread state, but it is also useful to call it over long-running
+native code that doesn't need access to Python objects or Python's C API.
+For example, the standard <a class="reference internal" href="../library/zlib.html#module-zlib" title="zlib: Low-level interface to compression and decompression routines compatible with gzip."><code class="xref py py-mod docutils literal notranslate"><span class="pre">zlib</span></code></a> and <a class="reference internal" href="../library/hashlib.html#module-hashlib" title="hashlib: Secure hash and message digest algorithms."><code class="xref py py-mod docutils literal notranslate"><span class="pre">hashlib</span></code></a> modules detach the
+<a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">thread state</span></a> when compressing or hashing
+data.</p>
+</div>
+<p>On a <a class="reference internal" href="../glossary.html#term-free-threaded-build"><span class="xref std std-term">free-threaded build</span></a>, the <a class="reference internal" href="../glossary.html#term-GIL"><span class="xref std std-term">GIL</span></a> is usually out of the question,
+but <strong>detaching the thread state is still required</strong>, because the interpreter
+periodically needs to block all threads to get a consistent view of Python objects
+without the risk of race conditions.
+For example, CPython currently suspends all threads for a short period of time
+while running the garbage collector.</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>Detaching the thread state can lead to unexpected behavior during interpreter
+finalization. See <a class="reference internal" href="interp-lifecycle.html#cautions-regarding-runtime-finalization"><span class="std std-ref">Cautions regarding runtime finalization</span></a> for more
+details.</p>
+</div>
+<section id="apis">
+<h3>APIs<a class="headerlink" href="#apis" title="連結到這個標頭">¶</a></h3>
+<p>The following macros are normally used without a trailing semicolon; look for
+example usage in the Python source distribution.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>These macros are still necessary on the <a class="reference internal" href="../glossary.html#term-free-threaded-build"><span class="xref std std-term">free-threaded build</span></a> to prevent
+deadlocks.</p>
+</div>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.Py_BEGIN_ALLOW_THREADS">
+<span class="sig-name descname"><span class="n"><span class="pre">Py_BEGIN_ALLOW_THREADS</span></span></span><a class="headerlink" href="#c.Py_BEGIN_ALLOW_THREADS" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>This macro expands to <code class="docutils literal notranslate"><span class="pre">{</span> <span class="pre">PyThreadState</span> <span class="pre">*_save;</span> <span class="pre">_save</span> <span class="pre">=</span> <span class="pre">PyEval_SaveThread();</span></code>.
+Note that it contains an opening brace; it must be matched with a following
+<a class="reference internal" href="#c.Py_END_ALLOW_THREADS" title="Py_END_ALLOW_THREADS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_END_ALLOW_THREADS</span></code></a> macro.  See above for further discussion of this
+macro.</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.Py_END_ALLOW_THREADS">
+<span class="sig-name descname"><span class="n"><span class="pre">Py_END_ALLOW_THREADS</span></span></span><a class="headerlink" href="#c.Py_END_ALLOW_THREADS" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>This macro expands to <code class="docutils literal notranslate"><span class="pre">PyEval_RestoreThread(_save);</span> <span class="pre">}</span></code>. Note that it contains
+a closing brace; it must be matched with an earlier
+<a class="reference internal" href="#c.Py_BEGIN_ALLOW_THREADS" title="Py_BEGIN_ALLOW_THREADS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_BEGIN_ALLOW_THREADS</span></code></a> macro.  See above for further discussion of
+this macro.</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.Py_BLOCK_THREADS">
+<span class="sig-name descname"><span class="n"><span class="pre">Py_BLOCK_THREADS</span></span></span><a class="headerlink" href="#c.Py_BLOCK_THREADS" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>This macro expands to <code class="docutils literal notranslate"><span class="pre">PyEval_RestoreThread(_save);</span></code>: it is equivalent to
+<a class="reference internal" href="#c.Py_END_ALLOW_THREADS" title="Py_END_ALLOW_THREADS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_END_ALLOW_THREADS</span></code></a> without the closing brace.</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.Py_UNBLOCK_THREADS">
+<span class="sig-name descname"><span class="n"><span class="pre">Py_UNBLOCK_THREADS</span></span></span><a class="headerlink" href="#c.Py_UNBLOCK_THREADS" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>This macro expands to <code class="docutils literal notranslate"><span class="pre">_save</span> <span class="pre">=</span> <span class="pre">PyEval_SaveThread();</span></code>: it is equivalent to
+<a class="reference internal" href="#c.Py_BEGIN_ALLOW_THREADS" title="Py_BEGIN_ALLOW_THREADS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_BEGIN_ALLOW_THREADS</span></code></a> without the opening brace and variable
+declaration.</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="non-python-created-threads">
+<h2>Non-Python created threads<a class="headerlink" href="#non-python-created-threads" title="連結到這個標頭">¶</a></h2>
+<p>When threads are created using the dedicated Python APIs (such as the
+<a class="reference internal" href="../library/threading.html#module-threading" title="threading: Thread-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code></a> module), a thread state is automatically associated with them,
+However, when a thread is created from native code (for example, by a
+third-party library with its own thread management), it doesn't hold an
+attached thread state.</p>
+<p>If you need to call Python code from these threads (often this will be part
+of a callback API provided by the aforementioned third-party library),
+you must first register these threads with the interpreter by
+creating a new thread state and attaching it.</p>
+<p>The most robust way to do this is through <a class="reference internal" href="#c.PyThreadState_New" title="PyThreadState_New"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_New()</span></code></a> followed
+by <a class="reference internal" href="#c.PyThreadState_Swap" title="PyThreadState_Swap"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_Swap()</span></code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p><code class="docutils literal notranslate"><span class="pre">PyThreadState_New</span></code> requires an argument pointing to the desired
+interpreter; such a pointer can be acquired via a call to
+<a class="reference internal" href="subinterpreters.html#c.PyInterpreterState_Get" title="PyInterpreterState_Get"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyInterpreterState_Get()</span></code></a> from the code where the thread was
+created.</p>
+</div>
+<p>For example:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cm">/* The return value of PyInterpreterState_Get() from the</span>
+<span class="cm">   function that created this thread. */</span>
+<span class="n">PyInterpreterState</span><span class="w"> </span><span class="o">*</span><span class="n">interp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">thread_data</span><span class="o">-&gt;</span><span class="n">interp</span><span class="p">;</span>
+
+<span class="cm">/* Create a new thread state for the interpreter. It does not start out</span>
+<span class="cm">   attached. */</span>
+<span class="n">PyThreadState</span><span class="w"> </span><span class="o">*</span><span class="n">tstate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyThreadState_New</span><span class="p">(</span><span class="n">interp</span><span class="p">);</span>
+
+<span class="cm">/* Attach the thread state, which will acquire the GIL. */</span>
+<span class="n">PyThreadState_Swap</span><span class="p">(</span><span class="n">tstate</span><span class="p">);</span>
+
+<span class="cm">/* Perform Python actions here. */</span>
+<span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CallSomeFunction</span><span class="p">();</span>
+<span class="cm">/* evaluate result or handle exception */</span>
+
+<span class="cm">/* Destroy the thread state. No Python API allowed beyond this point. */</span>
+<span class="n">PyThreadState_Clear</span><span class="p">(</span><span class="n">tstate</span><span class="p">);</span>
+<span class="n">PyThreadState_DeleteCurrent</span><span class="p">();</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>If the interpreter finalized before <code class="docutils literal notranslate"><span class="pre">PyThreadState_Swap</span></code> was called, then
+<code class="docutils literal notranslate"><span class="pre">interp</span></code> will be a dangling pointer!</p>
+</div>
+</section>
+<section id="legacy-api">
+<span id="gilstate"></span><h2>Legacy API<a class="headerlink" href="#legacy-api" title="連結到這個標頭">¶</a></h2>
+<p>Another common pattern to call Python code from a non-Python thread is to use
+<a class="reference internal" href="#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a> followed by a call to <a class="reference internal" href="#c.PyGILState_Release" title="PyGILState_Release"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Release()</span></code></a>.</p>
+<p>These functions do not work well when multiple interpreters exist in the Python
+process. If no Python interpreter has ever been used in the current thread (which
+is common for threads created outside Python), <code class="docutils literal notranslate"><span class="pre">PyGILState_Ensure</span></code> will create
+and attach a thread state for the &quot;main&quot; interpreter (the first interpreter in
+the Python process).</p>
+<p>Additionally, these functions have thread-safety issues during interpreter
+finalization. Using <code class="docutils literal notranslate"><span class="pre">PyGILState_Ensure</span></code> during finalization will likely
+crash the process.</p>
+<p>Usage of these functions look like such:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyGILState_STATE</span><span class="w"> </span><span class="n">gstate</span><span class="p">;</span>
+<span class="n">gstate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyGILState_Ensure</span><span class="p">();</span>
+
+<span class="cm">/* Perform Python actions here. */</span>
+<span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">CallSomeFunction</span><span class="p">();</span>
+<span class="cm">/* evaluate result or handle exception */</span>
+
+<span class="cm">/* Release the thread. No Python API allowed beyond this point. */</span>
+<span class="n">PyGILState_Release</span><span class="p">(</span><span class="n">gstate</span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="cautions-about-fork">
+<span id="fork-and-threads"></span><h2>Cautions about fork()<a class="headerlink" href="#cautions-about-fork" title="連結到這個標頭">¶</a></h2>
+<p>Another important thing to note about threads is their behaviour in the face
+of the C <code class="xref c c-func docutils literal notranslate"><span class="pre">fork()</span></code> call. On most systems with <code class="xref c c-func docutils literal notranslate"><span class="pre">fork()</span></code>, after a
+process forks only the thread that issued the fork will exist.  This has a
+concrete impact both on how locks must be handled and on all stored state
+in CPython's runtime.</p>
+<p>The fact that only the &quot;current&quot; thread remains
+means any locks held by other threads will never be released. Python solves
+this for <a class="reference internal" href="../library/os.html#os.fork" title="os.fork"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.fork()</span></code></a> by acquiring the locks it uses internally before
+the fork, and releasing them afterwards. In addition, it resets any
+<a class="reference internal" href="../library/threading.html#lock-objects"><span class="std std-ref">Lock 物件</span></a> in the child. When extending or embedding Python, there
+is no way to inform Python of additional (non-Python) locks that need to be
+acquired before or reset after a fork. OS facilities such as
+<code class="xref c c-func docutils literal notranslate"><span class="pre">pthread_atfork()</span></code> would need to be used to accomplish the same thing.
+Additionally, when extending or embedding Python, calling <code class="xref c c-func docutils literal notranslate"><span class="pre">fork()</span></code>
+directly rather than through <a class="reference internal" href="../library/os.html#os.fork" title="os.fork"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.fork()</span></code></a> (and returning to or calling
+into Python) may result in a deadlock by one of Python's internal locks
+being held by a thread that is defunct after the fork.
+<a class="reference internal" href="sys.html#c.PyOS_AfterFork_Child" title="PyOS_AfterFork_Child"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyOS_AfterFork_Child()</span></code></a> tries to reset the necessary locks, but is not
+always able to.</p>
+<p>The fact that all other threads go away also means that CPython's
+runtime state there must be cleaned up properly, which <a class="reference internal" href="../library/os.html#os.fork" title="os.fork"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.fork()</span></code></a>
+does.  This means finalizing all other <a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyThreadState</span></code></a> objects
+belonging to the current interpreter and all other
+<a class="reference internal" href="subinterpreters.html#c.PyInterpreterState" title="PyInterpreterState"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyInterpreterState</span></code></a> objects.  Due to this and the special
+nature of the <a class="reference internal" href="subinterpreters.html#sub-interpreter-support"><span class="std std-ref">&quot;main&quot; interpreter</span></a>,
+<code class="xref c c-func docutils literal notranslate"><span class="pre">fork()</span></code> should only be called in that interpreter's &quot;main&quot;
+thread, where the CPython global runtime was originally initialized.
+The only exception is if <code class="xref c c-func docutils literal notranslate"><span class="pre">exec()</span></code> will be called immediately
+after.</p>
+</section>
+<section id="high-level-apis">
+<h2>High-level APIs<a class="headerlink" href="#high-level-apis" title="連結到這個標頭">¶</a></h2>
+<p>These are the most commonly used types and functions when writing multi-threaded
+C extensions.</p>
+<dl class="c type">
+<dt class="sig sig-object c" id="c.PyThreadState">
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThreadState</span></span></span><a class="headerlink" href="#c.PyThreadState" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">受限 API 的一部分</span></a> （做為一個不透明結構 (opaque struct)）.</em><p>This data structure represents the state of a single thread.  The only public
+data member is:</p>
+<dl class="c member">
+<dt class="sig sig-object c" id="c.PyThreadState.interp">
+<a class="reference internal" href="subinterpreters.html#c.PyInterpreterState" title="PyInterpreterState"><span class="n"><span class="pre">PyInterpreterState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">interp</span></span></span><a class="headerlink" href="#c.PyThreadState.interp" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>這個執行緒的直譯器狀態。</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyEval_InitThreads">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyEval_InitThreads</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyEval_InitThreads" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p id="index-5">已棄用的函式，什麼也不做。</p>
+<p>In Python 3.6 and older, this function created the GIL if it didn't exist.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.9 版的變更: </span>此函式現在不會做任何事情。</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.7 版的變更: </span>This function is now called by <a class="reference internal" href="interp-lifecycle.html#c.Py_Initialize" title="Py_Initialize"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_Initialize()</span></code></a>, so you don't
+have to call it yourself anymore.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.2 版的變更: </span>This function cannot be called before <a class="reference internal" href="interp-lifecycle.html#c.Py_Initialize" title="Py_Initialize"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_Initialize()</span></code></a> anymore.</p>
+</div>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">在 3.9 版之後被棄用.</span></p>
+</div>
+<span class="target" id="index-6"></span></dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyEval_SaveThread">
+<a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyEval_SaveThread</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyEval_SaveThread" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Detach the <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a> and return it.
+The thread will have no <a class="reference internal" href="../glossary.html#term-thread-state"><span class="xref std std-term">thread state</span></a> upon returning.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyEval_RestoreThread">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyEval_RestoreThread</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">tstate</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyEval_RestoreThread" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Set the <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a> to <em>tstate</em>.
+The passed <a class="reference internal" href="../glossary.html#term-thread-state"><span class="xref std std-term">thread state</span></a> <strong>should not</strong> be <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached</span></a>,
+otherwise deadlock ensues. <em>tstate</em> will be attached upon returning.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Calling this function from a thread when the runtime is finalizing will
+hang the thread until the program exits, even if the thread was not
+created by Python.  Refer to
+<a class="reference internal" href="interp-lifecycle.html#cautions-regarding-runtime-finalization"><span class="std std-ref">Cautions regarding runtime finalization</span></a> for more details.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.14 版的變更: </span>Hangs the current thread, rather than terminating it, if called while the
+interpreter is finalizing.</p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThreadState_Get">
+<a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyThreadState_Get</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThreadState_Get" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Return the <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>. If the thread has no attached
+thread state, (such as when inside of <a class="reference internal" href="#c.Py_BEGIN_ALLOW_THREADS" title="Py_BEGIN_ALLOW_THREADS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_BEGIN_ALLOW_THREADS</span></code></a>
+block), then this issues a fatal error (so that the caller needn't check
+for <code class="docutils literal notranslate"><span class="pre">NULL</span></code>).</p>
+<p>也請見 <a class="reference internal" href="#c.PyThreadState_GetUnchecked" title="PyThreadState_GetUnchecked"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_GetUnchecked()</span></code></a>。</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThreadState_GetUnchecked">
+<a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyThreadState_GetUnchecked</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThreadState_GetUnchecked" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Similar to <a class="reference internal" href="#c.PyThreadState_Get" title="PyThreadState_Get"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_Get()</span></code></a>, but don't kill the process with a
+fatal error if it is NULL. The caller is responsible to check if the result
+is NULL.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入: </span>在 Python 3.5 到 3.12 中，此函式是私有的，被稱為 <code class="docutils literal notranslate"><span class="pre">_PyThreadState_UncheckedGet()</span></code>。</p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThreadState_Swap">
+<a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyThreadState_Swap</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">tstate</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThreadState_Swap" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Set the <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a> to <em>tstate</em>, and return the
+<a class="reference internal" href="../glossary.html#term-thread-state"><span class="xref std std-term">thread state</span></a> that was attached prior to calling.</p>
+<p>This function is safe to call without an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>; it
+will simply return <code class="docutils literal notranslate"><span class="pre">NULL</span></code> indicating that there was no prior thread state.</p>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><a class="reference internal" href="#c.PyEval_ReleaseThread" title="PyEval_ReleaseThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_ReleaseThread()</span></code></a></p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Similar to <a class="reference internal" href="#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a>, this function will hang the
+thread if the runtime is finalizing.</p>
+</div>
+</dd></dl>
+
+</section>
+<section id="gil-state-apis">
+<h2>GIL 狀態 API<a class="headerlink" href="#gil-state-apis" title="連結到這個標頭">¶</a></h2>
+<p>The following functions use thread-local storage, and are not compatible
+with sub-interpreters:</p>
+<dl class="c type">
+<dt class="sig sig-object c" id="c.PyGILState_STATE">
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyGILState_STATE</span></span></span><a class="headerlink" href="#c.PyGILState_STATE" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>The type of the value returned by <a class="reference internal" href="#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a> and passed to
+<a class="reference internal" href="#c.PyGILState_Release" title="PyGILState_Release"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Release()</span></code></a>.</p>
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.PyGILState_STATE.PyGILState_LOCKED">
+<span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyGILState_LOCKED</span></span></span><a class="headerlink" href="#c.PyGILState_STATE.PyGILState_LOCKED" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The GIL was already held when <a class="reference internal" href="#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a> was called.</p>
+</dd></dl>
+
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.PyGILState_STATE.PyGILState_UNLOCKED">
+<span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyGILState_UNLOCKED</span></span></span><a class="headerlink" href="#c.PyGILState_STATE.PyGILState_UNLOCKED" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The GIL was not held when <a class="reference internal" href="#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a> was called.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyGILState_Ensure">
+<a class="reference internal" href="#c.PyGILState_STATE" title="PyGILState_STATE"><span class="n"><span class="pre">PyGILState_STATE</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyGILState_Ensure</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyGILState_Ensure" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Ensure that the current thread is ready to call the Python C API regardless
+of the current state of Python, or of the <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>. This may
+be called as many times as desired by a thread as long as each call is
+matched with a call to <a class="reference internal" href="#c.PyGILState_Release" title="PyGILState_Release"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Release()</span></code></a>. In general, other
+thread-related APIs may be used between <a class="reference internal" href="#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a> and
+<a class="reference internal" href="#c.PyGILState_Release" title="PyGILState_Release"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Release()</span></code></a> calls as long as the thread state is restored to
+its previous state before the Release().  For example, normal usage of the
+<a class="reference internal" href="#c.Py_BEGIN_ALLOW_THREADS" title="Py_BEGIN_ALLOW_THREADS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_BEGIN_ALLOW_THREADS</span></code></a> and <a class="reference internal" href="#c.Py_END_ALLOW_THREADS" title="Py_END_ALLOW_THREADS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_END_ALLOW_THREADS</span></code></a> macros is
+acceptable.</p>
+<p>The return value is an opaque &quot;handle&quot; to the <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a> when
+<a class="reference internal" href="#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a> was called, and must be passed to
+<a class="reference internal" href="#c.PyGILState_Release" title="PyGILState_Release"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Release()</span></code></a> to ensure Python is left in the same state. Even
+though recursive calls are allowed, these handles <em>cannot</em> be shared - each
+unique call to <a class="reference internal" href="#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a> must save the handle for its call
+to <a class="reference internal" href="#c.PyGILState_Release" title="PyGILState_Release"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Release()</span></code></a>.</p>
+<p>When the function returns, there will be an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>
+and the thread will be able to call arbitrary Python code.  Failure is a fatal error.</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>Calling this function when the runtime is finalizing is unsafe. Doing
+so will either hang the thread until the program ends, or fully crash
+the interpreter in rare cases. Refer to
+<a class="reference internal" href="interp-lifecycle.html#cautions-regarding-runtime-finalization"><span class="std std-ref">Cautions regarding runtime finalization</span></a> for more details.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.14 版的變更: </span>Hangs the current thread, rather than terminating it, if called while the
+interpreter is finalizing.</p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyGILState_Release">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyGILState_Release</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyGILState_STATE" title="PyGILState_STATE"><span class="n"><span class="pre">PyGILState_STATE</span></span></a><span class="sig-paren">)</span><a class="headerlink" href="#c.PyGILState_Release" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Release any resources previously acquired.  After this call, Python's state will
+be the same as it was prior to the corresponding <a class="reference internal" href="#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a> call
+(but generally this state will be unknown to the caller, hence the use of the
+GILState API).</p>
+<p>Every call to <a class="reference internal" href="#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a> must be matched by a call to
+<a class="reference internal" href="#c.PyGILState_Release" title="PyGILState_Release"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Release()</span></code></a> on the same thread.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyGILState_GetThisThreadState">
+<a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyGILState_GetThisThreadState</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyGILState_GetThisThreadState" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Get the <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a> for this thread.  May return <code class="docutils literal notranslate"><span class="pre">NULL</span></code> if no
+GILState API has been used on the current thread.  Note that the main thread
+always has such a thread-state, even if no auto-thread-state call has been
+made on the main thread.  This is mainly a helper/diagnostic function.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>This function may return non-<code class="docutils literal notranslate"><span class="pre">NULL</span></code> even when the <a class="reference internal" href="../glossary.html#term-thread-state"><span class="xref std std-term">thread state</span></a>
+is detached.
+Prefer <a class="reference internal" href="#c.PyThreadState_Get" title="PyThreadState_Get"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_Get()</span></code></a> or <a class="reference internal" href="#c.PyThreadState_GetUnchecked" title="PyThreadState_GetUnchecked"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_GetUnchecked()</span></code></a>
+for most cases.</p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><a class="reference internal" href="#c.PyThreadState_Get" title="PyThreadState_Get"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_Get()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyGILState_Check">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyGILState_Check</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyGILState_Check" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">1</span></code> if the current thread is holding the <a class="reference internal" href="../glossary.html#term-GIL"><span class="xref std std-term">GIL</span></a> and <code class="docutils literal notranslate"><span class="pre">0</span></code> otherwise.
+This function can be called from any thread at any time.
+Only if it has had its <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">thread state</span></a> initialized
+via <a class="reference internal" href="#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a> will it return <code class="docutils literal notranslate"><span class="pre">1</span></code>.
+This is mainly a helper/diagnostic function.  It can be useful
+for example in callback contexts or memory allocation functions when
+knowing that the <a class="reference internal" href="../glossary.html#term-GIL"><span class="xref std std-term">GIL</span></a> is locked can allow the caller to perform sensitive
+actions or otherwise behave differently.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>If the current Python process has ever created a subinterpreter, this
+function will <em>always</em> return <code class="docutils literal notranslate"><span class="pre">1</span></code>. Prefer <a class="reference internal" href="#c.PyThreadState_GetUnchecked" title="PyThreadState_GetUnchecked"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_GetUnchecked()</span></code></a>
+for most cases.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.4 版被加入.</span></p>
+</div>
+</dd></dl>
+
+</section>
+<section id="low-level-apis">
+<h2>低階 API<a class="headerlink" href="#low-level-apis" title="連結到這個標頭">¶</a></h2>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThreadState_New">
+<a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyThreadState_New</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="subinterpreters.html#c.PyInterpreterState" title="PyInterpreterState"><span class="n"><span class="pre">PyInterpreterState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">interp</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThreadState_New" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Create a new thread state object belonging to the given interpreter object.
+An <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a> is not needed.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThreadState_Clear">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThreadState_Clear</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">tstate</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThreadState_Clear" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Reset all information in a <a class="reference internal" href="../glossary.html#term-thread-state"><span class="xref std std-term">thread state</span></a> object.  <em>tstate</em>
+must be <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached</span></a></p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.9 版的變更: </span>This function now calls the <code class="xref c c-member docutils literal notranslate"><span class="pre">PyThreadState.on_delete</span></code> callback.
+Previously, that happened in <a class="reference internal" href="#c.PyThreadState_Delete" title="PyThreadState_Delete"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_Delete()</span></code></a>.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.13 版的變更: </span><code class="xref c c-member docutils literal notranslate"><span class="pre">PyThreadState.on_delete</span></code> 回呼已被移除。</p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThreadState_Delete">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThreadState_Delete</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">tstate</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThreadState_Delete" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Destroy a <a class="reference internal" href="../glossary.html#term-thread-state"><span class="xref std std-term">thread state</span></a> object.  <em>tstate</em> should not
+be <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached</span></a> to any thread.
+<em>tstate</em> must have been reset with a previous call to
+<a class="reference internal" href="#c.PyThreadState_Clear" title="PyThreadState_Clear"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_Clear()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThreadState_DeleteCurrent">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThreadState_DeleteCurrent</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThreadState_DeleteCurrent" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Detach the <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a> (which must have been reset
+with a previous call to <a class="reference internal" href="#c.PyThreadState_Clear" title="PyThreadState_Clear"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_Clear()</span></code></a>) and then destroy it.</p>
+<p>No <a class="reference internal" href="../glossary.html#term-thread-state"><span class="xref std std-term">thread state</span></a> will be <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached</span></a> upon
+returning.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThreadState_GetFrame">
+<a class="reference internal" href="frame.html#c.PyFrameObject" title="PyFrameObject"><span class="n"><span class="pre">PyFrameObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyThreadState_GetFrame</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">tstate</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThreadState_GetFrame" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.10 版本開始.</em><p>Get the current frame of the Python thread state <em>tstate</em>.</p>
+<p>Return a <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a>. Return <code class="docutils literal notranslate"><span class="pre">NULL</span></code> if no frame is currently
+executing.</p>
+<p>也請見 <a class="reference internal" href="reflection.html#c.PyEval_GetFrame" title="PyEval_GetFrame"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_GetFrame()</span></code></a>。</p>
+<p><em>tstate</em> must not be <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, and must be <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached</span></a>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.9 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThreadState_GetID">
+<span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThreadState_GetID</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">tstate</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThreadState_GetID" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.10 版本開始.</em><p>Get the unique <a class="reference internal" href="../glossary.html#term-thread-state"><span class="xref std std-term">thread state</span></a> identifier of the Python thread state <em>tstate</em>.</p>
+<p><em>tstate</em> must not be <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, and must be <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached</span></a>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.9 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThreadState_GetInterpreter">
+<a class="reference internal" href="subinterpreters.html#c.PyInterpreterState" title="PyInterpreterState"><span class="n"><span class="pre">PyInterpreterState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyThreadState_GetInterpreter</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">tstate</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThreadState_GetInterpreter" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.10 版本開始.</em><p>Get the interpreter of the Python thread state <em>tstate</em>.</p>
+<p><em>tstate</em> must not be <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, and must be <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached</span></a>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.9 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThreadState_EnterTracing">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThreadState_EnterTracing</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">tstate</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThreadState_EnterTracing" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Suspend tracing and profiling in the Python thread state <em>tstate</em>.</p>
+<p>Resume them using the <a class="reference internal" href="#c.PyThreadState_LeaveTracing" title="PyThreadState_LeaveTracing"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_LeaveTracing()</span></code></a> function.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.11 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThreadState_LeaveTracing">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThreadState_LeaveTracing</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">tstate</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThreadState_LeaveTracing" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Resume tracing and profiling in the Python thread state <em>tstate</em> suspended
+by the <a class="reference internal" href="#c.PyThreadState_EnterTracing" title="PyThreadState_EnterTracing"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_EnterTracing()</span></code></a> function.</p>
+<p>See also <a class="reference internal" href="profiling.html#c.PyEval_SetTrace" title="PyEval_SetTrace"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SetTrace()</span></code></a> and <a class="reference internal" href="profiling.html#c.PyEval_SetProfile" title="PyEval_SetProfile"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SetProfile()</span></code></a>
+functions.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.11 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyUnstable_ThreadState_SetStackProtection">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyUnstable_ThreadState_SetStackProtection</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">tstate</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">stack_start_addr</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n"><span class="pre">stack_size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyUnstable_ThreadState_SetStackProtection" title="連結到這個定義">¶</a><br /></dt>
+<dd><div class="unstable-c-api warning admonition">
+<em>這是 <a class="reference internal" href="stable.html#unstable-c-api"><span class="std std-ref">不穩定 API</span></a>，它可能在小版本發布中沒有任何警告地被變更。</em></div>
+<p>Set the stack protection start address and stack protection size
+of a Python thread state.</p>
+<p>On success, return <code class="docutils literal notranslate"><span class="pre">0</span></code>.
+On failure, set an exception and return <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p>
+<p>CPython implements <a class="reference internal" href="exceptions.html#recursion"><span class="std std-ref">recursion control</span></a> for C code by raising
+<a class="reference internal" href="../library/exceptions.html#RecursionError" title="RecursionError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RecursionError</span></code></a> when it notices that the machine execution stack is close
+to overflow. See for example the <a class="reference internal" href="exceptions.html#c.Py_EnterRecursiveCall" title="Py_EnterRecursiveCall"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_EnterRecursiveCall()</span></code></a> function.
+For this, it needs to know the location of the current thread's stack, which it
+normally gets from the operating system.
+When the stack is changed, for example using context switching techniques like the
+Boost library's <code class="docutils literal notranslate"><span class="pre">boost::context</span></code>, you must call
+<a class="reference internal" href="#c.PyUnstable_ThreadState_SetStackProtection" title="PyUnstable_ThreadState_SetStackProtection"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnstable_ThreadState_SetStackProtection()</span></code></a> to inform CPython of the change.</p>
+<p>Call <a class="reference internal" href="#c.PyUnstable_ThreadState_SetStackProtection" title="PyUnstable_ThreadState_SetStackProtection"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnstable_ThreadState_SetStackProtection()</span></code></a> either before
+or after changing the stack.
+Do not call any other Python C API between the call and the stack
+change.</p>
+<p>若要撤銷此操作，請參見 <a class="reference internal" href="#c.PyUnstable_ThreadState_ResetStackProtection" title="PyUnstable_ThreadState_ResetStackProtection"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnstable_ThreadState_ResetStackProtection()</span></code></a>。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.15 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyUnstable_ThreadState_ResetStackProtection">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyUnstable_ThreadState_ResetStackProtection</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">tstate</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyUnstable_ThreadState_ResetStackProtection" title="連結到這個定義">¶</a><br /></dt>
+<dd><div class="unstable-c-api warning admonition">
+<em>這是 <a class="reference internal" href="stable.html#unstable-c-api"><span class="std std-ref">不穩定 API</span></a>，它可能在小版本發布中沒有任何警告地被變更。</em></div>
+<p>Reset the stack protection start address and stack protection size
+of a Python thread state to the operating system defaults.</p>
+<p>請參見 <a class="reference internal" href="#c.PyUnstable_ThreadState_SetStackProtection" title="PyUnstable_ThreadState_SetStackProtection"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnstable_ThreadState_SetStackProtection()</span></code></a> 的說明。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.15 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThreadState_GetDict">
+<a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyThreadState_GetDict</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThreadState_GetDict" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="refcount return_borrowed_ref">回傳值：借用參照。</em><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Return a dictionary in which extensions can store thread-specific state
+information.  Each extension should use a unique key to use to store state in
+the dictionary.  It is okay to call this function when no <a class="reference internal" href="../glossary.html#term-thread-state"><span class="xref std std-term">thread state</span></a>
+is <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached</span></a>. If this function returns
+<code class="docutils literal notranslate"><span class="pre">NULL</span></code>, no exception has been raised and the caller should assume no
+thread state is attached.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyEval_AcquireThread">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyEval_AcquireThread</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">tstate</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyEval_AcquireThread" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p><a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">Attach</span></a> <em>tstate</em> to the current thread,
+which must not be <code class="docutils literal notranslate"><span class="pre">NULL</span></code> or already <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached</span></a>.</p>
+<p>The calling thread must not already have an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Calling this function from a thread when the runtime is finalizing will
+hang the thread until the program exits, even if the thread was not
+created by Python.  Refer to
+<a class="reference internal" href="interp-lifecycle.html#cautions-regarding-runtime-finalization"><span class="std std-ref">Cautions regarding runtime finalization</span></a> for more details.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.8 版的變更: </span>Updated to be consistent with <a class="reference internal" href="#c.PyEval_RestoreThread" title="PyEval_RestoreThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_RestoreThread()</span></code></a>,
+<a class="reference internal" href="#c.Py_END_ALLOW_THREADS" title="Py_END_ALLOW_THREADS"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_END_ALLOW_THREADS()</span></code></a>, and <a class="reference internal" href="#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a>,
+and terminate the current thread if called while the interpreter is finalizing.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.14 版的變更: </span>Hangs the current thread, rather than terminating it, if called while the
+interpreter is finalizing.</p>
+</div>
+<p><a class="reference internal" href="#c.PyEval_RestoreThread" title="PyEval_RestoreThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_RestoreThread()</span></code></a> is a higher-level function which is always
+available (even when threads have not been initialized).</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyEval_ReleaseThread">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyEval_ReleaseThread</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyThreadState" title="PyThreadState"><span class="n"><span class="pre">PyThreadState</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">tstate</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyEval_ReleaseThread" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Detach the <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>.
+The <em>tstate</em> argument, which must not be <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, is only used to check
+that it represents the <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a> --- if it isn't, a fatal error is
+reported.</p>
+<p><a class="reference internal" href="#c.PyEval_SaveThread" title="PyEval_SaveThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SaveThread()</span></code></a> is a higher-level function which is always
+available (even when threads have not been initialized).</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="asynchronous-notifications">
+<h1>Asynchronous notifications<a class="headerlink" href="#asynchronous-notifications" title="連結到這個標頭">¶</a></h1>
+<p>A mechanism is provided to make asynchronous notifications to the main
+interpreter thread.  These notifications take the form of a function
+pointer and a void pointer argument.</p>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.Py_AddPendingCall">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_AddPendingCall</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">)</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_AddPendingCall" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Schedule a function to be called from the main interpreter thread.  On
+success, <code class="docutils literal notranslate"><span class="pre">0</span></code> is returned and <em>func</em> is queued for being called in the
+main thread.  On failure, <code class="docutils literal notranslate"><span class="pre">-1</span></code> is returned without setting any exception.</p>
+<p>When successfully queued, <em>func</em> will be <em>eventually</em> called from the
+main interpreter thread with the argument <em>arg</em>.  It will be called
+asynchronously with respect to normally running Python code, but with
+both these conditions met:</p>
+<ul class="simple">
+<li><p>on a <a class="reference internal" href="../glossary.html#term-bytecode"><span class="xref std std-term">bytecode</span></a> boundary;</p></li>
+<li><p>with the main thread holding an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>
+(<em>func</em> can therefore use the full C API).</p></li>
+</ul>
+<p><em>func</em> must return <code class="docutils literal notranslate"><span class="pre">0</span></code> on success, or <code class="docutils literal notranslate"><span class="pre">-1</span></code> on failure with an exception
+set.  <em>func</em> won't be interrupted to perform another asynchronous
+notification recursively, but it can still be interrupted to switch
+threads if the <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">thread state</span></a> is detached.</p>
+<p>This function doesn't need an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>. However, to call this
+function in a subinterpreter, the caller must have an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>.
+Otherwise, the function <em>func</em> can be scheduled to be called from the wrong interpreter.</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>This is a low-level function, only useful for very special cases.
+There is no guarantee that <em>func</em> will be called as quick as
+possible.  If the main thread is busy executing a system call,
+<em>func</em> won't be called before the system call returns.  This
+function is generally <strong>not</strong> suitable for calling Python code from
+arbitrary C threads.  Instead, use the <a class="reference internal" href="#gilstate"><span class="std std-ref">PyGILState API</span></a>.</p>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.1 版被加入.</span></p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.9 版的變更: </span>If this function is called in a subinterpreter, the function <em>func</em> is
+now scheduled to be called from the subinterpreter, rather than being
+called from the main interpreter. Each subinterpreter now has its own
+list of scheduled calls.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>This function now always schedules <em>func</em> to be run in the main
+interpreter.</p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.Py_MakePendingCalls">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_MakePendingCalls</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_MakePendingCalls" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Execute all pending calls. This is usually executed automatically by the
+interpreter.</p>
+<p>This function returns <code class="docutils literal notranslate"><span class="pre">0</span></code> on success, and returns <code class="docutils literal notranslate"><span class="pre">-1</span></code> with an exception
+set on failure.</p>
+<p>If this is not called in the main thread of the main
+interpreter, this function does nothing and returns <code class="docutils literal notranslate"><span class="pre">0</span></code>.
+The caller must hold an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.1 版被加入.</span></p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>This function only runs pending calls in the main interpreter.</p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThreadState_SetAsyncExc">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThreadState_SetAsyncExc</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n"><span class="pre">id</span></span>, <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">exc</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThreadState_SetAsyncExc" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Asynchronously raise an exception in a thread. The <em>id</em> argument is the thread
+id of the target thread; <em>exc</em> is the exception object to be raised. This
+function does not steal any references to <em>exc</em>. To prevent naive misuse, you
+must write your own C extension to call this.  Must be called with an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>.
+Returns the number of thread states modified; this is normally one, but will be
+zero if the thread id isn't found.  If <em>exc</em> is <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, the pending
+exception (if any) for the thread is cleared. This raises no exceptions.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.7 版的變更: </span>The type of the <em>id</em> parameter changed from <span class="c-expr sig sig-inline c"><span class="kt">long</span></span> to
+<span class="c-expr sig sig-inline c"><span class="kt">unsigned</span><span class="w"> </span><span class="kt">long</span></span>.</p>
+</div>
+</dd></dl>
+
+</section>
+<section id="operating-system-thread-apis">
+<h1>作業系統執行緒 API<a class="headerlink" href="#operating-system-thread-apis" title="連結到這個標頭">¶</a></h1>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PYTHREAD_INVALID_THREAD_ID">
+<span class="sig-name descname"><span class="n"><span class="pre">PYTHREAD_INVALID_THREAD_ID</span></span></span><a class="headerlink" href="#c.PYTHREAD_INVALID_THREAD_ID" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Sentinel value for an invalid thread ID.</p>
+<p>目前等同於 <code class="docutils literal notranslate"><span class="pre">(unsigned</span> <span class="pre">long)-1</span></code>。</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThread_start_new_thread">
+<span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThread_start_new_thread</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">func</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">)</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThread_start_new_thread" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Start function <em>func</em> in a new thread with argument <em>arg</em>.
+The resulting thread is not intended to be joined.</p>
+<p><em>func</em> 不能是 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>，但 <em>arg</em> 可以是 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>。</p>
+<p>On success, this function returns the identifier of the new thread; on failure,
+this returns <a class="reference internal" href="#c.PYTHREAD_INVALID_THREAD_ID" title="PYTHREAD_INVALID_THREAD_ID"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PYTHREAD_INVALID_THREAD_ID</span></code></a>.</p>
+<p>呼叫者不需擁有一個 <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>。</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThread_get_thread_ident">
+<span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThread_get_thread_ident</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThread_get_thread_ident" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Return the identifier of the current thread, which will never be zero.</p>
+<p>This function cannot fail, and the caller does not need to hold an
+<a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>.</p>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><a class="reference internal" href="../library/threading.html#threading.get_ident" title="threading.get_ident"><code class="xref py py-func docutils literal notranslate"><span class="pre">threading.get_ident()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThread_GetInfo">
+<a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyThread_GetInfo</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThread_GetInfo" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.3 版本開始.</em><p>Get general information about the current thread in the form of a
+<a class="reference internal" href="tuple.html#struct-sequence-objects"><span class="std std-ref">struct sequence</span></a> object. This information is
+accessible as <a class="reference internal" href="../library/sys.html#sys.thread_info" title="sys.thread_info"><code class="xref py py-attr docutils literal notranslate"><span class="pre">sys.thread_info</span></code></a> in Python.</p>
+<p>On success, this returns a new <a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong reference</span></a> to the thread
+information; on failure, this returns <code class="docutils literal notranslate"><span class="pre">NULL</span></code> with an exception set.</p>
+<p>呼叫者必須擁有一個 <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>。</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PY_HAVE_THREAD_NATIVE_ID">
+<span class="sig-name descname"><span class="n"><span class="pre">PY_HAVE_THREAD_NATIVE_ID</span></span></span><a class="headerlink" href="#c.PY_HAVE_THREAD_NATIVE_ID" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>This macro is defined when the system supports native thread IDs.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThread_get_thread_native_id">
+<span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThread_get_thread_native_id</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThread_get_thread_native_id" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> on platforms with native thread IDs.</em><p>Get the native identifier of the current thread as it was assigned by the operating
+system's kernel, which will never be less than zero.</p>
+<p>This function is only available when <a class="reference internal" href="#c.PY_HAVE_THREAD_NATIVE_ID" title="PY_HAVE_THREAD_NATIVE_ID"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PY_HAVE_THREAD_NATIVE_ID</span></code></a> is
+defined.</p>
+<p>This function cannot fail, and the caller does not need to hold an
+<a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>.</p>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><a class="reference internal" href="../library/threading.html#threading.get_native_id" title="threading.get_native_id"><code class="xref py py-func docutils literal notranslate"><span class="pre">threading.get_native_id()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThread_exit_thread">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThread_exit_thread</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThread_exit_thread" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Terminate the current thread. This function is generally considered unsafe
+and should be avoided. It is kept solely for backwards compatibility.</p>
+<p>This function is only safe to call if all functions in the full call
+stack are written to safely allow it.</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>If the current system uses POSIX threads (also known as &quot;pthreads&quot;),
+this calls <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/pthread_exit(3)">pthread_exit(3)</a></em>, which attempts to unwind the stack
+and call C++ destructors on some libc implementations. However, if a
+<code class="docutils literal notranslate"><span class="pre">noexcept</span></code> function is reached, it may terminate the process.
+Other systems, such as macOS, do unwinding.</p>
+<p>On Windows, this function calls <code class="docutils literal notranslate"><span class="pre">_endthreadex()</span></code>, which kills the thread
+without calling C++ destructors.</p>
+<p>In any case, there is a risk of corruption on the thread's stack.</p>
+</div>
+<div class="deprecated">
+<p><span class="versionmodified deprecated">在 3.14 版之後被棄用.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThread_init_thread">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThread_init_thread</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThread_init_thread" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Initialize <code class="docutils literal notranslate"><span class="pre">PyThread*</span></code> APIs. Python executes this function automatically,
+so there's little need to call it from an extension module.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThread_set_stacksize">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThread_set_stacksize</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThread_set_stacksize" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Set the stack size of the current thread to <em>size</em> bytes.</p>
+<p>This function returns <code class="docutils literal notranslate"><span class="pre">0</span></code> on success, <code class="docutils literal notranslate"><span class="pre">-1</span></code> if <em>size</em> is invalid, or
+<code class="docutils literal notranslate"><span class="pre">-2</span></code> if the system does not support changing the stack size. This function
+does not set exceptions.</p>
+<p>呼叫者不需擁有一個 <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>。</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyThread_get_stacksize">
+<span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThread_get_stacksize</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyThread_get_stacksize" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Return the stack size of the current thread in bytes, or <code class="docutils literal notranslate"><span class="pre">0</span></code> if the system's
+default stack size is in use.</p>
+<p>呼叫者不需擁有一個 <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>。</p>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">執行緒狀態與全域直譯器鎖</a><ul>
+<li><a class="reference internal" href="#detaching-the-thread-state-from-extension-code">Detaching the thread state from extension code</a><ul>
+<li><a class="reference internal" href="#apis">APIs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#non-python-created-threads">Non-Python created threads</a></li>
+<li><a class="reference internal" href="#legacy-api">Legacy API</a></li>
+<li><a class="reference internal" href="#cautions-about-fork">Cautions about fork()</a></li>
+<li><a class="reference internal" href="#high-level-apis">High-level APIs</a></li>
+<li><a class="reference internal" href="#gil-state-apis">GIL 狀態 API</a></li>
+<li><a class="reference internal" href="#low-level-apis">低階 API</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#asynchronous-notifications">Asynchronous notifications</a></li>
+<li><a class="reference internal" href="#operating-system-thread-apis">作業系統執行緒 API</a></li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="interp-lifecycle.html"
+                          title="上一章">直譯器的初始化與終結化</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="synchronization.html"
+                          title="下一章">同步原語</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "c-api/threads.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/c-api/threads.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/c-api/threads.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="synchronization.html" title="同步原語"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="interp-lifecycle.html" title="直譯器的初始化與終結化"
+             >上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.4 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python/C API 參考手冊</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">執行緒狀態與全域直譯器鎖</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; <a href="../copyright.html">版權所有</a> 2001 Python Software Foundation.
+    <br>
+    此頁面採用 Python 軟體基金會授權條款第 2 版。
+    <br>
+    文件中的範例、應用技巧與其他程式碼額外採用了 Zero Clause BSD 授權條款。
+    <br>
+    
+      更多訊息請見<a href="/license.html">歷史與授權條款</a>。<br>
+    
+    
+    <br>
+
+    Python 軟體基金會是一家非營利法人。
+<a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
+<br>
+    <br>
+      最後更新於 4月 08, 2026 (03:53 UTC)。
+    
+      <a href="/bugs.html">發現 bug</a>？
+    
+    <br>
+
+    以 <a href="https://www.sphinx-doc.org/">Sphinx</a>8.2.3建立。 
+    </div>
+
+  </body>
+</html>
