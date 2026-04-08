@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>執行緒安全保證 &#8212; Python 3.14.3 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>執行緒安全保證 &#8212; Python 3.14.4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=82640b3f" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
     
-    <script src="../_static/documentation_options.js?v=e2c088d7"></script>
+    <script src="../_static/documentation_options.js?v=9e923c91"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,7 +20,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.14.3 說明文件 中搜尋"
+          title="在 Python 3.14.4 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -100,7 +100,9 @@
 </li>
 <li><a class="reference internal" href="#thread-safety-for-list-objects">Thread safety for list objects</a></li>
 <li><a class="reference internal" href="#thread-safety-for-dict-objects">Thread safety for dict objects</a></li>
-<li><a class="reference internal" href="#thread-safety-for-set-objects">Thread safety for set objects</a></li>
+<li><a class="reference internal" href="#thread-safety-for-set-objects">set 物件的執行緒安全</a></li>
+<li><a class="reference internal" href="#thread-safety-for-bytearray-objects">bytearray 物件的執行緒安全</a></li>
+<li><a class="reference internal" href="#thread-safety-for-memoryview-objects">memoryview 物件的執行緒安全</a></li>
 </ul>
 </li>
 </ul>
@@ -179,7 +181,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.3 Documentation</a> &#187;
+      <a href="../index.html">3.14.4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -461,7 +463,7 @@ thread, iterate over a copy:</p>
 across threads.</p>
 </section>
 <section id="thread-safety-for-set-objects">
-<span id="thread-safety-set"></span><h2>Thread safety for set objects<a class="headerlink" href="#thread-safety-for-set-objects" title="連結到這個標頭">¶</a></h2>
+<span id="thread-safety-set"></span><h2>set 物件的執行緒安全<a class="headerlink" href="#thread-safety-for-set-objects" title="連結到這個標頭">¶</a></h2>
 <p>The <a class="reference internal" href="functions.html#len" title="len"><code class="xref py py-func docutils literal notranslate"><span class="pre">len()</span></code></a> function is lock-free and <a class="reference internal" href="../glossary.html#term-atomic-operation"><span class="xref std std-term">atomic</span></a>.</p>
 <p>The following read operation is lock-free. It does not block concurrent
 modifications and may observe intermediate states from operations that
@@ -555,6 +557,123 @@ atomic:</p>
 <p>Consider external synchronization when sharing <a class="reference internal" href="stdtypes.html#set" title="set"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a> instances
 across threads.  See <a class="reference internal" href="../howto/free-threading-python.html#freethreading-python-howto"><span class="std std-ref">Python 自由執行緒的支援</span></a> for more information.</p>
 </section>
+<section id="thread-safety-for-bytearray-objects">
+<span id="thread-safety-bytearray"></span><h2>bytearray 物件的執行緒安全<a class="headerlink" href="#thread-safety-for-bytearray-objects" title="連結到這個標頭">¶</a></h2>
+<blockquote>
+<div><p>The <a class="reference internal" href="functions.html#len" title="len"><code class="xref py py-func docutils literal notranslate"><span class="pre">len()</span></code></a> function is lock-free and <a class="reference internal" href="../glossary.html#term-atomic-operation"><span class="xref std std-term">atomic</span></a>.</p>
+<p>Concatenation and comparisons use the buffer protocol, which prevents
+resizing but does not hold the per-object lock. These operations may
+observe intermediate states from concurrent modifications:</p>
+<div class="maybe highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">ba</span> <span class="o">+</span> <span class="n">other</span>    <span class="c1"># may observe concurrent writes</span>
+<span class="n">ba</span> <span class="o">==</span> <span class="n">other</span>   <span class="c1"># may observe concurrent writes</span>
+<span class="n">ba</span> <span class="o">&lt;</span> <span class="n">other</span>    <span class="c1"># may observe concurrent writes</span>
+</pre></div>
+</div>
+<p>All other operations from here on hold the per-object lock.</p>
+<p>Reading a single element or slice is safe to call from multiple threads:</p>
+<div class="good highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">ba</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>        <span class="c1"># bytearray.__getitem__</span>
+<span class="n">ba</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">j</span><span class="p">]</span>      <span class="c1"># slice</span>
+</pre></div>
+</div>
+<p>The following operations are safe to call from multiple threads and will
+not corrupt the bytearray:</p>
+<div class="good highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">ba</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span>         <span class="c1"># write single byte</span>
+<span class="n">ba</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">values</span>  <span class="c1"># write slice</span>
+<span class="n">ba</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>      <span class="c1"># append single byte</span>
+<span class="n">ba</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>  <span class="c1"># extend with iterable</span>
+<span class="n">ba</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>   <span class="c1"># insert single byte</span>
+<span class="n">ba</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>          <span class="c1"># remove and return last byte</span>
+<span class="n">ba</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>         <span class="c1"># remove and return byte at index</span>
+<span class="n">ba</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>      <span class="c1"># remove first occurrence</span>
+<span class="n">ba</span><span class="o">.</span><span class="n">reverse</span><span class="p">()</span>      <span class="c1"># reverse in place</span>
+<span class="n">ba</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>        <span class="c1"># remove all bytes</span>
+</pre></div>
+</div>
+<p>Slice assignment locks both objects when <em>values</em> is a <a class="reference internal" href="stdtypes.html#bytearray" title="bytearray"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code></a>:</p>
+<div class="good highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">ba</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">other_bytearray</span>  <span class="c1"># both locked</span>
+</pre></div>
+</div>
+<p>The following operations return new objects and hold the per-object lock
+for the duration:</p>
+<div class="good highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">ba</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>     <span class="c1"># returns a shallow copy</span>
+<span class="n">ba</span> <span class="o">*</span> <span class="n">n</span>        <span class="c1"># repeat into new bytearray</span>
+</pre></div>
+</div>
+<p>The membership test holds the lock for its duration:</p>
+<div class="good highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="ow">in</span> <span class="n">ba</span>       <span class="c1"># bytearray.__contains__</span>
+</pre></div>
+</div>
+<p>All other bytearray methods (such as <a class="reference internal" href="stdtypes.html#bytearray.find" title="bytearray.find"><code class="xref py py-meth docutils literal notranslate"><span class="pre">find()</span></code></a>,
+<a class="reference internal" href="stdtypes.html#bytearray.replace" title="bytearray.replace"><code class="xref py py-meth docutils literal notranslate"><span class="pre">replace()</span></code></a>, <a class="reference internal" href="stdtypes.html#bytearray.split" title="bytearray.split"><code class="xref py py-meth docutils literal notranslate"><span class="pre">split()</span></code></a>,
+<a class="reference internal" href="stdtypes.html#bytearray.decode" title="bytearray.decode"><code class="xref py py-meth docutils literal notranslate"><span class="pre">decode()</span></code></a>, etc.) hold the per-object lock for their
+duration.</p>
+<p>Operations that involve multiple accesses, as well as iteration, are never
+atomic:</p>
+<div class="bad highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOT atomic: check-then-act</span>
+<span class="k">if</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">ba</span><span class="p">:</span>
+    <span class="n">ba</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+<span class="c1"># NOT thread-safe: iteration while modifying</span>
+<span class="k">for</span> <span class="n">byte</span> <span class="ow">in</span> <span class="n">ba</span><span class="p">:</span>
+    <span class="n">process</span><span class="p">(</span><span class="n">byte</span><span class="p">)</span>  <span class="c1"># another thread may modify ba</span>
+</pre></div>
+</div>
+<p>To safely iterate over a bytearray that may be modified by another
+thread, iterate over a copy:</p>
+<div class="good highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a copy to iterate safely</span>
+<span class="k">for</span> <span class="n">byte</span> <span class="ow">in</span> <span class="n">ba</span><span class="o">.</span><span class="n">copy</span><span class="p">():</span>
+    <span class="n">process</span><span class="p">(</span><span class="n">byte</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Consider external synchronization when sharing <a class="reference internal" href="stdtypes.html#bytearray" title="bytearray"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code></a> instances
+across threads.  See <a class="reference internal" href="../howto/free-threading-python.html#freethreading-python-howto"><span class="std std-ref">Python 自由執行緒的支援</span></a> for more information.</p>
+</div></blockquote>
+</section>
+<section id="thread-safety-for-memoryview-objects">
+<span id="thread-safety-memoryview"></span><h2>memoryview 物件的執行緒安全<a class="headerlink" href="#thread-safety-for-memoryview-objects" title="連結到這個標頭">¶</a></h2>
+<p><a class="reference internal" href="stdtypes.html#memoryview" title="memoryview"><code class="xref py py-class docutils literal notranslate"><span class="pre">memoryview</span></code></a> objects provide access to the internal data of an
+underlying object without copying. Thread safety depends on both the
+memoryview itself and the underlying buffer exporter.</p>
+<p>The memoryview implementation uses atomic operations to track its own
+exports in the <a class="reference internal" href="../glossary.html#term-free-threaded-build"><span class="xref std std-term">free-threaded build</span></a>. Creating and
+releasing a memoryview are thread-safe. Attribute access (e.g.,
+<a class="reference internal" href="stdtypes.html#memoryview.shape" title="memoryview.shape"><code class="xref py py-attr docutils literal notranslate"><span class="pre">shape</span></code></a>, <a class="reference internal" href="stdtypes.html#memoryview.format" title="memoryview.format"><code class="xref py py-attr docutils literal notranslate"><span class="pre">format</span></code></a>) reads fields that
+are immutable for the lifetime of the memoryview, so concurrent reads
+are safe as long as the memoryview has not been released.</p>
+<p>However, the actual data accessed through the memoryview is owned by the
+underlying object. Concurrent access to this data is only safe if the
+underlying object supports it:</p>
+<ul class="simple">
+<li><p>For immutable objects like <a class="reference internal" href="stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>, concurrent reads through
+multiple memoryviews are safe.</p></li>
+<li><p>For mutable objects like <a class="reference internal" href="stdtypes.html#bytearray" title="bytearray"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code></a>, reading and writing the
+same memory region from multiple threads without external
+synchronization is not safe and may result in data corruption.
+Note that even read-only memoryviews of mutable objects do not
+prevent data races if the underlying object is modified from
+another thread.</p></li>
+</ul>
+<div class="bad highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># NOT safe: concurrent writes to the same buffer</span>
+<span class="n">data</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">view</span> <span class="o">=</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="c1"># Thread 1: view[0:500] = b&#39;x&#39; * 500</span>
+<span class="c1"># Thread 2: view[0:500] = b&#39;y&#39; * 500</span>
+</pre></div>
+</div>
+<div class="good highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Safe: use a lock for concurrent access</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+<span class="n">lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+<span class="n">data</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">(</span><span class="mi">1000</span><span class="p">)</span>
+<span class="n">view</span> <span class="o">=</span> <span class="nb">memoryview</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
+    <span class="n">view</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">500</span><span class="p">]</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;x&#39;</span> <span class="o">*</span> <span class="mi">500</span>
+</pre></div>
+</div>
+<p>Resizing or reallocating the underlying object (such as calling
+<a class="reference internal" href="stdtypes.html#bytearray.resize" title="bytearray.resize"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bytearray.resize()</span></code></a>) while a memoryview is exported raises
+<a class="reference internal" href="exceptions.html#BufferError" title="BufferError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BufferError</span></code></a>. This is enforced regardless of threading.</p>
+</section>
 </section>
 
 
@@ -578,7 +697,9 @@ across threads.  See <a class="reference internal" href="../howto/free-threading
 </li>
 <li><a class="reference internal" href="#thread-safety-for-list-objects">Thread safety for list objects</a></li>
 <li><a class="reference internal" href="#thread-safety-for-dict-objects">Thread safety for dict objects</a></li>
-<li><a class="reference internal" href="#thread-safety-for-set-objects">Thread safety for set objects</a></li>
+<li><a class="reference internal" href="#thread-safety-for-set-objects">set 物件的執行緒安全</a></li>
+<li><a class="reference internal" href="#thread-safety-for-bytearray-objects">bytearray 物件的執行緒安全</a></li>
+<li><a class="reference internal" href="#thread-safety-for-memoryview-objects">memoryview 物件的執行緒安全</a></li>
 </ul>
 </li>
 </ul>
@@ -660,7 +781,7 @@ across threads.  See <a class="reference internal" href="../howto/free-threading
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.3 Documentation</a> &#187;
+      <a href="../index.html">3.14.4 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -705,7 +826,7 @@ across threads.  See <a class="reference internal" href="../howto/free-threading
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 3月 14, 2026 (05:47 UTC)。
+      最後更新於 4月 08, 2026 (10:00 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
