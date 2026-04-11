@@ -2,7 +2,6 @@
 ==========================================
 
 .. module:: winreg
-   :platform: Windows
    :synopsis: Routines and objects for manipulating the Windows registry.
 
 .. sectionauthor:: Mark Hammond <MarkH@ActiveState.com>
@@ -13,6 +12,8 @@ These functions expose the Windows registry API to Python.  Instead of using an
 integer as the registry handle, a :ref:`handle object <handle-object>` is used
 to ensure that the handles are closed correctly, even if the programmer neglects
 to explicitly close them.
+
+.. availability:: Windows.
 
 .. _exception-changed:
 
@@ -536,7 +537,7 @@ This module offers the following functions:
 Constants
 ------------------
 
-The following constants are defined for use in many :mod:`winreg` functions.
+The following constants are defined for use in many :mod:`!winreg` functions.
 
 .. _hkey-constants:
 
@@ -752,9 +753,6 @@ Handle objects provide semantics for :meth:`~object.__bool__` -- thus ::
 
 will print ``Yes`` if the handle is currently valid (has not been closed or
 detached).
-
-The object also support comparison semantics, so handle objects will compare
-true if they both reference the same underlying Windows handle value.
 
 Handle objects can be converted to an integer (e.g., using the built-in
 :func:`int` function), in which case the underlying Windows handle value is

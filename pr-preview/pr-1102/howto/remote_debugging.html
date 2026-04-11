@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>遠端偵錯附加協定 &#8212; Python 3.14.4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=82640b3f" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
+    
+    <script src="../_static/documentation_options.js?v=9e923c91"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.14.4 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權所有" href="../copyright.html" />
+    <link rel="next" title="Python 常見問題" href="../faq/index.html" />
+    <link rel="prev" title="支援自由執行緒的 C API 擴充" href="free-threading-extensions.html" />
+    
+      
+      <link rel="canonical" href="https://docs.python.org/3/howto/remote_debugging.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="../_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="../_static/py.svg">
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script>
+            <script type="text/javascript" src="../_static/search-focus.js"></script>
+            <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="選單">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="../_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"></span>
+            <form role="search" class="search" action="../search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q">
+                <input type="submit" value="前往">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+            
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">遠端偵錯附加協定</a><ul>
+<li><a class="reference internal" href="#disabling-remote-debugging">停用遠端偵錯</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#permission-requirements">權限需求</a></li>
+<li><a class="reference internal" href="#locating-the-pyruntime-structure">定位 PyRuntime 結構</a></li>
+<li><a class="reference internal" href="#reading-py-debugoffsets">讀取 _Py_DebugOffsets</a></li>
+<li><a class="reference internal" href="#locating-the-interpreter-and-thread-state">定位直譯器和執行緒狀態</a></li>
+<li><a class="reference internal" href="#writing-control-information">寫入控制資訊</a></li>
+<li><a class="reference internal" href="#summary">摘要</a></li>
+<li><a class="reference internal" href="#security-and-threat-model">Security and threat model</a><ul>
+<li><a class="reference internal" href="#when-to-use-python-disable-remote-debug">When to use <code class="docutils literal notranslate"><span class="pre">PYTHON_DISABLE_REMOTE_DEBUG</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="free-threading-extensions.html"
+                          title="上一章">支援自由執行緒的 C API 擴充</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="../faq/index.html"
+                          title="下一章">Python 常見問題</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "howto/remote_debugging.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/remote_debugging.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/howto/remote_debugging.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="../faq/index.html" title="Python 常見問題"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="free-threading-extensions.html" title="支援自由執行緒的 C API 擴充"
+             accesskey="P">上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.4 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 如何達成任務</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">遠端偵錯附加協定</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="remote-debugging-attachment-protocol">
+<span id="remote-debugging"></span><h1>遠端偵錯附加協定<a class="headerlink" href="#remote-debugging-attachment-protocol" title="連結到這個標頭">¶</a></h1>
+<p>此協定使外部工具能夠附加到正在執行的 CPython 行程並遠端執行 Python 程式碼。</p>
+<p>大多數平台上都會需要更高的權限才能附加到另一個 Python 行程。</p>
+<section id="disabling-remote-debugging">
+<h2>停用遠端偵錯<a class="headerlink" href="#disabling-remote-debugging" title="連結到這個標頭">¶</a></h2>
+<p>要停用遠端偵錯支援，請使用以下任一方法：</p>
+<ul class="simple">
+<li><p>在啟動直譯器之前，將 <span class="target" id="index-3"></span><a class="reference internal" href="../using/cmdline.html#envvar-PYTHON_DISABLE_REMOTE_DEBUG"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHON_DISABLE_REMOTE_DEBUG</span></code></a> 環境變數設為 <code class="docutils literal notranslate"><span class="pre">1</span></code>。</p></li>
+<li><p>使用 <a class="reference internal" href="../using/cmdline.html#cmdoption-X"><code class="xref std std-option docutils literal notranslate"><span class="pre">-X</span> <span class="pre">disable_remote_debug</span></code></a> 命令列選項。</p></li>
+<li><p>使用 <a class="reference internal" href="../using/configure.html#cmdoption-without-remote-debug"><code class="xref std std-option docutils literal notranslate"><span class="pre">--without-remote-debug</span></code></a> 建置旗標來編譯 Python。</p></li>
+</ul>
+</section>
+</section>
+<section id="permission-requirements">
+<span id="id1"></span><h1>權限需求<a class="headerlink" href="#permission-requirements" title="連結到這個標頭">¶</a></h1>
+<p>在大多數平台上，附加到正在執行的 Python 行程進行遠端偵錯需要更高的權限。具體要求和疑難排解步驟會取決於你的作業系統：</p>
+<p class="rubric">Linux</p>
+<p>執行追蹤的行程 (tracer process) 必須具有 <code class="docutils literal notranslate"><span class="pre">CAP_SYS_PTRACE</span></code> 功能或同等權限。你只能追蹤你擁有且可以發送訊號的行程。如果行程已經被追蹤，或者它以 set-user-ID 或 set-group-ID 執行，則追蹤可能會失敗。像 Yama 這樣的安全模組可能會進一步限制追蹤。</p>
+<p>要暫時放寬 ptrace 限制（直到重新開機），請執行：</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">echo</span> <span class="pre">0</span> <span class="pre">|</span> <span class="pre">sudo</span> <span class="pre">tee</span> <span class="pre">/proc/sys/kernel/yama/ptrace_scope</span></code></p>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>停用 <code class="docutils literal notranslate"><span class="pre">ptrace_scope</span></code> 會降低系統安全性，應僅在受信任的環境中執行此操作。</p>
+</div>
+<p>如果在容器內執行，請使用 <code class="docutils literal notranslate"><span class="pre">--cap-add=SYS_PTRACE</span></code> 或 <code class="docutils literal notranslate"><span class="pre">--privileged</span></code>，並在需要時以 root 身分執行。</p>
+<p>嘗試使用提升後的權限重新執行命令：</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">-E</span> <span class="pre">!!</span></code></p>
+</div></blockquote>
+<p class="rubric">macOS</p>
+<p>要附加到另一個行程，你通常需要以提升過的權限來執行偵錯工具。這可以透過使用 <code class="docutils literal notranslate"><span class="pre">sudo</span></code> 或以 root 身分執行來完成。</p>
+<p>即使附加到你擁有的行程，macOS 也可能會阻止偵錯，除非偵錯器以 root 權限執行，這是由於系統安全限制。</p>
+<p class="rubric">Windows</p>
+<p>要附加到另一個行程，你通常需要以系統管理員權限執行偵錯工具。以系統管理員身分啟動命令提示字元或終端機。</p>
+<p>即使具有系統管理員權限，某些行程仍可能無法存取，除非你啟用了 <code class="docutils literal notranslate"><span class="pre">SeDebugPrivilege</span></code> 權限。</p>
+<p>要解決檔案或資料夾存取問題，請調整安全權限：</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>右鍵點擊檔案或資料夾並選擇 <strong>Properties</strong>。</p></li>
+<li><p>前往 <strong>Security</strong> 分頁以檢視具有存取權限的使用者和群組。</p></li>
+<li><p>點擊 <strong>Edit</strong> 以修改權限。</p></li>
+<li><p>選擇你的使用者帳戶。</p></li>
+<li><p>在 <strong>Permissions</strong> 中，視需要勾選 <strong>Read</strong> 或 <strong>Full control</strong>。</p></li>
+<li><p>點擊 <strong>Apply</strong>，然後點擊 <strong>OK</strong> 來確認。</p></li>
+</ol>
+</div></blockquote>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>在繼續之前，請確保你已滿足所有 <a class="reference internal" href="#permission-requirements"><span class="std std-ref">權限需求</span></a>。</p>
+</div>
+<p>本節描述了低階協定，使外部工具能夠在正在執行的 CPython 行程中注入並執行 Python 腳本。</p>
+<p>此機制構成了 <a class="reference internal" href="../library/sys.html#sys.remote_exec" title="sys.remote_exec"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.remote_exec()</span></code></a> 函式的基礎，該函式指示遠端 Python 行程執行 <code class="docutils literal notranslate"><span class="pre">.py</span></code> 檔案。但本節不記錄該函式的用法，而是提供底層協定的詳細說明，該協定以目標 Python 行程的 <code class="docutils literal notranslate"><span class="pre">pid</span></code> 和要執行的 Python 原始檔路徑作為輸入。此資訊支援該協定的獨立重新實作，無論使用何種程式語言。</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>注入腳本的執行取決於直譯器是否到達安全執行點 (safe evaluation point)。因此，執行可能會根據目標行程的 runtime 狀態而延遲。</p>
+</div>
+<p>一旦注入，腳本將在下次到達安全執行點時會由目標行程內的直譯器執行。這種方法使遠端執行功能成為可能，而不需修改正在執行的 Python 應用程式的行為或結構。</p>
+<p>後續章節提供了協定的逐步描述，包括在記憶體中定位直譯器結構、安全存取內部欄位以及觸發程式碼執行的技術。在適用的情況下會註明平台特有的變化，並包含範例實作以闡明每個操作。</p>
+</section>
+<section id="locating-the-pyruntime-structure">
+<h1>定位 PyRuntime 結構<a class="headerlink" href="#locating-the-pyruntime-structure" title="連結到這個標頭">¶</a></h1>
+<p>CPython 將 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構放置在專用的二進位區段（section）中，以幫助外部工具在 runtime 找到它。此區段的名稱和格式因平台而異。例如，ELF 系統使用 <code class="docutils literal notranslate"><span class="pre">.PyRuntime</span></code>、macOS 使用 <code class="docutils literal notranslate"><span class="pre">__DATA,__PyRuntime</span></code>。工具可以透過檢查磁碟上的二進位檔案來找到此結構的偏移量。</p>
+<p><code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構包含 CPython 的全域直譯器狀態，並可存取其他內部資料，包括直譯器清單、執行緒狀態和偵錯器支援欄位。</p>
+<p>要與遠端 Python 行程協作，偵錯器必須首先找到目標行程中 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構的記憶體位址。此位址無法寫死或從符號名稱計算出，因為它取決於作業系統載入二進位檔案的位置。</p>
+<p>尋找 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 的方法取決於平台，但步驟大致相同：</p>
+<ol class="arabic simple">
+<li><p>找到目標行程中 Python 二進位檔案或共享函式庫被載入的基底位址。</p></li>
+<li><p>使用磁碟上的二進位檔案來定位 <code class="docutils literal notranslate"><span class="pre">.PyRuntime</span></code> 區段的偏移量。</p></li>
+<li><p>將區段偏移量加到基底位址以計算記憶體中的位址。</p></li>
+</ol>
+<p>以下各節說明如何在每個支援的平台上執行此操作，並包含範例程式碼。</p>
+<p class="rubric">Linux (ELF)</p>
+<p>在 Linux 上尋找 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構：</p>
+<ol class="arabic simple">
+<li><p>讀取行程的記憶體對映（例如 <code class="docutils literal notranslate"><span class="pre">/proc/&lt;pid&gt;/maps</span></code>）以找到 Python 可執行檔位址或 <code class="docutils literal notranslate"><span class="pre">libpython</span></code> 被載入的位址。</p></li>
+<li><p>剖析二進位檔案中的 ELF 區段標頭以取得 <code class="docutils literal notranslate"><span class="pre">.PyRuntime</span></code> 區段的偏移量。</p></li>
+<li><p>將該偏移量加到步驟 1 的基底位址以取得 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 的記憶體位址。</p></li>
+</ol>
+<p>以下是一個範例實作：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">find_py_runtime_linux</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="c1"># 步驟 1：嘗試在記憶體中找到 Python 可執行檔</span>
+    <span class="n">binary_path</span><span class="p">,</span> <span class="n">base_address</span> <span class="o">=</span> <span class="n">find_mapped_binary</span><span class="p">(</span>
+        <span class="n">pid</span><span class="p">,</span> <span class="n">name_contains</span><span class="o">=</span><span class="s2">&quot;python&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># 步驟 2：如果找不到可執行檔，則改用共享函式庫</span>
+    <span class="k">if</span> <span class="n">binary_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">binary_path</span><span class="p">,</span> <span class="n">base_address</span> <span class="o">=</span> <span class="n">find_mapped_binary</span><span class="p">(</span>
+            <span class="n">pid</span><span class="p">,</span> <span class="n">name_contains</span><span class="o">=</span><span class="s2">&quot;libpython&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 步驟 3：剖析 ELF 標頭以取得 .PyRuntime 區段偏移量</span>
+    <span class="n">section_offset</span> <span class="o">=</span> <span class="n">parse_elf_section_offset</span><span class="p">(</span>
+        <span class="n">binary_path</span><span class="p">,</span> <span class="s2">&quot;.PyRuntime&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># 步驟 4：計算 PyRuntime 在記憶體中的位址</span>
+    <span class="k">return</span> <span class="n">base_address</span> <span class="o">+</span> <span class="n">section_offset</span>
+</pre></div>
+</div>
+<p>在 Linux 系統上，有兩種主要方法可以從另一個行程讀取記憶體。第一種是透過 <code class="docutils literal notranslate"><span class="pre">/proc</span></code> 檔案系統，特別是從 <code class="docutils literal notranslate"><span class="pre">/proc/[pid]/mem</span></code> 讀取，這提供了對行程記憶體的直接存取。這需要適當的權限 - 要麼與目標行程是同一使用者，要麼就要擁有 root 存取權限。第二種方法是使用 <code class="docutils literal notranslate"><span class="pre">process_vm_readv()</span></code> 系統呼叫，它提供了在行程之間複製記憶體的更有效方式。雖然 ptrace 的 <code class="docutils literal notranslate"><span class="pre">PTRACE_PEEKTEXT</span></code> 操作也可以用來讀取記憶體，但它明顯較慢，因為它一次只讀取一個字，並且需要追蹤器和被追蹤行程之間的多次情境切換。</p>
+<p>對於剖析 ELF 區段，該過程涉及從磁碟上的二進位檔案讀取並解釋 ELF 檔案格式結構。ELF標頭包含指向區段標頭表的指標。每個區段標頭包含關於區段的中介資料，包括其名稱（儲存在單獨的字串表中）、偏移量和大小。要找到像 .PyRuntime 這樣的特定區段，你需要遍歷這些標頭並匹配區段名稱。然後區段標頭會提供該區段在檔案中存在的偏移量，當二進位檔案載入到記憶體時，可以用它來計算 runtime 位址。</p>
+<p>你可以在 <a class="reference external" href="https://en.wikipedia.org/wiki/Executable_and_Linkable_Format">ELF 規範</a>中閱讀更多關於 ELF 檔案格式的資訊。</p>
+<p class="rubric">macOS (Mach-O)</p>
+<p>在 macOS 上找 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構：</p>
+<ol class="arabic simple">
+<li><p>呼叫 <code class="docutils literal notranslate"><span class="pre">task_for_pid()</span></code> 以取得目標行程的 <code class="docutils literal notranslate"><span class="pre">mach_port_t</span></code> 任務埠 (task port)。此控制代碼 (handle) 用於使用像 <code class="docutils literal notranslate"><span class="pre">mach_vm_read_overwrite</span></code> 和 <code class="docutils literal notranslate"><span class="pre">mach_vm_region</span></code> 這樣的 API 來讀取記憶體。</p></li>
+<li><p>掃描記憶體區域以找到包含 Python 可執行檔或 <code class="docutils literal notranslate"><span class="pre">libpython</span></code> 的區域。</p></li>
+<li><p>從磁碟載入二進位檔案並剖析 Mach-O 標頭以找到 <code class="docutils literal notranslate"><span class="pre">__DATA</span></code> 程式段（segment）中名為 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 的區段。在 macOS 上，符號名稱會自動加上底線前綴，因此 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 符號在符號表中顯示為 <code class="docutils literal notranslate"><span class="pre">_PyRuntime</span></code>，但區段名稱不受影響。</p></li>
+</ol>
+<p>以下是一個範例實作：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">find_py_runtime_macos</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="c1"># 步驟 1：取得對行程記憶體的存取權限</span>
+    <span class="n">handle</span> <span class="o">=</span> <span class="n">get_memory_access_handle</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+
+    <span class="c1"># 步驟 2：嘗試在記憶體中找到 Python 可執行檔</span>
+    <span class="n">binary_path</span><span class="p">,</span> <span class="n">base_address</span> <span class="o">=</span> <span class="n">find_mapped_binary</span><span class="p">(</span>
+        <span class="n">handle</span><span class="p">,</span> <span class="n">name_contains</span><span class="o">=</span><span class="s2">&quot;python&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># 步驟 3：如果找不到可執行檔，則改用 libpython</span>
+    <span class="k">if</span> <span class="n">binary_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">binary_path</span><span class="p">,</span> <span class="n">base_address</span> <span class="o">=</span> <span class="n">find_mapped_binary</span><span class="p">(</span>
+            <span class="n">handle</span><span class="p">,</span> <span class="n">name_contains</span><span class="o">=</span><span class="s2">&quot;libpython&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 步驟 4：剖析 Mach-O 標頭以取得 __DATA,__PyRuntime 區段偏移量</span>
+    <span class="n">section_offset</span> <span class="o">=</span> <span class="n">parse_macho_section_offset</span><span class="p">(</span>
+        <span class="n">binary_path</span><span class="p">,</span> <span class="s2">&quot;__DATA&quot;</span><span class="p">,</span> <span class="s2">&quot;__PyRuntime&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># 步驟 5：計算 PyRuntime 在記憶體中的位址</span>
+    <span class="k">return</span> <span class="n">base_address</span> <span class="o">+</span> <span class="n">section_offset</span>
+</pre></div>
+</div>
+<p>在 macOS 上，存取另一個行程的記憶體需要使用 Mach-O 特定的 API 和檔案格式。第一步是透過 <code class="docutils literal notranslate"><span class="pre">task_for_pid()</span></code> 取得 <code class="docutils literal notranslate"><span class="pre">task_port</span></code> 控制代碼，它提供對目標行程記憶體空間的存取。此控制代碼透過像 <code class="docutils literal notranslate"><span class="pre">mach_vm_read_overwrite()</span></code> 這樣的 API 啟用記憶體操作。</p>
+<p>可以使用 <code class="docutils literal notranslate"><span class="pre">mach_vm_region()</span></code> 掃描虛擬記憶體空間來檢查行程記憶體，而 <code class="docutils literal notranslate"><span class="pre">proc_regionfilename()</span></code> 幫助識別在每個記憶體區域載入了哪些二進位檔案。當找到 Python 二進位檔案或函式庫時，需要剖析其 Mach-O 標頭以定位 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構。</p>
+<p>Mach-O 格式將程式碼和資料組織成程式段和區段。<code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構位於 <code class="docutils literal notranslate"><span class="pre">__DATA</span></code> 程式段內名為 <code class="docutils literal notranslate"><span class="pre">__PyRuntime</span></code> 的區段中。實際的 runtime 位址計算涉及找到作為二進位檔案基底位址的 <code class="docutils literal notranslate"><span class="pre">__TEXT</span></code> 程式段，然後定位包含我們目標區段的 <code class="docutils literal notranslate"><span class="pre">__DATA</span></code> 程式段。最終位址是透過將基底位址與來自 Mach-O 標頭的適當區段偏移量組合來計算的。</p>
+<p>請注意，在 macOS 上存取另一個行程的記憶體通常需要提升過後的權限 - 要麼是 root 存取權限，要麼是授予偵錯行程的特殊安全授權。</p>
+<p class="rubric">Windows (PE)</p>
+<p>在 Windows 上找 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構：</p>
+<ol class="arabic simple">
+<li><p>使用 ToolHelp API 來列舉目標行程中載入的所有模組。這是使用諸如 <a class="reference external" href="https://learn.microsoft.com/en-us/windows/win32/api/tlhelp32/nf-tlhelp32-createtoolhelp32snapshot">CreateToolhelp32Snapshot</a>、<a class="reference external" href="https://learn.microsoft.com/en-us/windows/win32/api/tlhelp32/nf-tlhelp32-module32first">Module32First</a> 和 <a class="reference external" href="https://learn.microsoft.com/en-us/windows/win32/api/tlhelp32/nf-tlhelp32-module32next">Module32Next</a> 等函式來完成的。</p></li>
+<li><p>識別對應於 <code class="file docutils literal notranslate"><span class="pre">python.exe</span></code> 或 <code class="file docutils literal notranslate"><span class="pre">python</span><em><span class="pre">XY</span></em><span class="pre">.dll</span></code> 的模組，其中 <code class="docutils literal notranslate"><span class="pre">X</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Y</span></code> 是Python 版本的主要和次要版本號，並記錄其基底位址。</p></li>
+<li><p>定位 <code class="docutils literal notranslate"><span class="pre">PyRuntim</span></code> 區段。由於 PE 格式對區段名稱有 8 個字元的限制（定義為 <code class="docutils literal notranslate"><span class="pre">IMAGE_SIZEOF_SHORT_NAME</span></code>），所以原始名稱 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 會被截斷。此區段包含 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構。</p></li>
+<li><p>檢索區段的相對虛擬位址 (RVA, relative virtual address) 並將其加到模組的基底位址。</p></li>
+</ol>
+<p>以下是一個範例實作：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">find_py_runtime_windows</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="c1"># 步驟 1：嘗試在記憶體中找到 Python 可執行檔</span>
+    <span class="n">binary_path</span><span class="p">,</span> <span class="n">base_address</span> <span class="o">=</span> <span class="n">find_loaded_module</span><span class="p">(</span>
+        <span class="n">pid</span><span class="p">,</span> <span class="n">name_contains</span><span class="o">=</span><span class="s2">&quot;python&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># 步驟 2：如果找不到可執行檔，則改用共享函式庫 pythonXY.dll</span>
+    <span class="k">if</span> <span class="n">binary_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">binary_path</span><span class="p">,</span> <span class="n">base_address</span> <span class="o">=</span> <span class="n">find_loaded_module</span><span class="p">(</span>
+            <span class="n">pid</span><span class="p">,</span> <span class="n">name_contains</span><span class="o">=</span><span class="s2">&quot;python3&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># 步驟 3：剖析 PE 區段標頭以取得 PyRuntime 區段的 RVA。</span>
+    <span class="c1"># 由於 PE 格式 (IMAGE_SIZEOF_SHORT_NAME) 有8 字元的限制，</span>
+    <span class="c1"># 區段名稱顯示為 &quot;PyRuntim&quot;。</span>
+    <span class="n">section_rva</span> <span class="o">=</span> <span class="n">parse_pe_section_offset</span><span class="p">(</span><span class="n">binary_path</span><span class="p">,</span> <span class="s2">&quot;PyRuntim&quot;</span><span class="p">)</span>
+
+    <span class="c1"># 步驟 4：計算 PyRuntime 在記憶體中的位址</span>
+    <span class="k">return</span> <span class="n">base_address</span> <span class="o">+</span> <span class="n">section_rva</span>
+</pre></div>
+</div>
+<p>在 Windows 上，存取另一個行程的記憶體需要使用像 <code class="docutils literal notranslate"><span class="pre">CreateToolhelp32Snapshot()</span></code> 和 <code class="docutils literal notranslate"><span class="pre">Module32First()/Module32Next()</span></code> 這樣的 Windows API 函式來列舉載入的模組。<code class="docutils literal notranslate"><span class="pre">OpenProcess()</span></code> 函式提供一個控制代碼來存取目標行程的記憶體空間，並透過 <code class="docutils literal notranslate"><span class="pre">ReadProcessMemory()</span></code> 啟用記憶體操作。</p>
+<p>可以透過列舉載入的模組來檢查行程記憶體，以找到 Python 二進位檔案或 DLL。找到後，需要剖析其 PE 標頭以定位 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構。</p>
+<p>PE 格式將程式碼和資料組織成區段。<code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構位於名為 &quot;PyRuntim&quot; 的區段中（由於 PE 的 8 字元名稱限制，從 &quot;PyRuntime&quot; 截斷）。實際的 runtime 位址計算涉及從模組項目中找到模組的基底位址，然後在 PE 標頭中定位我們的目標區段。最終位址是透過將基底位址與 PE 區段標頭中的區段虛擬位址組合來計算的。</p>
+<p>請注意，在 Windows 上存取另一個行程的記憶體通常需要適當的權限 - 要麼是系統管理員存取權限，要麼是授予偵錯行程的 <code class="docutils literal notranslate"><span class="pre">SeDebugPrivilege</span></code> 權限。</p>
+</section>
+<section id="reading-py-debugoffsets">
+<h1>讀取 _Py_DebugOffsets<a class="headerlink" href="#reading-py-debugoffsets" title="連結到這個標頭">¶</a></h1>
+<p>一旦確定了 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構的位址，下一步就是讀取位於 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 區塊開頭的 <code class="docutils literal notranslate"><span class="pre">_Py_DebugOffsets</span></code> 結構。</p>
+<p>此結構提供了安全讀取直譯器和執行緒狀態記憶體所需的版本特定欄位偏移量。這些偏移量在不同的 CPython 版本之間有所不同，必須在使用前檢查以確保它們相容。</p>
+<p>要讀取並檢查偵錯偏移量，請按照以下步驟操作：</p>
+<ol class="arabic simple">
+<li><p>從目標行程中的 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 位址開始讀取記憶體，涵蓋與 <code class="docutils literal notranslate"><span class="pre">_Py_DebugOffsets</span></code> 結構相同的位元組數。此結構位於 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 記憶體區塊的最開始處。其佈局 (layout) 在 CPython 的內部標頭中定義，並在給定的次要版本中維持不變，但在主要版本中可能會更改。</p></li>
+<li><p>檢查結構是否包含有效資料：</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cookie</span></code> 欄位必須匹配預期的偵錯標記。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">version</span></code> 欄位必須匹配偵錯器使用的 Python 直譯器版本。</p></li>
+<li><p>如果偵錯器或目標行程使用的是預發行版本（例如 alpha、beta 或候選版本），版本必須完全匹配。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">free_threaded</span></code> 欄位在偵錯器和目標行程中必須具有相同的值。</p></li>
+</ul>
+</li>
+<li><p>如果結構有效，其中包含的偏移量可用於定位記憶體中的欄位。如果任何檢查失敗，偵錯器應停止操作以避免以錯誤的格式讀取記憶體。</p></li>
+</ol>
+<p>以下是一個讀取並檢查 <code class="docutils literal notranslate"><span class="pre">_Py_DebugOffsets</span></code> 的範例實作：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">read_debug_offsets</span><span class="p">(</span><span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">py_runtime_addr</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DebugOffsets</span><span class="p">:</span>
+    <span class="c1"># 步驟 1：在 PyRuntime 位址從目標行程讀取記憶體</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">read_process_memory</span><span class="p">(</span>
+        <span class="n">pid</span><span class="p">,</span> <span class="n">address</span><span class="o">=</span><span class="n">py_runtime_addr</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">DEBUG_OFFSETS_SIZE</span>
+    <span class="p">)</span>
+
+    <span class="c1"># 步驟 2：將原始位元組反序列化為 _Py_DebugOffsets 結構</span>
+    <span class="n">debug_offsets</span> <span class="o">=</span> <span class="n">parse_debug_offsets</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="c1"># 步驟 3：驗證結構的內容</span>
+    <span class="k">if</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">cookie</span> <span class="o">!=</span> <span class="n">EXPECTED_COOKIE</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Invalid or missing debug cookie&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">version</span> <span class="o">!=</span> <span class="n">LOCAL_PYTHON_VERSION</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">&quot;Mismatch between caller and target Python versions&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">free_threaded</span> <span class="o">!=</span> <span class="n">LOCAL_FREE_THREADED</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Mismatch in free-threaded configuration&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">debug_offsets</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p><strong>建議暫停行程</strong></p>
+<p>為了避免競態條件 (race conditions) 並確保記憶體一致性，強烈建議在執行任何讀取或寫入內部直譯器狀態的操作之前暫停目標行程。Python runtime 可能在正常執行期間同時變更直譯器資料結構 - 例如建立或銷毀執行緒。這可能導致無效的記憶體讀取或寫入。</p>
+<p>偵錯器可以透過使用 <code class="docutils literal notranslate"><span class="pre">ptrace</span></code> 附加到行程或發送 <code class="docutils literal notranslate"><span class="pre">SIGSTOP</span></code> 訊號來暫停執行。只有在偵錯器端的記憶體操作完成後才應恢復執行。</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>一些工具，例如分析器 (profilers) 或基於取樣的偵錯器，可能在不暫停的情況下對正在執行的行程進行操作。在這種情況下，工具必須明確設計為能夠處理部分更新或不一致的記憶體。對於大多數偵錯器實作來說，暫停行程仍然是最安全可靠的方法。</p>
+</div>
+</div>
+</section>
+<section id="locating-the-interpreter-and-thread-state">
+<h1>定位直譯器和執行緒狀態<a class="headerlink" href="#locating-the-interpreter-and-thread-state" title="連結到這個標頭">¶</a></h1>
+<p>在可以於遠端 Python 行程中注入並執行程式碼之前，偵錯器必須選擇一個用於排程執行的執行緒。這是必要的，因為用於執行遠端程式碼注入的控制欄位位於 <code class="docutils literal notranslate"><span class="pre">_PyRemoteDebuggerSupport</span></code> 結構中，該結構嵌入在 <code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code> 物件中。偵錯器會修改這些欄位以請求執行注入的腳本。</p>
+<p><code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code> 結構代表在 Python 直譯器內執行的執行緒。它維護執行緒的求值情境 (evaluation context)，並包含偵錯器協調所需的欄位。因此，定位有效的 <code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code> 是遠端觸發執行的關鍵前提。</p>
+<p>通常根據執行緒的角色或 ID 來選擇執行緒。在大多數情況下會使用主執行緒，但某些工具可能會透過其原生執行緒 ID 來定位特定執行緒。一旦選擇了目標執行緒，偵錯器必須在記憶體中定位直譯器和相關的執行緒狀態結構。</p>
+<p>相關的內部結構定義如下：</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">PyInterpreterState</span></code> 代表一個隔離的 Python 直譯器實例。每個直譯器維護自己的一組已引入模組、內建狀態和執行緒狀態串列。雖然大多數 Python 應用程式使用單一直譯器，但 CPython 支援在同一行程中使用多個直譯器。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code> 代表在直譯器內運行的執行緒。它包含執行狀態和偵錯器使用的控制欄位。</p></li>
+</ul>
+<p>要定位執行緒：</p>
+<ol class="arabic simple">
+<li><p>使用偏移量 <code class="docutils literal notranslate"><span class="pre">runtime_state.interpreters_head</span></code> 來取得 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構中第一個直譯器的位址。這是活動直譯器鏈結串列的進入點。</p></li>
+<li><p>使用偏移量 <code class="docutils literal notranslate"><span class="pre">interpreter_state.threads_main</span></code> 來存取與所選直譯器相關的主執行緒狀態。這通常是最可靠的目標執行緒。</p></li>
+<li><p>可選地使用偏移量 <code class="docutils literal notranslate"><span class="pre">interpreter_state.threads_head</span></code> 來遍歷所有執行緒狀態的鏈結串列。每個 <code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code> 結構包含一個 <code class="docutils literal notranslate"><span class="pre">native_thread_id</span></code> 欄位，可以將其與目標執行緒 ID 進行比較以找到特定執行緒。</p></li>
+<li><p>一旦找到有效的 <code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code>，其位址可以在協定的後續步驟中使用，例如寫入偵錯器控制欄位和排程執行。</p></li>
+</ol>
+<p>以下是一個定位主執行緒狀態的範例實作：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">find_main_thread_state</span><span class="p">(</span>
+    <span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">py_runtime_addr</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">debug_offsets</span><span class="p">:</span> <span class="n">DebugOffsets</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="c1"># 步驟 1：從 PyRuntime 讀取 interpreters_head</span>
+    <span class="n">interp_head_ptr</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">py_runtime_addr</span> <span class="o">+</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">runtime_state</span><span class="o">.</span><span class="n">interpreters_head</span>
+    <span class="p">)</span>
+    <span class="n">interp_addr</span> <span class="o">=</span> <span class="n">read_pointer</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">interp_head_ptr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">interp_addr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;No interpreter found in the target process&quot;</span><span class="p">)</span>
+
+    <span class="c1"># 步驟 2：從直譯器讀取 threads_main 指標</span>
+    <span class="n">threads_main_ptr</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">interp_addr</span> <span class="o">+</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">interpreter_state</span><span class="o">.</span><span class="n">threads_main</span>
+    <span class="p">)</span>
+    <span class="n">thread_state_addr</span> <span class="o">=</span> <span class="n">read_pointer</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">threads_main_ptr</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">thread_state_addr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Main thread state is not available&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">thread_state_addr</span>
+</pre></div>
+</div>
+<p>以下範例示範如何透過原生執行緒 ID 來定位執行緒：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">find_thread_by_id</span><span class="p">(</span>
+    <span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">interp_addr</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">debug_offsets</span><span class="p">:</span> <span class="n">DebugOffsets</span><span class="p">,</span>
+    <span class="n">target_tid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="c1"># 從 threads_head 開始並遍歷鏈結串列</span>
+    <span class="n">thread_ptr</span> <span class="o">=</span> <span class="n">read_pointer</span><span class="p">(</span>
+        <span class="n">pid</span><span class="p">,</span>
+        <span class="n">interp_addr</span> <span class="o">+</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">interpreter_state</span><span class="o">.</span><span class="n">threads_head</span>
+    <span class="p">)</span>
+
+    <span class="k">while</span> <span class="n">thread_ptr</span><span class="p">:</span>
+        <span class="n">native_tid_ptr</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">thread_ptr</span> <span class="o">+</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">thread_state</span><span class="o">.</span><span class="n">native_thread_id</span>
+        <span class="p">)</span>
+        <span class="n">native_tid</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">native_tid_ptr</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">native_tid</span> <span class="o">==</span> <span class="n">target_tid</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">thread_ptr</span>
+        <span class="n">thread_ptr</span> <span class="o">=</span> <span class="n">read_pointer</span><span class="p">(</span>
+            <span class="n">pid</span><span class="p">,</span>
+            <span class="n">thread_ptr</span> <span class="o">+</span> <span class="n">debug_offsets</span><span class="o">.</span><span class="n">thread_state</span><span class="o">.</span><span class="n">next</span>
+        <span class="p">)</span>
+
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Thread with the given ID was not found&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>一旦定位到有效的執行緒狀態，偵錯器就可以繼續修改其控制欄位並排程執行，如下一節所述。</p>
+</section>
+<section id="writing-control-information">
+<h1>寫入控制資訊<a class="headerlink" href="#writing-control-information" title="連結到這個標頭">¶</a></h1>
+<p>一旦識別出有效的 <code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code> 結構，偵錯器就可以修改其中的控制欄位以排程執行指定的 Python 腳本。直譯器會定期檢查這些控制欄位，當正確設定時，它們會在求值迴圈中的安全點觸發遠端程式碼的執行。</p>
+<p>每個 <code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code> 都包含一個 <code class="docutils literal notranslate"><span class="pre">_PyRemoteDebuggerSupport</span></code> 結構，能用於偵錯器和直譯器之間的通訊。其欄位的位置由 <code class="docutils literal notranslate"><span class="pre">_Py_DebugOffsets</span></code> 結構定義，包括以下內容：</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">debugger_script_path</span></code>：一個固定大小的緩衝區，用於保存 Python 原始檔（<code class="docutils literal notranslate"><span class="pre">.py</span></code>）的完整路徑。觸發執行時，目標行程必須能夠存取和讀取此檔案。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">debugger_pending_call</span></code>：一個整數旗標。將其設定為 <code class="docutils literal notranslate"><span class="pre">1</span></code> 會告訴直譯器腳本已準備好執行。</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">eval_breaker</span></code>：直譯器在執行期間檢查的欄位。在此欄位中設定位元 5（<code class="docutils literal notranslate"><span class="pre">_PY_EVAL_PLEASE_STOP_BIT</span></code>，值 <code class="docutils literal notranslate"><span class="pre">1U</span> <span class="pre">&lt;&lt;</span> <span class="pre">5</span></code>）會導致直譯器暫停並檢查偵錯器活動。</p></li>
+</ul>
+<p>要完成注入，偵錯器必須執行以下步驟：</p>
+<ol class="arabic simple">
+<li><p>將完整的腳本路徑寫入 <code class="docutils literal notranslate"><span class="pre">debugger_script_path</span></code> 緩衝區。</p></li>
+<li><p>將 <code class="docutils literal notranslate"><span class="pre">debugger_pending_call</span></code> 設定為 <code class="docutils literal notranslate"><span class="pre">1</span></code>。</p></li>
+<li><p>讀取 <code class="docutils literal notranslate"><span class="pre">eval_breaker</span></code> 目前的值，設定位元 5（<code class="docutils literal notranslate"><span class="pre">_PY_EVAL_PLEASE_STOP_BIT</span></code>）並將更新後的值寫回。這會向直譯器發出檢查偵錯器活動的訊號。</p></li>
+</ol>
+<p>以下是一個範例實作：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">inject_script</span><span class="p">(</span>
+    <span class="n">pid</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">thread_state_addr</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">debug_offsets</span><span class="p">:</span> <span class="n">DebugOffsets</span><span class="p">,</span>
+    <span class="n">script_path</span><span class="p">:</span> <span class="nb">str</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="c1"># 計算 _PyRemoteDebuggerSupport 的基底偏移量</span>
+    <span class="n">support_base</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">thread_state_addr</span> <span class="o">+</span>
+        <span class="n">debug_offsets</span><span class="o">.</span><span class="n">debugger_support</span><span class="o">.</span><span class="n">remote_debugger_support</span>
+    <span class="p">)</span>
+
+    <span class="c1"># 步驟 1：將腳本路徑寫入 debugger_script_path</span>
+    <span class="n">script_path_ptr</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">support_base</span> <span class="o">+</span>
+        <span class="n">debug_offsets</span><span class="o">.</span><span class="n">debugger_support</span><span class="o">.</span><span class="n">debugger_script_path</span>
+    <span class="p">)</span>
+    <span class="n">write_string</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">script_path_ptr</span><span class="p">,</span> <span class="n">script_path</span><span class="p">)</span>
+
+    <span class="c1"># 步驟 2：將 debugger_pending_call 設定為 1</span>
+    <span class="n">pending_ptr</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">support_base</span> <span class="o">+</span>
+        <span class="n">debug_offsets</span><span class="o">.</span><span class="n">debugger_support</span><span class="o">.</span><span class="n">debugger_pending_call</span>
+    <span class="p">)</span>
+    <span class="n">write_int</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">pending_ptr</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># 步驟 3：在 eval_breaker 中設定 _PY_EVAL_PLEASE_STOP_BIT（位元 5，值為 1 &lt;&lt; 5）</span>
+    <span class="n">eval_breaker_ptr</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">thread_state_addr</span> <span class="o">+</span>
+        <span class="n">debug_offsets</span><span class="o">.</span><span class="n">debugger_support</span><span class="o">.</span><span class="n">eval_breaker</span>
+    <span class="p">)</span>
+    <span class="n">breaker</span> <span class="o">=</span> <span class="n">read_int</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">eval_breaker_ptr</span><span class="p">)</span>
+    <span class="n">breaker</span> <span class="o">|=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="mi">5</span><span class="p">)</span>
+    <span class="n">write_int</span><span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">eval_breaker_ptr</span><span class="p">,</span> <span class="n">breaker</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>一旦設定了這些欄位，偵錯器就可以恢復行程（如果它先被暫停了）。直譯器將在下一個安全執行點處理請求、從磁碟載入腳本並執行它。</p>
+<p>偵錯器有責任確保腳本檔案在執行期間仍然存在且可供目標行程存取。</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>腳本執行是非同步的。注入後不能立即刪除腳本檔案。偵錯器應等到注入的腳本產生可觀察的效果後再刪除檔案。此效果取決於腳本被設計要執行的操作。例如，偵錯器可能會等到遠端行程連回通訊端後再刪除腳本。一旦觀察到這種效果，就可以安全地假設不再需要該檔案。</p>
+</div>
+</section>
+<section id="summary">
+<h1>摘要<a class="headerlink" href="#summary" title="連結到這個標頭">¶</a></h1>
+<p>要在遠端行程中注入並執行 Python 腳本：</p>
+<ol class="arabic simple">
+<li><p>在目標行程的記憶體中定位 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 結構。</p></li>
+<li><p>讀取並驗證 <code class="docutils literal notranslate"><span class="pre">PyRuntime</span></code> 開頭的 <code class="docutils literal notranslate"><span class="pre">_Py_DebugOffsets</span></code> 結構。</p></li>
+<li><p>使用偏移量來定位有效的 <code class="docutils literal notranslate"><span class="pre">PyThreadState</span></code>。</p></li>
+<li><p>將 Python 腳本的路徑寫入 <code class="docutils literal notranslate"><span class="pre">debugger_script_path</span></code>。</p></li>
+<li><p>將 <code class="docutils literal notranslate"><span class="pre">debugger_pending_call</span></code> 旗標設定為 <code class="docutils literal notranslate"><span class="pre">1</span></code>。</p></li>
+<li><p>在 <code class="docutils literal notranslate"><span class="pre">eval_breaker</span></code> 欄位中設定 <code class="docutils literal notranslate"><span class="pre">_PY_EVAL_PLEASE_STOP_BIT</span></code>。</p></li>
+<li><p>恢復行程（如果已暫停）。腳本將在下一個安全執行點執行。</p></li>
+</ol>
+</section>
+<section id="security-and-threat-model">
+<span id="remote-debugging-threat-model"></span><h1>Security and threat model<a class="headerlink" href="#security-and-threat-model" title="連結到這個標頭">¶</a></h1>
+<p>The remote debugging protocol relies on the same operating system primitives
+used by native debuggers such as GDB and LLDB.  Attaching to a process
+requires the <strong>same privileges</strong> that those debuggers require, for example
+<code class="docutils literal notranslate"><span class="pre">ptrace</span></code> / Yama LSM on Linux, <code class="docutils literal notranslate"><span class="pre">task_for_pid</span></code> on macOS, and
+<code class="docutils literal notranslate"><span class="pre">SeDebugPrivilege</span></code> on Windows.  Python does not introduce any new privilege
+escalation path; if an attacker already possesses the permissions needed to
+attach to a process, they could equally use GDB to read memory or inject
+code.</p>
+<p>The following principles define what is, and is not, considered a security
+vulnerability in this feature:</p>
+<dl class="simple">
+<dt>Attaching requires OS-level privileges</dt><dd><p>On every supported platform the operating system gates cross-process
+memory access behind privilege checks (<code class="docutils literal notranslate"><span class="pre">CAP_SYS_PTRACE</span></code>, root, or
+administrator rights).  A report that demonstrates an issue only after
+these privileges have already been obtained is <strong>not</strong> a vulnerability in
+CPython, since the OS security boundary was already crossed.</p>
+</dd>
+<dt>Crashes or memory errors when reading a compromised process are not vulnerabilities</dt><dd><p>A tool that reads internal interpreter state from a target process must
+trust that memory to be well-formed.  If the target process has been
+corrupted or is controlled by an attacker, the debugger or profiler may
+crash, produce garbage output, or behave unpredictably.  This is the same
+risk accepted by every <code class="docutils literal notranslate"><span class="pre">ptrace</span></code>-based debugger.  Bugs in this category
+(buffer overflows, segmentation faults, or undefined behaviour triggered
+by reading corrupted state) are <strong>not</strong> treated as security issues, though
+fixes that improve robustness are welcome.</p>
+</dd>
+<dt>Vulnerabilities in the target process are not in scope</dt><dd><p>If the Python process being debugged has already been compromised, the
+attacker already controls execution in that process.  Demonstrating further
+impact from that starting point does not constitute a vulnerability in the
+remote debugging protocol.</p>
+</dd>
+</dl>
+<section id="when-to-use-python-disable-remote-debug">
+<h2>When to use <code class="docutils literal notranslate"><span class="pre">PYTHON_DISABLE_REMOTE_DEBUG</span></code><a class="headerlink" href="#when-to-use-python-disable-remote-debug" title="連結到這個標頭">¶</a></h2>
+<p>The environment variable <span class="target" id="index-1"></span><a class="reference internal" href="../using/cmdline.html#envvar-PYTHON_DISABLE_REMOTE_DEBUG"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHON_DISABLE_REMOTE_DEBUG</span></code></a> (and the
+equivalent <a class="reference internal" href="../using/cmdline.html#cmdoption-X"><code class="xref std std-option docutils literal notranslate"><span class="pre">-X</span> <span class="pre">disable_remote_debug</span></code></a> flag) allows operators to disable
+the in-process side of the protocol as a <strong>defence-in-depth</strong> measure.  This
+may be useful in hardened or sandboxed deployment environments where no
+debugging or profiling of the process is expected and reducing attack surface
+is a priority, even though the OS-level privilege checks already prevent
+unprivileged access.</p>
+<p>Setting this variable does <strong>not</strong> affect other OS-level debugging interfaces
+(<code class="docutils literal notranslate"><span class="pre">ptrace</span></code>, <code class="docutils literal notranslate"><span class="pre">/proc</span></code>, <code class="docutils literal notranslate"><span class="pre">task_for_pid</span></code>, etc.), which remain available
+according to their own permission models.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">遠端偵錯附加協定</a><ul>
+<li><a class="reference internal" href="#disabling-remote-debugging">停用遠端偵錯</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#permission-requirements">權限需求</a></li>
+<li><a class="reference internal" href="#locating-the-pyruntime-structure">定位 PyRuntime 結構</a></li>
+<li><a class="reference internal" href="#reading-py-debugoffsets">讀取 _Py_DebugOffsets</a></li>
+<li><a class="reference internal" href="#locating-the-interpreter-and-thread-state">定位直譯器和執行緒狀態</a></li>
+<li><a class="reference internal" href="#writing-control-information">寫入控制資訊</a></li>
+<li><a class="reference internal" href="#summary">摘要</a></li>
+<li><a class="reference internal" href="#security-and-threat-model">Security and threat model</a><ul>
+<li><a class="reference internal" href="#when-to-use-python-disable-remote-debug">When to use <code class="docutils literal notranslate"><span class="pre">PYTHON_DISABLE_REMOTE_DEBUG</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="free-threading-extensions.html"
+                          title="上一章">支援自由執行緒的 C API 擴充</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="../faq/index.html"
+                          title="下一章">Python 常見問題</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "howto/remote_debugging.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/remote_debugging.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/howto/remote_debugging.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="../faq/index.html" title="Python 常見問題"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="free-threading-extensions.html" title="支援自由執行緒的 C API 擴充"
+             >上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.4 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 如何達成任務</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">遠端偵錯附加協定</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; <a href="../copyright.html">版權所有</a> 2001 Python Software Foundation.
+    <br>
+    此頁面採用 Python 軟體基金會授權條款第 2 版。
+    <br>
+    文件中的範例、應用技巧與其他程式碼額外採用了 Zero Clause BSD 授權條款。
+    <br>
+    
+      更多訊息請見<a href="/license.html">歷史與授權條款</a>。<br>
+    
+    
+    <br>
+
+    Python 軟體基金會是一家非營利法人。
+<a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
+<br>
+    <br>
+      最後更新於 4月 11, 2026 (08:02 UTC)。
+    
+      <a href="/bugs.html">發現 bug</a>？
+    
+    <br>
+
+    以 <a href="https://www.sphinx-doc.org/">Sphinx</a>8.2.3建立。 
+    </div>
+
+  </body>
+</html>

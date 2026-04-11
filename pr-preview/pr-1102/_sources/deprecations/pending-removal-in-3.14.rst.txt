@@ -1,4 +1,4 @@
-Pending Removal in Python 3.14
+Pending removal in Python 3.14
 ------------------------------
 
 * :mod:`argparse`: The *type*, *choices*, and *metavar* parameters
@@ -21,15 +21,15 @@ Pending Removal in Python 3.14
 
 * :mod:`asyncio`:
 
-  * The child watcher classes :class:`~asyncio.MultiLoopChildWatcher`,
-    :class:`~asyncio.FastChildWatcher`, :class:`~asyncio.AbstractChildWatcher`
-    and :class:`~asyncio.SafeChildWatcher` are deprecated and
+  * The child watcher classes :class:`!asyncio.MultiLoopChildWatcher`,
+    :class:`!asyncio.FastChildWatcher`, :class:`!asyncio.AbstractChildWatcher`
+    and :class:`!asyncio.SafeChildWatcher` are deprecated and
     will be removed in Python 3.14.
     (Contributed by Kumar Aditya in :gh:`94597`.)
 
-  * :func:`asyncio.set_child_watcher`, :func:`asyncio.get_child_watcher`,
-    :meth:`asyncio.AbstractEventLoopPolicy.set_child_watcher` and
-    :meth:`asyncio.AbstractEventLoopPolicy.get_child_watcher` are deprecated
+  * :func:`!asyncio.set_child_watcher`, :func:`!asyncio.get_child_watcher`,
+    :meth:`!asyncio.AbstractEventLoopPolicy.set_child_watcher` and
+    :meth:`!asyncio.AbstractEventLoopPolicy.get_child_watcher` are deprecated
     and will be removed in Python 3.14.
     (Contributed by Kumar Aditya in :gh:`94597`.)
 
@@ -37,12 +37,6 @@ Pending Removal in Python 3.14
     default event loop policy now emits a :exc:`DeprecationWarning` if there
     is no current event loop set and it decides to create one.
     (Contributed by Serhiy Storchaka and Guido van Rossum in :gh:`100160`.)
-
-* :mod:`collections.abc`: Deprecated :class:`~collections.abc.ByteString`.
-  Prefer :class:`!Sequence` or :class:`~collections.abc.Buffer`.
-  For use in typing, prefer a union, like ``bytes | bytearray``,
-  or :class:`collections.abc.Buffer`.
-  (Contributed by Shantanu Jain in :gh:`91896`.)
 
 * :mod:`email`: Deprecated the *isdst* parameter in :func:`email.utils.localtime`.
   (Contributed by Alan Williams in :gh:`72346`.)
@@ -78,7 +72,7 @@ Pending Removal in Python 3.14
   :meth:`~pathlib.PurePath.relative_to`: passing additional arguments is
   deprecated.
 
-* :mod:`pkgutil`: :func:`~pkgutil.find_loader` and :func:`~pkgutil.get_loader`
+* :mod:`pkgutil`: :func:`!pkgutil.find_loader` and :func:`!pkgutil.get_loader`
   now raise :exc:`DeprecationWarning`;
   use :func:`importlib.util.find_spec` instead.
   (Contributed by Nikita Sobolev in :gh:`97850`.)
@@ -90,14 +84,11 @@ Pending Removal in Python 3.14
 
 * :mod:`sqlite3`:
 
-  * :data:`~sqlite3.version` and :data:`~sqlite3.version_info`.
+  * :data:`!version` and :data:`!version_info`.
 
   * :meth:`~sqlite3.Cursor.execute` and :meth:`~sqlite3.Cursor.executemany`
     if :ref:`named placeholders <sqlite3-placeholders>` are used and
     *parameters* is a sequence instead of a :class:`dict`.
-
-* :mod:`typing`: :class:`~typing.ByteString`, deprecated since Python 3.9,
-  now causes a :exc:`DeprecationWarning` to be emitted when it is used.
 
 * :mod:`urllib`:
   :class:`!urllib.parse.Quoter` is deprecated: it was not intended to be a

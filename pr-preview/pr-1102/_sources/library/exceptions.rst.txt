@@ -221,7 +221,7 @@ The following exceptions are the exceptions that are usually raised.
 .. exception:: EOFError
 
    Raised when the :func:`input` function hits an end-of-file condition (EOF)
-   without reading any data. (Note: the :meth:`!io.IOBase.read` and
+   without reading any data. (Note: the :meth:`io.TextIOBase.read` and
    :meth:`io.IOBase.readline` methods return an empty string when they hit EOF.)
 
 
@@ -436,6 +436,7 @@ The following exceptions are the exceptions that are usually raised.
    :exc:`PythonFinalizationError` during the Python finalization:
 
    * Creating a new Python thread.
+   * :meth:`Joining <threading.Thread.join>` a running daemon thread.
    * :func:`os.fork`.
 
    See also the :func:`sys.is_finalizing` function.
@@ -443,6 +444,9 @@ The following exceptions are the exceptions that are usually raised.
    .. versionadded:: 3.13
       Previously, a plain :exc:`RuntimeError` was raised.
 
+   .. versionchanged:: 3.14
+
+      :meth:`threading.Thread.join` can now raise this exception.
 
 .. exception:: RecursionError
 
@@ -658,9 +662,15 @@ The following exceptions are the exceptions that are usually raised.
 
        The first index of invalid data in :attr:`object`.
 
+       This value should not be negative as it is interpreted as an
+       absolute offset but this constraint is not enforced at runtime.
+
    .. attribute:: end
 
        The index after the last invalid data in :attr:`object`.
+
+       This value should not be negative as it is interpreted as an
+       absolute offset but this constraint is not enforced at runtime.
 
 
 .. exception:: UnicodeEncodeError
@@ -725,8 +735,8 @@ depending on the system error code.
 
    .. attribute:: characters_written
 
-      An integer containing the number of characters written to the stream
-      before it blocked.  This attribute is available when using the
+      An integer containing the number of **bytes** written to the stream
+      before it blocked. This attribute is available when using the
       buffered I/O classes from the :mod:`io` module.
 
 .. exception:: ChildProcessError
@@ -880,6 +890,9 @@ The following exceptions are used as warning categories; see the
 
    Base class for warnings about dubious syntax.
 
+   This warning is typically emitted when compiling Python source code, and usually won't be reported
+   when running already compiled code.
+
 
 .. exception:: RuntimeWarning
 
@@ -957,6 +970,12 @@ their subgroups based on the types of the contained exceptions.
    automatic. The :exc:`ExceptionGroup` constructor, on the other hand,
    raises a :exc:`TypeError` if any contained exception is not an
    :exc:`Exception` subclass.
+
+   .. impl-detail::
+
+      The ``excs`` parameter may be any sequence, but lists and tuples are
+      specifically processed more efficiently here. For optimal performance,
+      pass a tuple as ``excs``.
 
    .. attribute:: message
 

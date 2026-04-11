@@ -12,24 +12,23 @@ and adds some new things as well.
 More on Lists
 =============
 
-The list data type has some more methods.  Here are all of the methods of list
-objects:
+The :ref:`list <typesseq-list>` data type has some more methods. Here are all
+of the methods of list objects:
 
-
-.. method:: list.append(x)
+.. method:: list.append(value, /)
    :noindex:
 
    Add an item to the end of the list.  Similar to ``a[len(a):] = [x]``.
 
 
-.. method:: list.extend(iterable)
+.. method:: list.extend(iterable, /)
    :noindex:
 
    Extend the list by appending all the items from the iterable.  Similar to
    ``a[len(a):] = iterable``.
 
 
-.. method:: list.insert(i, x)
+.. method:: list.insert(index, value, /)
    :noindex:
 
    Insert an item at a given position.  The first argument is the index of the
@@ -37,14 +36,14 @@ objects:
    the list, and ``a.insert(len(a), x)`` is equivalent to ``a.append(x)``.
 
 
-.. method:: list.remove(x)
+.. method:: list.remove(value, /)
    :noindex:
 
-   Remove the first item from the list whose value is equal to *x*.  It raises a
+   Remove the first item from the list whose value is equal to *value*.  It raises a
    :exc:`ValueError` if there is no such item.
 
 
-.. method:: list.pop([i])
+.. method:: list.pop(index=-1, /)
    :noindex:
 
    Remove the item at the given position in the list, and return it.  If no index
@@ -59,10 +58,10 @@ objects:
    Remove all items from the list.  Similar to ``del a[:]``.
 
 
-.. method:: list.index(x[, start[, end]])
+.. method:: list.index(value[, start[, stop]])
    :noindex:
 
-   Return zero-based index in the list of the first item whose value is equal to *x*.
+   Return zero-based index of the first occurrence of *value* in the list.
    Raises a :exc:`ValueError` if there is no such item.
 
    The optional arguments *start* and *end* are interpreted as in the slice
@@ -71,10 +70,10 @@ objects:
    sequence rather than the *start* argument.
 
 
-.. method:: list.count(x)
+.. method:: list.count(value, /)
    :noindex:
 
-   Return the number of times *x* appears in the list.
+   Return the number of times *value* appears in the list.
 
 
 .. method:: list.sort(*, key=None, reverse=False)
@@ -142,8 +141,8 @@ Using Lists as Stacks
 
 The list methods make it very easy to use a list as a stack, where the last
 element added is the first element retrieved ("last-in, first-out").  To add an
-item to the top of the stack, use :meth:`!append`.  To retrieve an item from the
-top of the stack, use :meth:`!pop` without an explicit index.  For example::
+item to the top of the stack, use :meth:`~list.append`.  To retrieve an item from the
+top of the stack, use :meth:`~list.pop` without an explicit index.  For example::
 
    >>> stack = [3, 4, 5]
    >>> stack.append(6)
@@ -340,7 +339,7 @@ The :keyword:`!del` statement
 =============================
 
 There is a way to remove an item from a list given its index instead of its
-value: the :keyword:`del` statement.  This differs from the :meth:`!pop` method
+value: the :keyword:`del` statement.  This differs from the :meth:`~list.pop` method
 which returns a value.  The :keyword:`!del` statement can also be used to remove
 slices from a list or clear the entire list (which we did earlier by assignment
 of an empty list to the slice).  For example::
@@ -445,14 +444,18 @@ packing and sequence unpacking.
 Sets
 ====
 
-Python also includes a data type for *sets*.  A set is an unordered collection
-with no duplicate elements.  Basic uses include membership testing and
-eliminating duplicate entries.  Set objects also support mathematical operations
-like union, intersection, difference, and symmetric difference.
+Python also includes a data type for :ref:`sets <types-set>`.  A set is
+an unordered collection with no duplicate elements.  Basic uses include
+membership testing and eliminating duplicate entries.  Set objects also
+support mathematical operations like union, intersection, difference, and
+symmetric difference.
 
 Curly braces or the :func:`set` function can be used to create sets.  Note: to
 create an empty set you have to use ``set()``, not ``{}``; the latter creates an
 empty dictionary, a data structure that we discuss in the next section.
+
+Because sets are unordered, iterating over them or printing them can
+produce the elements in a different order than you expect.
 
 Here is a brief demonstration::
 
@@ -500,8 +503,8 @@ any immutable type; strings and numbers can always be keys.  Tuples can be used
 as keys if they contain only strings, numbers, or tuples; if a tuple contains
 any mutable object either directly or indirectly, it cannot be used as a key.
 You can't use lists as keys, since lists can be modified in place using index
-assignments, slice assignments, or methods like :meth:`!append` and
-:meth:`!extend`.
+assignments, slice assignments, or methods like :meth:`~list.append` and
+:meth:`~list.extend`.
 
 It is best to think of a dictionary as a set of *key: value* pairs,
 with the requirement that the keys are unique (within one dictionary). A pair of
@@ -512,8 +515,12 @@ dictionary; this is also the way dictionaries are written on output.
 The main operations on a dictionary are storing a value with some key and
 extracting the value given the key.  It is also possible to delete a key:value
 pair with ``del``. If you store using a key that is already in use, the old
-value associated with that key is forgotten.  It is an error to extract a value
-using a non-existent key.
+value associated with that key is forgotten.
+
+Extracting a value for a non-existent key by subscripting (``d[key]``) raises a
+:exc:`KeyError`. To avoid getting this error when trying to access a possibly
+non-existent key, use the :meth:`~dict.get` method instead, which returns
+``None`` (or a specified default value) if the key is not in the dictionary.
 
 Performing ``list(d)`` on a dictionary returns a list of all the keys
 used in the dictionary, in insertion order (if you want it sorted, just use
@@ -528,6 +535,12 @@ Here is a small example using a dictionary::
    {'jack': 4098, 'sape': 4139, 'guido': 4127}
    >>> tel['jack']
    4098
+   >>> tel['irv']
+   Traceback (most recent call last):
+     File "<stdin>", line 1, in <module>
+   KeyError: 'irv'
+   >>> print(tel.get('irv'))
+   None
    >>> del tel['sape']
    >>> tel['irv'] = 4127
    >>> tel

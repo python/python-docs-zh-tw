@@ -19,7 +19,7 @@ This module defines classes for implementing HTTP servers.
 
 .. warning::
 
-    :mod:`http.server` is not recommended for production. It only implements
+    :mod:`!http.server` is not recommended for production. It only implements
     :ref:`basic security checks <http.server-security>`.
 
 .. include:: ../includes/wasm-notavail.rst
@@ -51,9 +51,49 @@ handler.  Code to create and run the server looks like this::
    .. versionadded:: 3.7
 
 
-The :class:`HTTPServer` and :class:`ThreadingHTTPServer` must be given
-a *RequestHandlerClass* on instantiation, of which this module
-provides three different variants:
+.. class:: HTTPSServer(server_address, RequestHandlerClass,\
+                       bind_and_activate=True, *, certfile, keyfile=None,\
+                       password=None, alpn_protocols=None)
+
+   Subclass of :class:`HTTPServer` with a wrapped socket using the :mod:`ssl` module.
+   If the :mod:`ssl` module is not available, instantiating a :class:`!HTTPSServer`
+   object fails with a :exc:`RuntimeError`.
+
+   The *certfile* argument is the path to the SSL certificate chain file,
+   and the *keyfile* is the path to file containing the private key.
+
+   A *password* can be specified for files protected and wrapped with PKCS#8,
+   but beware that this could possibly expose hardcoded passwords in clear.
+
+   .. seealso::
+
+      See :meth:`ssl.SSLContext.load_cert_chain` for additional
+      information on the accepted values for *certfile*, *keyfile*
+      and *password*.
+
+   When specified, the *alpn_protocols* argument must be a sequence of strings
+   specifying the "Application-Layer Protocol Negotiation" (ALPN) protocols
+   supported by the server. ALPN allows the server and the client to negotiate
+   the application protocol during the TLS handshake.
+
+   By default, it is set to ``["http/1.1"]``, meaning the server supports HTTP/1.1.
+
+   .. versionadded:: 3.14
+
+.. class:: ThreadingHTTPSServer(server_address, RequestHandlerClass,\
+                                bind_and_activate=True, *, certfile, keyfile=None,\
+                                password=None, alpn_protocols=None)
+
+   This class is identical to :class:`HTTPSServer` but uses threads to handle
+   requests by inheriting from :class:`~socketserver.ThreadingMixIn`. This is
+   analogous to :class:`ThreadingHTTPServer` only using :class:`HTTPSServer`.
+
+   .. versionadded:: 3.14
+
+
+The :class:`HTTPServer`, :class:`ThreadingHTTPServer`, :class:`HTTPSServer` and
+:class:`ThreadingHTTPSServer` must be given a *RequestHandlerClass* on
+instantiation, of which this module provides three different variants:
 
 .. class:: BaseHTTPRequestHandler(request, client_address, server)
 
@@ -114,7 +154,7 @@ provides three different variants:
       variable. This instance parses and manages the headers in the HTTP
       request. The :func:`~http.client.parse_headers` function from
       :mod:`http.client` is used to parse the headers and it requires that the
-      HTTP request provide a valid :rfc:`2822` style header.
+      HTTP request provide a valid :rfc:`5322` style header.
 
    .. attribute:: rfile
 
@@ -247,6 +287,8 @@ provides three different variants:
       specifying its value. Note that, after the send_header calls are done,
       :meth:`end_headers` MUST BE called in order to complete the operation.
 
+      This method does not reject input containing CRLF sequences.
+
       .. versionchanged:: 3.2
          Headers are stored in an internal buffer.
 
@@ -256,6 +298,8 @@ provides three different variants:
       Continue`` response is sent by the server to the client. The headers not
       buffered and sent directly the output stream.If the *message* is not
       specified, the HTTP message corresponding the response *code*  is sent.
+
+      This method does not reject *message* containing CRLF sequences.
 
       .. versionadded:: 3.2
 
@@ -472,7 +516,7 @@ such as using different index file names by overriding the class attribute
 Command-line interface
 ----------------------
 
-:mod:`http.server` can also be invoked directly using the :option:`-m`
+:mod:`!http.server` can also be invoked directly using the :option:`-m`
 switch of the interpreter.  The following example illustrates how to serve
 files relative to the current directory::
 
@@ -532,7 +576,7 @@ The following options are accepted:
 
    .. deprecated-removed:: 3.13 3.15
 
-      :mod:`http.server` command line ``--cgi`` support is being removed
+      :mod:`!http.server` command line ``--cgi`` support is being removed
       because :class:`CGIHTTPRequestHandler` is being removed.
 
 .. warning::
@@ -540,6 +584,35 @@ The following options are accepted:
    :class:`CGIHTTPRequestHandler` and the ``--cgi`` command-line option
    are not intended for use by untrusted clients and may be vulnerable
    to exploitation. Always use within a secure environment.
+
+.. option:: --tls-cert
+
+   Specifies a TLS certificate chain for HTTPS connections::
+
+      python -m http.server --tls-cert fullchain.pem
+
+   .. versionadded:: 3.14
+
+.. option:: --tls-key
+
+   Specifies a private key file for HTTPS connections.
+
+   This option requires ``--tls-cert`` to be specified.
+
+   .. versionadded:: 3.14
+
+.. option:: --tls-password-file
+
+   Specifies the password file for password-protected private keys::
+
+      python -m http.server \
+             --tls-cert cert.pem \
+             --tls-key key.pem \
+             --tls-password-file password.txt
+
+   This option requires `--tls-cert`` to be specified.
+
+   .. versionadded:: 3.14
 
 
 .. _http.server-security:
@@ -552,6 +625,11 @@ Security considerations
 :class:`SimpleHTTPRequestHandler` will follow symbolic links when handling
 requests, this makes it possible for files outside of the specified directory
 to be served.
+
+Methods :meth:`BaseHTTPRequestHandler.send_header` and
+:meth:`BaseHTTPRequestHandler.send_response_only` assume sanitized input
+and does not perform input validation such as checking for the presence of CRLF
+sequences. Untrusted input may result in HTTP Header injection attacks.
 
 Earlier versions of Python did not scrub control characters from the
 log messages emitted to stderr from ``python -m http.server`` or the

@@ -16,7 +16,7 @@ function getCopyableText(rootElement) {
     }
     // Remove all elements with the "go" (Generic.Output),
     // "gp" (Generic.Prompt), or "gt" (Generic.Traceback) CSS class
-    const elements = rootElement.querySelectorAll(".gp, .go, .gt")
+    const elements = rootElement.querySelectorAll(".gp, .go, .gt, .linenos")
     for (const el of elements) {
         el.remove()
     }
@@ -62,6 +62,12 @@ const loadCopyButton = () => {
         + ".highlight-python3 .highlight,"
         + ".highlight-pycon .highlight,"
         + ".highlight-pycon3 .highlight,"
+        + ".highlight-bash .highlight,"
+        + ".highlight-console .highlight,"
+        + ".highlight-doscon .highlight,"
+        + ".highlight-ps1con .highlight,"
+        + ".highlight-sh .highlight,"
+        + ".highlight-shell-session .highlight,"
         + ".highlight-default .highlight"
     )
 

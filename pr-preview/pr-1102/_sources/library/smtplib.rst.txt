@@ -14,7 +14,7 @@
 
 --------------
 
-The :mod:`smtplib` module defines an SMTP client session object that can be used
+The :mod:`!smtplib` module defines an SMTP client session object that can be used
 to send mail to any internet machine with an SMTP or ESMTP listener daemon.  For
 details of SMTP and ESMTP operation, consult :rfc:`821` (Simple Mail Transfer
 Protocol) and :rfc:`1869` (SMTP Service Extensions).
@@ -80,8 +80,8 @@ Protocol) and :rfc:`1869` (SMTP Service Extensions).
 
    An :class:`SMTP_SSL` instance behaves exactly the same as instances of
    :class:`SMTP`. :class:`SMTP_SSL` should be used for situations where SSL is
-   required from the beginning of the connection and using :meth:`starttls` is
-   not appropriate. If *host* is not specified, the local host is used. If
+   required from the beginning of the connection and using :meth:`~SMTP.starttls`
+   is not appropriate. If *host* is not specified, the local host is used. If
    *port* is zero, the standard SMTP-over-SSL port (465) is used.  The optional
    arguments *local_hostname*, *timeout* and *source_address* have the same
    meaning as they do in the :class:`SMTP` class.  *context*, also optional,
@@ -112,7 +112,7 @@ Protocol) and :rfc:`1869` (SMTP Service Extensions).
 
    The LMTP protocol, which is very similar to ESMTP, is heavily based on the
    standard SMTP client. It's common to use Unix sockets for LMTP, so our
-   :meth:`connect` method must support that as well as a regular host:port
+   :meth:`~SMTP.connect` method must support that as well as a regular host:port
    server. The optional arguments *local_hostname* and *source_address* have the
    same meaning as they do in the :class:`SMTP` class. To specify a Unix
    socket, you must use an absolute path for *host*, starting with a '/'.
@@ -147,9 +147,15 @@ A nice selection of exceptions is defined as well:
 .. exception:: SMTPResponseException
 
    Base class for all exceptions that include an SMTP error code. These exceptions
-   are generated in some instances when the SMTP server returns an error code.  The
-   error code is stored in the :attr:`smtp_code` attribute of the error, and the
-   :attr:`smtp_error` attribute is set to the error message.
+   are generated in some instances when the SMTP server returns an error code.
+
+   .. attribute:: smtp_code
+
+      The error code.
+
+   .. attribute:: smtp_error
+
+      The error message.
 
 
 .. exception:: SMTPSenderRefused
@@ -161,9 +167,13 @@ A nice selection of exceptions is defined as well:
 
 .. exception:: SMTPRecipientsRefused
 
-   All recipient addresses refused.  The errors for each recipient are accessible
-   through the attribute :attr:`recipients`, which is a dictionary of exactly the
-   same sort as :meth:`SMTP.sendmail` returns.
+   All recipient addresses refused.
+
+   .. attribute:: recipients
+
+      A dictionary of exactly the same sort as returned
+      by :meth:`SMTP.sendmail` containing the errors for
+      each recipient.
 
 
 .. exception:: SMTPDataError
@@ -212,7 +222,6 @@ SMTP Objects
 ------------
 
 An :class:`SMTP` instance has the following methods:
-
 
 .. method:: SMTP.set_debuglevel(level)
 
@@ -327,7 +336,7 @@ An :class:`SMTP` instance has the following methods:
    :exc:`SMTPException`
       No suitable authentication method was found.
 
-   Each of the authentication methods supported by :mod:`smtplib` are tried in
+   Each of the authentication methods supported by :mod:`!smtplib` are tried in
    turn if they are advertised as supported by the server.  See :meth:`auth`
    for a list of supported authentication methods.  *initial_response_ok* is
    passed through to :meth:`auth`.
@@ -379,7 +388,7 @@ An :class:`SMTP` instance has the following methods:
    call the :meth:`login` method, which will try each of the above mechanisms
    in turn, in the order listed.  ``auth`` is exposed to facilitate the
    implementation of authentication methods not (or not yet) supported
-   directly by :mod:`smtplib`.
+   directly by :mod:`!smtplib`.
 
    .. versionadded:: 3.5
 
@@ -417,7 +426,7 @@ An :class:`SMTP` instance has the following methods:
 
    .. versionchanged:: 3.4
       The method now supports hostname check with
-      :attr:`SSLContext.check_hostname` and *Server Name Indicator* (see
+      :attr:`ssl.SSLContext.check_hostname` and *Server Name Indicator* (see
       :const:`~ssl.HAS_SNI`).
 
    .. versionchanged:: 3.5
@@ -431,11 +440,13 @@ An :class:`SMTP` instance has the following methods:
    Send mail.  The required arguments are an :rfc:`822` from-address string, a list
    of :rfc:`822` to-address strings (a bare string will be treated as a list with 1
    address), and a message string.  The caller may pass a list of ESMTP options
-   (such as ``8bitmime``) to be used in ``MAIL FROM`` commands as *mail_options*.
+   (such as ``"8bitmime"``) to be used in ``MAIL FROM`` commands as *mail_options*.
    ESMTP options (such as ``DSN`` commands) that should be used with all ``RCPT``
-   commands can be passed as *rcpt_options*.  (If you need to use different ESMTP
+   commands can be passed as *rcpt_options*. Each option should be passed as a string
+   containing the full text of the option, including any potential key
+   (for instance, ``"NOTIFY=SUCCESS,FAILURE"``). (If you need to use different ESMTP
    options to different recipients you have to use the low-level methods such as
-   :meth:`mail`, :meth:`rcpt` and :meth:`data` to send the message.)
+   :meth:`!mail`, :meth:`!rcpt` and :meth:`!data` to send the message.)
 
    .. note::
 
@@ -467,10 +478,7 @@ An :class:`SMTP` instance has the following methods:
    This method may raise the following exceptions:
 
    :exc:`SMTPRecipientsRefused`
-      All recipients were refused.  Nobody got the mail.  The :attr:`recipients`
-      attribute of the exception object is a dictionary with information about the
-      refused recipients (like the one returned when at least one recipient was
-      accepted).
+      All recipients were refused.  Nobody got the mail.
 
    :exc:`SMTPHeloError`
       The server didn't reply properly to the ``HELO`` greeting.
@@ -545,6 +553,30 @@ Low-level methods corresponding to the standard SMTP/ESMTP commands ``HELP``,
 ``RSET``, ``NOOP``, ``MAIL``, ``RCPT``, and ``DATA`` are also supported.
 Normally these do not need to be called directly, so they are not documented
 here.  For details, consult the module code.
+
+Additionally, an SMTP instance has the following attributes:
+
+
+.. attribute:: SMTP.helo_resp
+
+   The response to the ``HELO`` command, see :meth:`helo`.
+
+
+.. attribute:: SMTP.ehlo_resp
+
+   The response to the ``EHLO`` command, see :meth:`ehlo`.
+
+
+.. attribute:: SMTP.does_esmtp
+
+   A boolean value indicating whether the server supports ESMTP, see
+   :meth:`ehlo`.
+
+
+.. attribute:: SMTP.esmtp_features
+
+   A dictionary of the names of SMTP service extensions supported by the server,
+   see :meth:`ehlo`.
 
 
 .. _smtp-example:
