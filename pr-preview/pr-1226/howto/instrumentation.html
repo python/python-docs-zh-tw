@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>使用 DTrace 和 SystemTap 檢測 CPython &#8212; Python 3.14.4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=4365c8fe" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
+    
+    <script src="../_static/documentation_options.js?v=9e923c91"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.14.4 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權所有" href="../copyright.html" />
+    <link rel="next" title="Python 對 Linux perf 分析器的支援" href="perf_profiling.html" />
+    <link rel="prev" title="ipaddress 模組介紹" href="ipaddress.html" />
+    
+      
+      <link rel="canonical" href="https://docs.python.org/3/howto/instrumentation.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="../_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="../_static/py.svg">
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script>
+            <script type="text/javascript" src="../_static/search-focus.js"></script>
+            <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="選單">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="../_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"></span>
+            <form role="search" class="search" action="../search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q">
+                <input type="submit" value="前往">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+            
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">使用 DTrace 和 SystemTap 檢測 CPython</a><ul>
+<li><a class="reference internal" href="#enabling-the-static-markers">啟用靜態標記</a></li>
+<li><a class="reference internal" href="#static-dtrace-probes">靜態 DTrace 探針</a></li>
+<li><a class="reference internal" href="#static-systemtap-markers">靜態 SystemTap 標記</a></li>
+<li><a class="reference internal" href="#available-static-markers">可用的靜態標記</a><ul>
+<li><a class="reference internal" href="#c-entry-points">C Entry Points</a></li>
+<li><a class="reference internal" href="#c-probing-checks">C Probing Checks</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#systemtap-tapsets">SystemTap Tapsets</a></li>
+<li><a class="reference internal" href="#examples">範例</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="ipaddress.html"
+                          title="上一章">ipaddress 模組介紹</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="perf_profiling.html"
+                          title="下一章">Python 對 Linux <code class="docutils literal notranslate"><span class="pre">perf</span></code> 分析器的支援</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "howto/instrumentation.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/instrumentation.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/howto/instrumentation.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="perf_profiling.html" title="Python 對 Linux perf 分析器的支援"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="ipaddress.html" title="ipaddress 模組介紹"
+             accesskey="P">上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.4 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 如何達成任務</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">使用 DTrace 和 SystemTap 檢測 CPython</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="instrumenting-cpython-with-dtrace-and-systemtap">
+<span id="instrumentation"></span><h1>使用 DTrace 和 SystemTap 檢測 CPython<a class="headerlink" href="#instrumenting-cpython-with-dtrace-and-systemtap" title="連結到這個標頭">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">作者<span class="colon">:</span></dt>
+<dd class="field-odd"><p>David Malcolm</p>
+</dd>
+<dt class="field-even">作者<span class="colon">:</span></dt>
+<dd class="field-even"><p>Łukasz Langa</p>
+</dd>
+</dl>
+<p>DTrace 和 SystemTap 都是監測工具，各自都提供了一種檢查電腦系統之行程 (process) 正在執行什麼操作的方法。它們都使用了領域限定 (domain-specific) 的語言，允許使用者編寫以下腳本：</p>
+<ul class="simple">
+<li><p>過濾要觀察的行程</p></li>
+<li><p>收集來自感興趣之行程的資料</p></li>
+<li><p>以這些資料產生報告</p></li>
+</ul>
+<p>從 Python 3.6 開始，CPython 可以使用嵌入式「標記 (marker)」（也稱為「探針 (probe)」）建置，可以透過 DTrace 或 SystemTap 腳本進行觀察，從而更輕鬆地監視系統之 CPython 行程正在執行的操作。</p>
+<div class="impl-detail compound">
+<p>DTrace 標記是 CPython 直譯器的實作細節。不保證 CPython 版本之間的探針相容性。更改 CPython 版本時，DTrace 腳本可能會停止運作或錯誤地運作，而不會發出警告。</p>
+</div>
+<section id="enabling-the-static-markers">
+<h2>啟用靜態標記<a class="headerlink" href="#enabling-the-static-markers" title="連結到這個標頭">¶</a></h2>
+<p>macOS 內建了對 DTrace 的支援。在 Linux 上，為了建置帶有 SystemTap 嵌入標記的 CPython，必須安裝 SystemTap 開發工具。</p>
+<p>在 Linux 機器上，這可以透過以下方式完成：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>yum<span class="w"> </span>install<span class="w"> </span>systemtap-sdt-devel
+</pre></div>
+</div>
+<p>或是：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>systemtap-sdt-dev
+</pre></div>
+</div>
+<p>然後 CPython 必須使用<a class="reference internal" href="../using/configure.html#cmdoption-with-dtrace"><code class="xref std std-option docutils literal notranslate"><span class="pre">配置</span> <span class="pre">--with-dtrace</span> <span class="pre">選項</span></code></a>：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>checking for --with-dtrace... yes
+</pre></div>
+</div>
+<p>在 macOS 上，你可以透過在後台運行 Python 行程並列出 Python 發布者 (provider) 所提供的所有可用探針，以列出可用的 DTrace 探針：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python3.6<span class="w"> </span>-q<span class="w"> </span><span class="p">&amp;</span>
+<span class="gp">$ </span>sudo<span class="w"> </span>dtrace<span class="w"> </span>-l<span class="w"> </span>-P<span class="w"> </span>python<span class="nv">$!</span><span class="w">  </span><span class="c1"># 或 dtrace -l -m python3.6</span>
+
+<span class="go">   ID   PROVIDER            MODULE                          FUNCTION NAME</span>
+<span class="go">29564 python18035        python3.6          _PyEval_EvalFrameDefault function-entry</span>
+<span class="go">29565 python18035        python3.6             dtrace_function_entry function-entry</span>
+<span class="go">29566 python18035        python3.6          _PyEval_EvalFrameDefault function-return</span>
+<span class="go">29567 python18035        python3.6            dtrace_function_return function-return</span>
+<span class="go">29568 python18035        python3.6                           collect gc-done</span>
+<span class="go">29569 python18035        python3.6                           collect gc-start</span>
+<span class="go">29570 python18035        python3.6          _PyEval_EvalFrameDefault line</span>
+<span class="go">29571 python18035        python3.6                 maybe_dtrace_line line</span>
+</pre></div>
+</div>
+<p>在 Linux 上，你可以透過查看二進位建置檔案中是否包含 &quot;.note.stapsdt&quot; 部分來驗證 SystemTap 靜態標記是否存在。</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>readelf<span class="w"> </span>-S<span class="w"> </span>./python<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>.note.stapsdt
+<span class="go">[30] .note.stapsdt        NOTE         0000000000000000 00308d78</span>
+</pre></div>
+</div>
+<p>如果你已將 Python 建置為共享函式庫（使用 <a class="reference internal" href="../using/configure.html#cmdoption-enable-shared"><code class="xref std std-option docutils literal notranslate"><span class="pre">--enable-shared</span></code></a> 配置選項），則需要在共享函式庫中查找。例如：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>readelf<span class="w"> </span>-S<span class="w"> </span>libpython3.3dm.so.1.0<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>.note.stapsdt
+<span class="go">[29] .note.stapsdt        NOTE         0000000000000000 00365b68</span>
+</pre></div>
+</div>
+<p>足夠現代化的 readelf 可以印出元資料 (metadata)：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>readelf<span class="w"> </span>-n<span class="w"> </span>./python
+
+<span class="go">Displaying notes found at file offset 0x00000254 with length 0x00000020:</span>
+<span class="go">    Owner                 Data size          Description</span>
+<span class="go">    GNU                  0x00000010          NT_GNU_ABI_TAG (ABI version tag)</span>
+<span class="go">        OS: Linux, ABI: 2.6.32</span>
+
+<span class="go">Displaying notes found at file offset 0x00000274 with length 0x00000024:</span>
+<span class="go">    Owner                 Data size          Description</span>
+<span class="go">    GNU                  0x00000014          NT_GNU_BUILD_ID (unique build ID bitstring)</span>
+<span class="go">        Build ID: df924a2b08a7e89f6e11251d4602022977af2670</span>
+
+<span class="go">Displaying notes found at file offset 0x002d6c30 with length 0x00000144:</span>
+<span class="go">    Owner                 Data size          Description</span>
+<span class="go">    stapsdt              0x00000031          NT_STAPSDT (SystemTap probe descriptors)</span>
+<span class="go">        Provider: python</span>
+<span class="go">        Name: gc__start</span>
+<span class="go">        Location: 0x00000000004371c3, Base: 0x0000000000630ce2, Semaphore: 0x00000000008d6bf6</span>
+<span class="go">        Arguments: -4@%ebx</span>
+<span class="go">    stapsdt              0x00000030          NT_STAPSDT (SystemTap probe descriptors)</span>
+<span class="go">        Provider: python</span>
+<span class="go">        Name: gc__done</span>
+<span class="go">        Location: 0x00000000004374e1, Base: 0x0000000000630ce2, Semaphore: 0x00000000008d6bf8</span>
+<span class="go">        Arguments: -8@%rax</span>
+<span class="go">    stapsdt              0x00000045          NT_STAPSDT (SystemTap probe descriptors)</span>
+<span class="go">        Provider: python</span>
+<span class="go">        Name: function__entry</span>
+<span class="go">        Location: 0x000000000053db6c, Base: 0x0000000000630ce2, Semaphore: 0x00000000008d6be8</span>
+<span class="go">        Arguments: 8@%rbp 8@%r12 -4@%eax</span>
+<span class="go">    stapsdt              0x00000046          NT_STAPSDT (SystemTap probe descriptors)</span>
+<span class="go">        Provider: python</span>
+<span class="go">        Name: function__return</span>
+<span class="go">        Location: 0x000000000053dba8, Base: 0x0000000000630ce2, Semaphore: 0x00000000008d6bea</span>
+<span class="go">        Arguments: 8@%rbp 8@%r12 -4@%eax</span>
+</pre></div>
+</div>
+<p>上述元資料包含 SystemTap 的資訊，描述了它如何修補策略性放置的機器碼指令以啟用 SystemTap 腳本使用的追蹤 hook。</p>
+</section>
+<section id="static-dtrace-probes">
+<h2>靜態 DTrace 探針<a class="headerlink" href="#static-dtrace-probes" title="連結到這個標頭">¶</a></h2>
+<p>以下範例示範 DTrace 腳本可用於顯示 Python 腳本的呼叫/回傳階層結構，僅在名為 &quot;start&quot; 的函式的呼叫內進行追蹤。換句話說，引入時的函式呼叫不會被列出：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>self int indent;
+
+python$target:::function-entry
+/copyinstr(arg1) == &quot;start&quot;/
+{
+        self-&gt;trace = 1;
+}
+
+python$target:::function-entry
+/self-&gt;trace/
+{
+        printf(&quot;%d\t%*s:&quot;, timestamp, 15, probename);
+        printf(&quot;%*s&quot;, self-&gt;indent, &quot;&quot;);
+        printf(&quot;%s:%s:%d\n&quot;, basename(copyinstr(arg0)), copyinstr(arg1), arg2);
+        self-&gt;indent++;
+}
+
+python$target:::function-return
+/self-&gt;trace/
+{
+        self-&gt;indent--;
+        printf(&quot;%d\t%*s:&quot;, timestamp, 15, probename);
+        printf(&quot;%*s&quot;, self-&gt;indent, &quot;&quot;);
+        printf(&quot;%s:%s:%d\n&quot;, basename(copyinstr(arg0)), copyinstr(arg1), arg2);
+}
+
+python$target:::function-return
+/copyinstr(arg1) == &quot;start&quot;/
+{
+        self-&gt;trace = 0;
+}
+</pre></div>
+</div>
+<p>可以這樣呼叫：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>sudo<span class="w"> </span>dtrace<span class="w"> </span>-q<span class="w"> </span>-s<span class="w"> </span>call_stack.d<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;python3.6 script.py&quot;</span>
+</pre></div>
+</div>
+<p>輸出如下所示：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>156641360502280  function-entry:call_stack.py:start:23
+156641360518804  function-entry: call_stack.py:function_1:1
+156641360532797  function-entry:  call_stack.py:function_3:9
+156641360546807 function-return:  call_stack.py:function_3:10
+156641360563367 function-return: call_stack.py:function_1:2
+156641360578365  function-entry: call_stack.py:function_2:5
+156641360591757  function-entry:  call_stack.py:function_1:1
+156641360605556  function-entry:   call_stack.py:function_3:9
+156641360617482 function-return:   call_stack.py:function_3:10
+156641360629814 function-return:  call_stack.py:function_1:2
+156641360642285 function-return: call_stack.py:function_2:6
+156641360656770  function-entry: call_stack.py:function_3:9
+156641360669707 function-return: call_stack.py:function_3:10
+156641360687853  function-entry: call_stack.py:function_4:13
+156641360700719 function-return: call_stack.py:function_4:14
+156641360719640  function-entry: call_stack.py:function_5:18
+156641360732567 function-return: call_stack.py:function_5:21
+156641360747370 function-return:call_stack.py:start:28
+</pre></div>
+</div>
+</section>
+<section id="static-systemtap-markers">
+<h2>靜態 SystemTap 標記<a class="headerlink" href="#static-systemtap-markers" title="連結到這個標頭">¶</a></h2>
+<p>使用 SystemTap 整合的低階方法是直接使用靜態標記。這會需要你明確聲明包含它們的二進位檔案。</p>
+<p>例如，此 SystemTap 腳本可用於顯示 Python 腳本的呼叫/回傳階層結構：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>probe process(&quot;python&quot;).mark(&quot;function__entry&quot;) {
+     filename = user_string($arg1);
+     funcname = user_string($arg2);
+     lineno = $arg3;
+
+     printf(&quot;%s =&gt; %s in %s:%d\\n&quot;,
+            thread_indent(1), funcname, filename, lineno);
+}
+
+probe process(&quot;python&quot;).mark(&quot;function__return&quot;) {
+    filename = user_string($arg1);
+    funcname = user_string($arg2);
+    lineno = $arg3;
+
+    printf(&quot;%s &lt;= %s in %s:%d\\n&quot;,
+           thread_indent(-1), funcname, filename, lineno);
+}
+</pre></div>
+</div>
+<p>可以這樣呼叫：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>stap<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>show-call-hierarchy.stp<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-c<span class="w"> </span><span class="s2">&quot;./python test.py&quot;</span>
+</pre></div>
+</div>
+<p>輸出如下所示：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>11408 python(8274):        =&gt; __contains__ in Lib/_abcoll.py:362
+11414 python(8274):         =&gt; __getitem__ in Lib/os.py:425
+11418 python(8274):          =&gt; encode in Lib/os.py:490
+11424 python(8274):          &lt;= encode in Lib/os.py:493
+11428 python(8274):         &lt;= __getitem__ in Lib/os.py:426
+11433 python(8274):        &lt;= __contains__ in Lib/_abcoll.py:366
+</pre></div>
+</div>
+<p>其中的行 (column) 是：</p>
+<ul class="simple">
+<li><p>自腳本開始以來的時間（以微秒為單位）</p></li>
+<li><p>可執行檔案的名稱</p></li>
+<li><p>行程的 PID</p></li>
+</ul>
+<p>其餘部分表示腳本執行時的呼叫/回傳階層結構。</p>
+<p>對於以 <a class="reference internal" href="../using/configure.html#cmdoption-enable-shared"><code class="xref std std-option docutils literal notranslate"><span class="pre">--enable-shared</span></code></a> 建置的 CPython，標記被包含在 libpython 共享函式庫中，並且探針的帶點路徑 (dotted path) 需要反映這一點。例如，上面範例中的這一列：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>probe process(&quot;python&quot;).mark(&quot;function__entry&quot;) {
+</pre></div>
+</div>
+<p>應該改為讀取：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>probe process(&quot;python&quot;).library(&quot;libpython3.6dm.so.1.0&quot;).mark(&quot;function__entry&quot;) {
+</pre></div>
+</div>
+<p>（假設 CPython 3.6 的<a class="reference internal" href="../using/configure.html#debug-build"><span class="std std-ref">除錯建置版本</span></a>）</p>
+</section>
+<section id="available-static-markers">
+<span id="static-markers"></span><h2>可用的靜態標記<a class="headerlink" href="#available-static-markers" title="連結到這個標頭">¶</a></h2>
+<dl class="object">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">function__entry(str</span> <span class="pre">filename,</span> <span class="pre">str</span> <span class="pre">funcname,</span> <span class="pre">int</span> <span class="pre">lineno)</span></span></dt>
+<dd><p>該標記表示 Python 函式的執行已經開始。它僅針對純 Python（位元組碼）函式觸發。</p>
+<p>檔案名稱、函式名稱和列號作為位置引數提供給追蹤腳本，必須使用 <code class="docutils literal notranslate"><span class="pre">$arg1</span></code>、<code class="docutils literal notranslate"><span class="pre">$arg2</span></code>、<code class="docutils literal notranslate"><span class="pre">$arg3</span></code> 來存取：</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">$arg1</span></code> : <code class="docutils literal notranslate"><span class="pre">(const</span> <span class="pre">char</span> <span class="pre">*)</span></code> 檔案名稱，可使用 <code class="docutils literal notranslate"><span class="pre">user_string($arg1)</span></code> 存取</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$arg2</span></code> ：<code class="docutils literal notranslate"><span class="pre">(const</span> <span class="pre">char</span> <span class="pre">*)</span></code> 函式名稱，可使用 <code class="docutils literal notranslate"><span class="pre">user_string($arg2)</span></code> 存取</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$arg3</span></code> : <code class="docutils literal notranslate"><span class="pre">int</span></code> 列號</p></li>
+</ul>
+</div></blockquote>
+</dd></dl>
+
+<dl class="object">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">function__return(str</span> <span class="pre">filename,</span> <span class="pre">str</span> <span class="pre">funcname,</span> <span class="pre">int</span> <span class="pre">lineno)</span></span></dt>
+<dd><p>該標記與 <code class="xref c c-func docutils literal notranslate"><span class="pre">function__entry()</span></code> 相反，表示 Python 函式的執行已結束（透過 <code class="docutils literal notranslate"><span class="pre">return</span></code> 或透過例外）。它僅針對純 Python（位元組碼）函式觸發。</p>
+<p>引數與 <code class="xref c c-func docutils literal notranslate"><span class="pre">function__entry()</span></code> 相同</p>
+</dd></dl>
+
+<dl class="object">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">line(str</span> <span class="pre">filename,</span> <span class="pre">str</span> <span class="pre">funcname,</span> <span class="pre">int</span> <span class="pre">lineno)</span></span></dt>
+<dd><p>該標記表示一列 Python 即將被執行。它相當於使用 Python 分析器來逐行追蹤。它不在 C 函式內觸發。</p>
+<p>引數與 <code class="xref c c-func docutils literal notranslate"><span class="pre">function__entry()</span></code> 相同。</p>
+</dd></dl>
+
+<dl class="object">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">gc__start(int</span> <span class="pre">generation)</span></span></dt>
+<dd><p>當 Python 直譯器開始垃圾回收 (garbage collection) 週期時觸發。<code class="docutils literal notranslate"><span class="pre">arg0</span></code> 是要掃描的一代 (generation)，如 <a class="reference internal" href="../library/gc.html#gc.collect" title="gc.collect"><code class="xref py py-func docutils literal notranslate"><span class="pre">gc.collect()</span></code></a>。</p>
+</dd></dl>
+
+<dl class="object">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">gc__done(long</span> <span class="pre">collected)</span></span></dt>
+<dd><p>當 Python 直譯器完成垃圾回收週期時觸發。<code class="docutils literal notranslate"><span class="pre">arg0</span></code> 是收集到的物件數量。</p>
+</dd></dl>
+
+<dl class="object">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">import__find__load__start(str</span> <span class="pre">modulename)</span></span></dt>
+<dd><p>在 <a class="reference internal" href="../library/importlib.html#module-importlib" title="importlib: The implementation of the import machinery."><code class="xref py py-mod docutils literal notranslate"><span class="pre">importlib</span></code></a> 嘗試查找並載入模組之前觸發。<code class="docutils literal notranslate"><span class="pre">arg0</span></code> 是模組名稱。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.7 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="object">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">import__find__load__done(str</span> <span class="pre">modulename,</span> <span class="pre">int</span> <span class="pre">found)</span></span></dt>
+<dd><p>在呼叫 <a class="reference internal" href="../library/importlib.html#module-importlib" title="importlib: The implementation of the import machinery."><code class="xref py py-mod docutils literal notranslate"><span class="pre">importlib</span></code></a> 的 find_and_load 函式後觸發。 <code class="docutils literal notranslate"><span class="pre">arg0</span></code> 是模組名稱，<code class="docutils literal notranslate"><span class="pre">arg1</span></code> 代表模組是否已成功載入。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.7 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="object">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">audit(str</span> <span class="pre">event,</span> <span class="pre">void</span> <span class="pre">*tuple)</span></span></dt>
+<dd><p>當呼叫 <a class="reference internal" href="../library/sys.html#sys.audit" title="sys.audit"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.audit()</span></code></a> 或 <a class="reference internal" href="../c-api/sys.html#c.PySys_Audit" title="PySys_Audit"><code class="xref c c-func docutils literal notranslate"><span class="pre">PySys_Audit()</span></code></a> 時觸發。<code class="docutils literal notranslate"><span class="pre">arg0</span></code> 是 C 字串形式的事件名稱，<code class="docutils literal notranslate"><span class="pre">arg1</span></code> 是指向元組 (tuple) 物件的 <a class="reference internal" href="../c-api/structures.html#c.PyObject" title="PyObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyObject</span></code></a> 指標。</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.8 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<section id="c-entry-points">
+<h3>C Entry Points<a class="headerlink" href="#c-entry-points" title="連結到這個標頭">¶</a></h3>
+<p>To simplify triggering of DTrace markers, Python's C API comes with a number
+of helper functions that mirror each static marker. On builds of Python without
+DTrace enabled, these do nothing.</p>
+<p>In general, it is not necessary to call these yourself, as Python will do
+it for you.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50.0%" />
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>C API Function</p></th>
+<th class="head"><p>靜態標記</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_LINE">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_LINE</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg0</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg1</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">arg2</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_LINE" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><code class="xref c c-func docutils literal notranslate"><span class="pre">line()</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_FUNCTION_ENTRY">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_FUNCTION_ENTRY</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg0</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg1</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">arg2</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_FUNCTION_ENTRY" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><code class="xref c c-func docutils literal notranslate"><span class="pre">function__entry()</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_FUNCTION_RETURN">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_FUNCTION_RETURN</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg0</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg1</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">arg2</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_FUNCTION_RETURN" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><code class="xref c c-func docutils literal notranslate"><span class="pre">function__return()</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_GC_START">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_GC_START</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">arg0</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_GC_START" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><code class="xref c c-func docutils literal notranslate"><span class="pre">gc__start()</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_GC_DONE">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_GC_DONE</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="../c-api/intro.html#c.Py_ssize_t" title="Py_ssize_t"><span class="n"><span class="pre">Py_ssize_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">arg0</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_GC_DONE" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><code class="xref c c-func docutils literal notranslate"><span class="pre">gc__done()</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_INSTANCE_NEW_START">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_INSTANCE_NEW_START</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">arg0</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_INSTANCE_NEW_START" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><code class="xref c c-func docutils literal notranslate"><span class="pre">instance__new__start()</span></code></p></td>
+<td><p>Not used by Python</p></td>
+</tr>
+<tr class="row-even"><td><dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_INSTANCE_NEW_DONE">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_INSTANCE_NEW_DONE</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">arg0</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_INSTANCE_NEW_DONE" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><code class="xref c c-func docutils literal notranslate"><span class="pre">instance__new__done()</span></code></p></td>
+<td><p>Not used by Python</p></td>
+</tr>
+<tr class="row-odd"><td><dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_INSTANCE_DELETE_START">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_INSTANCE_DELETE_START</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">arg0</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_INSTANCE_DELETE_START" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><code class="xref c c-func docutils literal notranslate"><span class="pre">instance__delete__start()</span></code></p></td>
+<td><p>Not used by Python</p></td>
+</tr>
+<tr class="row-even"><td><dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_INSTANCE_DELETE_DONE">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_INSTANCE_DELETE_DONE</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">arg0</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_INSTANCE_DELETE_DONE" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><code class="xref c c-func docutils literal notranslate"><span class="pre">instance__delete__done()</span></code></p></td>
+<td><p>Not used by Python</p></td>
+</tr>
+<tr class="row-odd"><td><dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_IMPORT_FIND_LOAD_START">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_IMPORT_FIND_LOAD_START</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg0</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_IMPORT_FIND_LOAD_START" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><code class="xref c c-func docutils literal notranslate"><span class="pre">import__find__load__start()</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_IMPORT_FIND_LOAD_DONE">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_IMPORT_FIND_LOAD_DONE</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg0</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">arg1</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_IMPORT_FIND_LOAD_DONE" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><code class="xref c c-func docutils literal notranslate"><span class="pre">import__find__load__done()</span></code></p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_AUDIT">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_AUDIT</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg0</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg1</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_AUDIT" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+</td>
+<td><p><code class="xref c c-func docutils literal notranslate"><span class="pre">audit()</span></code></p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="c-probing-checks">
+<h3>C Probing Checks<a class="headerlink" href="#c-probing-checks" title="連結到這個標頭">¶</a></h3>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_LINE_ENABLED">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_LINE_ENABLED</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_LINE_ENABLED" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_FUNCTION_ENTRY_ENABLED">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_FUNCTION_ENTRY_ENABLED</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_FUNCTION_ENTRY_ENABLED" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_FUNCTION_RETURN_ENABLED">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_FUNCTION_RETURN_ENABLED</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_FUNCTION_RETURN_ENABLED" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_GC_START_ENABLED">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_GC_START_ENABLED</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_GC_START_ENABLED" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_GC_DONE_ENABLED">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_GC_DONE_ENABLED</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_GC_DONE_ENABLED" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_INSTANCE_NEW_START_ENABLED">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_INSTANCE_NEW_START_ENABLED</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_INSTANCE_NEW_START_ENABLED" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_INSTANCE_NEW_DONE_ENABLED">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_INSTANCE_NEW_DONE_ENABLED</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_INSTANCE_NEW_DONE_ENABLED" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_INSTANCE_DELETE_START_ENABLED">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_INSTANCE_DELETE_START_ENABLED</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_INSTANCE_DELETE_START_ENABLED" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_INSTANCE_DELETE_DONE_ENABLED">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_INSTANCE_DELETE_DONE_ENABLED</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_INSTANCE_DELETE_DONE_ENABLED" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_IMPORT_FIND_LOAD_START_ENABLED">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_IMPORT_FIND_LOAD_START_ENABLED</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_IMPORT_FIND_LOAD_START_ENABLED" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_IMPORT_FIND_LOAD_DONE_ENABLED">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_IMPORT_FIND_LOAD_DONE_ENABLED</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_IMPORT_FIND_LOAD_DONE_ENABLED" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyDTrace_AUDIT_ENABLED">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyDTrace_AUDIT_ENABLED</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyDTrace_AUDIT_ENABLED" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>All calls to <code class="docutils literal notranslate"><span class="pre">PyDTrace</span></code> functions must be guarded by a call to one
+of these functions. This allows Python to minimize performance impact
+when probing is disabled.</p>
+<p>On builds without DTrace enabled, these functions do nothing and return
+<code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="systemtap-tapsets">
+<h2>SystemTap Tapsets<a class="headerlink" href="#systemtap-tapsets" title="連結到這個標頭">¶</a></h2>
+<p>使用 SystemTap 整合的高階方法是使用 &quot;tapset&quot;：SystemTap 相當於一個函式庫，它隱藏了靜態標記的一些低階詳細資訊。</p>
+<p>這是一個 tapset 檔案，是基於 CPython 的非共享建置版本：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>/*
+   提供一個更高階、在 function__entry 和 function__return 標記上的包裝：
+ \*/
+probe python.function.entry = process(&quot;python&quot;).mark(&quot;function__entry&quot;)
+{
+    filename = user_string($arg1);
+    funcname = user_string($arg2);
+    lineno = $arg3;
+    frameptr = $arg4
+}
+probe python.function.return = process(&quot;python&quot;).mark(&quot;function__return&quot;)
+{
+    filename = user_string($arg1);
+    funcname = user_string($arg2);
+    lineno = $arg3;
+    frameptr = $arg4
+}
+</pre></div>
+</div>
+<p>如果此檔案是安裝在 SystemTap 的 tapset 目錄中（例如 <code class="docutils literal notranslate"><span class="pre">/usr/share/systemtap/tapset</span></code>），則這些額外的探測點將可被使用：</p>
+<dl class="object">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">python.function.entry(str</span> <span class="pre">filename,</span> <span class="pre">str</span> <span class="pre">funcname,</span> <span class="pre">int</span> <span class="pre">lineno,</span> <span class="pre">frameptr)</span></span></dt>
+<dd><p>該探測點表示 Python 函式的執行已經開始。它僅針對純 Python（位元組碼）函式觸發。</p>
+</dd></dl>
+
+<dl class="object">
+<dt class="sig sig-object">
+<span class="sig-name descname"><span class="pre">python.function.return(str</span> <span class="pre">filename,</span> <span class="pre">str</span> <span class="pre">funcname,</span> <span class="pre">int</span> <span class="pre">lineno,</span> <span class="pre">frameptr)</span></span></dt>
+<dd><p>這個探測點與 <code class="docutils literal notranslate"><span class="pre">python.function.return</span></code> 相反，表示 Python 函式的執行已經結束（透過 <code class="docutils literal notranslate"><span class="pre">return</span></code> 或者透過例外）。它僅針對純 Python（位元組碼）函式觸發。</p>
+</dd></dl>
+
+</section>
+<section id="examples">
+<h2>範例<a class="headerlink" href="#examples" title="連結到這個標頭">¶</a></h2>
+<p>此 SystemTap 腳本使用上面的 tapset 來更清晰地實作上面給出的追蹤 Python 函式呼叫階層結構的範例，而無需直接命名靜態標記：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>probe python.function.entry
+{
+  printf(&quot;%s =&gt; %s in %s:%d\n&quot;,
+         thread_indent(1), funcname, filename, lineno);
+}
+
+probe python.function.return
+{
+  printf(&quot;%s &lt;= %s in %s:%d\n&quot;,
+         thread_indent(-1), funcname, filename, lineno);
+}
+</pre></div>
+</div>
+<p>以下腳本使用上面的 tapset 來提供所有正在運行之 CPython 程式碼的近乎最高層視角，顯示整個系統中每秒最常被進入的 20 個位元組碼幀 (bytecode frame)：</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>global fn_calls;
+
+probe python.function.entry
+{
+    fn_calls[pid(), filename, funcname, lineno] += 1;
+}
+
+probe timer.ms(1000) {
+    printf(&quot;\033[2J\033[1;1H&quot;) /* clear screen \*/
+    printf(&quot;%6s %80s %6s %30s %6s\n&quot;,
+           &quot;PID&quot;, &quot;FILENAME&quot;, &quot;LINE&quot;, &quot;FUNCTION&quot;, &quot;CALLS&quot;)
+    foreach ([pid, filename, funcname, lineno] in fn_calls- limit 20) {
+        printf(&quot;%6d %80s %6d %30s %6d\n&quot;,
+            pid, filename, lineno, funcname,
+            fn_calls[pid, filename, funcname, lineno]);
+    }
+    delete fn_calls;
+}
+</pre></div>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">使用 DTrace 和 SystemTap 檢測 CPython</a><ul>
+<li><a class="reference internal" href="#enabling-the-static-markers">啟用靜態標記</a></li>
+<li><a class="reference internal" href="#static-dtrace-probes">靜態 DTrace 探針</a></li>
+<li><a class="reference internal" href="#static-systemtap-markers">靜態 SystemTap 標記</a></li>
+<li><a class="reference internal" href="#available-static-markers">可用的靜態標記</a><ul>
+<li><a class="reference internal" href="#c-entry-points">C Entry Points</a></li>
+<li><a class="reference internal" href="#c-probing-checks">C Probing Checks</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#systemtap-tapsets">SystemTap Tapsets</a></li>
+<li><a class="reference internal" href="#examples">範例</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="ipaddress.html"
+                          title="上一章">ipaddress 模組介紹</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="perf_profiling.html"
+                          title="下一章">Python 對 Linux <code class="docutils literal notranslate"><span class="pre">perf</span></code> 分析器的支援</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "howto/instrumentation.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/instrumentation.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/howto/instrumentation.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="perf_profiling.html" title="Python 對 Linux perf 分析器的支援"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="ipaddress.html" title="ipaddress 模組介紹"
+             >上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.4 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 如何達成任務</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">使用 DTrace 和 SystemTap 檢測 CPython</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; <a href="../copyright.html">版權所有</a> 2001 Python Software Foundation.
+    <br>
+    此頁面採用 Python 軟體基金會授權條款第 2 版。
+    <br>
+    文件中的範例、應用技巧與其他程式碼額外採用了 Zero Clause BSD 授權條款。
+    <br>
+    
+      更多訊息請見<a href="/license.html">歷史與授權條款</a>。<br>
+    
+    
+    <br>
+
+    Python 軟體基金會是一家非營利法人。
+<a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
+<br>
+    <br>
+      最後更新於 4月 20, 2026 (00:32 UTC)。
+    
+      <a href="/bugs.html">發現 bug</a>？
+    
+    <br>
+
+    以 <a href="https://www.sphinx-doc.org/">Sphinx</a>8.2.3建立。 
+    </div>
+
+  </body>
+</html>

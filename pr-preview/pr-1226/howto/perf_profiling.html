@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Python 對 Linux perf 分析器的支援 &#8212; Python 3.14.4 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=4365c8fe" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
+    
+    <script src="../_static/documentation_options.js?v=9e923c91"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.14.4 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權所有" href="../copyright.html" />
+    <link rel="next" title="註釋 (annotation) 最佳實踐" href="annotations.html" />
+    <link rel="prev" title="使用 DTrace 和 SystemTap 檢測 CPython" href="instrumentation.html" />
+    
+      
+      <link rel="canonical" href="https://docs.python.org/3/howto/perf_profiling.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="../_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="../_static/py.svg">
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script>
+            <script type="text/javascript" src="../_static/search-focus.js"></script>
+            <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="選單">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="../_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"></span>
+            <form role="search" class="search" action="../search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q">
+                <input type="submit" value="前往">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+            
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Python 對 Linux <code class="docutils literal notranslate"><span class="pre">perf</span></code> 分析器的支援</a><ul>
+<li><a class="reference internal" href="#how-to-enable-perf-profiling-support">如何啟用 <code class="docutils literal notranslate"><span class="pre">perf</span></code> 分析支援</a></li>
+<li><a class="reference internal" href="#how-to-obtain-the-best-results">如何獲得最佳結果</a></li>
+<li><a class="reference internal" href="#how-to-work-without-frame-pointers">How to work without frame pointers</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="instrumentation.html"
+                          title="上一章">使用 DTrace 和 SystemTap 檢測 CPython</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="annotations.html"
+                          title="下一章">註釋 (annotation) 最佳實踐</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "howto/perf_profiling.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/perf_profiling.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/howto/perf_profiling.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="annotations.html" title="註釋 (annotation) 最佳實踐"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="instrumentation.html" title="使用 DTrace 和 SystemTap 檢測 CPython"
+             accesskey="P">上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.4 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 如何達成任務</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Python 對 Linux <code class="docutils literal notranslate"><span class="pre">perf</span></code> 分析器的支援</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="python-support-for-the-linux-perf-profiler">
+<span id="perf-profiling"></span><h1>Python 對 Linux <code class="docutils literal notranslate"><span class="pre">perf</span></code> 分析器的支援<a class="headerlink" href="#python-support-for-the-linux-perf-profiler" title="連結到這個標頭">¶</a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">作者<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Pablo Galindo</p>
+</dd>
+</dl>
+<p><a class="reference external" href="https://perf.wiki.kernel.org">Linux 性能分析器 (Linux perf profiler)</a> 是一個非常強大的工具，可讓你分析並取得有關應用程式的性能資訊。<code class="docutils literal notranslate"><span class="pre">perf</span></code> 還擁有一個非常活躍的工具生態系統，有助於分析其生成的資料。</p>
+<p>在 Python 應用程式中使用 <code class="docutils literal notranslate"><span class="pre">perf</span></code> 分析器的主要問題是 <code class="docutils literal notranslate"><span class="pre">perf</span></code> 僅取得有關原生符號的資訊，即用 C 編寫的函式和程式的名稱。這表示程式碼中的 Python 函式名稱和檔案名稱不會出現在 <code class="docutils literal notranslate"><span class="pre">perf</span></code> 的輸出中。</p>
+<p>從 Python 3.12 開始，直譯器可以在特殊模式下執行，該模式允許 Python 函式出現在 <code class="docutils literal notranslate"><span class="pre">perf</span></code> 分析器的輸出中。啟用此模式後，直譯器將在執行每個 Python 函式之前插入 (interpose) 一小段動態編譯的程式碼，並使用 <a class="reference internal" href="../c-api/perfmaps.html"><span class="doc">perf map 檔案</span></a>來告訴 <code class="docutils literal notranslate"><span class="pre">perf</span></code> 這段程式碼與相關聯的 Python 函式間的關係。</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>目前對 <code class="docutils literal notranslate"><span class="pre">perf</span></code> 分析器的支援僅適用於 Linux 的特定架構上。檢查 <code class="docutils literal notranslate"><span class="pre">configure</span></code> 建構步驟的輸出或檢查 <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span> <span class="pre">sysconfig</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">HAVE_PERF_TRAMPOLINE</span></code> 的輸出來查看你的系統是否支援。</p>
+</div>
+<p>例如，參考以下腳本：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">foo</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">bar</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="n">foo</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">baz</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="n">bar</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">baz</span><span class="p">(</span><span class="mi">1000000</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>我們可以執行 <code class="docutils literal notranslate"><span class="pre">perf</span></code> 以 9999 赫茲取樣 CPU 堆疊追蹤 (stack trace)：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>perf<span class="w"> </span>record<span class="w"> </span>-F<span class="w"> </span><span class="m">9999</span><span class="w"> </span>-g<span class="w"> </span>-o<span class="w"> </span>perf.data<span class="w"> </span>python<span class="w"> </span>my_script.py
+</pre></div>
+</div>
+<p>然後我們可以使用 <code class="docutils literal notranslate"><span class="pre">perf</span> <span class="pre">report</span></code> 來分析資料：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>perf<span class="w"> </span>report<span class="w"> </span>--stdio<span class="w"> </span>-n<span class="w"> </span>-g
+
+<span class="gp"># </span>Children<span class="w">      </span>Self<span class="w">       </span>Samples<span class="w">  </span>Command<span class="w">     </span>Shared<span class="w"> </span>Object<span class="w">       </span>Symbol
+<span class="gp"># </span>........<span class="w">  </span>........<span class="w">  </span>............<span class="w">  </span>..........<span class="w">  </span>..................<span class="w">  </span>..........................................
+<span class="gp">#</span>
+<span class="go">    91.08%     0.00%             0  python.exe  python.exe          [.] _start</span>
+<span class="go">            |</span>
+<span class="go">            ---_start</span>
+<span class="go">            |</span>
+<span class="go">                --90.71%--__libc_start_main</span>
+<span class="go">                        Py_BytesMain</span>
+<span class="go">                        |</span>
+<span class="go">                        |--56.88%--pymain_run_python.constprop.0</span>
+<span class="go">                        |          |</span>
+<span class="go">                        |          |--56.13%--_PyRun_AnyFileObject</span>
+<span class="go">                        |          |          _PyRun_SimpleFileObject</span>
+<span class="go">                        |          |          |</span>
+<span class="go">                        |          |          |--55.02%--run_mod</span>
+<span class="go">                        |          |          |          |</span>
+<span class="go">                        |          |          |           --54.65%--PyEval_EvalCode</span>
+<span class="go">                        |          |          |                     _PyEval_EvalFrameDefault</span>
+<span class="go">                        |          |          |                     PyObject_Vectorcall</span>
+<span class="go">                        |          |          |                     _PyEval_Vector</span>
+<span class="go">                        |          |          |                     _PyEval_EvalFrameDefault</span>
+<span class="go">                        |          |          |                     PyObject_Vectorcall</span>
+<span class="go">                        |          |          |                     _PyEval_Vector</span>
+<span class="go">                        |          |          |                     _PyEval_EvalFrameDefault</span>
+<span class="go">                        |          |          |                     PyObject_Vectorcall</span>
+<span class="go">                        |          |          |                     _PyEval_Vector</span>
+<span class="go">                        |          |          |                     |</span>
+<span class="go">                        |          |          |                     |--51.67%--_PyEval_EvalFrameDefault</span>
+<span class="go">                        |          |          |                     |          |</span>
+<span class="go">                        |          |          |                     |          |--11.52%--_PyLong_Add</span>
+<span class="go">                        |          |          |                     |          |          |</span>
+<span class="go">                        |          |          |                     |          |          |--2.97%--_PyObject_Malloc</span>
+<span class="go">...</span>
+</pre></div>
+</div>
+<p>如你所見，Python 函式未顯示在輸出中，僅顯示 <code class="docutils literal notranslate"><span class="pre">_Py_Eval_EvalFrameDefault</span></code> （為 Python 位元組碼 (bytecode) 求值的函式）。不幸的是，這不是很有用，因為所有 Python 函式都使用相同的 C 函式來替位元組碼求值，因此我們無法知道哪個 Python 函式是對應於哪個位元組碼計算函式。</p>
+<p>作為替代，如果我們在啟用 <code class="docutils literal notranslate"><span class="pre">perf</span></code> 支援的情況下執行相同的實驗，我們會得到：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>perf<span class="w"> </span>report<span class="w"> </span>--stdio<span class="w"> </span>-n<span class="w"> </span>-g
+
+<span class="gp"># </span>Children<span class="w">      </span>Self<span class="w">       </span>Samples<span class="w">  </span>Command<span class="w">     </span>Shared<span class="w"> </span>Object<span class="w">       </span>Symbol
+<span class="gp"># </span>........<span class="w">  </span>........<span class="w">  </span>............<span class="w">  </span>..........<span class="w">  </span>..................<span class="w">  </span>.....................................................................
+<span class="gp">#</span>
+<span class="go">    90.58%     0.36%             1  python.exe  python.exe          [.] _start</span>
+<span class="go">            |</span>
+<span class="go">            ---_start</span>
+<span class="go">            |</span>
+<span class="go">                --89.86%--__libc_start_main</span>
+<span class="go">                        Py_BytesMain</span>
+<span class="go">                        |</span>
+<span class="go">                        |--55.43%--pymain_run_python.constprop.0</span>
+<span class="go">                        |          |</span>
+<span class="go">                        |          |--54.71%--_PyRun_AnyFileObject</span>
+<span class="go">                        |          |          _PyRun_SimpleFileObject</span>
+<span class="go">                        |          |          |</span>
+<span class="go">                        |          |          |--53.62%--run_mod</span>
+<span class="go">                        |          |          |          |</span>
+<span class="go">                        |          |          |           --53.26%--PyEval_EvalCode</span>
+<span class="go">                        |          |          |                     py::&lt;module&gt;:/src/script.py</span>
+<span class="go">                        |          |          |                     _PyEval_EvalFrameDefault</span>
+<span class="go">                        |          |          |                     PyObject_Vectorcall</span>
+<span class="go">                        |          |          |                     _PyEval_Vector</span>
+<span class="go">                        |          |          |                     py::baz:/src/script.py</span>
+<span class="go">                        |          |          |                     _PyEval_EvalFrameDefault</span>
+<span class="go">                        |          |          |                     PyObject_Vectorcall</span>
+<span class="go">                        |          |          |                     _PyEval_Vector</span>
+<span class="go">                        |          |          |                     py::bar:/src/script.py</span>
+<span class="go">                        |          |          |                     _PyEval_EvalFrameDefault</span>
+<span class="go">                        |          |          |                     PyObject_Vectorcall</span>
+<span class="go">                        |          |          |                     _PyEval_Vector</span>
+<span class="go">                        |          |          |                     py::foo:/src/script.py</span>
+<span class="go">                        |          |          |                     |</span>
+<span class="go">                        |          |          |                     |--51.81%--_PyEval_EvalFrameDefault</span>
+<span class="go">                        |          |          |                     |          |</span>
+<span class="go">                        |          |          |                     |          |--13.77%--_PyLong_Add</span>
+<span class="go">                        |          |          |                     |          |          |</span>
+<span class="go">                        |          |          |                     |          |          |--3.26%--_PyObject_Malloc</span>
+</pre></div>
+</div>
+<section id="how-to-enable-perf-profiling-support">
+<h2>如何啟用 <code class="docutils literal notranslate"><span class="pre">perf</span></code> 分析支援<a class="headerlink" href="#how-to-enable-perf-profiling-support" title="連結到這個標頭">¶</a></h2>
+<p>要啟用 <code class="docutils literal notranslate"><span class="pre">perf</span></code> 分析支援，可以在一開始就使用環境變數 <span class="target" id="index-3"></span><a class="reference internal" href="../using/cmdline.html#envvar-PYTHONPERFSUPPORT"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHONPERFSUPPORT</span></code></a> 或使用 <a class="reference internal" href="../using/cmdline.html#cmdoption-X"><code class="xref std std-option docutils literal notranslate"><span class="pre">-X</span> <span class="pre">perf</span></code></a> 選項，也可以使用 <a class="reference internal" href="../library/sys.html#sys.activate_stack_trampoline" title="sys.activate_stack_trampoline"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.activate_stack_trampoline()</span></code></a> 和 <a class="reference internal" href="../library/sys.html#sys.deactivate_stack_trampoline" title="sys.deactivate_stack_trampoline"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.deactivate_stack_trampoline()</span></code></a> 來動態啟用。</p>
+<p><code class="xref py py-mod docutils literal notranslate"><span class="pre">sys</span></code> 函式優先於 <code class="xref std std-option docutils literal notranslate"><span class="pre">-X</span></code> 選項、<code class="xref std std-option docutils literal notranslate"><span class="pre">-X</span></code> 選項優先於環境變數。</p>
+<p>例如，使用環境變數：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nv">PYTHONPERFSUPPORT</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>perf<span class="w"> </span>record<span class="w"> </span>-F<span class="w"> </span><span class="m">9999</span><span class="w"> </span>-g<span class="w"> </span>-o<span class="w"> </span>perf.data<span class="w"> </span>python<span class="w"> </span>my_script.py
+<span class="gp">$ </span>perf<span class="w"> </span>report<span class="w"> </span>-g<span class="w"> </span>-i<span class="w"> </span>perf.data
+</pre></div>
+</div>
+<p>例如，使用 <code class="xref std std-option docutils literal notranslate"><span class="pre">-X</span></code> 選項：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>perf<span class="w"> </span>record<span class="w"> </span>-F<span class="w"> </span><span class="m">9999</span><span class="w"> </span>-g<span class="w"> </span>-o<span class="w"> </span>perf.data<span class="w"> </span>python<span class="w"> </span>-X<span class="w"> </span>perf<span class="w"> </span>my_script.py
+<span class="gp">$ </span>perf<span class="w"> </span>report<span class="w"> </span>-g<span class="w"> </span>-i<span class="w"> </span>perf.data
+</pre></div>
+</div>
+<p>例如，在 <code class="file docutils literal notranslate"><span class="pre">example.py</span></code> 檔案中使用 <a class="reference internal" href="../library/sys.html#module-sys" title="sys: Access system-specific parameters and functions."><code class="xref py py-mod docutils literal notranslate"><span class="pre">sys</span></code></a> API：</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
+
+<span class="n">sys</span><span class="o">.</span><span class="n">activate_stack_trampoline</span><span class="p">(</span><span class="s2">&quot;perf&quot;</span><span class="p">)</span>
+<span class="n">do_profiled_stuff</span><span class="p">()</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">deactivate_stack_trampoline</span><span class="p">()</span>
+
+<span class="n">non_profiled_stuff</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>...然後：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>perf<span class="w"> </span>record<span class="w"> </span>-F<span class="w"> </span><span class="m">9999</span><span class="w"> </span>-g<span class="w"> </span>-o<span class="w"> </span>perf.data<span class="w"> </span>python<span class="w"> </span>./example.py
+<span class="gp">$ </span>perf<span class="w"> </span>report<span class="w"> </span>-g<span class="w"> </span>-i<span class="w"> </span>perf.data
+</pre></div>
+</div>
+</section>
+<section id="how-to-obtain-the-best-results">
+<h2>如何獲得最佳結果<a class="headerlink" href="#how-to-obtain-the-best-results" title="連結到這個標頭">¶</a></h2>
+<p>為了獲得最佳結果，應使用 <code class="docutils literal notranslate"><span class="pre">CFLAGS=&quot;-fno-omit-frame-pointer</span> <span class="pre">-mno-omit-leaf-frame-pointer&quot;</span></code> 來進行 Python 編譯，因為這能允許分析器僅使用 frame 指標而不是 DWARF 除錯資訊來解析 (unwind)。這是因為，由於插入以允許 <code class="docutils literal notranslate"><span class="pre">perf</span></code> 支援的程式碼是動態生成的，因此它沒有任何可用的 DWARF 除錯資訊。</p>
+<p>你可以透過執行以下指令來檢查你的系統是否已使用此旗標進行編譯：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>python<span class="w"> </span>-m<span class="w"> </span>sysconfig<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;no-omit-frame-pointer&#39;</span>
+</pre></div>
+</div>
+<p>如果你沒有看到任何輸出，則表示你的直譯器尚未使用 frame 指標進行編譯，因此它可能無法在 <code class="docutils literal notranslate"><span class="pre">perf</span></code> 的輸出中顯示 Python 函式。</p>
+</section>
+<section id="how-to-work-without-frame-pointers">
+<h2>How to work without frame pointers<a class="headerlink" href="#how-to-work-without-frame-pointers" title="連結到這個標頭">¶</a></h2>
+<p>If you are working with a Python interpreter that has been compiled without
+frame pointers, you can still use the <code class="docutils literal notranslate"><span class="pre">perf</span></code> profiler, but the overhead will be
+a bit higher because Python needs to generate unwinding information for every
+Python function call on the fly. Additionally, <code class="docutils literal notranslate"><span class="pre">perf</span></code> will take more time to
+process the data because it will need to use the DWARF debugging information to
+unwind the stack and this is a slow process.</p>
+<p>To enable this mode, you can use the environment variable
+<span class="target" id="index-1"></span><a class="reference internal" href="../using/cmdline.html#envvar-PYTHON_PERF_JIT_SUPPORT"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">PYTHON_PERF_JIT_SUPPORT</span></code></a> or the <a class="reference internal" href="../using/cmdline.html#cmdoption-X"><code class="xref std std-option docutils literal notranslate"><span class="pre">-X</span> <span class="pre">perf_jit</span></code></a> option,
+which will enable the JIT mode for the <code class="docutils literal notranslate"><span class="pre">perf</span></code> profiler.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Due to a bug in the <code class="docutils literal notranslate"><span class="pre">perf</span></code> tool, only <code class="docutils literal notranslate"><span class="pre">perf</span></code> versions higher than v6.8
+will work with the JIT mode.  The fix was also backported to the v6.7.2
+version of the tool.</p>
+<p>Note that when checking the version of the <code class="docutils literal notranslate"><span class="pre">perf</span></code> tool (which can be done
+by running <code class="docutils literal notranslate"><span class="pre">perf</span> <span class="pre">version</span></code>) you must take into account that some distros
+add some custom version numbers including a <code class="docutils literal notranslate"><span class="pre">-</span></code> character.  This means
+that <code class="docutils literal notranslate"><span class="pre">perf</span> <span class="pre">6.7-3</span></code> is not necessarily <code class="docutils literal notranslate"><span class="pre">perf</span> <span class="pre">6.7.3</span></code>.</p>
+</div>
+<p>When using the perf JIT mode, you need an extra step before you can run <code class="docutils literal notranslate"><span class="pre">perf</span>
+<span class="pre">report</span></code>. You need to call the <code class="docutils literal notranslate"><span class="pre">perf</span> <span class="pre">inject</span></code> command to inject the JIT
+information into the <code class="docutils literal notranslate"><span class="pre">perf.data</span></code> file.:</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>perf<span class="w"> </span>record<span class="w"> </span>-F<span class="w"> </span><span class="m">9999</span><span class="w"> </span>-g<span class="w"> </span>-k<span class="w"> </span><span class="m">1</span><span class="w"> </span>--call-graph<span class="w"> </span>dwarf<span class="w"> </span>-o<span class="w"> </span>perf.data<span class="w"> </span>python<span class="w"> </span>-Xperf_jit<span class="w"> </span>my_script.py
+<span class="gp">$ </span>perf<span class="w"> </span>inject<span class="w"> </span>-i<span class="w"> </span>perf.data<span class="w"> </span>--jit<span class="w"> </span>--output<span class="w"> </span>perf.jit.data
+<span class="gp">$ </span>perf<span class="w"> </span>report<span class="w"> </span>-g<span class="w"> </span>-i<span class="w"> </span>perf.jit.data
+</pre></div>
+</div>
+<p>或使用環境變數：</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span><span class="nv">PYTHON_PERF_JIT_SUPPORT</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>perf<span class="w"> </span>record<span class="w"> </span>-F<span class="w"> </span><span class="m">9999</span><span class="w"> </span>-g<span class="w"> </span>--call-graph<span class="w"> </span>dwarf<span class="w"> </span>-o<span class="w"> </span>perf.data<span class="w"> </span>python<span class="w"> </span>my_script.py
+<span class="gp">$ </span>perf<span class="w"> </span>inject<span class="w"> </span>-i<span class="w"> </span>perf.data<span class="w"> </span>--jit<span class="w"> </span>--output<span class="w"> </span>perf.jit.data
+<span class="gp">$ </span>perf<span class="w"> </span>report<span class="w"> </span>-g<span class="w"> </span>-i<span class="w"> </span>perf.jit.data
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">perf</span> <span class="pre">inject</span> <span class="pre">--jit</span></code> command will read <code class="docutils literal notranslate"><span class="pre">perf.data</span></code>,
+automatically pick up the perf dump file that Python creates (in
+<code class="docutils literal notranslate"><span class="pre">/tmp/perf-$PID.dump</span></code>), and then create <code class="docutils literal notranslate"><span class="pre">perf.jit.data</span></code> which merges all the
+JIT information together. It should also create a lot of <code class="docutils literal notranslate"><span class="pre">jitted-XXXX-N.so</span></code>
+files in the current directory which are ELF images for all the JIT trampolines
+that were created by Python.</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>When using <code class="docutils literal notranslate"><span class="pre">--call-graph</span> <span class="pre">dwarf</span></code>, the <code class="docutils literal notranslate"><span class="pre">perf</span></code> tool will take
+snapshots of the stack of the process being profiled and save the
+information in the <code class="docutils literal notranslate"><span class="pre">perf.data</span></code> file. By default, the size of the stack dump
+is 8192 bytes, but you can change the size by passing it after
+a comma like <code class="docutils literal notranslate"><span class="pre">--call-graph</span> <span class="pre">dwarf,16384</span></code>.</p>
+<p>The size of the stack dump is important because if the size is too small
+<code class="docutils literal notranslate"><span class="pre">perf</span></code> will not be able to unwind the stack and the output will be
+incomplete. On the other hand, if the size is too big, then <code class="docutils literal notranslate"><span class="pre">perf</span></code> won't
+be able to sample the process as frequently as it would like as the overhead
+will be higher.</p>
+<p>The stack size is particularly important when profiling Python code compiled
+with low optimization levels (like <code class="docutils literal notranslate"><span class="pre">-O0</span></code>), as these builds tend to have
+larger stack frames. If you are compiling Python with <code class="docutils literal notranslate"><span class="pre">-O0</span></code> and not seeing
+Python functions in your profiling output, try increasing the stack dump
+size to 65528 bytes (the maximum):</p>
+<div class="highlight-shell-session notranslate"><div class="highlight"><pre><span></span><span class="gp">$ </span>perf<span class="w"> </span>record<span class="w"> </span>-F<span class="w"> </span><span class="m">9999</span><span class="w"> </span>-g<span class="w"> </span>-k<span class="w"> </span><span class="m">1</span><span class="w"> </span>--call-graph<span class="w"> </span>dwarf,65528<span class="w"> </span>-o<span class="w"> </span>perf.data<span class="w"> </span>python<span class="w"> </span>-Xperf_jit<span class="w"> </span>my_script.py
+</pre></div>
+</div>
+<p>Different compilation flags can significantly impact stack sizes:</p>
+<ul class="simple">
+<li><p>Builds with <code class="docutils literal notranslate"><span class="pre">-O0</span></code> typically have much larger stack frames than those with <code class="docutils literal notranslate"><span class="pre">-O1</span></code> or higher</p></li>
+<li><p>Adding optimizations (<code class="docutils literal notranslate"><span class="pre">-O1</span></code>, <code class="docutils literal notranslate"><span class="pre">-O2</span></code>, etc.) typically reduces stack size</p></li>
+<li><p>Frame pointers (<code class="docutils literal notranslate"><span class="pre">-fno-omit-frame-pointer</span></code>) generally provide more reliable stack unwinding</p></li>
+</ul>
+</div>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Python 對 Linux <code class="docutils literal notranslate"><span class="pre">perf</span></code> 分析器的支援</a><ul>
+<li><a class="reference internal" href="#how-to-enable-perf-profiling-support">如何啟用 <code class="docutils literal notranslate"><span class="pre">perf</span></code> 分析支援</a></li>
+<li><a class="reference internal" href="#how-to-obtain-the-best-results">如何獲得最佳結果</a></li>
+<li><a class="reference internal" href="#how-to-work-without-frame-pointers">How to work without frame pointers</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="instrumentation.html"
+                          title="上一章">使用 DTrace 和 SystemTap 檢測 CPython</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="annotations.html"
+                          title="下一章">註釋 (annotation) 最佳實踐</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "howto/perf_profiling.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/howto/perf_profiling.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/howto/perf_profiling.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="annotations.html" title="註釋 (annotation) 最佳實踐"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="instrumentation.html" title="使用 DTrace 和 SystemTap 檢測 CPython"
+             >上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.4 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 如何達成任務</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Python 對 Linux <code class="docutils literal notranslate"><span class="pre">perf</span></code> 分析器的支援</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; <a href="../copyright.html">版權所有</a> 2001 Python Software Foundation.
+    <br>
+    此頁面採用 Python 軟體基金會授權條款第 2 版。
+    <br>
+    文件中的範例、應用技巧與其他程式碼額外採用了 Zero Clause BSD 授權條款。
+    <br>
+    
+      更多訊息請見<a href="/license.html">歷史與授權條款</a>。<br>
+    
+    
+    <br>
+
+    Python 軟體基金會是一家非營利法人。
+<a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
+<br>
+    <br>
+      最後更新於 4月 20, 2026 (00:32 UTC)。
+    
+      <a href="/bugs.html">發現 bug</a>？
+    
+    <br>
+
+    以 <a href="https://www.sphinx-doc.org/">Sphinx</a>8.2.3建立。 
+    </div>
+
+  </body>
+</html>
