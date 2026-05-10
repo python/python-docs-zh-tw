@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Python 3.14\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-10-22 00:14+0000\n"
+"POT-Creation-Date: 2026-05-10 00:33+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: Chinese - TAIWAN (https://github.com/python/python-docs-zh-"
@@ -736,24 +736,138 @@ msgid ""
 msgstr ""
 
 #: ../../library/annotationlib.rst:514
+msgid "Creating a custom callable annotate function"
+msgstr ""
+
+#: ../../library/annotationlib.rst:516
+msgid ""
+"Custom :term:`annotate functions <annotate function>` may be literal "
+"functions like those automatically generated for functions, classes, and "
+"modules. Or, they may wish to utilise the encapsulation provided by classes, "
+"in which case any :term:`callable` can be used as an :term:`annotate "
+"function`."
+msgstr ""
+
+#: ../../library/annotationlib.rst:521
+msgid ""
+"To provide the :attr:`~Format.VALUE`, :attr:`~Format.STRING`, or :attr:"
+"`~Format.FORWARDREF` formats directly, an :term:`annotate function` must "
+"provide the following attribute:"
+msgstr ""
+
+#: ../../library/annotationlib.rst:525
+msgid ""
+"A callable ``__call__`` with signature ``__call__(format, /) -> dict``, that "
+"does not raise a :exc:`NotImplementedError` when called with a supported "
+"format."
+msgstr ""
+
+#: ../../library/annotationlib.rst:528
+msgid ""
+"To provide the :attr:`~Format.VALUE_WITH_FAKE_GLOBALS` format, which is used "
+"to automatically generate :attr:`~Format.STRING` or :attr:`~Format."
+"FORWARDREF` if they are not supported directly, :term:`annotate functions "
+"<annotate function>` must provide the following attributes:"
+msgstr ""
+
+#: ../../library/annotationlib.rst:533
+msgid ""
+"A callable ``__call__`` with signature ``__call__(format, /) -> dict``, that "
+"does not raise a :exc:`NotImplementedError` when called with :attr:`~Format."
+"VALUE_WITH_FAKE_GLOBALS`."
+msgstr ""
+
+#: ../../library/annotationlib.rst:536
+msgid ""
+"A :ref:`code object <code-objects>` ``__code__`` containing the compiled "
+"code for the annotate function."
+msgstr ""
+
+#: ../../library/annotationlib.rst:538
+msgid ""
+"Optional: A tuple of the function's positional defaults ``__kwdefaults__``, "
+"if the function represented by ``__code__`` uses any positional defaults."
+msgstr ""
+
+#: ../../library/annotationlib.rst:540
+msgid ""
+"Optional: A dict of the function's keyword defaults ``__defaults__``, if the "
+"function represented by ``__code__`` uses any keyword defaults."
+msgstr ""
+
+#: ../../library/annotationlib.rst:542
+msgid "Optional: All other :ref:`function attributes <inspect-types>`."
+msgstr ""
+
+#: ../../library/annotationlib.rst:544
+msgid ""
+"class Annotate:\n"
+"    called_formats = []\n"
+"\n"
+"    def __call__(self, format=None, /, *, _self=None):\n"
+"        # When called with fake globals, `_self` will be the\n"
+"        # actual self value, and `self` will be the format.\n"
+"        if _self is not None:\n"
+"            self, format = _self, self\n"
+"\n"
+"        self.called_formats.append(format)\n"
+"        if format <= 2:  # VALUE or VALUE_WITH_FAKE_GLOBALS\n"
+"            return {\"x\": MyType}\n"
+"        raise NotImplementedError\n"
+"\n"
+"    __code__ = __call__.__code__\n"
+"    __defaults__ = (None,)\n"
+"    __kwdefaults__ = property(lambda self: dict(_self=self))\n"
+"\n"
+"    __globals__ = {}\n"
+"    __builtins__ = {}\n"
+"    __closure__ = None"
+msgstr ""
+
+#: ../../library/annotationlib.rst:568
+msgid "This can then be called with:"
+msgstr ""
+
+#: ../../library/annotationlib.rst:570
+msgid ""
+">>> from annotationlib import call_annotate_function, Format\n"
+">>> call_annotate_function(Annotate(), format=Format.STRING)\n"
+"{'x': 'MyType'}"
+msgstr ""
+
+#: ../../library/annotationlib.rst:576
+msgid "Or used as the annotate function for an object:"
+msgstr ""
+
+#: ../../library/annotationlib.rst:578
+msgid ""
+">>> from annotationlib import get_annotations, Format\n"
+">>> class C:\n"
+"...   pass\n"
+">>> C.__annotate__ = Annotate()\n"
+">>> get_annotations(Annotate(), format=Format.STRING)\n"
+"{'x': 'MyType'}"
+msgstr ""
+
+#: ../../library/annotationlib.rst:589
 msgid "Limitations of the ``STRING`` format"
 msgstr "``STRING`` 格式的限制"
 
-#: ../../library/annotationlib.rst:516
+#: ../../library/annotationlib.rst:591
 msgid ""
 "The :attr:`~Format.STRING` format is meant to approximate the source code of "
 "the annotation, but the implementation strategy used means that it is not "
 "always possible to recover the exact source code."
 msgstr ""
 
-#: ../../library/annotationlib.rst:520
+#: ../../library/annotationlib.rst:595
 msgid ""
 "First, the stringifier of course cannot recover any information that is not "
 "present in the compiled code, including comments, whitespace, "
 "parenthesization, and operations that get simplified by the compiler."
 msgstr ""
 
-#: ../../library/annotationlib.rst:524
+#: ../../library/annotationlib.rst:599
 msgid ""
 "Second, the stringifier can intercept almost all operations that involve "
 "names looked up in some scope, but it cannot intercept operations that "
@@ -763,7 +877,7 @@ msgid ""
 "access to any globals or builtins. For example:"
 msgstr ""
 
-#: ../../library/annotationlib.rst:530
+#: ../../library/annotationlib.rst:605
 msgid ""
 ">>> def f(x: (1).__class__.__base__.__subclasses__()[-1].__init__."
 "__builtins__[\"print\"](\"Hello world\")): pass\n"
@@ -779,13 +893,13 @@ msgstr ""
 "Hello world\n"
 "{'x': 'None'}"
 
-#: ../../library/annotationlib.rst:539
+#: ../../library/annotationlib.rst:614
 msgid ""
 "This particular example works as of the time of writing, but it relies on "
 "implementation details and is not guaranteed to work in the future."
 msgstr ""
 
-#: ../../library/annotationlib.rst:542
+#: ../../library/annotationlib.rst:617
 msgid ""
 "Among the different kinds of expressions that exist in Python, as "
 "represented by the :mod:`ast` module, some expressions are supported, "
@@ -794,170 +908,171 @@ msgid ""
 "output or an error."
 msgstr ""
 
-#: ../../library/annotationlib.rst:547
+#: ../../library/annotationlib.rst:622
 msgid "The following are supported (sometimes with caveats):"
 msgstr ""
 
-#: ../../library/annotationlib.rst:549
+#: ../../library/annotationlib.rst:624
 msgid ":class:`ast.BinOp`"
 msgstr ":class:`ast.BinOp`"
 
-#: ../../library/annotationlib.rst:550
+#: ../../library/annotationlib.rst:625
 msgid ":class:`ast.UnaryOp`"
 msgstr ":class:`ast.UnaryOp`"
 
-#: ../../library/annotationlib.rst:552
+#: ../../library/annotationlib.rst:627
 msgid ""
 ":class:`ast.Invert` (``~``), :class:`ast.UAdd` (``+``), and :class:`ast."
 "USub` (``-``) are supported"
 msgstr ""
-":class:`ast.Invert` (``~``)、:class:`ast.UAdd` (``+``) 和 :class:`ast.USub` (``-``) 有被支援"
+":class:`ast.Invert` (``~``)、:class:`ast.UAdd` (``+``) 和 :class:`ast.USub` "
+"(``-``) 有被支援"
 
-#: ../../library/annotationlib.rst:553
+#: ../../library/annotationlib.rst:628
 msgid ":class:`ast.Not` (``not``) is not supported"
 msgstr ":class:`ast.Not` (``not``) 並不被支援"
 
-#: ../../library/annotationlib.rst:555
+#: ../../library/annotationlib.rst:630
 msgid ":class:`ast.Dict` (except when using ``**`` unpacking)"
 msgstr ":class:`ast.Dict`\\ （除了使用 ``**`` 解包的情況）"
 
-#: ../../library/annotationlib.rst:556
+#: ../../library/annotationlib.rst:631
 msgid ":class:`ast.Set`"
 msgstr ":class:`ast.Set`"
 
-#: ../../library/annotationlib.rst:557
+#: ../../library/annotationlib.rst:632
 msgid ":class:`ast.Compare`"
 msgstr ":class:`ast.Compare`"
 
-#: ../../library/annotationlib.rst:559
+#: ../../library/annotationlib.rst:634
 msgid ":class:`ast.Eq` and :class:`ast.NotEq` are supported"
 msgstr ":class:`ast.Eq` 和 :class:`ast.NotEq` 有被支援"
 
-#: ../../library/annotationlib.rst:560
+#: ../../library/annotationlib.rst:635
 msgid ""
 ":class:`ast.Lt`, :class:`ast.LtE`, :class:`ast.Gt`, and :class:`ast.GtE` are "
 "supported, but the operand may be flipped"
 msgstr ""
 
-#: ../../library/annotationlib.rst:561
+#: ../../library/annotationlib.rst:636
 msgid ""
 ":class:`ast.Is`, :class:`ast.IsNot`, :class:`ast.In`, and :class:`ast.NotIn` "
 "are not supported"
 msgstr ""
 
-#: ../../library/annotationlib.rst:563
+#: ../../library/annotationlib.rst:638
 msgid ":class:`ast.Call` (except when using ``**`` unpacking)"
 msgstr ""
 
-#: ../../library/annotationlib.rst:564
+#: ../../library/annotationlib.rst:639
 msgid ""
 ":class:`ast.Constant` (though not the exact representation of the constant; "
 "for example, escape sequences in strings are lost; hexadecimal numbers are "
 "converted to decimal)"
 msgstr ""
 
-#: ../../library/annotationlib.rst:566
+#: ../../library/annotationlib.rst:641
 msgid ":class:`ast.Attribute` (assuming the value is not a constant)"
 msgstr ""
 
-#: ../../library/annotationlib.rst:567
+#: ../../library/annotationlib.rst:642
 msgid ":class:`ast.Subscript` (assuming the value is not a constant)"
 msgstr ""
 
-#: ../../library/annotationlib.rst:568
+#: ../../library/annotationlib.rst:643
 msgid ":class:`ast.Starred` (``*`` unpacking)"
 msgstr ""
 
-#: ../../library/annotationlib.rst:569
+#: ../../library/annotationlib.rst:644
 msgid ":class:`ast.Name`"
 msgstr ":class:`ast.Name`"
 
-#: ../../library/annotationlib.rst:570
+#: ../../library/annotationlib.rst:645
 msgid ":class:`ast.List`"
 msgstr ":class:`ast.List`"
 
-#: ../../library/annotationlib.rst:571
+#: ../../library/annotationlib.rst:646
 msgid ":class:`ast.Tuple`"
 msgstr ":class:`ast.Tuple`"
 
-#: ../../library/annotationlib.rst:572
+#: ../../library/annotationlib.rst:647
 msgid ":class:`ast.Slice`"
 msgstr ":class:`ast.Slice`"
 
-#: ../../library/annotationlib.rst:574
+#: ../../library/annotationlib.rst:649
 msgid ""
 "The following are unsupported, but throw an informative error when "
 "encountered by the stringifier:"
 msgstr ""
 
-#: ../../library/annotationlib.rst:577
+#: ../../library/annotationlib.rst:652
 msgid ""
 ":class:`ast.FormattedValue` (f-strings; error is not detected if conversion "
 "specifiers like ``!r`` are used)"
 msgstr ""
 
-#: ../../library/annotationlib.rst:579
+#: ../../library/annotationlib.rst:654
 msgid ":class:`ast.JoinedStr` (f-strings)"
 msgstr ":class:`ast.JoinedStr`\\ （f 字串）"
 
-#: ../../library/annotationlib.rst:581
+#: ../../library/annotationlib.rst:656
 msgid "The following are unsupported and result in incorrect output:"
 msgstr "以下是不支援的，並且會導致不正確的輸出："
 
-#: ../../library/annotationlib.rst:583
+#: ../../library/annotationlib.rst:658
 msgid ":class:`ast.BoolOp` (``and`` and ``or``)"
 msgstr ":class:`ast.BoolOp`\\ （``and`` 和 ``or``）"
 
-#: ../../library/annotationlib.rst:584
+#: ../../library/annotationlib.rst:659
 msgid ":class:`ast.IfExp`"
 msgstr ":class:`ast.IfExp`"
 
-#: ../../library/annotationlib.rst:585
+#: ../../library/annotationlib.rst:660
 msgid ":class:`ast.Lambda`"
 msgstr ":class:`ast.Lambda`"
 
-#: ../../library/annotationlib.rst:586
+#: ../../library/annotationlib.rst:661
 msgid ":class:`ast.ListComp`"
 msgstr ":class:`ast.ListComp`"
 
-#: ../../library/annotationlib.rst:587
+#: ../../library/annotationlib.rst:662
 msgid ":class:`ast.SetComp`"
 msgstr ":class:`ast.SetComp`"
 
-#: ../../library/annotationlib.rst:588
+#: ../../library/annotationlib.rst:663
 msgid ":class:`ast.DictComp`"
 msgstr ":class:`ast.DictComp`"
 
-#: ../../library/annotationlib.rst:589
+#: ../../library/annotationlib.rst:664
 msgid ":class:`ast.GeneratorExp`"
 msgstr ":class:`ast.GeneratorExp`"
 
-#: ../../library/annotationlib.rst:591
+#: ../../library/annotationlib.rst:666
 msgid ""
 "The following are disallowed in annotation scopes and therefore not relevant:"
 msgstr ""
 
-#: ../../library/annotationlib.rst:593
+#: ../../library/annotationlib.rst:668
 msgid ":class:`ast.NamedExpr` (``:=``)"
 msgstr ":class:`ast.NamedExpr` (``:=``)"
 
-#: ../../library/annotationlib.rst:594
+#: ../../library/annotationlib.rst:669
 msgid ":class:`ast.Await`"
 msgstr ":class:`ast.Await`"
 
-#: ../../library/annotationlib.rst:595
+#: ../../library/annotationlib.rst:670
 msgid ":class:`ast.Yield`"
 msgstr ":class:`ast.Yield`"
 
-#: ../../library/annotationlib.rst:596
+#: ../../library/annotationlib.rst:671
 msgid ":class:`ast.YieldFrom`"
 msgstr ":class:`ast.YieldFrom`"
 
-#: ../../library/annotationlib.rst:600
+#: ../../library/annotationlib.rst:675
 msgid "Limitations of the ``FORWARDREF`` format"
 msgstr "``FORWARDREF`` 格式的限制"
 
-#: ../../library/annotationlib.rst:602
+#: ../../library/annotationlib.rst:677
 msgid ""
 "The :attr:`~Format.FORWARDREF` format aims to produce real values as much as "
 "possible, with anything that cannot be resolved replaced with :class:"
@@ -967,11 +1082,11 @@ msgid ""
 "evaluated using the :attr:`~Format.FORWARDREF` format."
 msgstr ""
 
-#: ../../library/annotationlib.rst:609
+#: ../../library/annotationlib.rst:684
 msgid "Below are a few examples of the behavior with unsupported expressions:"
 msgstr ""
 
-#: ../../library/annotationlib.rst:611
+#: ../../library/annotationlib.rst:686
 msgid ""
 ">>> from annotationlib import get_annotations, Format\n"
 ">>> def zerodiv(x: 1 / 0): ...\n"
@@ -1001,11 +1116,11 @@ msgstr ""
 ">>> get_annotations(ifexp, format=Format.STRING)\n"
 "{'x': '1'}"
 
-#: ../../library/annotationlib.rst:630
+#: ../../library/annotationlib.rst:705
 msgid "Security implications of introspecting annotations"
 msgstr ""
 
-#: ../../library/annotationlib.rst:632
+#: ../../library/annotationlib.rst:707
 msgid ""
 "Much of the functionality in this module involves executing code related to "
 "annotations, which can then do arbitrary things. For example, :func:"
@@ -1018,7 +1133,7 @@ msgid ""
 "func:`typing.get_type_hints`."
 msgstr ""
 
-#: ../../library/annotationlib.rst:641
+#: ../../library/annotationlib.rst:716
 msgid ""
 "Any security issue arising from this also applies immediately after "
 "importing code that may contain untrusted annotations: importing code can "
