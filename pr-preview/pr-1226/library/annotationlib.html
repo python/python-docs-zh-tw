@@ -95,6 +95,7 @@
 <li><a class="reference internal" href="#functions">Functions</a></li>
 <li><a class="reference internal" href="#recipes">Recipes</a><ul>
 <li><a class="reference internal" href="#using-annotations-in-a-metaclass">Using annotations in a metaclass</a></li>
+<li><a class="reference internal" href="#creating-a-custom-callable-annotate-function">Creating a custom callable annotate function</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#limitations-of-the-string-format"><code class="docutils literal notranslate"><span class="pre">STRING</span></code> 格式的限制</a></li>
@@ -713,6 +714,74 @@ annotations from the class and puts them in a separate attribute:</p>
 </pre></div>
 </div>
 </section>
+<section id="creating-a-custom-callable-annotate-function">
+<h3>Creating a custom callable annotate function<a class="headerlink" href="#creating-a-custom-callable-annotate-function" title="連結到這個標頭">¶</a></h3>
+<p>Custom <a class="reference internal" href="../glossary.html#term-annotate-function"><span class="xref std std-term">annotate functions</span></a> may be literal functions like those
+automatically generated for functions, classes, and modules. Or, they may wish to utilise
+the encapsulation provided by classes, in which case any <a class="reference internal" href="../glossary.html#term-callable"><span class="xref std std-term">callable</span></a> can be used as
+an <a class="reference internal" href="../glossary.html#term-annotate-function"><span class="xref std std-term">annotate function</span></a>.</p>
+<p>To provide the <a class="reference internal" href="#annotationlib.Format.VALUE" title="annotationlib.Format.VALUE"><code class="xref py py-attr docutils literal notranslate"><span class="pre">VALUE</span></code></a>, <a class="reference internal" href="#annotationlib.Format.STRING" title="annotationlib.Format.STRING"><code class="xref py py-attr docutils literal notranslate"><span class="pre">STRING</span></code></a>, or
+<a class="reference internal" href="#annotationlib.Format.FORWARDREF" title="annotationlib.Format.FORWARDREF"><code class="xref py py-attr docutils literal notranslate"><span class="pre">FORWARDREF</span></code></a> formats directly, an <a class="reference internal" href="../glossary.html#term-annotate-function"><span class="xref std std-term">annotate function</span></a> must provide
+the following attribute:</p>
+<ul class="simple">
+<li><p>A callable <code class="docutils literal notranslate"><span class="pre">__call__</span></code> with signature <code class="docutils literal notranslate"><span class="pre">__call__(format,</span> <span class="pre">/)</span> <span class="pre">-&gt;</span> <span class="pre">dict</span></code>, that does not
+raise a <a class="reference internal" href="exceptions.html#NotImplementedError" title="NotImplementedError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a> when called with a supported format.</p></li>
+</ul>
+<p>To provide the <a class="reference internal" href="#annotationlib.Format.VALUE_WITH_FAKE_GLOBALS" title="annotationlib.Format.VALUE_WITH_FAKE_GLOBALS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">VALUE_WITH_FAKE_GLOBALS</span></code></a> format, which is used to
+automatically generate <a class="reference internal" href="#annotationlib.Format.STRING" title="annotationlib.Format.STRING"><code class="xref py py-attr docutils literal notranslate"><span class="pre">STRING</span></code></a> or <a class="reference internal" href="#annotationlib.Format.FORWARDREF" title="annotationlib.Format.FORWARDREF"><code class="xref py py-attr docutils literal notranslate"><span class="pre">FORWARDREF</span></code></a> if they are
+not supported directly, <a class="reference internal" href="../glossary.html#term-annotate-function"><span class="xref std std-term">annotate functions</span></a> must provide the
+following attributes:</p>
+<ul class="simple">
+<li><p>A callable <code class="docutils literal notranslate"><span class="pre">__call__</span></code> with signature <code class="docutils literal notranslate"><span class="pre">__call__(format,</span> <span class="pre">/)</span> <span class="pre">-&gt;</span> <span class="pre">dict</span></code>, that does not
+raise a <a class="reference internal" href="exceptions.html#NotImplementedError" title="NotImplementedError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">NotImplementedError</span></code></a> when called with
+<a class="reference internal" href="#annotationlib.Format.VALUE_WITH_FAKE_GLOBALS" title="annotationlib.Format.VALUE_WITH_FAKE_GLOBALS"><code class="xref py py-attr docutils literal notranslate"><span class="pre">VALUE_WITH_FAKE_GLOBALS</span></code></a>.</p></li>
+<li><p>A <a class="reference internal" href="../reference/datamodel.html#code-objects"><span class="std std-ref">code object</span></a> <code class="docutils literal notranslate"><span class="pre">__code__</span></code> containing the compiled code for the
+annotate function.</p></li>
+<li><p>Optional: A tuple of the function's positional defaults <code class="docutils literal notranslate"><span class="pre">__kwdefaults__</span></code>, if the
+function represented by <code class="docutils literal notranslate"><span class="pre">__code__</span></code> uses any positional defaults.</p></li>
+<li><p>Optional: A dict of the function's keyword defaults <code class="docutils literal notranslate"><span class="pre">__defaults__</span></code>, if the function
+represented by <code class="docutils literal notranslate"><span class="pre">__code__</span></code> uses any keyword defaults.</p></li>
+<li><p>Optional: All other <a class="reference internal" href="inspect.html#inspect-types"><span class="std std-ref">function attributes</span></a>.</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Annotate</span><span class="p">:</span>
+    <span class="n">called_formats</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">/</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">_self</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># When called with fake globals, `_self` will be the</span>
+        <span class="c1"># actual self value, and `self` will be the format.</span>
+        <span class="k">if</span> <span class="n">_self</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="nb">format</span> <span class="o">=</span> <span class="n">_self</span><span class="p">,</span> <span class="bp">self</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">called_formats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">format</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">format</span> <span class="o">&lt;=</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># VALUE or VALUE_WITH_FAKE_GLOBALS</span>
+            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">MyType</span><span class="p">}</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+    <span class="vm">__code__</span> <span class="o">=</span> <span class="fm">__call__</span><span class="o">.</span><span class="vm">__code__</span>
+    <span class="vm">__defaults__</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,)</span>
+    <span class="vm">__kwdefaults__</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="nb">dict</span><span class="p">(</span><span class="n">_self</span><span class="o">=</span><span class="bp">self</span><span class="p">))</span>
+
+    <span class="vm">__globals__</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">__builtins__</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="vm">__closure__</span> <span class="o">=</span> <span class="kc">None</span>
+</pre></div>
+</div>
+<p>This can then be called with:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">annotationlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">call_annotate_function</span><span class="p">,</span> <span class="n">Format</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">call_annotate_function</span><span class="p">(</span><span class="n">Annotate</span><span class="p">(),</span> <span class="nb">format</span><span class="o">=</span><span class="n">Format</span><span class="o">.</span><span class="n">STRING</span><span class="p">)</span>
+<span class="go">{&#39;x&#39;: &#39;MyType&#39;}</span>
+</pre></div>
+</div>
+<p>Or used as the annotate function for an object:</p>
+<div class="highlight-pycon notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">annotationlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_annotations</span><span class="p">,</span> <span class="n">Format</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span><span class="w"> </span><span class="nc">C</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="k">pass</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">C</span><span class="o">.</span><span class="n">__annotate__</span> <span class="o">=</span> <span class="n">Annotate</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_annotations</span><span class="p">(</span><span class="n">Annotate</span><span class="p">(),</span> <span class="nb">format</span><span class="o">=</span><span class="n">Format</span><span class="o">.</span><span class="n">STRING</span><span class="p">)</span>
+<span class="go">{&#39;x&#39;: &#39;MyType&#39;}</span>
+</pre></div>
+</div>
+</section>
 </section>
 <section id="limitations-of-the-string-format">
 <h2><code class="docutils literal notranslate"><span class="pre">STRING</span></code> 格式的限制<a class="headerlink" href="#limitations-of-the-string-format" title="連結到這個標頭">¶</a></h2>
@@ -856,6 +925,7 @@ pass them to any of the APIs for introspecting annotations, for example by editi
 <li><a class="reference internal" href="#functions">Functions</a></li>
 <li><a class="reference internal" href="#recipes">Recipes</a><ul>
 <li><a class="reference internal" href="#using-annotations-in-a-metaclass">Using annotations in a metaclass</a></li>
+<li><a class="reference internal" href="#creating-a-custom-callable-annotate-function">Creating a custom callable annotate function</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#limitations-of-the-string-format"><code class="docutils literal notranslate"><span class="pre">STRING</span></code> 格式的限制</a></li>
@@ -988,7 +1058,7 @@ pass them to any of the APIs for introspecting annotations, for example by editi
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 5月 09, 2026 (00:40 UTC)。
+      最後更新於 5月 10, 2026 (00:39 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
