@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>性能分析與追蹤 &#8212; Python 3.14.5 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=4365c8fe" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
+    
+    <script src="../_static/documentation_options.js?v=8c54008b"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.14.5 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權所有" href="../copyright.html" />
+    <link rel="next" title="Python 初始化設定" href="init_config.html" />
+    <link rel="prev" title="Python 行程中的多重直譯器" href="subinterpreters.html" />
+    
+      
+      <link rel="canonical" href="https://docs.python.org/3/c-api/profiling.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="../_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="../_static/py.svg">
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script>
+            <script type="text/javascript" src="../_static/search-focus.js"></script>
+            <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="選單">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="../_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"></span>
+            <form role="search" class="search" action="../search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q">
+                <input type="submit" value="前往">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+            
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">性能分析與追蹤</a></li>
+<li><a class="reference internal" href="#reference-tracing">參照追蹤</a></li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="subinterpreters.html"
+                          title="上一章">Python 行程中的多重直譯器</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="init_config.html"
+                          title="下一章">Python 初始化設定</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "c-api/profiling.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/c-api/profiling.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/c-api/profiling.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="init_config.html" title="Python 初始化設定"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="subinterpreters.html" title="Python 行程中的多重直譯器"
+             accesskey="P">上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.5 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python/C API 參考手冊</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">性能分析與追蹤</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="profiling-and-tracing">
+<span id="profiling"></span><h1>性能分析與追蹤<a class="headerlink" href="#profiling-and-tracing" title="連結到這個標頭">¶</a></h1>
+<p>The Python interpreter provides some low-level support for attaching profiling
+and execution tracing facilities.  These are used for profiling, debugging, and
+coverage analysis tools.</p>
+<p>This C interface allows the profiling or tracing code to avoid the overhead of
+calling through Python-level callable objects, making a direct C function call
+instead.  The essential attributes of the facility have not changed; the
+interface allows trace functions to be installed per-thread, and the basic
+events reported to the trace function are the same as had been reported to the
+Python-level trace functions in previous versions.</p>
+<dl class="c type">
+<dt class="sig sig-object c" id="c.Py_tracefunc">
+<span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">Py_tracefunc</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">obj</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="frame.html#c.PyFrameObject" title="PyFrameObject"><span class="n"><span class="pre">PyFrameObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">frame</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">what</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#c.Py_tracefunc" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The type of the trace function registered using <a class="reference internal" href="#c.PyEval_SetProfile" title="PyEval_SetProfile"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SetProfile()</span></code></a> and
+<a class="reference internal" href="#c.PyEval_SetTrace" title="PyEval_SetTrace"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SetTrace()</span></code></a>. The first parameter is the object passed to the
+registration function as <em>obj</em>, <em>frame</em> is the frame object to which the event
+pertains, <em>what</em> is one of the constants <a class="reference internal" href="#c.PyTrace_CALL" title="PyTrace_CALL"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_CALL</span></code></a>,
+<a class="reference internal" href="#c.PyTrace_EXCEPTION" title="PyTrace_EXCEPTION"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_EXCEPTION</span></code></a>, <a class="reference internal" href="#c.PyTrace_LINE" title="PyTrace_LINE"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_LINE</span></code></a>, <a class="reference internal" href="#c.PyTrace_RETURN" title="PyTrace_RETURN"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_RETURN</span></code></a>,
+<a class="reference internal" href="#c.PyTrace_C_CALL" title="PyTrace_C_CALL"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_C_CALL</span></code></a>, <a class="reference internal" href="#c.PyTrace_C_EXCEPTION" title="PyTrace_C_EXCEPTION"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_C_EXCEPTION</span></code></a>, <a class="reference internal" href="#c.PyTrace_C_RETURN" title="PyTrace_C_RETURN"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_C_RETURN</span></code></a>,
+or <a class="reference internal" href="#c.PyTrace_OPCODE" title="PyTrace_OPCODE"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_OPCODE</span></code></a>, and <em>arg</em> depends on the value of <em>what</em>:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><em>what</em> 的值</p></th>
+<th class="head"><p><em>arg</em> 的含義</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#c.PyTrace_CALL" title="PyTrace_CALL"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_CALL</span></code></a></p></td>
+<td><p>永遠是 <a class="reference internal" href="none.html#c.Py_None" title="Py_None"><code class="xref c c-data docutils literal notranslate"><span class="pre">Py_None</span></code></a>。</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#c.PyTrace_EXCEPTION" title="PyTrace_EXCEPTION"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_EXCEPTION</span></code></a></p></td>
+<td><p>Exception information as returned by
+<a class="reference internal" href="../library/sys.html#sys.exc_info" title="sys.exc_info"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.exc_info()</span></code></a>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#c.PyTrace_LINE" title="PyTrace_LINE"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_LINE</span></code></a></p></td>
+<td><p>永遠是 <a class="reference internal" href="none.html#c.Py_None" title="Py_None"><code class="xref c c-data docutils literal notranslate"><span class="pre">Py_None</span></code></a>。</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#c.PyTrace_RETURN" title="PyTrace_RETURN"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_RETURN</span></code></a></p></td>
+<td><p>Value being returned to the caller,
+or <code class="docutils literal notranslate"><span class="pre">NULL</span></code> if caused by an exception.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#c.PyTrace_C_CALL" title="PyTrace_C_CALL"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_C_CALL</span></code></a></p></td>
+<td><p>被呼叫的函式物件。</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#c.PyTrace_C_EXCEPTION" title="PyTrace_C_EXCEPTION"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_C_EXCEPTION</span></code></a></p></td>
+<td><p>被呼叫的函式物件。</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#c.PyTrace_C_RETURN" title="PyTrace_C_RETURN"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_C_RETURN</span></code></a></p></td>
+<td><p>被呼叫的函式物件。</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#c.PyTrace_OPCODE" title="PyTrace_OPCODE"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_OPCODE</span></code></a></p></td>
+<td><p>永遠是 <a class="reference internal" href="none.html#c.Py_None" title="Py_None"><code class="xref c c-data docutils literal notranslate"><span class="pre">Py_None</span></code></a>。</p></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="c var">
+<dt class="sig sig-object c" id="c.PyTrace_CALL">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyTrace_CALL</span></span></span><a class="headerlink" href="#c.PyTrace_CALL" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The value of the <em>what</em> parameter to a <a class="reference internal" href="#c.Py_tracefunc" title="Py_tracefunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_tracefunc</span></code></a> function when a new
+call to a function or method is being reported, or a new entry into a generator.
+Note that the creation of the iterator for a generator function is not reported
+as there is no control transfer to the Python bytecode in the corresponding
+frame.</p>
+</dd></dl>
+
+<dl class="c var">
+<dt class="sig sig-object c" id="c.PyTrace_EXCEPTION">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyTrace_EXCEPTION</span></span></span><a class="headerlink" href="#c.PyTrace_EXCEPTION" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The value of the <em>what</em> parameter to a <a class="reference internal" href="#c.Py_tracefunc" title="Py_tracefunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_tracefunc</span></code></a> function when an
+exception has been raised.  The callback function is called with this value for
+<em>what</em> when after any bytecode is processed after which the exception becomes
+set within the frame being executed.  The effect of this is that as exception
+propagation causes the Python stack to unwind, the callback is called upon
+return to each frame as the exception propagates.  Only trace functions receive
+these events; they are not needed by the profiler.</p>
+</dd></dl>
+
+<dl class="c var">
+<dt class="sig sig-object c" id="c.PyTrace_LINE">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyTrace_LINE</span></span></span><a class="headerlink" href="#c.PyTrace_LINE" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The value passed as the <em>what</em> parameter to a <a class="reference internal" href="#c.Py_tracefunc" title="Py_tracefunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_tracefunc</span></code></a> function
+(but not a profiling function) when a line-number event is being reported.
+It may be disabled for a frame by setting <a class="reference internal" href="../reference/datamodel.html#frame.f_trace_lines" title="frame.f_trace_lines"><code class="xref py py-attr docutils literal notranslate"><span class="pre">f_trace_lines</span></code></a> to
+<em>0</em> on that frame.</p>
+</dd></dl>
+
+<dl class="c var">
+<dt class="sig sig-object c" id="c.PyTrace_RETURN">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyTrace_RETURN</span></span></span><a class="headerlink" href="#c.PyTrace_RETURN" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The value for the <em>what</em> parameter to <a class="reference internal" href="#c.Py_tracefunc" title="Py_tracefunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_tracefunc</span></code></a> functions when a
+call is about to return.</p>
+</dd></dl>
+
+<dl class="c var">
+<dt class="sig sig-object c" id="c.PyTrace_C_CALL">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyTrace_C_CALL</span></span></span><a class="headerlink" href="#c.PyTrace_C_CALL" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The value for the <em>what</em> parameter to <a class="reference internal" href="#c.Py_tracefunc" title="Py_tracefunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_tracefunc</span></code></a> functions when a C
+function is about to be called.</p>
+</dd></dl>
+
+<dl class="c var">
+<dt class="sig sig-object c" id="c.PyTrace_C_EXCEPTION">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyTrace_C_EXCEPTION</span></span></span><a class="headerlink" href="#c.PyTrace_C_EXCEPTION" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The value for the <em>what</em> parameter to <a class="reference internal" href="#c.Py_tracefunc" title="Py_tracefunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_tracefunc</span></code></a> functions when a C
+function has raised an exception.</p>
+</dd></dl>
+
+<dl class="c var">
+<dt class="sig sig-object c" id="c.PyTrace_C_RETURN">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyTrace_C_RETURN</span></span></span><a class="headerlink" href="#c.PyTrace_C_RETURN" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The value for the <em>what</em> parameter to <a class="reference internal" href="#c.Py_tracefunc" title="Py_tracefunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_tracefunc</span></code></a> functions when a C
+function has returned.</p>
+</dd></dl>
+
+<dl class="c var">
+<dt class="sig sig-object c" id="c.PyTrace_OPCODE">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyTrace_OPCODE</span></span></span><a class="headerlink" href="#c.PyTrace_OPCODE" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The value for the <em>what</em> parameter to <a class="reference internal" href="#c.Py_tracefunc" title="Py_tracefunc"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_tracefunc</span></code></a> functions (but not
+profiling functions) when a new opcode is about to be executed.  This event is
+not emitted by default: it must be explicitly requested by setting
+<a class="reference internal" href="../reference/datamodel.html#frame.f_trace_opcodes" title="frame.f_trace_opcodes"><code class="xref py py-attr docutils literal notranslate"><span class="pre">f_trace_opcodes</span></code></a> to <em>1</em> on the frame.</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyEval_SetProfile">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyEval_SetProfile</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.Py_tracefunc" title="Py_tracefunc"><span class="n"><span class="pre">Py_tracefunc</span></span></a><span class="w"> </span><span class="n"><span class="pre">func</span></span>, <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">obj</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyEval_SetProfile" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Set the profiler function to <em>func</em>.  The <em>obj</em> parameter is passed to the
+function as its first parameter, and may be any Python object, or <code class="docutils literal notranslate"><span class="pre">NULL</span></code>.  If
+the profile function needs to maintain state, using a different value for <em>obj</em>
+for each thread provides a convenient and thread-safe place to store it.  The
+profile function is called for all monitored events except <a class="reference internal" href="#c.PyTrace_LINE" title="PyTrace_LINE"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_LINE</span></code></a>
+<a class="reference internal" href="#c.PyTrace_OPCODE" title="PyTrace_OPCODE"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_OPCODE</span></code></a> and <a class="reference internal" href="#c.PyTrace_EXCEPTION" title="PyTrace_EXCEPTION"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_EXCEPTION</span></code></a>.</p>
+<p>另請參閱 <a class="reference internal" href="../library/sys.html#sys.setprofile" title="sys.setprofile"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.setprofile()</span></code></a> 函式。</p>
+<p>呼叫者必須擁有一個 <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>。</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyEval_SetProfileAllThreads">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyEval_SetProfileAllThreads</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.Py_tracefunc" title="Py_tracefunc"><span class="n"><span class="pre">Py_tracefunc</span></span></a><span class="w"> </span><span class="n"><span class="pre">func</span></span>, <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">obj</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyEval_SetProfileAllThreads" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Like <a class="reference internal" href="#c.PyEval_SetProfile" title="PyEval_SetProfile"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SetProfile()</span></code></a> but sets the profile function in all running threads
+belonging to the current interpreter instead of the setting it only on the current thread.</p>
+<p>呼叫者必須擁有一個 <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>。</p>
+<p>As <a class="reference internal" href="#c.PyEval_SetProfile" title="PyEval_SetProfile"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SetProfile()</span></code></a>, this function ignores any exceptions raised while
+setting the profile functions in all threads.</p>
+</dd></dl>
+
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.12 版被加入.</span></p>
+</div>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyEval_SetTrace">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyEval_SetTrace</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.Py_tracefunc" title="Py_tracefunc"><span class="n"><span class="pre">Py_tracefunc</span></span></a><span class="w"> </span><span class="n"><span class="pre">func</span></span>, <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">obj</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyEval_SetTrace" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Set the tracing function to <em>func</em>.  This is similar to
+<a class="reference internal" href="#c.PyEval_SetProfile" title="PyEval_SetProfile"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SetProfile()</span></code></a>, except the tracing function does receive line-number
+events and per-opcode events, but does not receive any event related to C function
+objects being called.  Any trace function registered using <a class="reference internal" href="#c.PyEval_SetTrace" title="PyEval_SetTrace"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SetTrace()</span></code></a>
+will not receive <a class="reference internal" href="#c.PyTrace_C_CALL" title="PyTrace_C_CALL"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_C_CALL</span></code></a>, <a class="reference internal" href="#c.PyTrace_C_EXCEPTION" title="PyTrace_C_EXCEPTION"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_C_EXCEPTION</span></code></a> or
+<a class="reference internal" href="#c.PyTrace_C_RETURN" title="PyTrace_C_RETURN"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyTrace_C_RETURN</span></code></a> as a value for the <em>what</em> parameter.</p>
+<p>也請見 <a class="reference internal" href="../library/sys.html#sys.settrace" title="sys.settrace"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.settrace()</span></code></a> 函式。</p>
+<p>呼叫者必須擁有一個 <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>。</p>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyEval_SetTraceAllThreads">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyEval_SetTraceAllThreads</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.Py_tracefunc" title="Py_tracefunc"><span class="n"><span class="pre">Py_tracefunc</span></span></a><span class="w"> </span><span class="n"><span class="pre">func</span></span>, <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">obj</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyEval_SetTraceAllThreads" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Like <a class="reference internal" href="#c.PyEval_SetTrace" title="PyEval_SetTrace"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SetTrace()</span></code></a> but sets the tracing function in all running threads
+belonging to the current interpreter instead of the setting it only on the current thread.</p>
+<p>呼叫者必須擁有一個 <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>。</p>
+<p>As <a class="reference internal" href="#c.PyEval_SetTrace" title="PyEval_SetTrace"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SetTrace()</span></code></a>, this function ignores any exceptions raised while
+setting the trace functions in all threads.</p>
+</dd></dl>
+
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.12 版被加入.</span></p>
+</div>
+</section>
+<section id="reference-tracing">
+<h1>參照追蹤<a class="headerlink" href="#reference-tracing" title="連結到這個標頭">¶</a></h1>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+<dl class="c type">
+<dt class="sig sig-object c" id="c.PyRefTracer">
+<span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyRefTracer</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">event</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#c.PyRefTracer" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The type of the trace function registered using <a class="reference internal" href="#c.PyRefTracer_SetTracer" title="PyRefTracer_SetTracer"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyRefTracer_SetTracer()</span></code></a>.
+The first parameter is a Python object that has been just created (when <strong>event</strong>
+is set to <a class="reference internal" href="#c.PyRefTracer_CREATE" title="PyRefTracer_CREATE"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyRefTracer_CREATE</span></code></a>) or about to be destroyed (when <strong>event</strong>
+is set to <a class="reference internal" href="#c.PyRefTracer_DESTROY" title="PyRefTracer_DESTROY"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyRefTracer_DESTROY</span></code></a>). The <strong>data</strong> argument is the opaque pointer
+that was provided when <a class="reference internal" href="#c.PyRefTracer_SetTracer" title="PyRefTracer_SetTracer"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyRefTracer_SetTracer()</span></code></a> was called.</p>
+<p>If a new tracing function is registered replacing the current one, a call to the
+trace function will be made with the object set to <strong>NULL</strong> and <strong>event</strong> set to
+<a class="reference internal" href="#c.PyRefTracer_TRACKER_REMOVED" title="PyRefTracer_TRACKER_REMOVED"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyRefTracer_TRACKER_REMOVED</span></code></a>. This will happen just before the new
+function is registered.</p>
+</dd></dl>
+
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+<dl class="c var">
+<dt class="sig sig-object c" id="c.PyRefTracer_CREATE">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyRefTracer_CREATE</span></span></span><a class="headerlink" href="#c.PyRefTracer_CREATE" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The value for the <em>event</em> parameter to <a class="reference internal" href="#c.PyRefTracer" title="PyRefTracer"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyRefTracer</span></code></a> functions when a Python
+object has been created.</p>
+</dd></dl>
+
+<dl class="c var">
+<dt class="sig sig-object c" id="c.PyRefTracer_DESTROY">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyRefTracer_DESTROY</span></span></span><a class="headerlink" href="#c.PyRefTracer_DESTROY" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The value for the <em>event</em> parameter to <a class="reference internal" href="#c.PyRefTracer" title="PyRefTracer"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyRefTracer</span></code></a> functions when a Python
+object has been destroyed.</p>
+</dd></dl>
+
+<dl class="c var">
+<dt class="sig sig-object c" id="c.PyRefTracer_TRACKER_REMOVED">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyRefTracer_TRACKER_REMOVED</span></span></span><a class="headerlink" href="#c.PyRefTracer_TRACKER_REMOVED" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>The value for the <em>event</em> parameter to <a class="reference internal" href="#c.PyRefTracer" title="PyRefTracer"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyRefTracer</span></code></a> functions when the
+current tracer is about to be replaced by a new one.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.14 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyRefTracer_SetTracer">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyRefTracer_SetTracer</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyRefTracer" title="PyRefTracer"><span class="n"><span class="pre">PyRefTracer</span></span></a><span class="w"> </span><span class="n"><span class="pre">tracer</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyRefTracer_SetTracer" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Register a reference tracer function. The function will be called when a new
+Python object has been created or when an object is going to be destroyed. If
+<strong>data</strong> is provided it must be an opaque pointer that will be provided when
+the tracer function is called. Return <code class="docutils literal notranslate"><span class="pre">0</span></code> on success. Set an exception and
+return <code class="docutils literal notranslate"><span class="pre">-1</span></code> on error.</p>
+<p>Note that tracer functions <strong>must not</strong> create Python objects inside or
+otherwise the call will be re-entrant. The tracer also <strong>must not</strong> clear
+any existing exception or set an exception.  A <a class="reference internal" href="../glossary.html#term-thread-state"><span class="xref std std-term">thread state</span></a> will be active
+every time the tracer function is called.</p>
+<p>There must be an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a> when calling this function.</p>
+<p>If another tracer function was already registered, the old function will be
+called with <strong>event</strong> set to <a class="reference internal" href="#c.PyRefTracer_TRACKER_REMOVED" title="PyRefTracer_TRACKER_REMOVED"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyRefTracer_TRACKER_REMOVED</span></code></a> just before
+the new function is registered.</p>
+</dd></dl>
+
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyRefTracer_GetTracer">
+<a class="reference internal" href="#c.PyRefTracer" title="PyRefTracer"><span class="n"><span class="pre">PyRefTracer</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyRefTracer_GetTracer</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyRefTracer_GetTracer" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Get the registered reference tracer function and the value of the opaque data
+pointer that was registered when <a class="reference internal" href="#c.PyRefTracer_SetTracer" title="PyRefTracer_SetTracer"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyRefTracer_SetTracer()</span></code></a> was called.
+If no tracer was registered this function will return NULL and will set the
+<strong>data</strong> pointer to NULL.</p>
+<p>There must be an <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a> when calling this function.</p>
+</dd></dl>
+
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">性能分析與追蹤</a></li>
+<li><a class="reference internal" href="#reference-tracing">參照追蹤</a></li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="subinterpreters.html"
+                          title="上一章">Python 行程中的多重直譯器</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="init_config.html"
+                          title="下一章">Python 初始化設定</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "c-api/profiling.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/c-api/profiling.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/c-api/profiling.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="init_config.html" title="Python 初始化設定"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="subinterpreters.html" title="Python 行程中的多重直譯器"
+             >上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.5 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python/C API 參考手冊</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">性能分析與追蹤</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; <a href="../copyright.html">版權所有</a> 2001 Python Software Foundation.
+    <br>
+    此頁面採用 Python 軟體基金會授權條款第 2 版。
+    <br>
+    文件中的範例、應用技巧與其他程式碼額外採用了 Zero Clause BSD 授權條款。
+    <br>
+    
+      更多訊息請見<a href="/license.html">歷史與授權條款</a>。<br>
+    
+    
+    <br>
+
+    Python 軟體基金會是一家非營利法人。
+<a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
+<br>
+    <br>
+      最後更新於 6月 07, 2026 (10:55 UTC)。
+    
+      <a href="/bugs.html">發現 bug</a>？
+    
+    <br>
+
+    以 <a href="https://www.sphinx-doc.org/">Sphinx</a>8.2.3建立。 
+    </div>
+
+  </body>
+</html>
