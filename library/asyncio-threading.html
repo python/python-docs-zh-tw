@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>asyncio and free-threaded Python &#8212; Python 3.14.6 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=4365c8fe" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
+    
+    <script src="../_static/documentation_options.js?v=bb1e44a5"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.14.6 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權所有" href="../copyright.html" />
+    <link rel="next" title="socket — 低階網路介面" href="socket.html" />
+    <link rel="prev" title="使用 asyncio 開發" href="asyncio-dev.html" />
+    
+      
+      <link rel="canonical" href="https://docs.python.org/3/library/asyncio-threading.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="../_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="../_static/py.svg">
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script>
+            <script type="text/javascript" src="../_static/search-focus.js"></script>
+            <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="選單">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="../_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"></span>
+            <form role="search" class="search" action="../search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q">
+                <input type="submit" value="前往">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+            
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">asyncio and free-threaded Python</a><ul>
+<li><a class="reference internal" href="#thread-safety-considerations">Thread safety considerations</a></li>
+<li><a class="reference internal" href="#using-asyncio-with-threads">Using asyncio with threads</a></li>
+<li><a class="reference internal" href="#producer-consumer-across-threads">Producer/consumer across threads</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="asyncio-dev.html"
+                          title="上一章">使用 asyncio 開發</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="socket.html"
+                          title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">socket</span></code> — 低階網路介面</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "library/asyncio-threading.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/asyncio-threading.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/library/asyncio-threading.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="socket.html" title="socket — 低階網路介面"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="asyncio-dev.html" title="使用 asyncio 開發"
+             accesskey="P">上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.6 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="ipc.html" >網路與行程間通訊</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="asyncio.html" accesskey="U"><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code> --- 非同步 I/O</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">asyncio and free-threaded Python</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="asyncio-and-free-threaded-python">
+<span id="asyncio-threading"></span><h1>asyncio and free-threaded Python<a class="headerlink" href="#asyncio-and-free-threaded-python" title="連結到這個標頭">¶</a></h1>
+<p>asyncio uses an event loop as a scheduler to enable highly efficient
+concurrency by switching between tasks to allow non-blocking I/O
+operations. This results in better performance for I/O-bound use
+cases. It also allows off-loading CPU-bound work to a thread or
+process pool, but that is still limited by the <a class="reference internal" href="../glossary.html#term-global-interpreter-lock"><span class="xref std std-term">global
+interpreter lock</span></a> in CPython.</p>
+<p>However, in <a class="reference internal" href="../howto/free-threading-python.html#freethreading-python-howto"><span class="std std-ref">free-threaded Python</span></a>,
+the GIL is disabled and Python can run true multi-threaded code. This
+means that asyncio can now take advantage of multiple CPU cores without
+the limitations imposed by the GIL.</p>
+<p>Since Python 3.14, asyncio has first-class support for free-threaded
+Python, and the implementation of asyncio is safe to use in a
+multi-threaded environment.</p>
+<p>A single event loop on one core can handle many connections
+concurrently, but the Python code that runs to handle each one still
+executes serially. Once requests involve a non-trivial amount of
+per-request computation, that handling becomes the bottleneck, and a
+single core can no longer keep up. Combining asyncio with threads is
+most useful here: by running an event loop per thread, the handling of
+different requests can run in parallel across multiple CPU cores. It is
+also useful when you need to run blocking or CPU-bound code from an
+asyncio application.</p>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><a class="reference external" href="https://labs.quansight.org/blog/scaling-asyncio-on-free-threaded-python">Scaling asyncio on Free-Threaded Python</a>,
+a blog post by Kumar Aditya which explains the internal changes
+that make asyncio safe and efficient under free-threaded Python,
+together with benchmarks of the resulting improvements.</p>
+</div>
+<section id="thread-safety-considerations">
+<h2>Thread safety considerations<a class="headerlink" href="#thread-safety-considerations" title="連結到這個標頭">¶</a></h2>
+<p>While asyncio is designed to be thread-safe in a free-threaded Python
+environment, there are still some considerations to keep in mind when
+using asyncio with threads:</p>
+<ol class="arabic simple">
+<li><p><strong>Event loop</strong>: Each thread should have its own event loop which
+should not be shared across threads. This ensures that the event loop
+can manage its own tasks and callbacks without interference from
+other threads.</p></li>
+<li><p><strong>Task management</strong>: Tasks and futures created in one thread should
+not be awaited or manipulated from another thread.</p></li>
+<li><p><strong>Thread-safe APIs</strong>: When interacting with asyncio from multiple
+threads, it's important to use thread-safe APIs provided by asyncio,
+such as <a class="reference internal" href="asyncio-task.html#asyncio.run_coroutine_threadsafe" title="asyncio.run_coroutine_threadsafe"><code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.run_coroutine_threadsafe()</span></code></a> for submitting
+coroutines to an event loop from another thread. If you need to
+call a callback from a different thread, you can use
+<a class="reference internal" href="asyncio-eventloop.html#asyncio.loop.call_soon_threadsafe" title="asyncio.loop.call_soon_threadsafe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">loop.call_soon_threadsafe()</span></code></a> to schedule it safely.</p></li>
+<li><p><strong>Synchronization</strong>: The synchronization primitives provided by
+asyncio (like <a class="reference internal" href="asyncio-sync.html#asyncio.Lock" title="asyncio.Lock"><code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.Lock</span></code></a> and <a class="reference internal" href="asyncio-sync.html#asyncio.Event" title="asyncio.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.Event</span></code></a>)
+are not designed to be used across threads. If you need to
+synchronize between threads, you should use the synchronization
+primitives from the <a class="reference internal" href="threading.html#module-threading" title="threading: Thread-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code></a> module instead.</p></li>
+</ol>
+</section>
+<section id="using-asyncio-with-threads">
+<h2>Using asyncio with threads<a class="headerlink" href="#using-asyncio-with-threads" title="連結到這個標頭">¶</a></h2>
+<p>asyncio supports running one event loop per thread, which allows you to
+take advantage of multiple CPU cores in a free-threaded Python
+environment. Each thread can run its own event loop, and tasks can be
+scheduled on those loops independently.</p>
+<p>Here's an example of how to use asyncio with threads:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">worker</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Worker </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> starting&quot;</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Worker </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> done&quot;</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">run_loop</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">worker</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+
+<span class="n">threads</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span><span class="n">target</span><span class="o">=</span><span class="n">run_loop</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;T</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,))</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">threads</span><span class="p">:</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">threads</span><span class="p">:</span>
+    <span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In this example, each thread creates its own event loop with
+<a class="reference internal" href="asyncio-runner.html#asyncio.run" title="asyncio.run"><code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.run()</span></code></a> and runs a coroutine on it. The threads execute
+concurrently, and in a free-threaded build they can run on separate
+CPU cores in parallel.</p>
+</section>
+<section id="producer-consumer-across-threads">
+<h2>Producer/consumer across threads<a class="headerlink" href="#producer-consumer-across-threads" title="連結到這個標頭">¶</a></h2>
+<p>When a regular (non-asyncio) thread needs to hand work to an asyncio
+event loop running in another thread, use a thread-safe primitive such
+as <a class="reference internal" href="queue.html#queue.Queue" title="queue.Queue"><code class="xref py py-class docutils literal notranslate"><span class="pre">queue.Queue</span></code></a> rather than <a class="reference internal" href="asyncio-queue.html#asyncio.Queue" title="asyncio.Queue"><code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.Queue</span></code></a>, which is
+only safe within a single event loop.:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">queue</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">threading</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">producer</span><span class="p">(</span><span class="n">q</span><span class="p">:</span> <span class="n">queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Producing </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">q</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+    <span class="n">q</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">consumer</span><span class="p">(</span><span class="n">q</span><span class="p">:</span> <span class="n">queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">item</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">get_nowait</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">queue</span><span class="o">.</span><span class="n">Empty</span><span class="p">:</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+            <span class="k">continue</span>
+        <span class="k">except</span> <span class="n">queue</span><span class="o">.</span><span class="n">ShutDown</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Consumed </span><span class="si">{</span><span class="n">item</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+<span class="n">q</span><span class="p">:</span> <span class="n">queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="n">Queue</span><span class="p">()</span>
+<span class="n">consumer_thread</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+    <span class="n">target</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">consumer</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+<span class="p">)</span>
+<span class="n">consumer_thread</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+<span class="n">producer</span><span class="p">(</span><span class="n">q</span><span class="p">)</span>
+<span class="n">consumer_thread</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The producer runs on the main thread while the consumer runs inside an
+event loop on its own thread, yet they communicate safely through
+<code class="docutils literal notranslate"><span class="pre">queue.Queue</span></code>. When the queue is empty the consumer sleeps briefly
+and tries again. When the producer is done it calls
+<a class="reference internal" href="queue.html#queue.Queue.shutdown" title="queue.Queue.shutdown"><code class="xref py py-meth docutils literal notranslate"><span class="pre">shutdown()</span></code></a>, which causes subsequent
+<a class="reference internal" href="queue.html#queue.Queue.get_nowait" title="queue.Queue.get_nowait"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_nowait()</span></code></a> calls to raise <a class="reference internal" href="queue.html#queue.ShutDown" title="queue.ShutDown"><code class="xref py py-exc docutils literal notranslate"><span class="pre">queue.ShutDown</span></code></a>
+so the consumer can exit cleanly.</p>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">asyncio and free-threaded Python</a><ul>
+<li><a class="reference internal" href="#thread-safety-considerations">Thread safety considerations</a></li>
+<li><a class="reference internal" href="#using-asyncio-with-threads">Using asyncio with threads</a></li>
+<li><a class="reference internal" href="#producer-consumer-across-threads">Producer/consumer across threads</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="asyncio-dev.html"
+                          title="上一章">使用 asyncio 開發</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="socket.html"
+                          title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">socket</span></code> — 低階網路介面</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "library/asyncio-threading.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/main/Doc/library/asyncio-threading.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-TW/blob/3.14/library/asyncio-threading.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="socket.html" title="socket — 低階網路介面"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="asyncio-dev.html" title="使用 asyncio 開發"
+             >上一頁</a> |</li>
+
+          <li><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.14.6 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="ipc.html" >網路與行程間通訊</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="asyncio.html" ><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code> --- 非同步 I/O</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">asyncio and free-threaded Python</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; <a href="../copyright.html">版權所有</a> 2001 Python Software Foundation.
+    <br>
+    此頁面採用 Python 軟體基金會授權條款第 2 版。
+    <br>
+    文件中的範例、應用技巧與其他程式碼額外採用了 Zero Clause BSD 授權條款。
+    <br>
+    
+      更多訊息請見<a href="/license.html">歷史與授權條款</a>。<br>
+    
+    
+    <br>
+
+    Python 軟體基金會是一家非營利法人。
+<a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
+<br>
+    <br>
+      最後更新於 6月 12, 2026 (18:24 UTC)。
+    
+      <a href="/bugs.html">發現 bug</a>？
+    
+    <br>
+
+    以 <a href="https://www.sphinx-doc.org/">Sphinx</a>8.2.3建立。 
+    </div>
+
+  </body>
+</html>
