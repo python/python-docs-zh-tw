@@ -700,7 +700,13 @@ expand to some compiler-specific suffixes on some older compilers.</p>
 <section id="reference-count-details">
 <span id="api-refcountdetails"></span><h4>參照計數詳細資訊<a class="headerlink" href="#reference-count-details" title="連結到這個標頭">¶</a></h4>
 <p>Python/C API 中函式的參照計數行為最好用<em>參照的所有權</em>來解釋。所有權附屬於參照而非物件（物件並非被擁有，它們總是共享的）。「擁有參照」意味著當不再需要該參照時，負責在其上呼叫 Py_DECREF。所有權也可以轉移，這意味著接收參照所有權的程式碼最終會負責在不需要參照時透過呼叫 <a class="reference internal" href="refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 或 <a class="reference internal" href="refcounting.html#c.Py_XDECREF" title="Py_XDECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_XDECREF()</span></code></a> 釋放參照 --- 或者將這個責任再傳遞出去（通常是給它的呼叫者）。當一個函式將參照的所有權傳遞給它的呼叫者時，呼叫者被稱為接收到一個<em>新</em>參照。當沒有所有權轉移時，呼叫者被稱為<em>借用</em>參照。如果是<a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">借用參照</span></a>就不需要做任何事情。</p>
-<p>相反地，當呼叫的函式傳入物件的參照時，有兩種可能性：函式有<em>竊取 (steal)</em> 物件的參照，或者沒有。 <em>竊取參照</em>意味著當你將參照傳遞給函式時，該函式假定它現在擁有該參照，並且你不再對它負責。</p>
+<p>Conversely, when a calling function passes in a reference to an  object, there
+are two possibilities: the function <em>steals</em> a  reference to the object, or it
+does not.</p>
+<p><em>Stealing a reference</em> means that when you pass a reference to a
+function, that function assumes that it now owns that reference.
+Since the new owner can use <code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code> at its discretion,
+you (the caller) must not use that reference after the call.</p>
 <p id="index-4">很少有函式會竊取參照；兩個值得注意的例外是 <a class="reference internal" href="list.html#c.PyList_SetItem" title="PyList_SetItem"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyList_SetItem()</span></code></a> 和 <a class="reference internal" href="tuple.html#c.PyTuple_SetItem" title="PyTuple_SetItem"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyTuple_SetItem()</span></code></a>，它們竊取了對項目的參照（但不是對項目所在的 tuple 或 list 的參照！）。因為有著使用新建立的物件來增加 (populate) tuple 或 list 的習慣，這些函式旨在竊取參照；例如，建立 tuple <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">2,</span> <span class="pre">&quot;three&quot;)</span></code> 的程式碼可以如下所示（先暫時忘記錯誤處理；更好的編寫方式如下所示）：</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">t</span><span class="p">;</span>
 
@@ -1100,7 +1106,7 @@ desirable in the first place.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 7月 01, 2026 (00:47 UTC)。
+      最後更新於 7月 02, 2026 (00:45 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
