@@ -486,12 +486,6 @@ in a REPL or a lambda should not be expected to work.</p>
 <dd><p>一個 <a class="reference internal" href="#concurrent.futures.Executor" title="concurrent.futures.Executor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Executor</span></code></a> 子類別，它使用了最多有 <em>max_workers</em> 個行程的池來非同步地執行呼叫。如果 <em>max_workers</em> 為 <code class="docutils literal notranslate"><span class="pre">None</span></code> 或未給定，它將被預設為 <a class="reference internal" href="os.html#os.process_cpu_count" title="os.process_cpu_count"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.process_cpu_count()</span></code></a>。如果 <em>max_workers</em> 小於或等於 <code class="docutils literal notranslate"><span class="pre">0</span></code>，則會引發 <a class="reference internal" href="exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a>。在 Windows 上，<em>max_workers</em> 必須小於或等於 <code class="docutils literal notranslate"><span class="pre">61</span></code>。如果不是，則會引發 <a class="reference internal" href="exceptions.html#ValueError" title="ValueError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ValueError</span></code></a>。如果 <em>max_workers</em> 為 <code class="docutils literal notranslate"><span class="pre">None</span></code>，則預設選擇最多為 <code class="docutils literal notranslate"><span class="pre">61</span></code>，即便有更多處理器可用。<em>mp_context</em> 可以是 <a class="reference internal" href="multiprocessing.html#module-multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">multiprocessing</span></code></a> 情境 (context) 或 <code class="docutils literal notranslate"><span class="pre">None</span></code>。它將用於啟動 worker。如果 <em>mp_context</em> 為 <code class="docutils literal notranslate"><span class="pre">None</span></code> 或未給定，則使用預設的 <a class="reference internal" href="multiprocessing.html#module-multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">multiprocessing</span></code></a> 情境。請見 <a class="reference internal" href="multiprocessing.html#multiprocessing-start-methods"><span class="std std-ref">Contexts and start methods</span></a>。</p>
 <p><em>initializer</em> 是一個可選的可呼叫物件，在每個工作行程 (worker process) 開始時呼叫；<em>initargs</em> 是傳遞給 initializer 的引數元組。如果 <em>initializer</em> 引發例外，所有目前未定的作業以及任何向池中提交更多作業的嘗試都將引發 <a class="reference internal" href="#concurrent.futures.process.BrokenProcessPool" title="concurrent.futures.process.BrokenProcessPool"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BrokenProcessPool</span></code></a>。</p>
 <p><em>max_tasks_per_child</em> 是一個可選引數，它指定單個行程在退出並被新的工作行程替換之前可以執行的最大任務數。預設情況下 <em>max_tasks_per_child</em> 是 <code class="docutils literal notranslate"><span class="pre">None</span></code>，這意味著工作行程的生命週期將與池一樣長。當指定最大值時，在沒有 <em>mp_context</em> 參數的情況下，將預設使用 &quot;spawn&quot; 做為 multiprocessing 啟動方法。此功能與 &quot;fork&quot; 啟動方法不相容。</p>
-<div class="admonition note">
-<p class="admonition-title">備註</p>
-<p>Bugs have been reported when using the <em>max_tasks_per_child</em> feature that
-can result in the <a class="reference internal" href="#concurrent.futures.ProcessPoolExecutor" title="concurrent.futures.ProcessPoolExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessPoolExecutor</span></code></a> hanging in some
-circumstances. Follow its eventual resolution in <a class="reference external" href="https://github.com/python/cpython/issues/115634">gh-115634</a>.</p>
-</div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.3 版的變更: </span>當其中一個工作行程突然終止時，現在會引發 <a class="reference internal" href="#concurrent.futures.process.BrokenProcessPool" title="concurrent.futures.process.BrokenProcessPool"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BrokenProcessPool</span></code></a> 錯誤。在過去，此行為是未定義的 (undefined)，但對 executor 或其 future 的操作經常會發生凍結或死鎖。</p>
 </div>
@@ -514,6 +508,11 @@ circumstances. Follow its eventual resolution in <a class="reference external" h
 <a class="reference internal" href="multiprocessing.html#multiprocessing-start-methods"><span class="std std-ref">Contexts and start methods</span></a>) changed away from <em>fork</em>. If you
 require the <em>fork</em> start method for <a class="reference internal" href="#concurrent.futures.ProcessPoolExecutor" title="concurrent.futures.ProcessPoolExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessPoolExecutor</span></code></a> you must
 explicitly pass <code class="docutils literal notranslate"><span class="pre">mp_context=multiprocessing.get_context(&quot;fork&quot;)</span></code>.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.14.6 (unreleased) 版的變更: </span>Fixed a deadlock (<a class="reference external" href="https://github.com/python/cpython/issues/115634">gh-115634</a>) where the executor could hang after
+a worker process exited upon reaching its <em>max_tasks_per_child</em>
+limit while tasks remained queued.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="concurrent.futures.ProcessPoolExecutor.terminate_workers">
@@ -944,7 +943,7 @@ executor.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 7月 03, 2026 (00:39 UTC)。
+      最後更新於 7月 04, 2026 (00:38 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
