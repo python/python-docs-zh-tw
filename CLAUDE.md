@@ -34,6 +34,13 @@ make progress         # Check translation progress
 ### reST Syntax
 - Preserve `:mod:`, `:func:`, `:class:`, `:term:`, `:ref:`, `:pep:` roles
 - Use `\\ ` as zero-width separator when Chinese precedes reST syntax
+- `\\ ` is also required when a role/literal/emphasis close is immediately followed by an
+  **opening** full-width punctuation mark (`（`, `「`, `『`) — confirmed by corpus-wide grep:
+  ~1 unescaped vs ~473 escaped occurrences. Example: `` :class:`Widget`\\ （ ``.
+- `\\ ` is **not** needed before **closing/medial** full-width punctuation (`。`, `，`, `：`,
+  `；`, `！`, `？`, `」`, `』`, `）`) — this is the dominant, unescaped, CI-passing convention
+  throughout the corpus (thousands of unescaped examples vs. a handful of escaped outliers).
+  Do not add `\\ ` there even if it looks visually similar to the open-paren case.
 
 ## Key Resources
 
