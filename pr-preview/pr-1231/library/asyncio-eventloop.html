@@ -1044,7 +1044,9 @@ or setting a default executor with a larger number of workers.</p>
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">loop.</span></span><span class="sig-name descname"><span class="pre">connect_read_pipe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">protocol_factory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.loop.connect_read_pipe" title="連結到這個定義">¶</a></dt>
 <dd><p>在事件迴圈中註冊 <em>pipe</em> 的讀取端。</p>
 <p><em>protocol_factory</em> 必須是一個回傳 <a class="reference internal" href="asyncio-protocol.html#asyncio-protocol"><span class="std std-ref">asyncio protocol</span></a> 實作的可呼叫函式。</p>
-<p><em>pipe</em> 是 <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">類檔案物件</span></a>。</p>
+<p><em>pipe</em> is a <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file-like object</span></a>.  See
+<a class="reference internal" href="#asyncio-pipe-objects"><span class="std std-ref">Supported pipe objects</span></a> for the objects
+supported as <em>pipe</em>.</p>
 <p>回傳 <code class="docutils literal notranslate"><span class="pre">(transport,</span> <span class="pre">protocol)</span></code> 對，其中 <em>transport</em> 支援 <a class="reference internal" href="asyncio-protocol.html#asyncio.ReadTransport" title="asyncio.ReadTransport"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReadTransport</span></code></a> 介面，<em>protocol</em> 是由 <em>protocol_factory</em> 實例化的物件。</p>
 <p>使用 <a class="reference internal" href="#asyncio.SelectorEventLoop" title="asyncio.SelectorEventLoop"><code class="xref py py-class docutils literal notranslate"><span class="pre">SelectorEventLoop</span></code></a> 事件迴圈時，<em>pipe</em> 設置為非阻塞模式。</p>
 </dd></dl>
@@ -1054,11 +1056,35 @@ or setting a default executor with a larger number of workers.</p>
 <em class="property"><span class="k"><span class="pre">async</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">loop.</span></span><span class="sig-name descname"><span class="pre">connect_write_pipe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">protocol_factory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipe</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#asyncio.loop.connect_write_pipe" title="連結到這個定義">¶</a></dt>
 <dd><p>在事件迴圈中註冊 <em>pipe</em> 的寫入端。</p>
 <p><em>protocol_factory</em> 必須是一個回傳 <a class="reference internal" href="asyncio-protocol.html#asyncio-protocol"><span class="std std-ref">asyncio protocol</span></a> 實作的可呼叫函式。</p>
-<p><em>pipe</em> 是 <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file-like object</span></a>。</p>
+<p><em>pipe</em> is a <a class="reference internal" href="../glossary.html#term-file-object"><span class="xref std std-term">file-like object</span></a>.  See
+<a class="reference internal" href="#asyncio-pipe-objects"><span class="std std-ref">Supported pipe objects</span></a> for the objects
+supported as <em>pipe</em>.</p>
 <p>回傳 <code class="docutils literal notranslate"><span class="pre">(transport,</span> <span class="pre">protocol)</span></code> 對，其中 <em>transport</em> 支援 <a class="reference internal" href="asyncio-protocol.html#asyncio.WriteTransport" title="asyncio.WriteTransport"><code class="xref py py-class docutils literal notranslate"><span class="pre">WriteTransport</span></code></a> 介面，<em>protocol</em> 是由 <em>protocol_factory</em> 實例化的物件。</p>
 <p>使用 <a class="reference internal" href="#asyncio.SelectorEventLoop" title="asyncio.SelectorEventLoop"><code class="xref py py-class docutils literal notranslate"><span class="pre">SelectorEventLoop</span></code></a> 事件迴圈時，<em>pipe</em> 設置為非阻塞模式。</p>
 </dd></dl>
 
+<p class="rubric" id="asyncio-pipe-objects">Supported pipe objects</p>
+<p>These methods only work with objects the operating system can poll for
+readiness or perform overlapped I/O on.  Regular files on disk are <strong>not</strong>
+supported on any platform.  There is no asynchronous file I/O in asyncio;
+use <a class="reference internal" href="#asyncio.loop.run_in_executor" title="asyncio.loop.run_in_executor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">loop.run_in_executor()</span></code></a> to read and write regular files without
+blocking the event loop.</p>
+<p>On Unix, with <a class="reference internal" href="#asyncio.SelectorEventLoop" title="asyncio.SelectorEventLoop"><code class="xref py py-class docutils literal notranslate"><span class="pre">SelectorEventLoop</span></code></a>, <em>pipe</em> must wrap one of the
+following:</p>
+<ul class="simple">
+<li><p>a pipe, such as an end of an <a class="reference internal" href="os.html#os.pipe" title="os.pipe"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.pipe()</span></code></a> pair or a FIFO created with
+<a class="reference internal" href="os.html#os.mkfifo" title="os.mkfifo"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.mkfifo()</span></code></a>;</p></li>
+<li><p>a socket;</p></li>
+<li><p>a character device, such as a terminal.</p></li>
+</ul>
+<p>On Windows, where only <a class="reference internal" href="#asyncio.ProactorEventLoop" title="asyncio.ProactorEventLoop"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProactorEventLoop</span></code></a> implements these methods,
+<em>pipe</em> must wrap a handle opened for overlapped I/O (that is, created with the
+<code class="docutils literal notranslate"><span class="pre">FILE_FLAG_OVERLAPPED</span></code> flag), since the handle has to be associated with an
+I/O completion port.  Handles that were not opened for overlapped I/O are
+rejected.  In particular, the standard streams (<a class="reference internal" href="sys.html#sys.stdin" title="sys.stdin"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.stdin</span></code></a>,
+<a class="reference internal" href="sys.html#sys.stdout" title="sys.stdout"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.stdout</span></code></a> and <a class="reference internal" href="sys.html#sys.stderr" title="sys.stderr"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.stderr</span></code></a>), console handles, and the pipes
+created by <a class="reference internal" href="os.html#os.pipe" title="os.pipe"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.pipe()</span></code></a> are <strong>not</strong> opened for overlapped I/O and therefore
+cannot be used with these methods.</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
 <p><a class="reference internal" href="#asyncio.SelectorEventLoop" title="asyncio.SelectorEventLoop"><code class="xref py py-class docutils literal notranslate"><span class="pre">SelectorEventLoop</span></code></a> 在 Windows 上不支援上述方法。對於 Windows 請使用 <a class="reference internal" href="#asyncio.ProactorEventLoop" title="asyncio.ProactorEventLoop"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProactorEventLoop</span></code></a>。</p>
@@ -1879,7 +1905,7 @@ platform.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 7月 14, 2026 (00:32 UTC)。
+      最後更新於 7月 15, 2026 (00:30 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
