@@ -103,8 +103,7 @@
 <li><a class="reference internal" href="#threading-model">執行緒模型</a></li>
 <li><a class="reference internal" href="#handy-reference">實用參考</a><ul>
 <li><a class="reference internal" href="#setting-options">設定選項</a></li>
-<li><a class="reference internal" href="#the-packer">Packer 佈局管理器</a></li>
-<li><a class="reference internal" href="#packer-options">Packer 選項</a></li>
+<li><a class="reference internal" href="#geometry-management">Geometry management</a></li>
 <li><a class="reference internal" href="#coupling-widget-variables">耦合元件變數</a></li>
 <li><a class="reference internal" href="#the-window-manager">視窗管理器</a></li>
 <li><a class="reference internal" href="#tk-option-data-types">Tk 選項資料型別</a></li>
@@ -251,7 +250,11 @@
 <p>Tkinter 並非一個輕薄的包裝器，而是加入了相當多自身的邏輯，使其體驗更具 Python 風格（pythonic）。本文件將著重於這些新增和變更，對於未變更的細節，則會引導讀者參閱官方的 Tcl/Tk 文件。</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>Tcl/Tk 8.5（2007）引入了一套現代化的主題式使用者介面元件，以及一個用以操作它們的新 API。新舊 API 目前都還能使用。你在網路上找到的大多數文件仍使用舊版 API，而且可能已經嚴重過時。</p>
+<p>Tcl/Tk 8.5 (2007) introduced a modern set of themed user interface components
+along with a new API to use them (see <a class="reference internal" href="tkinter.ttk.html#module-tkinter.ttk" title="tkinter.ttk: Tk themed widget set"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tkinter.ttk</span></code></a>).
+Both old and new APIs are still available.
+Most documentation you will find online still uses the old API and
+can be woefully outdated.</p>
 </div>
 <p>這是一個<a class="reference internal" href="../glossary.html#term-optional-module"><span class="xref std std-term">可選模組</span></a>。如果你的 CPython 副本中缺少它，請查閱你的發行者（即提供 Python 給你的人）的文件。如果你就是發行者，請參閱 <a class="reference internal" href="../using/configure.html#optional-module-requirements"><span class="std std-ref">可選模組的需求</span></a>。</p>
 <div class="admonition seealso">
@@ -497,6 +500,17 @@
 </div>
 </dd>
 </dl>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">fg</span></code> and <code class="docutils literal notranslate"><span class="pre">bg</span></code> options used here,
+and other options that control a widget's appearance,
+belong to the classic <code class="xref py py-mod docutils literal notranslate"><span class="pre">tkinter</span></code> widgets.
+The themed <a class="reference internal" href="tkinter.ttk.html#module-tkinter.ttk" title="tkinter.ttk: Tk themed widget set"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tkinter.ttk</span></code></a> widgets recommended in the introduction
+do not accept them;
+style a themed widget through the <a class="reference internal" href="tkinter.ttk.html#tkinter.ttk.Style" title="tkinter.ttk.Style"><code class="xref py py-class docutils literal notranslate"><span class="pre">ttk.Style</span></code></a>
+class instead.
+The three ways of setting an option shown above apply to both widget sets.</p>
+</div>
 <p>有關給定選項及其行為的完整解釋，請參閱相關元件的 Tk man pages。</p>
 <p>請注意，man pages 為每個元件列出了「標準選項」和「元件特定選項」。前者是許多元件共有的選項串列，後者是該特定元件特有的選項。標準選項記錄在 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/options(3)">options(3)</a></em> man page 中。</p>
 <p>本文件中未對標準選項和元件特定選項進行區分。某些選項不適用於某些類型的元件。給定元件是否回應特定選項取決於該元件的類別；按鈕有 <code class="docutils literal notranslate"><span class="pre">command</span></code> 選項，標籤則沒有。</p>
@@ -540,105 +554,159 @@
 </div>
 <p>當然，印出的字典將包含所有可用的選項及其值。這僅作為一個範例。</p>
 </section>
-<section id="the-packer">
-<span id="pack-the-packer"></span><h3>Packer 佈局管理器<a class="headerlink" href="#the-packer" title="連結到這個標頭">¶</a></h3>
-<p id="index-0">packer 是 Tk 的佈局管理（geometry manager）機制之一。佈局管理器（geometry manager）用於指定元件在其容器內的相對位置。與較為繁瑣的 <em>placer</em>（較不常用，我們在此不予介紹）相比，packer 採用定性的關係規範——<em>上方</em>、<em>左方</em>、<em>填滿</em>等——並為你計算出確切的放置座標。</p>
-<p>任何 <em>master</em> 元件的大小由其內部的「content 元件」的大小決定。packer 用於控制 content 元件在被 packed 的容器內部出現的位置。你可以將元件 pack 到框架中，再將框架 pack 到其他框架中，以達到你想要的佈局。此外，一旦 packed，佈局會動態調整以適應設定的增量變更。</p>
-<p>請注意，元件在透過佈局管理器（geometry manager）指定其佈局（geometry）之前是不會出現的。一個常見的早期錯誤是忽略了佈局（geometry）指定，然後在元件被建立但沒有任何東西出現時感到驚訝。一個元件只有在例如 packer 的 <a class="reference internal" href="#tkinter.Pack.pack" title="tkinter.Pack.pack"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pack()</span></code></a> 方法被應用於其上之後才會出現。</p>
-<p>pack() 方法可以與關鍵字選項/值對一起呼叫，以控制元件在其容器中出現的位置，以及當主應用程式視窗調整大小時它的行為方式。以下是一些範例：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">fred</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>                     <span class="c1"># 預設為 side = &quot;top&quot;</span>
-<span class="n">fred</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">side</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">)</span>
-<span class="n">fred</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">expand</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<section id="geometry-management">
+<span id="packer-options"></span><span id="the-packer"></span><span id="tkinter-geometry-management"></span><span id="pack-the-packer"></span><h3>Geometry management<a class="headerlink" href="#geometry-management" title="連結到這個標頭">¶</a></h3>
+<p id="index-0">Creating a widget does not display it.
+A widget appears only after it has been handed to a <em>geometry manager</em>,
+which works out its size and position inside its container
+and keeps the layout up to date as the container is resized or its content changes.
+Forgetting to call a geometry manager is a common early mistake:
+the widget is created, but nothing shows up.</p>
+<p>Tk provides three geometry managers.
+Each is inherited by every widget, so any widget can be managed by any of them
+(but see the warning below about the incompatibility of grid and pack).
+The choice depends on the kind of layout you want.</p>
+<dl>
+<dt><a class="reference internal" href="#tkinter.Grid.grid_configure" title="tkinter.Grid.grid_configure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">grid</span></code></a></dt><dd><p>Arranges widgets in a two-dimensional table of rows and columns.
+It is the most flexible manager and the one to reach for by default:
+layouts that would otherwise need several nested frames can often be
+expressed as a single grid,
+and rows and columns can be told how to absorb extra space.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">ttk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">frm</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Name:&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">&quot;w&quot;</span><span class="p">)</span>
+<span class="n">ttk</span><span class="o">.</span><span class="n">Entry</span><span class="p">(</span><span class="n">frm</span><span class="p">)</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">ttk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">frm</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;OK&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">column</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">row</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">sticky</span><span class="o">=</span><span class="s2">&quot;e&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
-<section id="packer-options">
-<h3>Packer 選項<a class="headerlink" href="#packer-options" title="連結到這個標頭">¶</a></h3>
-<p>有關 packer 及其可接受選項的更詳盡資訊，請參閱 man pages 和 John Ousterhout 書中的第 183 頁。</p>
-<dl class="simple">
-<dt>anchor</dt><dd><p>錨點類型。表示 packer 將每個內容放置在其區域中的位置。</p>
 </dd>
-<dt>expand</dt><dd><p>布林值，<code class="docutils literal notranslate"><span class="pre">0</span></code> 或 <code class="docutils literal notranslate"><span class="pre">1</span></code>。</p>
+<dt><a class="reference internal" href="#tkinter.Pack.pack_configure" title="tkinter.Pack.pack_configure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pack</span></code></a></dt><dd><p>Stacks widgets against one side of their container
+-- <code class="docutils literal notranslate"><span class="pre">&quot;top&quot;</span></code> (the default), <code class="docutils literal notranslate"><span class="pre">&quot;bottom&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;left&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;right&quot;</span></code> --
+and can make them fill or expand into the space that is left.
+It is convenient for simple arrangements,
+such as a single row or column of widgets
+or a content area framed by a toolbar and a status bar.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">toolbar</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">side</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">status</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">side</span><span class="o">=</span><span class="s2">&quot;bottom&quot;</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;x&quot;</span><span class="p">)</span>
+<span class="n">body</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">side</span><span class="o">=</span><span class="s2">&quot;left&quot;</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">fill</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd>
-<dt>fill</dt><dd><p>合法值：<code class="docutils literal notranslate"><span class="pre">'x'</span></code>、<code class="docutils literal notranslate"><span class="pre">'y'</span></code>、<code class="docutils literal notranslate"><span class="pre">'both'</span></code>、<code class="docutils literal notranslate"><span class="pre">'none'</span></code>。</p>
-</dd>
-<dt>ipadx 和 ipady</dt><dd><p>一個距離 —— 指定內容每一側的內部填充。</p>
-</dd>
-<dt>padx 和 pady</dt><dd><p>一個距離 —— 指定內容每一側的外部填充。</p>
-</dd>
-<dt>side</dt><dd><p>合法值為：<code class="docutils literal notranslate"><span class="pre">'left'</span></code>、<code class="docutils literal notranslate"><span class="pre">'right'</span></code>、<code class="docutils literal notranslate"><span class="pre">'top'</span></code>、<code class="docutils literal notranslate"><span class="pre">'bottom'</span></code>。</p>
+<dt><a class="reference internal" href="#tkinter.Place.place_configure" title="tkinter.Place.place_configure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">place</span></code></a></dt><dd><p>Positions each widget at an explicit spot,
+given either as absolute screen distances or as a fraction of the container's size.
+It offers the most control but the least automatic behavior, and is used the least;
+it suits special cases such as overlapping widgets or precise custom layouts.</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">background</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">relwidth</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">relheight</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">badge</span><span class="o">.</span><span class="n">place</span><span class="p">(</span><span class="n">relx</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">rely</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">anchor</span><span class="o">=</span><span class="s2">&quot;ne&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd>
 </dl>
+<p>Layouts are built up by nesting:
+grid or pack widgets, including frames, inside a frame or toplevel.
+Toplevels are managed by the OS window manager.
+Classic and themed <a class="reference internal" href="tkinter.ttk.html#module-tkinter.ttk" title="tkinter.ttk: Tk themed widget set"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tkinter.ttk</span></code></a> widgets can be managed interchangeably.</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>Do not apply <code class="xref py py-meth docutils literal notranslate"><span class="pre">pack()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">grid()</span></code> to two widgets that share the same container.
+The two managers negotiate sizes in incompatible ways,
+and the application can hang as they repeatedly resize the container against each other.
+To combine them, keep each manager's widgets in a separate frame.</p>
+</div>
+<p>The full set of options accepted by each manager, with their values and defaults,
+is documented under <a class="reference internal" href="#tkinter.Grid.grid_configure" title="tkinter.Grid.grid_configure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Grid.grid_configure()</span></code></a>, <a class="reference internal" href="#tkinter.Pack.pack_configure" title="tkinter.Pack.pack_configure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Pack.pack_configure()</span></code></a>
+and <a class="reference internal" href="#tkinter.Place.place_configure" title="tkinter.Place.place_configure"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Place.place_configure()</span></code></a>;
+see also the <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/grid(3tk)">grid(3tk)</a></em>, <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/pack(3tk)">pack(3tk)</a></em> and <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/place(3tk)">place(3tk)</a></em>
+man pages.</p>
 </section>
 <section id="coupling-widget-variables">
 <span id="id2"></span><h3>耦合元件變數<a class="headerlink" href="#coupling-widget-variables" title="連結到這個標頭">¶</a></h3>
-<p>某些元件（如文字輸入元件）的目前值設定可以透過使用特殊選項直接連接到應用程式變數。這些選項是 <code class="docutils literal notranslate"><span class="pre">variable</span></code>、<code class="docutils literal notranslate"><span class="pre">textvariable</span></code>、<code class="docutils literal notranslate"><span class="pre">onvalue</span></code>、<code class="docutils literal notranslate"><span class="pre">offvalue</span></code> 和 <code class="docutils literal notranslate"><span class="pre">value</span></code>。這種連接是雙向的：如果變數因任何原因發生變化，與之連接的元件將會更新以反映新值。</p>
-<p>不幸的是，在 <code class="xref py py-mod docutils literal notranslate"><span class="pre">tkinter</span></code> 的目前實作中，無法透過 <code class="docutils literal notranslate"><span class="pre">variable</span></code> 或 <code class="docutils literal notranslate"><span class="pre">textvariable</span></code> 選項將任意的 Python 變數傳遞給元件。唯一適用此功能的變數類型是從 <code class="xref py py-mod docutils literal notranslate"><span class="pre">tkinter</span></code> 中定義的一個名為 Variable 的類別繼承的子類別變數。</p>
-<p>已經定義了許多有用的 Variable 子類別：<a class="reference internal" href="#tkinter.StringVar" title="tkinter.StringVar"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringVar</span></code></a>、<a class="reference internal" href="#tkinter.IntVar" title="tkinter.IntVar"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntVar</span></code></a>、<a class="reference internal" href="#tkinter.DoubleVar" title="tkinter.DoubleVar"><code class="xref py py-class docutils literal notranslate"><span class="pre">DoubleVar</span></code></a> 和 <a class="reference internal" href="#tkinter.BooleanVar" title="tkinter.BooleanVar"><code class="xref py py-class docutils literal notranslate"><span class="pre">BooleanVar</span></code></a>。要讀取此類變數的目前值，請對其呼叫 <a class="reference internal" href="#tkinter.Variable.get" title="tkinter.Variable.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get()</span></code></a> 方法，要更改其值，則呼叫 <code class="xref py py-meth docutils literal notranslate"><span class="pre">set()</span></code> 方法。如果你遵循此協定，元件將始終追蹤變數的值，無需你進一步干預。</p>
-<p>Keep a reference to the variable for as long as a widget uses it, for example
-by storing it as an attribute (see <a class="reference internal" href="#tkinter.Variable" title="tkinter.Variable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variable</span></code></a>).</p>
+<p>Some widgets can tie their current value directly to a program variable,
+so that the two stay in sync.
+Options such as <code class="docutils literal notranslate"><span class="pre">variable</span></code>, <code class="docutils literal notranslate"><span class="pre">textvariable</span></code>, <code class="docutils literal notranslate"><span class="pre">value</span></code>, <code class="docutils literal notranslate"><span class="pre">onvalue</span></code> and
+<code class="docutils literal notranslate"><span class="pre">offvalue</span></code> set up this connection:
+when the user changes the widget the variable is updated,
+and when the variable is set the widget redraws to match.</p>
+<p>A widget can be linked only to a <a class="reference internal" href="#tkinter.Variable" title="tkinter.Variable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variable</span></code></a> object,
+not to an ordinary Python variable.
+This is not a limitation of <code class="xref py py-mod docutils literal notranslate"><span class="pre">tkinter</span></code>
+but a consequence of how the two languages differ:
+the link relies on Tcl being notified every time the value changes,
+and Python offers no way to react when a plain variable is reassigned.
+A <a class="reference internal" href="#tkinter.Variable" title="tkinter.Variable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variable</span></code></a> sidesteps this by keeping its value inside the Tcl interpreter
+and exposing it through explicit <a class="reference internal" href="#tkinter.Variable.get" title="tkinter.Variable.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get()</span></code></a> and <a class="reference internal" href="#tkinter.Variable.set" title="tkinter.Variable.set"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set()</span></code></a> methods.</p>
+<p>Ready-made subclasses cover the common types:
+<a class="reference internal" href="#tkinter.StringVar" title="tkinter.StringVar"><code class="xref py py-class docutils literal notranslate"><span class="pre">StringVar</span></code></a>, <a class="reference internal" href="#tkinter.IntVar" title="tkinter.IntVar"><code class="xref py py-class docutils literal notranslate"><span class="pre">IntVar</span></code></a>, <a class="reference internal" href="#tkinter.DoubleVar" title="tkinter.DoubleVar"><code class="xref py py-class docutils literal notranslate"><span class="pre">DoubleVar</span></code></a> and <a class="reference internal" href="#tkinter.BooleanVar" title="tkinter.BooleanVar"><code class="xref py py-class docutils literal notranslate"><span class="pre">BooleanVar</span></code></a>.
+Pass one as a widget's <code class="docutils literal notranslate"><span class="pre">textvariable</span></code> (or <code class="docutils literal notranslate"><span class="pre">variable</span></code>) option,
+then read and update it with <a class="reference internal" href="#tkinter.Variable.get" title="tkinter.Variable.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get()</span></code></a> and <a class="reference internal" href="#tkinter.Variable.set" title="tkinter.Variable.set"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set()</span></code></a>;
+the widget tracks it with no further work on your part.</p>
+<p>Keep a reference to the variable for as long as the widget uses it
+-- for example by storing it as an attribute.
+A <a class="reference internal" href="#tkinter.Variable" title="tkinter.Variable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variable</span></code></a> that is garbage collected removes its underlying Tcl variable,
+breaking the connection to the widget (see <a class="reference internal" href="#tkinter.Variable" title="tkinter.Variable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Variable</span></code></a>).</p>
 <p>舉例來說：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tkinter</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tk</span>
-
-<span class="k">class</span><span class="w"> </span><span class="nc">App</span><span class="p">(</span><span class="n">tk</span><span class="o">.</span><span class="n">Frame</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">master</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">entrythingy</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Entry</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">entrythingy</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>
-
-        <span class="c1"># 建立應用程式變數。</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">contents</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">StringVar</span><span class="p">()</span>
-        <span class="c1"># 將其設定為某個值。</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;this is a variable&quot;</span><span class="p">)</span>
-        <span class="c1"># 告訴 entry 元件監視此變數。</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">entrythingy</span><span class="p">[</span><span class="s2">&quot;textvariable&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">contents</span>
-
-        <span class="c1"># 為使用者按下 return 鍵定義一個回呼。</span>
-        <span class="c1"># 它會印出變數的目前值。</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">entrythingy</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s1">&#39;&lt;Key-Return&gt;&#39;</span><span class="p">,</span>
-                             <span class="bp">self</span><span class="o">.</span><span class="n">print_contents</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">print_contents</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Hi. The current entry content is:&quot;</span><span class="p">,</span>
-              <span class="bp">self</span><span class="o">.</span><span class="n">contents</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tkinter</span><span class="w"> </span><span class="kn">import</span> <span class="n">ttk</span>
 
 <span class="n">root</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Tk</span><span class="p">()</span>
-<span class="n">myapp</span> <span class="o">=</span> <span class="n">App</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
-<span class="n">myapp</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>
+
+<span class="c1"># Create the application variable and give it an initial value.</span>
+<span class="n">contents</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">StringVar</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="s2">&quot;this is a variable&quot;</span><span class="p">)</span>
+
+<span class="c1"># Tell the entry widget to track the variable.</span>
+<span class="n">entry</span> <span class="o">=</span> <span class="n">ttk</span><span class="o">.</span><span class="n">Entry</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">textvariable</span><span class="o">=</span><span class="n">contents</span><span class="p">)</span>
+<span class="n">entry</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>
+
+<span class="c1"># Print the current value whenever the user presses Return.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">print_contents</span><span class="p">(</span><span class="n">event</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;The current entry content is:&quot;</span><span class="p">,</span> <span class="n">contents</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
+
+<span class="n">entry</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="s2">&quot;&lt;Return&gt;&quot;</span><span class="p">,</span> <span class="n">print_contents</span><span class="p">)</span>
+
+<span class="c1"># Setting the variable from the program updates the entry through the</span>
+<span class="c1"># same link.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">clear</span><span class="p">():</span>
+    <span class="n">contents</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+<span class="n">ttk</span><span class="o">.</span><span class="n">Button</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Clear&quot;</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n">clear</span><span class="p">)</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>
+
+<span class="n">root</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
 <section id="the-window-manager">
-<h3>視窗管理器<a class="headerlink" href="#the-window-manager" title="連結到這個標頭">¶</a></h3>
-<p id="index-1">在 Tk 中，有一個工具指令 <code class="docutils literal notranslate"><span class="pre">wm</span></code>，用於與視窗管理器互動。<code class="docutils literal notranslate"><span class="pre">wm</span></code> 指令的選項允許你控制標題、位置、圖示點陣圖等。在 <code class="xref py py-mod docutils literal notranslate"><span class="pre">tkinter</span></code> 中，這些指令已實作為 <a class="reference internal" href="#tkinter.Wm" title="tkinter.Wm"><code class="xref py py-class docutils literal notranslate"><span class="pre">Wm</span></code></a> 類別上的方法。頂層元件是 <a class="reference internal" href="#tkinter.Wm" title="tkinter.Wm"><code class="xref py py-class docutils literal notranslate"><span class="pre">Wm</span></code></a> 類別的子類別，因此可以直接呼叫 <a class="reference internal" href="#tkinter.Wm" title="tkinter.Wm"><code class="xref py py-class docutils literal notranslate"><span class="pre">Wm</span></code></a> 方法。</p>
-<p>要取得包含給定元件的頂層視窗，你通常可以直接參照該元件的 <a class="reference internal" href="#tkinter.Tk.master" title="tkinter.Tk.master"><code class="xref py py-attr docutils literal notranslate"><span class="pre">master</span></code></a>。當然，如果該元件被 packed 在一個框架內，<code class="xref py py-attr docutils literal notranslate"><span class="pre">master</span></code> 將不代表一個頂層視窗。要取得包含任意元件的頂層視窗，你可以呼叫 <a class="reference internal" href="#tkinter.Misc.winfo_toplevel" title="tkinter.Misc.winfo_toplevel"><code class="xref py py-meth docutils literal notranslate"><span class="pre">winfo_toplevel()</span></code></a> 方法。還有一個 <code class="xref py py-meth docutils literal notranslate"><span class="pre">_root()</span></code> 方法；它以底線開頭，表示此函式是實作的一部分，而不是 Tk 功能的介面。它回傳應用程式的根視窗，而不是最近的包含頂層視窗。</p>
-<p>以下是一些常見用法範例：</p>
+<span id="tkinter-window-manager"></span><h3>視窗管理器<a class="headerlink" href="#the-window-manager" title="連結到這個標頭">¶</a></h3>
+<p id="index-1">The <em>window manager</em> is the part of the desktop responsible for the title bar,
+border and controls drawn around each top-level window,
+and for such things as its title, position, size and icon.
+Tk gives access to these through the <a class="reference internal" href="#tkinter.Wm" title="tkinter.Wm"><code class="xref py py-class docutils literal notranslate"><span class="pre">Wm</span></code></a> mixin,
+which is inherited by the <a class="reference internal" href="#tkinter.Tk" title="tkinter.Tk"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tk</span></code></a> root window and by every <a class="reference internal" href="#tkinter.Toplevel" title="tkinter.Toplevel"><code class="xref py py-class docutils literal notranslate"><span class="pre">Toplevel</span></code></a>.
+You therefore call the window-manager methods directly on a top-level window.
+Each has a short name and an equivalent <code class="docutils literal notranslate"><span class="pre">wm_</span></code>-prefixed name,
+for example <a class="reference internal" href="#tkinter.Wm.title" title="tkinter.Wm.title"><code class="xref py py-meth docutils literal notranslate"><span class="pre">title()</span></code></a> and <a class="reference internal" href="#tkinter.Wm.wm_title" title="tkinter.Wm.wm_title"><code class="xref py py-meth docutils literal notranslate"><span class="pre">wm_title()</span></code></a>.</p>
+<p>These methods act on the top-level window
+whether its content is built from the classic widgets or the themed <a class="reference internal" href="tkinter.ttk.html#module-tkinter.ttk" title="tkinter.ttk: Tk themed widget set"><code class="xref py py-mod docutils literal notranslate"><span class="pre">tkinter.ttk</span></code></a> widgets.
+To reach the top-level window containing an arbitrary widget,
+call its <a class="reference internal" href="#tkinter.Misc.winfo_toplevel" title="tkinter.Misc.winfo_toplevel"><code class="xref py py-meth docutils literal notranslate"><span class="pre">winfo_toplevel()</span></code></a> method.</p>
+<p>舉例來說：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">tkinter</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tk</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tkinter</span><span class="w"> </span><span class="kn">import</span> <span class="n">ttk</span>
 
-<span class="k">class</span><span class="w"> </span><span class="nc">App</span><span class="p">(</span><span class="n">tk</span><span class="o">.</span><span class="n">Frame</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">master</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">master</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pack</span><span class="p">()</span>
+<span class="n">root</span> <span class="o">=</span> <span class="n">tk</span><span class="o">.</span><span class="n">Tk</span><span class="p">()</span>
+<span class="n">root</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;My Application&quot;</span><span class="p">)</span>
+<span class="n">root</span><span class="o">.</span><span class="n">geometry</span><span class="p">(</span><span class="s2">&quot;640x480&quot;</span><span class="p">)</span>
+<span class="n">root</span><span class="o">.</span><span class="n">minsize</span><span class="p">(</span><span class="mi">320</span><span class="p">,</span> <span class="mi">240</span><span class="p">)</span>
 
-<span class="c1"># 建立應用程式</span>
-<span class="n">myapp</span> <span class="o">=</span> <span class="n">App</span><span class="p">()</span>
+<span class="n">ttk</span><span class="o">.</span><span class="n">Label</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">text</span><span class="o">=</span><span class="s2">&quot;Hello&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="n">padx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">pady</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
 
-<span class="c1">#</span>
-<span class="c1"># 以下是對視窗管理器類別的方法呼叫</span>
-<span class="c1">#</span>
-<span class="n">myapp</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;My Do-Nothing Application&quot;</span><span class="p">)</span>
-<span class="n">myapp</span><span class="o">.</span><span class="n">master</span><span class="o">.</span><span class="n">maxsize</span><span class="p">(</span><span class="mi">1000</span><span class="p">,</span> <span class="mi">400</span><span class="p">)</span>
-
-<span class="c1"># 啟動程式</span>
-<span class="n">myapp</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>
+<span class="n">root</span><span class="o">.</span><span class="n">mainloop</span><span class="p">()</span>
 </pre></div>
 </div>
+<p>See <a class="reference internal" href="#tkinter.Wm" title="tkinter.Wm"><code class="xref py py-class docutils literal notranslate"><span class="pre">Wm</span></code></a> for the full set of window-manager methods.</p>
 </section>
 <section id="tk-option-data-types">
 <span id="id3"></span><h3>Tk 選項資料型別<a class="headerlink" href="#tk-option-data-types" title="連結到這個標頭">¶</a></h3>
-<dl id="index-2">
+<p id="index-2">Many widget options documented in the reference
+accept values of a small number of common types, described here.</p>
+<dl>
 <dt>anchor</dt><dd><p>合法值為羅盤方位點：<code class="docutils literal notranslate"><span class="pre">&quot;n&quot;</span></code>、<code class="docutils literal notranslate"><span class="pre">&quot;ne&quot;</span></code>、<code class="docutils literal notranslate"><span class="pre">&quot;e&quot;</span></code>、<code class="docutils literal notranslate"><span class="pre">&quot;se&quot;</span></code>、<code class="docutils literal notranslate"><span class="pre">&quot;s&quot;</span></code>、<code class="docutils literal notranslate"><span class="pre">&quot;sw&quot;</span></code>、<code class="docutils literal notranslate"><span class="pre">&quot;w&quot;</span></code>、<code class="docutils literal notranslate"><span class="pre">&quot;nw&quot;</span></code>，以及 <code class="docutils literal notranslate"><span class="pre">&quot;center&quot;</span></code>。</p>
 </dd>
 <dt>bitmap</dt><dd><p>有十個內建的、命名的點陣圖：<code class="docutils literal notranslate"><span class="pre">'error'</span></code>、<code class="docutils literal notranslate"><span class="pre">'gray12'</span></code>、<code class="docutils literal notranslate"><span class="pre">'gray25'</span></code>、<code class="docutils literal notranslate"><span class="pre">'gray50'</span></code>、<code class="docutils literal notranslate"><span class="pre">'gray75'</span></code>、<code class="docutils literal notranslate"><span class="pre">'hourglass'</span></code>、<code class="docutils literal notranslate"><span class="pre">'info'</span></code>、<code class="docutils literal notranslate"><span class="pre">'questhead'</span></code>、<code class="docutils literal notranslate"><span class="pre">'question'</span></code>、<code class="docutils literal notranslate"><span class="pre">'warning'</span></code>。要指定一個 X 點陣圖檔名，請給出檔案的完整路徑，並在前面加上一個 <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>，例如 <code class="docutils literal notranslate"><span class="pre">&quot;&#64;/usr/contrib/bitmap/gumby.bit&quot;</span></code>。</p>
@@ -652,7 +720,11 @@ by storing it as an attribute (see <a class="reference internal" href="#tkinter.
 </pre></div>
 </div>
 </dd>
-<dt>color</dt><dd><p>顏色可以以 rgb.txt 檔案中的 X 顏色名稱給出，或以表示 RGB 值的字串給出，範圍可以是 4 位元：<code class="docutils literal notranslate"><span class="pre">&quot;#RGB&quot;</span></code>、8 位元：<code class="docutils literal notranslate"><span class="pre">&quot;#RRGGBB&quot;</span></code>、12 位元：<code class="docutils literal notranslate"><span class="pre">&quot;#RRRGGGBBB&quot;</span></code> 或 16 位元：<code class="docutils literal notranslate"><span class="pre">&quot;#RRRRGGGGBBBB&quot;</span></code>，其中 R、G、B 在此代表任何合法的十六進位數字。詳情請參閱 Ousterhout 書中的第 160 頁。</p>
+<dt>color</dt><dd><p>Colors can be given as the names of X colors in the rgb.txt file, or as strings
+representing RGB values in 4 bit: <code class="docutils literal notranslate"><span class="pre">&quot;#RGB&quot;</span></code>, 8 bit: <code class="docutils literal notranslate"><span class="pre">&quot;#RRGGBB&quot;</span></code>, 12 bit:
+<code class="docutils literal notranslate"><span class="pre">&quot;#RRRGGGBBB&quot;</span></code>, or 16 bit: <code class="docutils literal notranslate"><span class="pre">&quot;#RRRRGGGGBBBB&quot;</span></code> ranges, where R,G,B here
+represent any legal hex digit.  See the <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/colors(3tk)">colors(3tk)</a></em> man page for
+the list of named colors.</p>
 </dd>
 <dt>cursor</dt><dd><p>The name of the mouse cursor to display while the pointer is over the widget.
 Tk provides a portable set of cursor names available on all platforms
@@ -691,7 +763,11 @@ giving its path preceded with an <code class="docutils literal notranslate"><spa
 </div>
 <p>其中：</p>
 <dl class="simple">
-<dt>sequence</dt><dd><p>是一個表示目標事件類型的字串。實體事件使用 <code class="docutils literal notranslate"><span class="pre">&lt;modifier-modifier-type-detail&gt;</span></code> 形式（例如 <code class="docutils literal notranslate"><span class="pre">&quot;&lt;Enter&gt;&quot;</span></code> 或 <code class="docutils literal notranslate"><span class="pre">&quot;&lt;Control-Button-1&gt;&quot;</span></code>）；應用程式定義的虛擬事件使用雙角括號，如 <code class="docutils literal notranslate"><span class="pre">&quot;&lt;&lt;Paste&gt;&gt;&quot;</span></code>. （詳情請參閱 <em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/bind(3tk)">bind(3tk)</a></em> man page，以及 John Ousterhout 的書 <cite>Tcl and the Tk Toolkit (2nd edition)</cite> 的第 201 頁）。</p>
+<dt>sequence</dt><dd><p>is a string that denotes the target kind of event.  Physical events use the
+<code class="docutils literal notranslate"><span class="pre">&lt;modifier-modifier-type-detail&gt;</span></code> form (for example <code class="docutils literal notranslate"><span class="pre">&quot;&lt;Enter&gt;&quot;</span></code> or
+<code class="docutils literal notranslate"><span class="pre">&quot;&lt;Control-Button-1&gt;&quot;</span></code>); application-defined virtual events use double angle
+brackets, as in <code class="docutils literal notranslate"><span class="pre">&quot;&lt;&lt;Paste&gt;&gt;&quot;</span></code>.  (See the
+<em class="manpage"><a class="manpage reference external" href="https://manpages.debian.org/bind(3tk)">bind(3tk)</a></em> man page for details.)</p>
 </dd>
 <dt>func</dt><dd><p>是一個 Python 函式，接受一個引數，在事件發生時被呼叫。一個 Event 實例將作為引數傳遞。（以這種方式部署的函式通常稱為<em>回呼</em>。）</p>
 </dd>
@@ -784,7 +860,28 @@ and return the string <code class="docutils literal notranslate"><span class="pr
 <h3>index 參數<a class="headerlink" href="#the-index-parameter" title="連結到這個標頭">¶</a></h3>
 <p>許多元件需要傳遞 &quot;index&quot; 參數。這些參數用於指向 Text 元件中的特定位置、Entry 元件中的特定字元，或 Menu 元件中的特定選單項目。</p>
 <dl class="simple">
-<dt>Entry 元件索引（index、view index 等）</dt><dd><p>Entry 元件具有參照所顯示文字中字元位置的選項。你可以使用這些 <code class="xref py py-mod docutils literal notranslate"><span class="pre">tkinter</span></code> 函式來存取文字元件中的這些特殊點：</p>
+<dt>Entry 元件索引（index、view index 等）</dt><dd><p>Entry widgets have methods and options that refer to character positions
+in the text being displayed.
+Anytime an index is needed, you may pass in:</p>
+<ul class="simple">
+<li><p>an integer which refers to the numeric position of a character,
+counted from the beginning of the text, starting with 0;</p></li>
+<li><p>the string <code class="docutils literal notranslate"><span class="pre">&quot;anchor&quot;</span></code>,
+which refers to the anchor point of the selection,
+set with the widget's selection methods;</p></li>
+<li><p>the string <code class="docutils literal notranslate"><span class="pre">&quot;end&quot;</span></code>,
+which refers to the position just after the last character;</p></li>
+<li><p>the string <code class="docutils literal notranslate"><span class="pre">&quot;insert&quot;</span></code>,
+which refers to the character just after the insertion cursor;</p></li>
+<li><p>the strings <code class="docutils literal notranslate"><span class="pre">&quot;sel.first&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">&quot;sel.last&quot;</span></code>,
+which refer to the first character in the selection
+and the position just after the last
+(it is an error to use these if there is no selection);</p></li>
+<li><p>a string consisting of <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> followed by an integer, as in <code class="docutils literal notranslate"><span class="pre">&quot;&#64;6&quot;</span></code>,
+where the integer is interpreted as an x pixel coordinate
+in the entry's coordinate system,
+selecting the character spanning that point.</p></li>
+</ul>
 </dd>
 <dt>Text 元件索引</dt><dd><p>Text 元件的索引表示法非常豐富，在 Tk man pages 中有最好的描述。</p>
 </dd>
@@ -793,7 +890,9 @@ and return the string <code class="docutils literal notranslate"><span class="pr
 <li><p>一個整數，它參照元件中項目的數字位置，從頂部開始計數，從 0 開始；</p></li>
 <li><p>字串 <code class="docutils literal notranslate"><span class="pre">&quot;active&quot;</span></code>，它參照目前在游標下的選單位置；</p></li>
 <li><p>字串 <code class="docutils literal notranslate"><span class="pre">&quot;last&quot;</span></code>，它參照最後一個選單項目；</p></li>
-<li><p>一個以 <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> 為前綴的整數，如 <code class="docutils literal notranslate"><span class="pre">&#64;6</span></code>，其中該整數被解釋為選單座標系統中的 y 像素座標；</p></li>
+<li><p>a string consisting of <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> followed by an integer, as in <code class="docutils literal notranslate"><span class="pre">&quot;&#64;6&quot;</span></code>, where
+the integer is interpreted as a y pixel coordinate in the menu's coordinate
+system;</p></li>
 <li><p>字串 <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>，表示完全沒有選單項目，最常用於 menu.activate() 以停用所有項目，最後，</p></li>
 <li><p>一個文字字串，它會與從選單頂部掃描到底部的選單項目標籤進行模式匹配。請注意，此索引類型在所有其他類型之後考慮，這意味著標籤為 <code class="docutils literal notranslate"><span class="pre">last</span></code>、<code class="docutils literal notranslate"><span class="pre">active</span></code> 或 <code class="docutils literal notranslate"><span class="pre">none</span></code> 的選單項目的匹配可能會被解釋為上述的字面值。</p></li>
 </ul>
@@ -2237,7 +2336,8 @@ manager protocols.
 It is mixed into <a class="reference internal" href="#tkinter.Tk" title="tkinter.Tk"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tk</span></code></a> and <a class="reference internal" href="#tkinter.Toplevel" title="tkinter.Toplevel"><code class="xref py py-class docutils literal notranslate"><span class="pre">Toplevel</span></code></a>, so its methods are
 available on every top-level window.
 Each method has two equivalent spellings: a short name and a
-<code class="docutils literal notranslate"><span class="pre">wm_</span></code>-prefixed name (for example, <a class="reference internal" href="#tkinter.Wm.title" title="tkinter.Wm.title"><code class="xref py py-meth docutils literal notranslate"><span class="pre">title()</span></code></a> and <a class="reference internal" href="#tkinter.Wm.wm_title" title="tkinter.Wm.wm_title"><code class="xref py py-meth docutils literal notranslate"><span class="pre">wm_title()</span></code></a>).</p>
+<code class="docutils literal notranslate"><span class="pre">wm_</span></code>-prefixed name (for example, <a class="reference internal" href="#tkinter.Wm.title" title="tkinter.Wm.title"><code class="xref py py-meth docutils literal notranslate"><span class="pre">title()</span></code></a> and <a class="reference internal" href="#tkinter.Wm.wm_title" title="tkinter.Wm.wm_title"><code class="xref py py-meth docutils literal notranslate"><span class="pre">wm_title()</span></code></a>).
+See also <a class="reference internal" href="#tkinter-window-manager"><span class="std std-ref">視窗管理器</span></a>.</p>
 <dl class="py method" id="tkinter.Wm.wm_aspect">
 <dt class="sig sig-object py" id="tkinter.Wm.aspect">
 <span class="sig-name descname"><span class="pre">aspect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">minNumer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minDenom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxNumer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxDenom</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tkinter.Wm.aspect" title="連結到這個定義">¶</a></dt>
@@ -2725,7 +2825,7 @@ their container.
 The <code class="xref py py-class docutils literal notranslate"><span class="pre">Pack</span></code> mix-in is inherited by all widgets (through
 <a class="reference internal" href="#tkinter.Widget" title="tkinter.Widget"><code class="xref py py-class docutils literal notranslate"><span class="pre">Widget</span></code></a>) and provides the methods for managing a widget with the
 <em>pack</em> geometry manager.
-See also <a class="reference internal" href="#pack-the-packer"><span class="std std-ref">Packer 佈局管理器</span></a>.</p>
+See also <a class="reference internal" href="#tkinter-geometry-management"><span class="std std-ref">Geometry management</span></a>.</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
 <p><a class="reference internal" href="#tkinter.Pack" title="tkinter.Pack"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pack</span></code></a>, <a class="reference internal" href="#tkinter.Place" title="tkinter.Place"><code class="xref py py-class docutils literal notranslate"><span class="pre">Place</span></code></a> and <a class="reference internal" href="#tkinter.Grid" title="tkinter.Grid"><code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code></a> all define the short
@@ -2831,7 +2931,8 @@ this widget.
 <dd><p>Geometry manager that places widgets at explicit positions and sizes within
 their container.
 The <code class="xref py py-class docutils literal notranslate"><span class="pre">Place</span></code> mix-in is inherited by all widgets (through
-<a class="reference internal" href="#tkinter.Widget" title="tkinter.Widget"><code class="xref py py-class docutils literal notranslate"><span class="pre">Widget</span></code></a>).</p>
+<a class="reference internal" href="#tkinter.Widget" title="tkinter.Widget"><code class="xref py py-class docutils literal notranslate"><span class="pre">Widget</span></code></a>).
+See also <a class="reference internal" href="#tkinter-geometry-management"><span class="std std-ref">Geometry management</span></a>.</p>
 <dl class="py method" id="tkinter.Place.config">
 <span id="tkinter.Place.configure"></span><dt class="sig sig-object py" id="tkinter.Place.place_configure">
 <span class="sig-name descname"><span class="pre">place_configure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cnf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tkinter.Place.place_configure" title="連結到這個定義">¶</a></dt>
@@ -2903,7 +3004,8 @@ this widget.</p>
 <dd><p>Geometry manager that arranges widgets in a two-dimensional grid of rows and
 columns within their container.
 The <code class="xref py py-class docutils literal notranslate"><span class="pre">Grid</span></code> mix-in is inherited by all widgets (through
-<a class="reference internal" href="#tkinter.Widget" title="tkinter.Widget"><code class="xref py py-class docutils literal notranslate"><span class="pre">Widget</span></code></a>).</p>
+<a class="reference internal" href="#tkinter.Widget" title="tkinter.Widget"><code class="xref py py-class docutils literal notranslate"><span class="pre">Widget</span></code></a>).
+See also <a class="reference internal" href="#tkinter-geometry-management"><span class="std std-ref">Geometry management</span></a>.</p>
 <dl class="py method" id="tkinter.Grid.config">
 <span id="tkinter.Grid.configure"></span><dt class="sig sig-object py" id="tkinter.Grid.grid_configure">
 <span class="sig-name descname"><span class="pre">grid_configure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cnf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#tkinter.Grid.grid_configure" title="連結到這個定義">¶</a></dt>
@@ -6870,8 +6972,7 @@ or <a class="reference internal" href="#tkinter.YView.yview" title="tkinter.YVie
 <li><a class="reference internal" href="#threading-model">執行緒模型</a></li>
 <li><a class="reference internal" href="#handy-reference">實用參考</a><ul>
 <li><a class="reference internal" href="#setting-options">設定選項</a></li>
-<li><a class="reference internal" href="#the-packer">Packer 佈局管理器</a></li>
-<li><a class="reference internal" href="#packer-options">Packer 選項</a></li>
+<li><a class="reference internal" href="#geometry-management">Geometry management</a></li>
 <li><a class="reference internal" href="#coupling-widget-variables">耦合元件變數</a></li>
 <li><a class="reference internal" href="#the-window-manager">視窗管理器</a></li>
 <li><a class="reference internal" href="#tk-option-data-types">Tk 選項資料型別</a></li>
@@ -7019,7 +7120,7 @@ or <a class="reference internal" href="#tkinter.YView.yview" title="tkinter.YVie
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 7月 15, 2026 (00:30 UTC)。
+      最後更新於 7月 16, 2026 (00:34 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
