@@ -480,6 +480,103 @@ variables to be visible to frame objects.</p>
 </div>
 </dd></dl>
 
+<dl class="c var">
+<dt class="sig sig-object c" id="c.PyUnstable_ExecutableKinds">
+<span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><span class="n"><span class="pre">PyTypeObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyUnstable_ExecutableKinds</span></span></span><a class="headerlink" href="#c.PyUnstable_ExecutableKinds" title="連結到這個定義">¶</a><br /></dt>
+<dd><div class="unstable-c-api warning admonition">
+<em>這是 <a class="reference internal" href="stable.html#unstable-c-api"><span class="std std-ref">不穩定 API</span></a>，它可能在小版本發布中沒有任何警告地被變更。</em></div>
+<p>An array of executable kinds (executor types) for frames, used for internal
+debugging and tracing.</p>
+<p>Tools like debuggers and profilers can use this to identify the type of execution
+context associated with a frame (such as to filter out internal frames).
+The entries are indexed by the following constants:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Constant</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PyUnstable_ExecutableKinds.PyUnstable_EXECUTABLE_KIND_SKIP">
+<span class="sig-name descname"><span class="n"><span class="pre">PyUnstable_EXECUTABLE_KIND_SKIP</span></span></span><a class="headerlink" href="#c.PyUnstable_ExecutableKinds.PyUnstable_EXECUTABLE_KIND_SKIP" title="連結到這個定義">¶</a><br /></dt>
+<dd><div class="unstable-c-api warning admonition">
+<em>這是 <a class="reference internal" href="stable.html#unstable-c-api"><span class="std std-ref">不穩定 API</span></a>，它可能在小版本發布中沒有任何警告地被變更。</em></div>
+</dd></dl>
+
+</td>
+<td><p>The frame is internal (For example: inlined) and should be skipped by tools.</p></td>
+</tr>
+<tr class="row-odd"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PyUnstable_ExecutableKinds.PyUnstable_EXECUTABLE_KIND_PY_FUNCTION">
+<span class="sig-name descname"><span class="n"><span class="pre">PyUnstable_EXECUTABLE_KIND_PY_FUNCTION</span></span></span><a class="headerlink" href="#c.PyUnstable_ExecutableKinds.PyUnstable_EXECUTABLE_KIND_PY_FUNCTION" title="連結到這個定義">¶</a><br /></dt>
+<dd><div class="unstable-c-api warning admonition">
+<em>這是 <a class="reference internal" href="stable.html#unstable-c-api"><span class="std std-ref">不穩定 API</span></a>，它可能在小版本發布中沒有任何警告地被變更。</em></div>
+</dd></dl>
+
+</td>
+<td><p>The frame corresponds to a standard Python function.</p></td>
+</tr>
+<tr class="row-even"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PyUnstable_ExecutableKinds.PyUnstable_EXECUTABLE_KIND_BUILTIN_FUNCTION">
+<span class="sig-name descname"><span class="n"><span class="pre">PyUnstable_EXECUTABLE_KIND_BUILTIN_FUNCTION</span></span></span><a class="headerlink" href="#c.PyUnstable_ExecutableKinds.PyUnstable_EXECUTABLE_KIND_BUILTIN_FUNCTION" title="連結到這個定義">¶</a><br /></dt>
+<dd><div class="unstable-c-api warning admonition">
+<em>這是 <a class="reference internal" href="stable.html#unstable-c-api"><span class="std std-ref">不穩定 API</span></a>，它可能在小版本發布中沒有任何警告地被變更。</em></div>
+</dd></dl>
+
+</td>
+<td><p>The frame corresponds to a function defined in native code.</p></td>
+</tr>
+<tr class="row-odd"><td><dl class="c macro">
+<dt class="sig sig-object c" id="c.PyUnstable_ExecutableKinds.PyUnstable_EXECUTABLE_KIND_METHOD_DESCRIPTOR">
+<span class="sig-name descname"><span class="n"><span class="pre">PyUnstable_EXECUTABLE_KIND_METHOD_DESCRIPTOR</span></span></span><a class="headerlink" href="#c.PyUnstable_ExecutableKinds.PyUnstable_EXECUTABLE_KIND_METHOD_DESCRIPTOR" title="連結到這個定義">¶</a><br /></dt>
+<dd><div class="unstable-c-api warning admonition">
+<em>這是 <a class="reference internal" href="stable.html#unstable-c-api"><span class="std std-ref">不穩定 API</span></a>，它可能在小版本發布中沒有任何警告地被變更。</em></div>
+</dd></dl>
+
+</td>
+<td><p>The frame corresponds to a method on a class instance.</p></td>
+</tr>
+</tbody>
+</table>
+<p>However, Python's C API lacks a function to read the executable kind from
+a frame. Instead, use this recipe:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span>
+<span class="nf">get_executable_kind</span><span class="p">(</span><span class="n">PyFrameObject</span><span class="w"> </span><span class="o">*</span><span class="n">frame</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">   </span><span class="n">_PyInterpreterFrame</span><span class="w"> </span><span class="o">*</span><span class="n">f</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">frame</span><span class="o">-&gt;</span><span class="n">f_frame</span><span class="p">;</span>
+<span class="w">   </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">exec</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyStackRef_AsPyObjectBorrow</span><span class="p">(</span><span class="n">f</span><span class="o">-&gt;</span><span class="n">f_executable</span><span class="p">);</span>
+
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PyCode_Check</span><span class="p">(</span><span class="n">exec</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">PyUnstable_EXECUTABLE_KIND_PY_FUNCTION</span><span class="p">;</span>
+<span class="w">   </span><span class="p">}</span>
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PyMethod_Check</span><span class="p">(</span><span class="n">exec</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">PyUnstable_EXECUTABLE_KIND_BUILTIN_FUNCTION</span><span class="p">;</span>
+<span class="w">   </span><span class="p">}</span>
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">Py_IS_TYPE</span><span class="p">(</span><span class="n">exec</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">PyMethodDescr_Type</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="n">PyUnstable_EXECUTABLE_KIND_METHOD_DESCRIPTOR</span><span class="p">;</span>
+<span class="w">   </span><span class="p">}</span>
+
+<span class="w">   </span><span class="k">return</span><span class="w"> </span><span class="n">PyUnstable_EXECUTABLE_KIND_SKIP</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PyUnstable_EXECUTABLE_KINDS">
+<span class="sig-name descname"><span class="n"><span class="pre">PyUnstable_EXECUTABLE_KINDS</span></span></span><a class="headerlink" href="#c.PyUnstable_EXECUTABLE_KINDS" title="連結到這個定義">¶</a><br /></dt>
+<dd><div class="unstable-c-api warning admonition">
+<em>這是 <a class="reference internal" href="stable.html#unstable-c-api"><span class="std std-ref">不穩定 API</span></a>，它可能在小版本發布中沒有任何警告地被變更。</em></div>
+<p>The number of entries in <a class="reference internal" href="#c.PyUnstable_ExecutableKinds" title="PyUnstable_ExecutableKinds"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyUnstable_ExecutableKinds</span></code></a>.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
 </section>
 </section>
 
@@ -624,7 +721,7 @@ variables to be visible to frame objects.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 7月 16, 2026 (00:34 UTC)。
+      最後更新於 7月 19, 2026 (00:35 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
