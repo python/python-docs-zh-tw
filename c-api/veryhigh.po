@@ -388,9 +388,8 @@ msgid ""
 msgstr ""
 
 #: ../../c-api/veryhigh.rst:347
-#, fuzzy
 msgid "Low-level flags"
-msgstr "編譯器旗標。"
+msgstr "低階旗標"
 
 #: ../../c-api/veryhigh.rst:348
 msgid ""
@@ -399,6 +398,8 @@ msgid ""
 "reason to use them.  They are considered implementation details and may "
 "change at any time."
 msgstr ""
+"以下的旗標和遮罩僅滿足標準函式庫和互動式直譯器的少數特定需求，標準函式庫以外"
+"的程式碼很少有理由使用它們。它們被視為實作細節，可能隨時變更。"
 
 #: ../../c-api/veryhigh.rst:355
 msgid ""
@@ -406,6 +407,8 @@ msgid ""
 "module.  Do not use it; its behavior is unsupported and may change without "
 "warning."
 msgstr ""
+"此旗標是編譯器與 :mod:`codeop` 模組之間的私有介面，請勿使用；其行為不受支援，"
+"且可能在沒有警告的情況下變更。"
 
 #: ../../c-api/veryhigh.rst:359
 msgid ""
@@ -418,6 +421,12 @@ msgid ""
 "with a real syntax error, so that interactive interpreters know when to "
 "prompt for another line instead of reporting an error."
 msgstr ""
+"設定此旗標後，當編譯因原始文字在預期需要更多輸入之處結束而失敗時（例如在縮排"
+"區塊中間或未結束的字串字面值中），所引發的錯誤會是未有文件記載的 "
+"``_IncompleteInputError``，它是 :exc:`SyntaxError` 的子類別。:mod:`codeop` 模"
+"組會設定此旗標，並搭配 :c:macro:`PyCF_DONT_IMPLY_DEDENT`，以區分不完整的輸入"
+"與帶有真正語法錯誤的輸入，讓互動式直譯器知道何時該提示輸入下一行，而不是回報"
+"錯誤。"
 
 #: ../../c-api/veryhigh.rst:373
 msgid ""
@@ -427,6 +436,9 @@ msgid ""
 "the source ends with a newline; otherwise, compilation fails with a :exc:"
 "`SyntaxError`:"
 msgstr ""
+"依預設，使用 :c:var:`Py_single_input` 起始符號進行編譯時，抵達原始文字結尾會"
+"隱式關閉所有開啟的縮排區塊。設定此旗標後，只有當原始碼的最後一行以換行符號結"
+"尾時，開啟的區塊才會被關閉；否則編譯會失敗並引發 :exc:`SyntaxError`："
 
 #: ../../c-api/veryhigh.rst:379
 msgid ""
@@ -445,6 +457,20 @@ msgid ""
 "flags.cf_flags = PyCF_DONT_IMPLY_DEDENT;\n"
 "Py_CompileStringFlags(source, \"<input>\", Py_single_input, &flags);"
 msgstr ""
+"PyCompilerFlags flags = {\n"
+"    .cf_flags = 0,\n"
+"    .cf_feature_version = PY_MINOR_VERSION,\n"
+"};\n"
+"const char *source = \"if a:\\n    pass\";\n"
+"\n"
+"/* 「if」區塊被隱式關閉；\n"
+"   這會回傳一個程式碼物件： */\n"
+"Py_CompileStringFlags(source, \"<input>\", Py_single_input, &flags);\n"
+"\n"
+"/* 加上此旗標後，這會因為 SyntaxError 而失敗，\n"
+"   因為最後一行沒有以換行符號結尾： */\n"
+"flags.cf_flags = PyCF_DONT_IMPLY_DEDENT;\n"
+"Py_CompileStringFlags(source, \"<input>\", Py_single_input, &flags);"
 
 #: ../../c-api/veryhigh.rst:396
 msgid ""
@@ -453,12 +479,16 @@ msgid ""
 "does not yet end with a newline, so it fails to compile and the user is "
 "prompted for another line."
 msgstr ""
+":mod:`codeop` 模組使用此旗標來偵測不完整的互動式輸入。當使用者仍在縮排區塊內"
+"輸入時，原始碼尚未以換行符號結尾，因此編譯會失敗，並提示使用者輸入下一行。"
 
 #: ../../c-api/veryhigh.rst:403
 msgid ""
 "Read the source text as UTF-8, ignoring its :pep:`263` encoding declaration "
 "(\"coding cookie\"), if any:"
 msgstr ""
+"將原始文字以 UTF-8 讀取，忽略其 :pep:`263` 編碼宣告（「coding cookie」，如果"
+"有的話）："
 
 #: ../../c-api/veryhigh.rst:406
 msgid ""
@@ -477,6 +507,20 @@ msgid ""
 "flags.cf_flags = PyCF_IGNORE_COOKIE;\n"
 "Py_CompileStringFlags(source, \"<input>\", Py_file_input, &flags);"
 msgstr ""
+"PyCompilerFlags flags = {\n"
+"    .cf_flags = 0,\n"
+"    .cf_feature_version = PY_MINOR_VERSION,\n"
+"};\n"
+"const char *source = \"# coding: latin-1\\ns = '\\xe9'\\n\";\n"
+"\n"
+"/* coding cookie 被遵循：位元組 0xE9 被解碼為\n"
+"   Latin-1，這會回傳一個將 s 設為 \"é\" 的程式碼物件： */\n"
+"Py_CompileStringFlags(source, \"<input>\", Py_file_input, &flags);\n"
+"\n"
+"/* 加上此旗標後，cookie 會被忽略，導致編譯失敗\n"
+"   並出現 SyntaxError，因為 0xE9 不是有效的 UTF-8： */\n"
+"flags.cf_flags = PyCF_IGNORE_COOKIE;\n"
+"Py_CompileStringFlags(source, \"<input>\", Py_file_input, &flags);"
 
 #: ../../c-api/veryhigh.rst:423
 msgid ""
@@ -484,6 +528,8 @@ msgid ""
 "this flag when the source is a :class:`str` object, because they pass the "
 "text to the parser encoded as UTF-8."
 msgstr ""
+":func:`compile`、:func:`eval` 和 :func:`exec` 這幾個內建函式，會在原始碼是 :"
+"class:`str` 物件時設定此旗標，因為它們會將文字以 UTF-8 編碼傳遞給剖析器。"
 
 #: ../../c-api/veryhigh.rst:429
 msgid ""
@@ -491,6 +537,8 @@ msgid ""
 "func:`eval` and :func:`exec` built-in functions set this flag, but it "
 "currently has no effect."
 msgstr ""
+"將原始文字標記為已知採用 UTF-8 編碼。:func:`compile`、:func:`eval` 和 :func:"
+"`exec` 這幾個內建函式會設定此旗標，但目前沒有任何效果。"
 
 #: ../../c-api/veryhigh.rst:433
 msgid ""
@@ -502,7 +550,7 @@ msgstr ""
 
 #: ../../c-api/veryhigh.rst:438
 msgid "The following masks combine several flags:"
-msgstr ""
+msgstr "以下的遮罩結合了數個旗標："
 
 #: ../../c-api/veryhigh.rst:442
 msgid ""
@@ -512,17 +560,24 @@ msgid ""
 "__future__ import`` statement, the flag for the imported feature is added to "
 "*flags*, so that code executed later in the same context inherits it."
 msgstr ""
+"所有 ``CO_FUTURE`` 旗標的位元遮罩（請參閱 :ref:`c_codeobject_flags`），這些旗"
+"標用來選擇通常由 :ref:`future 陳述式 <future>`\\ 啟用的功能。當使用 "
+"``PyCompilerFlags *flags`` 引數編譯的程式碼包含 ``from __future__ import`` 陳"
+"述式時，該匯入功能所對應的旗標會被加入 *flags* 中，讓稍後在同一情境中執行的程"
+"式碼繼承它。"
 
 #: ../../c-api/veryhigh.rst:452
 msgid ""
 "Do not use this mask in new code.  It is kept only so that old code passing "
 "its flags to :func:`compile` keeps working."
 msgstr ""
+"請勿在新程式碼中使用此遮罩，保留它只是為了讓傳遞其旗標給 :func:`compile` 的舊"
+"有程式碼能繼續運作。"
 
 #: ../../c-api/veryhigh.rst:455
 msgid ""
 "Bitmask of flags for obsolete future features that no longer have any effect."
-msgstr ""
+msgstr "已過時且不再有任何作用的 future 功能旗標之位元遮罩。"
 
 #: ../../c-api/veryhigh.rst:460
 msgid ""
@@ -530,6 +585,9 @@ msgid ""
 "as :c:macro:`PyCF_ONLY_AST`. The :func:`compile` built-in function uses this "
 "mask to validate its *flags* argument."
 msgstr ""
+"所有會改變原始碼編譯方式的 ``PyCF`` 旗標之位元遮罩，例如 :c:macro:"
+"`PyCF_ONLY_AST`。:func:`compile` 這個內建函式使用此遮罩來驗證其 *flags* 引"
+"數。"
 
 #: ../../c-api/veryhigh.rst:469
 msgid "Available start symbols"
