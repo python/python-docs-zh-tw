@@ -236,13 +236,18 @@ case and quadratic time in the expected case. <a class="reference internal" href
 quadratic time for the worst case and has expected-case behavior dependent in a
 complicated way on how many elements the sequences have in common; best case
 time is linear.</p>
-<p><strong>Automatic junk heuristic:</strong> <a class="reference internal" href="#difflib.SequenceMatcher" title="difflib.SequenceMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceMatcher</span></code></a> supports a heuristic that
-automatically treats certain sequence items as junk. The heuristic counts how many
-times each individual item appears in the sequence. If an item's duplicates (after
-the first one) account for more than 1% of the sequence and the sequence is at least
-200 items long, this item is marked as &quot;popular&quot; and is treated as junk for
-the purpose of sequence matching. This heuristic can be turned off by setting
-the <code class="docutils literal notranslate"><span class="pre">autojunk</span></code> argument to <code class="docutils literal notranslate"><span class="pre">False</span></code> when creating the <a class="reference internal" href="#difflib.SequenceMatcher" title="difflib.SequenceMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceMatcher</span></code></a>.</p>
+<p><strong>Junk</strong>: <a class="reference internal" href="#difflib.SequenceMatcher" title="difflib.SequenceMatcher"><code class="xref py py-class docutils literal notranslate"><span class="pre">SequenceMatcher</span></code></a> accepts an <code class="docutils literal notranslate"><span class="pre">isjunk</span></code> predicate and an
+<code class="docutils literal notranslate"><span class="pre">autojunk</span></code> flag. Items that are considered as junk will not be considered
+to find similar content blocks. This can produce better results for humans
+(typically breaking on whitespace) and faster (because it reduces the number
+of possible combinations). But it can also cause pathological cases where
+too many items considered junk cause an unexpectedly large (but correct)
+diff result.
+You should consider tuning them or turning them off depending on your data.
+Moreover, only the second sequence is inspected for junk. This causes the diff
+output to not be symmetrical.
+When <code class="docutils literal notranslate"><span class="pre">autojunk=True</span></code>, it will consider as junk the items that account for more
+than 1% of the sequence, if it is at least 200 items long.</p>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.2 版的變更: </span>新增 <em>autojunk</em> 參數。</p>
 </div>
@@ -741,17 +746,6 @@ sequences are identical, and <code class="docutils literal notranslate"><span cl
 <a class="reference internal" href="#difflib.SequenceMatcher.get_opcodes" title="difflib.SequenceMatcher.get_opcodes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_opcodes()</span></code></a> hasn't already been called, in which case you may want
 to try <a class="reference internal" href="#difflib.SequenceMatcher.quick_ratio" title="difflib.SequenceMatcher.quick_ratio"><code class="xref py py-meth docutils literal notranslate"><span class="pre">quick_ratio()</span></code></a> or <a class="reference internal" href="#difflib.SequenceMatcher.real_quick_ratio" title="difflib.SequenceMatcher.real_quick_ratio"><code class="xref py py-meth docutils literal notranslate"><span class="pre">real_quick_ratio()</span></code></a> first to get an
 upper bound.</p>
-<div class="admonition note">
-<p class="admonition-title">備註</p>
-<p>Caution: The result of a <a class="reference internal" href="#difflib.SequenceMatcher.ratio" title="difflib.SequenceMatcher.ratio"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ratio()</span></code></a> call may depend on the order of
-the arguments. For instance:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">SequenceMatcher</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;tide&#39;</span><span class="p">,</span> <span class="s1">&#39;diet&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">ratio</span><span class="p">()</span>
-<span class="go">0.25</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">SequenceMatcher</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="s1">&#39;diet&#39;</span><span class="p">,</span> <span class="s1">&#39;tide&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">ratio</span><span class="p">()</span>
-<span class="go">0.5</span>
-</pre></div>
-</div>
-</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1260,7 +1254,7 @@ details.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 7月 24, 2026 (00:34 UTC)。
+      最後更新於 7月 25, 2026 (00:37 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
