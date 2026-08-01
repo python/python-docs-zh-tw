@@ -214,7 +214,10 @@
 <dt class="sig sig-object py" id="functools.cache">
 <span class="sig-prename descclassname"><span class="pre">&#64;</span></span><span class="sig-prename descclassname"><span class="pre">functools.</span></span><span class="sig-name descname"><span class="pre">cache</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_function</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functools.cache" title="連結到這個定義">¶</a></dt>
 <dd><p>簡單的輕量級無繫結函式快取 (Simple lightweight unbounded function cache)。有時稱之為 <a class="reference external" href="https://en.wikipedia.org/wiki/Memoization">&quot;memoize&quot;（記憶化）</a>。</p>
-<p>和 <code class="docutils literal notranslate"><span class="pre">lru_cache(maxsize=None)</span></code> 回傳相同的值，為函式引數建立一個字典查找的薄包裝器。因為它永遠不需要丟棄舊值，所以這比有大小限制的 <a class="reference internal" href="#functools.lru_cache" title="functools.lru_cache"><code class="xref py py-func docutils literal notranslate"><span class="pre">lru_cache()</span></code></a> 更小、更快。</p>
+<p>Returns the same as <code class="docutils literal notranslate"><span class="pre">lru_cache(maxsize=None)</span></code>, creating a thin
+wrapper around a dictionary lookup for the function arguments.  Because it
+never needs to evict old values, this is smaller and faster than
+<a class="reference internal" href="#functools.lru_cache" title="functools.lru_cache"><code class="xref py py-deco docutils literal notranslate"><span class="pre">&#64;lru_cache</span></code></a> with a size limit.</p>
 <p>舉例來說：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="nd">@cache</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
@@ -238,7 +241,10 @@
 <dl class="py function">
 <dt class="sig sig-object py" id="functools.cached_property">
 <span class="sig-prename descclassname"><span class="pre">&#64;</span></span><span class="sig-prename descclassname"><span class="pre">functools.</span></span><span class="sig-name descname"><span class="pre">cached_property</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functools.cached_property" title="連結到這個定義">¶</a></dt>
-<dd><p>將類別的一個方法轉換為屬性 (property)，其值會計算一次，然後在實例的生命週期內快取為普通屬性。類似 <a class="reference internal" href="functions.html#property" title="property"><code class="xref py py-func docutils literal notranslate"><span class="pre">property()</span></code></a>，但增加了快取機制。對於除使用該裝飾器的屬性外實質上幾乎是不可變 (immutable) 的實例，針對其所需要繁重計算會很有用。</p>
+<dd><p>Transform a method of a class into a property whose value is computed once
+and then cached as a normal attribute for the life of the instance. Similar
+to <a class="reference internal" href="functions.html#property" title="property"><code class="xref py py-deco docutils literal notranslate"><span class="pre">&#64;property</span></code></a>, with the addition of caching. Useful for expensive
+computed properties of instances that are otherwise effectively immutable.</p>
 <p>範例：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">DataSet</span><span class="p">:</span>
 
@@ -250,18 +256,27 @@
         <span class="k">return</span> <span class="n">statistics</span><span class="o">.</span><span class="n">stdev</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="#functools.cached_property" title="functools.cached_property"><code class="xref py py-func docutils literal notranslate"><span class="pre">cached_property()</span></code></a> 的機制與 <a class="reference internal" href="functions.html#property" title="property"><code class="xref py py-func docutils literal notranslate"><span class="pre">property()</span></code></a> 有所不同。除非定義了 setter，否則常規屬性會阻止屬性的寫入。相反地，<em>cached_property</em> 則允許寫入。</p>
+<p>The mechanics of <a class="reference internal" href="#functools.cached_property" title="functools.cached_property"><code class="xref py py-deco docutils literal notranslate"><span class="pre">&#64;cached_property</span></code></a> are somewhat different from
+<a class="reference internal" href="functions.html#property" title="property"><code class="xref py py-deco docutils literal notranslate"><span class="pre">&#64;property</span></code></a>.  A regular property blocks attribute writes unless a
+setter is defined. In contrast, a <em>cached_property</em> allows writes.</p>
 <p><em>cached_property</em> 裝飾器僅在查找時且僅在同名屬性不存在時運行。當它運行時，<em>cached_property</em> 會寫入同名的屬性。後續屬性讀取和寫入優先於 <em>cached_property</em> 方法，並且它的工作方式與普通屬性類似。</p>
 <p>可以透過刪除屬性來清除快取的值，這使得 <em>cached_property</em> 方法可以再次運行。</p>
 <p><em>cached_property</em> 無法防止多執行緒使用中可能出現的競爭條件 (race condition)。getter 函式可以在同一個實例上運行多次，最後一次運行會設定快取的值。所以快取的屬性最好是冪等的 (idempotent)，或者在一個實例上運行多次不會有害，就不會有問題。如果同步是必要的，請在裝飾的 getter 函式內部或在快取的屬性存取周圍實作必要的鎖。</p>
 <p>請注意，此裝飾器會干擾 <span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0412/"><strong>PEP 412</strong></a> 金鑰共用字典的操作。這意味著實例字典可能比平常佔用更多的空間。</p>
 <p>此外，此裝飾器要求每個實例上的 <code class="docutils literal notranslate"><span class="pre">__dict__</span></code> 屬性是可變對映 (mutable mapping)。這意味著它不適用於某些型別，例如元類別 (metaclass)（因為型別實例上的 <code class="docutils literal notranslate"><span class="pre">__dict__</span></code> 屬性是類別命名空間的唯讀代理），以及那些指定 <code class="docutils literal notranslate"><span class="pre">__slots__</span></code> 而不包含 <code class="docutils literal notranslate"><span class="pre">__dict__</span></code> 的型別作為有定義的插槽之一（因為此種類別根本不提供 <code class="docutils literal notranslate"><span class="pre">__dict__</span></code> 屬性）。</p>
-<p>如果可變對映不可用或需要金鑰共享以節省空間，則也可以透過在 <a class="reference internal" href="#functools.lru_cache" title="functools.lru_cache"><code class="xref py py-func docutils literal notranslate"><span class="pre">lru_cache()</span></code></a> 之上堆疊 <a class="reference internal" href="functions.html#property" title="property"><code class="xref py py-func docutils literal notranslate"><span class="pre">property()</span></code></a> 來實作類似於 <a class="reference internal" href="#functools.cached_property" title="functools.cached_property"><code class="xref py py-func docutils literal notranslate"><span class="pre">cached_property()</span></code></a> 的效果。請參閱<a class="reference internal" href="../faq/programming.html#faq-cache-method-calls"><span class="std std-ref">如何快取方法呼叫？</span></a>以了解有關這與 <a class="reference internal" href="#functools.cached_property" title="functools.cached_property"><code class="xref py py-func docutils literal notranslate"><span class="pre">cached_property()</span></code></a> 間不同之處的更多詳細資訊。</p>
+<p>If a mutable mapping is not available or if space-efficient key sharing is
+desired, an effect similar to <a class="reference internal" href="#functools.cached_property" title="functools.cached_property"><code class="xref py py-deco docutils literal notranslate"><span class="pre">&#64;cached_property</span></code></a> can also be achieved by
+stacking <a class="reference internal" href="functions.html#property" title="property"><code class="xref py py-deco docutils literal notranslate"><span class="pre">&#64;property</span></code></a> on top of <a class="reference internal" href="#functools.lru_cache" title="functools.lru_cache"><code class="xref py py-deco docutils literal notranslate"><span class="pre">&#64;lru_cache</span></code></a>. See
+<a class="reference internal" href="../faq/programming.html#faq-cache-method-calls"><span class="std std-ref">如何快取方法呼叫？</span></a> for more details on how this differs from <a class="reference internal" href="#functools.cached_property" title="functools.cached_property"><code class="xref py py-deco docutils literal notranslate"><span class="pre">&#64;cached_property</span></code></a>.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.8 版被加入.</span></p>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.12 版的變更: </span>在 Python 3.12 之前，<code class="docutils literal notranslate"><span class="pre">cached_property</span></code> 包含一個未以文件記錄的鎖，以確保在多執行緒使用中能保證 getter 函式對於每個實例只會執行一次。然而，鎖是針對每個屬性，而不是針對每個實例，這可能會導致無法被接受的嚴重鎖爭用 (lock contention)。在 Python 3.12+ 中，此鎖已被刪除。</p>
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>Prior to Python 3.12, <code class="xref py py-deco docutils literal notranslate"><span class="pre">&#64;cached_property</span></code> included an undocumented lock to
+ensure that in multi-threaded usage the getter function was guaranteed to
+run only once per instance. However, the lock was per-property, not
+per-instance, which could result in unacceptably high lock contention. In
+Python 3.12+ this locking is removed.</p>
 </div>
 </dd></dl>
 
@@ -719,7 +734,10 @@ runtime impact.</p>
 <dt class="sig sig-object py" id="functools.update_wrapper">
 <span class="sig-prename descclassname"><span class="pre">functools.</span></span><span class="sig-name descname"><span class="pre">update_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wrapper</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wrapped</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">assigned</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">WRAPPER_ASSIGNMENTS</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">updated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">WRAPPER_UPDATES</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#functools.update_wrapper" title="連結到這個定義">¶</a></dt>
 <dd><p>更新 <em>wrapper</em> 函式，使其看起來像 <em>wrapped</em> 函式。可選引數是元組，用於指定原始函式的哪些屬性直接賦值給包裝函式上的匹配屬性，以及包裝函式的哪些屬性使用原始函式中的對應屬性進行更新。這些引數的預設值是模組層級的常數 <code class="docutils literal notranslate"><span class="pre">WRAPPER_ASSIGNMENTS</span></code>（它賦值給包裝函式的 <a class="reference internal" href="../reference/datamodel.html#function.__module__" title="function.__module__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__module__</span></code></a>、<a class="reference internal" href="../reference/datamodel.html#function.__name__" title="function.__name__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__name__</span></code></a>、<a class="reference internal" href="../reference/datamodel.html#function.__qualname__" title="function.__qualname__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__qualname__</span></code></a>、<a class="reference internal" href="../reference/datamodel.html#function.__annotations__" title="function.__annotations__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__annotations__</span></code></a>、<a class="reference internal" href="../reference/datamodel.html#function.__type_params__" title="function.__type_params__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__type_params__</span></code></a> 和 <a class="reference internal" href="../reference/datamodel.html#function.__doc__" title="function.__doc__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__doc__</span></code></a> 文件字串 (docstring））和 <code class="docutils literal notranslate"><span class="pre">WRAPPER_UPDATES</span></code>（更新包裝器函式的 <a class="reference internal" href="../reference/datamodel.html#function.__dict__" title="function.__dict__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__dict__</span></code></a>，即實例字典）。</p>
-<p>為了允許出於內省 (introspection) 和其他目的所對原始函式的存取（例如繞過快取裝飾器，如 <a class="reference internal" href="#functools.lru_cache" title="functools.lru_cache"><code class="xref py py-func docutils literal notranslate"><span class="pre">lru_cache()</span></code></a>），此函式會自動向包裝器新增 <code class="docutils literal notranslate"><span class="pre">__wrapped__</span></code> 屬性，該包裝器參照被包裝的函式。</p>
+<p>To allow access to the original function for introspection and other purposes
+(e.g. bypassing a caching decorator such as <a class="reference internal" href="#functools.lru_cache" title="functools.lru_cache"><code class="xref py py-deco docutils literal notranslate"><span class="pre">&#64;lru_cache</span></code></a>), this function
+automatically adds a <code class="docutils literal notranslate"><span class="pre">__wrapped__</span></code> attribute to the wrapper that refers to
+the function being wrapped.</p>
 <p>此函式的主要用途是在 <a class="reference internal" href="../glossary.html#term-decorator"><span class="xref std std-term">decorator</span></a> 函式中，它包裝函式並回傳包裝器。如果包裝器函式未更新，則回傳函式的元資料 (metadata) 將反映包裝器定義而非原始函式定義，這通常不太會有幫助。</p>
 <p><a class="reference internal" href="#functools.update_wrapper" title="functools.update_wrapper"><code class="xref py py-func docutils literal notranslate"><span class="pre">update_wrapper()</span></code></a> 可以與函式以外的可呼叫物件一起使用。被包裝的物件中缺少的 <em>assigned</em> 或 <em>updated</em> 中指定的任何屬性都將被忽略（即此函式不會嘗試在包裝器函式上設定它們）。如果包裝函式本身缺少 <em>updated</em> 中指定的任何屬性，仍然會引發 <a class="reference internal" href="exceptions.html#AttributeError" title="AttributeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AttributeError</span></code></a>。</p>
 <div class="versionchanged">
@@ -926,7 +944,7 @@ runtime impact.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 7月 31, 2026 (00:37 UTC)。
+      最後更新於 8月 01, 2026 (00:36 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
