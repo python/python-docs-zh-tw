@@ -492,6 +492,17 @@ a collection:</p>
     <span class="n">task</span><span class="o">.</span><span class="n">add_done_callback</span><span class="p">(</span><span class="n">background_tasks</span><span class="o">.</span><span class="n">discard</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>Note that this approach never awaits the tasks, so if a task
+fails, its exception is never retrieved and asyncio logs a
+&quot;Task exception was never retrieved&quot; message when the task is
+garbage collected.  To avoid this, use <a class="reference internal" href="#asyncio.TaskGroup" title="asyncio.TaskGroup"><code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.TaskGroup</span></code></a>
+which keeps a strong reference to each task, awaits them and
+propagates their exceptions:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">async</span> <span class="k">with</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">TaskGroup</span><span class="p">()</span> <span class="k">as</span> <span class="n">tg</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">):</span>
+        <span class="n">tg</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="n">some_coro</span><span class="p">(</span><span class="n">param</span><span class="o">=</span><span class="n">i</span><span class="p">))</span>
+</pre></div>
+</div>
 </div>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.7 版被加入.</span></p>
@@ -1883,7 +1894,7 @@ used by end-user code.  See <a class="reference internal" href="#asyncio.Task.un
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 8月 07, 2026 (01:19 UTC)。
+      最後更新於 8月 08, 2026 (00:21 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
