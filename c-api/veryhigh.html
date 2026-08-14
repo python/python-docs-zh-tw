@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>The Very High Level Layer &#8212; Python 3.14.6 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Very High Level Layer &#8212; Python 3.14.7 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=4365c8fe" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
     
-    <script src="../_static/documentation_options.js?v=bb1e44a5"></script>
+    <script src="../_static/documentation_options.js?v=a9d878bf"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,7 +20,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.14.6 說明文件 中搜尋"
+          title="在 Python 3.14.7 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -170,7 +170,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.6 Documentation</a> &#187;
+      <a href="../index.html">3.14.7 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python/C API 參考手冊</a> &#187;</li>
@@ -571,10 +571,130 @@ initialized to <code class="docutils literal notranslate"><span class="pre">PY_M
 the same names.</p>
 </dd></dl>
 
+<p class="rubric">Low-level flags</p>
+<p>The following flags and masks serve narrow needs of the standard
+library and interactive interpreters.  Code outside the standard
+library rarely has a reason to use them.  They are considered
+implementation details and may change at any time.</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PyCF_ALLOW_INCOMPLETE_INPUT">
+<span class="sig-name descname"><span class="n"><span class="pre">PyCF_ALLOW_INCOMPLETE_INPUT</span></span></span><a class="headerlink" href="#c.PyCF_ALLOW_INCOMPLETE_INPUT" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>This flag is a private interface between the compiler and the
+<a class="reference internal" href="../library/codeop.html#module-codeop" title="codeop: Compile (possibly incomplete) Python code."><code class="xref py py-mod docutils literal notranslate"><span class="pre">codeop</span></code></a> module.  Do not use it; its behavior is unsupported
+and may change without warning.</p>
+<p>With this flag set, when compilation fails because the source text
+ends where more input is expected, for example in the middle of an
+indented block or an unterminated string literal, the error raised
+is the undocumented <code class="docutils literal notranslate"><span class="pre">_IncompleteInputError</span></code>, a subclass of
+<a class="reference internal" href="../library/exceptions.html#SyntaxError" title="SyntaxError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">SyntaxError</span></code></a>.  The <a class="reference internal" href="../library/codeop.html#module-codeop" title="codeop: Compile (possibly incomplete) Python code."><code class="xref py py-mod docutils literal notranslate"><span class="pre">codeop</span></code></a> module sets this flag,
+together with <a class="reference internal" href="#c.PyCF_DONT_IMPLY_DEDENT" title="PyCF_DONT_IMPLY_DEDENT"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PyCF_DONT_IMPLY_DEDENT</span></code></a>, to tell input
+that is incomplete apart from input with a real syntax error, so
+that interactive interpreters know when to prompt for another
+line instead of reporting an error.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.11 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PyCF_DONT_IMPLY_DEDENT">
+<span class="sig-name descname"><span class="n"><span class="pre">PyCF_DONT_IMPLY_DEDENT</span></span></span><a class="headerlink" href="#c.PyCF_DONT_IMPLY_DEDENT" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>By default, when compiling with the <a class="reference internal" href="#c.Py_single_input" title="Py_single_input"><code class="xref c c-var docutils literal notranslate"><span class="pre">Py_single_input</span></code></a> start
+symbol, reaching the end of the source text implicitly closes any
+open indented blocks.  With this flag set, open blocks are only
+closed if the last line of the source ends with a newline; otherwise,
+compilation fails with a <a class="reference internal" href="../library/exceptions.html#SyntaxError" title="SyntaxError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">SyntaxError</span></code></a>:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyCompilerFlags</span><span class="w"> </span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">.</span><span class="n">cf_flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">cf_feature_version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PY_MINOR_VERSION</span><span class="p">,</span>
+<span class="p">};</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;if a:</span><span class="se">\n</span><span class="s">    pass&quot;</span><span class="p">;</span>
+
+<span class="cm">/* The &quot;if&quot; block is closed implicitly;</span>
+<span class="cm">   this returns a code object: */</span>
+<span class="n">Py_CompileStringFlags</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&lt;input&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Py_single_input</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">flags</span><span class="p">);</span>
+
+<span class="cm">/* With the flag, this fails with a SyntaxError,</span>
+<span class="cm">   because the last line does not end with a newline: */</span>
+<span class="n">flags</span><span class="p">.</span><span class="n">cf_flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyCF_DONT_IMPLY_DEDENT</span><span class="p">;</span>
+<span class="n">Py_CompileStringFlags</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&lt;input&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Py_single_input</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">flags</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="../library/codeop.html#module-codeop" title="codeop: Compile (possibly incomplete) Python code."><code class="xref py py-mod docutils literal notranslate"><span class="pre">codeop</span></code></a> module uses this flag to detect incomplete
+interactive input.  While the user is still typing inside an
+indented block, the source does not yet end with a newline, so it
+fails to compile and the user is prompted for another line.</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PyCF_IGNORE_COOKIE">
+<span class="sig-name descname"><span class="n"><span class="pre">PyCF_IGNORE_COOKIE</span></span></span><a class="headerlink" href="#c.PyCF_IGNORE_COOKIE" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Read the source text as UTF-8, ignoring its <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0263/"><strong>PEP 263</strong></a> encoding
+declaration (&quot;coding cookie&quot;), if any:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyCompilerFlags</span><span class="w"> </span><span class="n">flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="p">.</span><span class="n">cf_flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">    </span><span class="p">.</span><span class="n">cf_feature_version</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PY_MINOR_VERSION</span><span class="p">,</span>
+<span class="p">};</span>
+<span class="k">const</span><span class="w"> </span><span class="kt">char</span><span class="w"> </span><span class="o">*</span><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;# coding: latin-1</span><span class="se">\n</span><span class="s">s = &#39;</span><span class="se">\xe9</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="cm">/* The coding cookie is honored: byte 0xE9 is decoded as</span>
+<span class="cm">   Latin-1, and this returns a code object that sets s to &quot;é&quot;: */</span>
+<span class="n">Py_CompileStringFlags</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&lt;input&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Py_file_input</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">flags</span><span class="p">);</span>
+
+<span class="cm">/* With the flag, the cookie is ignored and compilation fails</span>
+<span class="cm">   with a SyntaxError, because 0xE9 is not valid UTF-8: */</span>
+<span class="n">flags</span><span class="p">.</span><span class="n">cf_flags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyCF_IGNORE_COOKIE</span><span class="p">;</span>
+<span class="n">Py_CompileStringFlags</span><span class="p">(</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;&lt;input&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">Py_file_input</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">flags</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="../library/functions.html#compile" title="compile"><code class="xref py py-func docutils literal notranslate"><span class="pre">compile()</span></code></a>, <a class="reference internal" href="../library/functions.html#eval" title="eval"><code class="xref py py-func docutils literal notranslate"><span class="pre">eval()</span></code></a> and <a class="reference internal" href="../library/functions.html#exec" title="exec"><code class="xref py py-func docutils literal notranslate"><span class="pre">exec()</span></code></a> built-in functions
+set this flag when the source is a <a class="reference internal" href="../library/stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a> object, because they
+pass the text to the parser encoded as UTF-8.</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PyCF_SOURCE_IS_UTF8">
+<span class="sig-name descname"><span class="n"><span class="pre">PyCF_SOURCE_IS_UTF8</span></span></span><a class="headerlink" href="#c.PyCF_SOURCE_IS_UTF8" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Mark the source text as known to be UTF-8 encoded.
+The <a class="reference internal" href="../library/functions.html#compile" title="compile"><code class="xref py py-func docutils literal notranslate"><span class="pre">compile()</span></code></a>, <a class="reference internal" href="../library/functions.html#eval" title="eval"><code class="xref py py-func docutils literal notranslate"><span class="pre">eval()</span></code></a> and <a class="reference internal" href="../library/functions.html#exec" title="exec"><code class="xref py py-func docutils literal notranslate"><span class="pre">exec()</span></code></a> built-in functions
+set this flag, but it currently has no effect.</p>
+</dd></dl>
+
 <p>The &quot;<code class="docutils literal notranslate"><span class="pre">PyCF</span></code>&quot; flags above can be combined with &quot;<code class="docutils literal notranslate"><span class="pre">CO_FUTURE</span></code>&quot; flags such
 as <a class="reference internal" href="code.html#c.CO_FUTURE_ANNOTATIONS" title="CO_FUTURE_ANNOTATIONS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">CO_FUTURE_ANNOTATIONS</span></code></a> to enable features normally
 selectable using <a class="reference internal" href="../reference/simple_stmts.html#future"><span class="std std-ref">future statements</span></a>.
 See <a class="reference internal" href="code.html#c-codeobject-flags"><span class="std std-ref">程式碼物件旗標</span></a> for a complete list.</p>
+<p>The following masks combine several flags:</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PyCF_MASK">
+<span class="sig-name descname"><span class="n"><span class="pre">PyCF_MASK</span></span></span><a class="headerlink" href="#c.PyCF_MASK" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Bitmask of all <code class="docutils literal notranslate"><span class="pre">CO_FUTURE</span></code> flags (see <a class="reference internal" href="code.html#c-codeobject-flags"><span class="std std-ref">程式碼物件旗標</span></a>),
+which select features normally enabled by
+<a class="reference internal" href="../reference/simple_stmts.html#future"><span class="std std-ref">future statements</span></a>.
+When code compiled with a <code class="docutils literal notranslate"><span class="pre">PyCompilerFlags</span> <span class="pre">*flags</span></code> argument
+contains a <code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">__future__</span> <span class="pre">import</span></code> statement, the flag for the
+imported feature is added to <em>flags</em>, so that code executed later
+in the same context inherits it.</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PyCF_MASK_OBSOLETE">
+<span class="sig-name descname"><span class="n"><span class="pre">PyCF_MASK_OBSOLETE</span></span></span><a class="headerlink" href="#c.PyCF_MASK_OBSOLETE" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Do not use this mask in new code.  It is kept only so that old
+code passing its flags to <a class="reference internal" href="../library/functions.html#compile" title="compile"><code class="xref py py-func docutils literal notranslate"><span class="pre">compile()</span></code></a> keeps working.</p>
+<p>Bitmask of flags for obsolete future features that no longer
+have any effect.</p>
+</dd></dl>
+
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PyCF_COMPILE_MASK">
+<span class="sig-name descname"><span class="n"><span class="pre">PyCF_COMPILE_MASK</span></span></span><a class="headerlink" href="#c.PyCF_COMPILE_MASK" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>Bitmask of all <code class="docutils literal notranslate"><span class="pre">PyCF</span></code> flags that change how the source is
+compiled, such as <a class="reference internal" href="#c.PyCF_ONLY_AST" title="PyCF_ONLY_AST"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PyCF_ONLY_AST</span></code></a>.
+The <a class="reference internal" href="../library/functions.html#compile" title="compile"><code class="xref py py-func docutils literal notranslate"><span class="pre">compile()</span></code></a> built-in function uses this mask to validate
+its <em>flags</em> argument.</p>
+</dd></dl>
+
 </dd></dl>
 
 <section id="available-start-symbols">
@@ -582,14 +702,14 @@ See <a class="reference internal" href="code.html#c-codeobject-flags"><span clas
 <dl class="c var">
 <dt class="sig sig-object c" id="c.Py_eval_input">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_eval_input</span></span></span><a class="headerlink" href="#c.Py_eval_input" title="連結到這個定義">¶</a><br /></dt>
-<dd><p id="index-0">The start symbol from the Python grammar for isolated expressions; for use with
+<dd><p id="index-1">The start symbol from the Python grammar for isolated expressions; for use with
 <a class="reference internal" href="#c.Py_CompileString" title="Py_CompileString"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_CompileString()</span></code></a>.</p>
 </dd></dl>
 
 <dl class="c var">
 <dt class="sig sig-object c" id="c.Py_file_input">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_file_input</span></span></span><a class="headerlink" href="#c.Py_file_input" title="連結到這個定義">¶</a><br /></dt>
-<dd><p id="index-1">The start symbol from the Python grammar for sequences of statements as read
+<dd><p id="index-2">The start symbol from the Python grammar for sequences of statements as read
 from a file or other source; for use with <a class="reference internal" href="#c.Py_CompileString" title="Py_CompileString"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_CompileString()</span></code></a>.  This is
 the symbol to use when compiling arbitrarily long Python source code.</p>
 </dd></dl>
@@ -597,7 +717,7 @@ the symbol to use when compiling arbitrarily long Python source code.</p>
 <dl class="c var">
 <dt class="sig sig-object c" id="c.Py_single_input">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_single_input</span></span></span><a class="headerlink" href="#c.Py_single_input" title="連結到這個定義">¶</a><br /></dt>
-<dd><p id="index-2">The start symbol from the Python grammar for a single statement; for use with
+<dd><p id="index-3">The start symbol from the Python grammar for a single statement; for use with
 <a class="reference internal" href="#c.Py_CompileString" title="Py_CompileString"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_CompileString()</span></code></a>. This is the symbol used for the interactive
 interpreter loop.</p>
 </dd></dl>
@@ -605,15 +725,15 @@ interpreter loop.</p>
 <dl class="c var">
 <dt class="sig sig-object c" id="c.Py_func_type_input">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Py_func_type_input</span></span></span><a class="headerlink" href="#c.Py_func_type_input" title="連結到這個定義">¶</a><br /></dt>
-<dd><p id="index-3">The start symbol from the Python grammar for a function type; for use with
+<dd><p id="index-4">The start symbol from the Python grammar for a function type; for use with
 <a class="reference internal" href="#c.Py_CompileString" title="Py_CompileString"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_CompileString()</span></code></a>. This is used to parse &quot;signature type comments&quot;
-from <span class="target" id="index-4"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a>.</p>
+from <span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a>.</p>
 <p>這需要設定 <a class="reference internal" href="#c.PyCF_ONLY_AST" title="PyCF_ONLY_AST"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PyCF_ONLY_AST</span></code></a> 旗標。</p>
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="../library/ast.html#ast.FunctionType" title="ast.FunctionType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ast.FunctionType</span></code></a></p></li>
-<li><p><span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a></p></li>
+<li><p><span class="target" id="index-6"></span><a class="pep reference external" href="https://peps.python.org/pep-0484/"><strong>PEP 484</strong></a></p></li>
 </ul>
 </div>
 <div class="versionadded">
@@ -760,7 +880,7 @@ returns <a class="reference internal" href="#c.PY_INVALID_STACK_EFFECT" title="P
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.6 Documentation</a> &#187;
+      <a href="../index.html">3.14.7 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python/C API 參考手冊</a> &#187;</li>
@@ -805,7 +925,7 @@ returns <a class="reference internal" href="#c.PY_INVALID_STACK_EFFECT" title="P
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 6月 12, 2026 (18:24 UTC)。
+      最後更新於 8月 14, 2026 (02:39 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>1. 以 C 或 C++ 擴充 Python &#8212; Python 3.14.6 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1. 以 C 或 C++ 擴充 Python &#8212; Python 3.14.7 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=4365c8fe" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=5349f25f" />
     
-    <script src="../_static/documentation_options.js?v=bb1e44a5"></script>
+    <script src="../_static/documentation_options.js?v=a9d878bf"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,7 +20,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.14.6 說明文件 中搜尋"
+          title="在 Python 3.14.7 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -186,7 +186,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.6 Documentation</a> &#187;
+      <a href="../index.html">3.14.7 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">擴充和嵌入 Python 直譯器</a> &#187;</li>
@@ -507,7 +507,9 @@
 <section id="calling-python-functions-from-c">
 <span id="callingpython"></span><h2><span class="section-number">1.6. </span>從 C 呼叫 Python 函式<a class="headerlink" href="#calling-python-functions-from-c" title="連結到這個標頭">¶</a></h2>
 <p>到目前為止，我們一直專注於讓 C 函式可以從 Python 呼叫。反過來也很有用：從 C 呼叫 Python 函式。對於支援所謂「回呼 (callback)」函式的函式庫尤其如此。如果一個 C 介面使用了回呼，等價的 Python 通常就需要為 Python 程式設計者提供一個回呼機制；其實作將需要從 C 回呼中呼叫 Python 回呼函式。其他用途也是可以想像的。</p>
-<p>幸運的是，Python 直譯器可以很容易地被遞迴呼叫，並且有一個標準介面可以呼叫 Python 函式。（我不會深入討論如何以特定字串作為輸入來呼叫 Python 剖析器 --- 如果你有興趣，可以查看 Python 原始碼中 <code class="file docutils literal notranslate"><span class="pre">Modules/main.c</span></code> 裡 <a class="reference internal" href="../using/cmdline.html#cmdoption-c"><code class="xref std std-option docutils literal notranslate"><span class="pre">-c</span></code></a> 命令列選項的實作。）</p>
+<p>Fortunately, the Python interpreter is easily called recursively, and there is a
+standard interface to call a Python function.  (If you're interested in how to call the
+Python parser with a particular string as input, see <a class="reference internal" href="../c-api/veryhigh.html#veryhigh"><span class="std std-ref">The Very High Level Layer</span></a>.)</p>
 <p>呼叫 Python 函式很容易。首先，Python 程式必須以某種方式將 Python 函式物件傳給你。你應該提供一個函式（或其他介面）來做到這一點。當這個函式被呼叫時，將一個指向 Python 函式物件的指標儲存在全域變數中（要注意對它呼叫 <a class="reference internal" href="../c-api/refcounting.html#c.Py_INCREF" title="Py_INCREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_INCREF()</span></code></a>！）--- 或任何你認為合適的地方。例如，以下函式可能是模組定義的一部分：</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">my_callback</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
@@ -749,7 +751,17 @@ Py_BuildValue(&quot;((ii)(ii)) (ii)&quot;,
 <p>每個使用 <code class="xref c c-func docutils literal notranslate"><span class="pre">malloc()</span></code> 配置的記憶體區塊，最終都應該透過恰好一次的 <code class="xref c c-func docutils literal notranslate"><span class="pre">free()</span></code> 呼叫回歸到可用記憶體池中。在正確的時機呼叫 <code class="xref c c-func docutils literal notranslate"><span class="pre">free()</span></code> 很重要。如果一個區塊的位址被遺忘了但沒有對它呼叫 <code class="xref c c-func docutils literal notranslate"><span class="pre">free()</span></code>，那麼它佔用的記憶體在程式終止之前都無法被重新使用。這稱為<em class="dfn">記憶體洩漏 (memory leak)</em>。另一方面，如果程式對一個區塊呼叫了 <code class="xref c c-func docutils literal notranslate"><span class="pre">free()</span></code> 之後又繼續使用該區塊，這會與透過另一個 <code class="xref c c-func docutils literal notranslate"><span class="pre">malloc()</span></code> 呼叫重新使用該區塊產生衝突。這稱為<em class="dfn">使用已釋放的記憶體 (using freed memory)</em>。它的後果和引用未初始化的資料一樣糟糕 --- core dump、錯誤的結果、神秘的當機。</p>
 <p>記憶體洩漏的常見原因是程式碼中不尋常的路徑。例如，一個函式可能配置一塊記憶體、做一些計算，然後再次釋放該區塊。現在，對函式需求的變更可能會在計算中加入一個測試來偵測錯誤條件，並可以從函式中提前回傳。當走這條提前退出的路徑時，很容易忘記釋放已配置的記憶體區塊，特別是當它是後來才加入程式碼中的。這種洩漏一旦引入，通常會在很長一段時間內都不被發現：錯誤退出只在所有呼叫中的一小部分發生，而且大多數現代機器有充足的虛擬記憶體，所以洩漏只有在頻繁使用有洩漏函式的長時間執行程序中才會變得明顯。因此，透過採用能最小化這類錯誤的編碼慣例或策略來防止洩漏發生是很重要的。</p>
 <p>由於 Python 大量使用 <code class="xref c c-func docutils literal notranslate"><span class="pre">malloc()</span></code> 和 <code class="xref c c-func docutils literal notranslate"><span class="pre">free()</span></code>，它需要一個策略來避免記憶體洩漏以及使用已釋放記憶體的問題。所選擇的方法稱為<em class="dfn">參照計數 (reference counting)</em>。原理很簡單：每個物件包含一個計數器，當一個指向該物件的參照被儲存在某處時計數器遞增，當一個指向它的參照被刪除時計數器遞減。當計數器歸零時，表示該物件的最後一個參照已被刪除，物件便被釋放。</p>
-<p>另一種替代策略稱為<em class="dfn">自動垃圾回收 (automatic garbage collection)</em>。（有時，參照計數也被稱為一種垃圾回收策略，因此我使用「自動」來區分兩者。）自動垃圾回收的最大優點是使用者不需要明確地呼叫 <code class="xref c c-func docutils literal notranslate"><span class="pre">free()</span></code>。（另一個聲稱的優點是速度或記憶體使用量的改善 --- 但這並非確定的事實。）缺點是對於 C 語言而言，並沒有真正可移植的自動垃圾回收器，而參照計數可以被可移植地實作（只要 <code class="xref c c-func docutils literal notranslate"><span class="pre">malloc()</span></code> 和 <code class="xref c c-func docutils literal notranslate"><span class="pre">free()</span></code> 函式可用 --- 這是 C 標準所保證的）。也許有一天會有足夠可移植的 C 自動垃圾回收器可用。在那之前，我們只能與參照計數共存。</p>
+<p>An alternative strategy is called <em class="dfn">automatic garbage collection</em>.
+(Sometimes, reference counting is also referred to as a garbage collection
+strategy, hence the use of &quot;automatic&quot; to distinguish the two.)  The big
+advantage of automatic garbage collection is that the user doesn't need to call
+<code class="xref c c-func docutils literal notranslate"><span class="pre">free()</span></code> explicitly.  (Another claimed advantage is an improvement in speed
+or memory usage --- this is no hard fact however.)  The disadvantage is that for
+C, there is no truly portable automatic garbage collector, while reference
+counting can be implemented portably (as long as the functions <code class="xref c c-func docutils literal notranslate"><span class="pre">malloc()</span></code>
+and <code class="xref c c-func docutils literal notranslate"><span class="pre">free()</span></code> are available --- which the C Standard guarantees). Maybe some
+day a sufficiently portable automatic garbage collector will be available for C.
+Until then, we'll have to live with reference counts.</p>
 <p>雖然 Python 使用傳統的參照計數實作，但它也提供了一個能偵測參照循環的循環偵測器。這讓應用程式不必擔心建立直接或間接的循環參照；這些是僅使用參照計數來實作垃圾回收的弱點。參照循環由包含指向自身的（可能是間接的）參照的物件組成，使得循環中的每個物件的參照計數都不為零。典型的參照計數實作無法回收屬於參照循環中的任何物件的記憶體，或從循環中的物件所參照的記憶體，即使除了循環本身之外已經沒有其他的參照了。</p>
 <p>循環偵測器能夠偵測垃圾循環並回收它們。<a class="reference internal" href="../library/gc.html#module-gc" title="gc: Interface to the cycle-detecting garbage collector."><code class="xref py py-mod docutils literal notranslate"><span class="pre">gc</span></code></a> 模組公開了一種執行偵測器的方式（<a class="reference internal" href="../library/gc.html#gc.collect" title="gc.collect"><code class="xref py py-func docutils literal notranslate"><span class="pre">collect()</span></code></a> 函式），以及配置介面和在 runtime 停用偵測器的功能。</p>
 <section id="reference-counting-in-python">
@@ -1092,7 +1104,7 @@ Py_BuildValue(&quot;((ii)(ii)) (ii)&quot;,
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.6 Documentation</a> &#187;
+      <a href="../index.html">3.14.7 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >擴充和嵌入 Python 直譯器</a> &#187;</li>
@@ -1137,7 +1149,7 @@ Py_BuildValue(&quot;((ii)(ii)) (ii)&quot;,
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 6月 12, 2026 (18:24 UTC)。
+      最後更新於 8月 14, 2026 (02:39 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
