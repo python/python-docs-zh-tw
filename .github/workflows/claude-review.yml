@@ -1,0 +1,43 @@
+name: claude-review-translation
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - "**/*.po"
+
+jobs:
+  review:
+    # Only run on the upstream repo, skip forks
+    if: >-
+      github.repository == 'python/python-docs-zh-tw'
+      && !contains(github.event.pull_request.labels.*.name, 'sync-cpython')
+      && github.event.pull_request.head.ref != 'cron/sync/3.14'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install gettext
+        run: sudo apt-get install -y gettext
+
+      - uses: anthropics/claude-code-action@v1
+        timeout-minutes: 10
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ github.token }}
+          claude_args: >-
+            --max-turns 5
+            --allowedTools "Read,Bash(gh pr diff:*),Bash(grep:*),Bash(msgattrib:*),Bash(msgfmt:*)"
+          prompt: |
+            Review the changed PO files in this pull request for translation quality.
+            Follow the validate-translation and check-terminology skills for review criteria.
+
+            Steps:
+            1. Run `gh pr diff ${{ github.event.pull_request.number }}` to identify changed PO files
+            2. Read each changed file and review translated entries per the skill checklists
+            3. Run `msgfmt --check` on each changed file to validate
+            4. Post a concise review comment grouping issues by category
+            5. If no issues found, post a short approval comment
