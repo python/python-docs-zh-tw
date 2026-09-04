@@ -207,32 +207,69 @@
   <section id="module-atexit">
 <span id="atexit-exit-handlers"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">atexit</span></code> --- 退出處理函式<a class="headerlink" href="#module-atexit" title="連結到這個標頭">¶</a></h1>
 <hr class="docutils" />
-<p><code class="xref py py-mod docutils literal notranslate"><span class="pre">atexit</span></code> 模組定義了註冊和註銷清理函式 (cleanup function) 的函式，這樣的註冊函式會在直譯器正常終止時自動執行。<code class="xref py py-mod docutils literal notranslate"><span class="pre">atexit</span></code> 按照這些函式註冊之<em>反序</em>來運行這些函式；如果你有註冊 <code class="docutils literal notranslate"><span class="pre">A</span></code>、<code class="docutils literal notranslate"><span class="pre">B</span></code> 和 <code class="docutils literal notranslate"><span class="pre">C</span></code>，則在直譯器終止時它們將按 <code class="docutils literal notranslate"><span class="pre">C</span></code>、<code class="docutils literal notranslate"><span class="pre">B</span></code>、<code class="docutils literal notranslate"><span class="pre">A</span></code> 的順序運行。</p>
-<p><strong>注意：</strong>當程式被一個不是來自 Python 的訊號終止、偵測到有 Python 嚴重內部錯誤時或者 <a class="reference internal" href="os.html#os._exit" title="os._exit"><code class="xref py py-func docutils literal notranslate"><span class="pre">os._exit()</span></code></a> 被呼叫時，透過此模組註冊的函式就不會被呼叫。</p>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">atexit</span></code> module defines functions to register and unregister
+<em class="dfn">exit handlers</em>: functions that are automatically executed
+&quot;at exit&quot;, that is, upon normal program termination (for instance,
+if <a class="reference internal" href="sys.html#sys.exit" title="sys.exit"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.exit()</span></code></a> is called or the main module's execution completes)
+or, more generally, upon <a class="reference internal" href="../glossary.html#term-interpreter-shutdown"><span class="xref std std-term">interpreter shutdown</span></a>.</p>
+<p>At exit, all registered exit handlers are called
+in the <em>reverse</em> order in which they were registered.
+If you register <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">B</span></code>, and <code class="docutils literal notranslate"><span class="pre">C</span></code>, at interpreter shutdown time they
+will be run in the order <code class="docutils literal notranslate"><span class="pre">C</span></code>, <code class="docutils literal notranslate"><span class="pre">B</span></code>, <code class="docutils literal notranslate"><span class="pre">A</span></code>.
+The assumption is that lower level modules will normally be imported before
+higher level modules and thus must be cleaned up later.</p>
+<p>If an exception is raised during execution of an exit handler, a traceback is
+printed (unless <a class="reference internal" href="exceptions.html#SystemExit" title="SystemExit"><code class="xref py py-exc docutils literal notranslate"><span class="pre">SystemExit</span></code></a> is raised) and the exception information is
+saved.  After all exit handlers have had a chance to run, the last exception to
+be raised is re-raised.</p>
+<p>In programs that use multiple interpreters, each interpreter has its own stack
+of exit handlers, which are executed when the interpreter shuts down
+(for example, with <a class="reference internal" href="concurrent.interpreters.html#concurrent.interpreters.Interpreter.close" title="concurrent.interpreters.Interpreter.close"><code class="xref py py-meth docutils literal notranslate"><span class="pre">concurrent.interpreters.Interpreter.close()</span></code></a> or the
+C API <a class="reference internal" href="../c-api/subinterpreters.html#c.Py_EndInterpreter" title="Py_EndInterpreter"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_EndInterpreter()</span></code></a>).
+Registration functions in this module only affect the interpreter they are
+called from.</p>
+<p><strong>Note:</strong> Exit handlers are not called when the
+program is killed by a signal not handled by Python, when a Python fatal
+internal error is detected, or when <a class="reference internal" href="os.html#os._exit" title="os._exit"><code class="xref py py-func docutils literal notranslate"><span class="pre">os._exit()</span></code></a> is called.</p>
 <p><strong>注意：</strong>在清理函式中註冊或註銷函式的作用並未定義。</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>When writing exit handlers, especially in C API extensions, keep in mind
+that other exit handlers may still run arbitrary Python code after you
+clean up.
+Such code should succeed or fail with an exception, rather than crash.</p>
+</div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.7 版的變更: </span>當與 C-API 子直譯器 (subinterpreter) 一起使用時，已註冊函式對於它們所註冊的直譯器來說是區域的 (local)。</p>
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>Attempts to start a new thread or <a class="reference internal" href="os.html#os.fork" title="os.fork"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.fork()</span></code></a> a new process
+in an exit handler now leads to <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>.
+Previously, this could cause race conditions between the main Python
+runtime thread freeing thread states while internal <a class="reference internal" href="threading.html#module-threading" title="threading: Thread-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code></a>
+routines or the new process try to use that state, which could lead to
+crashes rather than clean shutdown.</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.7 版的變更: </span>When used with subinterpreters, registered functions
+are local to the interpreter they were registered in.</p>
 </div>
 <dl class="py function">
 <dt class="sig sig-object py" id="atexit.register">
 <span class="sig-prename descclassname"><span class="pre">atexit.</span></span><span class="sig-name descname"><span class="pre">register</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#atexit.register" title="連結到這個定義">¶</a></dt>
-<dd><p>將 <em>func</em> 註冊為要在終止時執行的函式。任何要傳遞給 <em>func</em> 的可選引數都必須作為引數傳遞給 <a class="reference internal" href="#atexit.register" title="atexit.register"><code class="xref py py-func docutils literal notranslate"><span class="pre">register()</span></code></a>。可以多次註冊相同的函式和引數。</p>
-<p>在程式正常終止時（例如呼叫 <a class="reference internal" href="sys.html#sys.exit" title="sys.exit"><code class="xref py py-func docutils literal notranslate"><span class="pre">sys.exit()</span></code></a> 或主要模組執行完成），所有已註冊函式都會依照後進先出的順序呼叫。這邊做的假設是較低階的模組通常會在較高階模組之前被引入，因此較低階模組必須在比較後面才被清理。</p>
-<p>如果在執行退出處理函式期間引發例外，則會列印回溯 (traceback)（除非引發 <a class="reference internal" href="exceptions.html#SystemExit" title="SystemExit"><code class="xref py py-exc docutils literal notranslate"><span class="pre">SystemExit</span></code></a>）並儲存例外資訊。在所有退出處理函式都有嘗試運作過後，將重新引發最後一個引發的例外。</p>
+<dd><p>Register <em>func</em> as an exit handler.
+Any optional arguments that are to be passed to <em>func</em> must be passed as
+arguments to <a class="reference internal" href="#atexit.register" title="atexit.register"><code class="xref py py-func docutils literal notranslate"><span class="pre">register()</span></code></a>.
+It is possible to register the same function and arguments more than once.</p>
 <p>該函式回傳 <em>func</em>，這使得可以將其作為裝飾器使用。</p>
-<div class="admonition warning">
-<p class="admonition-title">警告</p>
-<p>啟動新執行緒或從已註冊函式呼叫 <a class="reference internal" href="os.html#os.fork" title="os.fork"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.fork()</span></code></a> 可能會導致 Python 主要 runtime 執行緒釋放執行緒狀態，而內部 <a class="reference internal" href="threading.html#module-threading" title="threading: Thread-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code></a> 例程或新行程嘗試使用該狀態所形成的競態條件 (race condition)。這可能會導致崩潰 (crash) 而不是完整關閉中止。</p>
-</div>
-<div class="versionchanged">
-<p><span class="versionmodified changed">在 3.12 版的變更: </span>嘗試在已註冊函式中啟動新執行緒或 <a class="reference internal" href="os.html#os.fork" title="os.fork"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.fork()</span></code></a> 新行程現在會導致 <a class="reference internal" href="exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>。</p>
-</div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="atexit.unregister">
 <span class="sig-prename descclassname"><span class="pre">atexit.</span></span><span class="sig-name descname"><span class="pre">unregister</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#atexit.unregister" title="連結到這個定義">¶</a></dt>
-<dd><p>從在直譯器中止時會執行之函式串列中刪除 <em>func</em>。如果 <em>func</em> 先前未被註冊，則 <a class="reference internal" href="#atexit.unregister" title="atexit.unregister"><code class="xref py py-func docutils literal notranslate"><span class="pre">unregister()</span></code></a> 不會執行任何操作。如果 <em>func</em> 已被註冊多次，則該函式在 <code class="xref py py-mod docutils literal notranslate"><span class="pre">atexit</span></code> 呼叫堆疊 (call stack) 中的所有存在都會被刪除。會在註銷期間於內部使用相等性比較 (<code class="docutils literal notranslate"><span class="pre">==</span></code>)，因此函式參照不需要具有匹配的識別性。</p>
+<dd><p>Remove <em>func</em> from the list of exit handlers.
+<a class="reference internal" href="#atexit.unregister" title="atexit.unregister"><code class="xref py py-func docutils literal notranslate"><span class="pre">unregister()</span></code></a> silently does nothing if <em>func</em> was not previously
+registered.  If <em>func</em> has been registered more than once, every occurrence
+of that function in the <code class="xref py py-mod docutils literal notranslate"><span class="pre">atexit</span></code> call stack will be removed.  Equality
+comparisons (<code class="docutils literal notranslate"><span class="pre">==</span></code>) are used internally during unregistration, so function
+references do not need to have matching identities.</p>
 </dd></dl>
 
 <div class="admonition seealso">
@@ -426,7 +463,7 @@
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 9月 03, 2026 (00:27 UTC)。
+      最後更新於 9月 04, 2026 (00:25 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

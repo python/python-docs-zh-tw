@@ -494,13 +494,16 @@ underline, reverse code, or in color.  They'll be explained in more detail in
 the next subsection.</p>
 <p>The <a class="reference internal" href="../library/curses.html#curses.window.addstr" title="curses.window.addstr"><code class="xref py py-meth docutils literal notranslate"><span class="pre">addstr()</span></code></a> method takes a Python string or
 bytestring as the value to be displayed.  The contents of bytestrings
-are sent to the terminal as-is.  Strings are encoded to bytes using
-the value of the window's <a class="reference internal" href="../library/curses.html#curses.window.encoding" title="curses.window.encoding"><code class="xref py py-attr docutils literal notranslate"><span class="pre">encoding</span></code></a> attribute; this defaults to
-the default system encoding as returned by <a class="reference internal" href="../library/locale.html#locale.getencoding" title="locale.getencoding"><code class="xref py py-func docutils literal notranslate"><span class="pre">locale.getencoding()</span></code></a>.</p>
+are sent to the terminal as-is.
+On a build without wide-character support strings are encoded
+using the value of the window's <a class="reference internal" href="../library/curses.html#curses.window.encoding" title="curses.window.encoding"><code class="xref py py-attr docutils literal notranslate"><span class="pre">encoding</span></code></a> attribute;
+this defaults to the default system encoding
+as returned by <a class="reference internal" href="../library/locale.html#locale.getencoding" title="locale.getencoding"><code class="xref py py-func docutils literal notranslate"><span class="pre">locale.getencoding()</span></code></a>.</p>
 <p>The <a class="reference internal" href="../library/curses.html#curses.window.addch" title="curses.window.addch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">addch()</span></code></a> methods take a character, which can be
 either a string of length 1, a bytestring of length 1, or an integer.</p>
-<p>Constants are provided for extension characters; these constants are
-integers greater than 255.  For example, <a class="reference internal" href="../library/curses.html#curses.ACS_PLMINUS" title="curses.ACS_PLMINUS"><code class="xref py py-const docutils literal notranslate"><span class="pre">ACS_PLMINUS</span></code></a> is a +/-
+<p>Constants are provided for the characters of the terminal's alternate
+character set.
+For example, <a class="reference internal" href="../library/curses.html#curses.ACS_PLMINUS" title="curses.ACS_PLMINUS"><code class="xref py py-const docutils literal notranslate"><span class="pre">ACS_PLMINUS</span></code></a> is a +/-
 symbol, and <a class="reference internal" href="../library/curses.html#curses.ACS_ULCORNER" title="curses.ACS_ULCORNER"><code class="xref py py-const docutils literal notranslate"><span class="pre">ACS_ULCORNER</span></code></a> is the upper left corner of a box
 (handy for drawing borders).  You can also use the appropriate Unicode
 character.</p>
@@ -512,11 +515,11 @@ you may want to ensure that the cursor is positioned in some location where it
 won't be distracting; it can be confusing to have the cursor blinking at some
 apparently random location.</p>
 <p>If your application doesn't need a blinking cursor at all, you can
-call <code class="docutils literal notranslate"><span class="pre">curs_set(False)</span></code> to make it invisible.  For compatibility
-with older curses versions, there's a <code class="docutils literal notranslate"><span class="pre">leaveok(bool)</span></code> function
-that's a synonym for <a class="reference internal" href="../library/curses.html#curses.curs_set" title="curses.curs_set"><code class="xref py py-func docutils literal notranslate"><span class="pre">curs_set()</span></code></a>.  When <em>bool</em> is true, the
-curses library will attempt to suppress the flashing cursor, and you
-won't need to worry about leaving it in odd locations.</p>
+call <code class="docutils literal notranslate"><span class="pre">curs_set(False)</span></code> to make it invisible.
+The window method <a class="reference internal" href="../library/curses.html#curses.window.leaveok" title="curses.window.leaveok"><code class="xref py py-meth docutils literal notranslate"><span class="pre">leaveok()</span></code></a> does something different:
+when its argument is true,
+curses leaves the cursor wherever the last update put it,
+instead of moving it back to the window's cursor position.</p>
 <section id="attributes-and-color">
 <h3>Attributes and Color<a class="headerlink" href="#attributes-and-color" title="連結到這個標頭">¶</a></h3>
 <p>Characters can be displayed in different ways.  Status lines in a text-based
@@ -621,37 +624,44 @@ system's man pages for more information.</p>
 <p>The C curses library offers only very simple input mechanisms. Python's
 <a class="reference internal" href="../library/curses.html#module-curses" title="curses: An interface to the curses library, providing portable terminal handling."><code class="xref py py-mod docutils literal notranslate"><span class="pre">curses</span></code></a> module adds a basic text-input widget.  (Other libraries
 such as <a class="extlink-pypi reference external" href="https://pypi.org/project/Urwid/">Urwid</a> have more extensive collections of widgets.)</p>
-<p>There are two methods for getting input from a window:</p>
+<p>There are three methods for getting input from a window:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="../library/curses.html#curses.window.getch" title="curses.window.getch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getch()</span></code></a> refreshes the screen and then waits for
+<li><p><a class="reference internal" href="../library/curses.html#curses.window.get_wch" title="curses.window.get_wch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_wch()</span></code></a> refreshes the screen and then waits for
 the user to hit a key, displaying the key if <a class="reference internal" href="../library/curses.html#curses.echo" title="curses.echo"><code class="xref py py-func docutils literal notranslate"><span class="pre">echo()</span></code></a> has been
 called earlier.  You can optionally specify a coordinate to which
 the cursor should be moved before pausing.</p></li>
-<li><p><a class="reference internal" href="../library/curses.html#curses.window.getkey" title="curses.window.getkey"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getkey()</span></code></a> does the same thing but converts the
-integer to a string.  Individual characters are returned as
-1-character strings, and special keys such as function keys return
-longer strings containing a key name such as <code class="docutils literal notranslate"><span class="pre">KEY_UP</span></code> or <code class="docutils literal notranslate"><span class="pre">^G</span></code>.</p></li>
+<li><p><a class="reference internal" href="../library/curses.html#curses.window.getch" title="curses.window.getch"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getch()</span></code></a> does the same thing but returns the code of
+the key instead of a character.
+With ncurses this is a single byte of the key's encoding in the current
+locale, so a character encoded with several bytes takes several calls,
+one byte per call.</p></li>
+<li><p><a class="reference internal" href="../library/curses.html#curses.window.getkey" title="curses.window.getkey"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getkey()</span></code></a> does the same as <code class="xref py py-meth docutils literal notranslate"><span class="pre">getch()</span></code> but returns
+a string:
+an ordinary key as a 1-character string,
+and a special key as its name, such as <code class="docutils literal notranslate"><span class="pre">KEY_UP</span></code>.</p></li>
 </ul>
 <p>It's possible to not wait for the user using the
 <a class="reference internal" href="../library/curses.html#curses.window.nodelay" title="curses.window.nodelay"><code class="xref py py-meth docutils literal notranslate"><span class="pre">nodelay()</span></code></a> window method. After <code class="docutils literal notranslate"><span class="pre">nodelay(True)</span></code>,
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">getch()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">getkey()</span></code> for the window become
-non-blocking. To signal that no input is ready, <code class="xref py py-meth docutils literal notranslate"><span class="pre">getch()</span></code> returns
-<code class="docutils literal notranslate"><span class="pre">curses.ERR</span></code> (a value of -1) and <code class="xref py py-meth docutils literal notranslate"><span class="pre">getkey()</span></code> raises an exception.
+the reads for the window become non-blocking.
+To signal that no input is ready,
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">get_wch()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">getkey()</span></code> raise an exception,
+and <code class="xref py py-meth docutils literal notranslate"><span class="pre">getch()</span></code> returns <code class="docutils literal notranslate"><span class="pre">-1</span></code>.
 There's also a <a class="reference internal" href="../library/curses.html#curses.halfdelay" title="curses.halfdelay"><code class="xref py py-func docutils literal notranslate"><span class="pre">halfdelay()</span></code></a> function, which can be used to (in
-effect) set a timer on each <code class="xref py py-meth docutils literal notranslate"><span class="pre">getch()</span></code>; if no input becomes
+effect) set a timer on each read; if no input becomes
 available within a specified delay (measured in tenths of a second),
-curses raises an exception.</p>
-<p>The <code class="xref py py-meth docutils literal notranslate"><span class="pre">getch()</span></code> method returns an integer; if it's between 0 and 255, it
-represents the ASCII code of the key pressed.  Values greater than 255 are
-special keys such as Page Up, Home, or the cursor keys. You can compare the
-value returned to constants such as <a class="reference internal" href="../library/curses.html#curses.KEY_PPAGE" title="curses.KEY_PPAGE"><code class="xref py py-const docutils literal notranslate"><span class="pre">curses.KEY_PPAGE</span></code></a>,
+the read fails the same way.</p>
+<p>Special keys such as Page Up, Home, or the cursor keys are returned by all
+three as one of the <a class="reference internal" href="../library/curses.html#curses-key-constants"><span class="std std-ref">KEY_* constants</span></a>,
+all larger than 255.
+You can compare the value returned to constants such as
+<a class="reference internal" href="../library/curses.html#curses.KEY_PPAGE" title="curses.KEY_PPAGE"><code class="xref py py-const docutils literal notranslate"><span class="pre">curses.KEY_PPAGE</span></code></a>,
 <a class="reference internal" href="../library/curses.html#curses.KEY_HOME" title="curses.KEY_HOME"><code class="xref py py-const docutils literal notranslate"><span class="pre">curses.KEY_HOME</span></code></a>, or <a class="reference internal" href="../library/curses.html#curses.KEY_LEFT" title="curses.KEY_LEFT"><code class="xref py py-const docutils literal notranslate"><span class="pre">curses.KEY_LEFT</span></code></a>.  The main loop of
 your program may look something like this:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-    <span class="n">c</span> <span class="o">=</span> <span class="n">stdscr</span><span class="o">.</span><span class="n">getch</span><span class="p">()</span>
-    <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">'p'</span><span class="p">):</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">stdscr</span><span class="o">.</span><span class="n">get_wch</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">'p'</span><span class="p">:</span>
         <span class="n">PrintDocument</span><span class="p">()</span>
-    <span class="k">elif</span> <span class="n">c</span> <span class="o">==</span> <span class="nb">ord</span><span class="p">(</span><span class="s1">'q'</span><span class="p">):</span>
+    <span class="k">elif</span> <span class="n">c</span> <span class="o">==</span> <span class="s1">'q'</span><span class="p">:</span>
         <span class="k">break</span>  <span class="c1"># Exit the while loop</span>
     <span class="k">elif</span> <span class="n">c</span> <span class="o">==</span> <span class="n">curses</span><span class="o">.</span><span class="n">KEY_HOME</span><span class="p">:</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">y</span> <span class="o">=</span> <span class="mi">0</span>
@@ -663,14 +673,15 @@ writing more readable tests for such loops.  It also supplies
 conversion functions  that take either integer or 1-character-string arguments
 and return the same type.  For example, <a class="reference internal" href="../library/curses.ascii.html#curses.ascii.ctrl" title="curses.ascii.ctrl"><code class="xref py py-func docutils literal notranslate"><span class="pre">curses.ascii.ctrl()</span></code></a> returns the
 control character corresponding to its argument.</p>
-<p>There's also a method to retrieve an entire string,
+<p>There's also a method to retrieve an entire line,
 <a class="reference internal" href="../library/curses.html#curses.window.getstr" title="curses.window.getstr"><code class="xref py py-meth docutils literal notranslate"><span class="pre">getstr()</span></code></a>.  It isn't used very often, because its
 functionality is quite limited; the only editing keys available are
-the backspace key and the Enter key, which terminates the string.  It
-can optionally be limited to a fixed number of characters.</p>
+the erase and kill characters, and the Enter key, which terminates the line.
+It returns a bytes object,
+and can optionally be limited to a fixed number of bytes.</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">curses</span><span class="o">.</span><span class="n">echo</span><span class="p">()</span>            <span class="c1"># Enable echoing of characters</span>
 
-<span class="c1"># Get a 15-character string, with the cursor on the top line</span>
+<span class="c1"># Get a line of at most 15 bytes, with the cursor on the top line</span>
 <span class="n">s</span> <span class="o">=</span> <span class="n">stdscr</span><span class="o">.</span><span class="n">getstr</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mi">15</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -882,7 +893,7 @@ Urwid.</p></li>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 9月 03, 2026 (00:27 UTC)。
+      最後更新於 9月 04, 2026 (00:25 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
