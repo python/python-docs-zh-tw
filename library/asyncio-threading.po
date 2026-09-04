@@ -1,0 +1,208 @@
+# Copyright (C) 2001 Python Software Foundation
+# This file is distributed under the same license as the Python package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Python 3.14\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-06-11 00:43+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: Chinese - TAIWAN (https://github.com/python/python-docs-zh-"
+"tw)\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../library/asyncio-threading.rst:6
+msgid "asyncio and free-threaded Python"
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:8
+msgid ""
+"asyncio uses an event loop as a scheduler to enable highly efficient "
+"concurrency by switching between tasks to allow non-blocking I/O operations. "
+"This results in better performance for I/O-bound use cases. It also allows "
+"off-loading CPU-bound work to a thread or process pool, but that is still "
+"limited by the :term:`global interpreter lock` in CPython."
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:15
+msgid ""
+"However, in :ref:`free-threaded Python <freethreading-python-howto>`, the "
+"GIL is disabled and Python can run true multi-threaded code. This means that "
+"asyncio can now take advantage of multiple CPU cores without the limitations "
+"imposed by the GIL."
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:20
+msgid ""
+"Since Python 3.14, asyncio has first-class support for free-threaded Python, "
+"and the implementation of asyncio is safe to use in a multi-threaded "
+"environment."
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:24
+msgid ""
+"A single event loop on one core can handle many connections concurrently, "
+"but the Python code that runs to handle each one still executes serially. "
+"Once requests involve a non-trivial amount of per-request computation, that "
+"handling becomes the bottleneck, and a single core can no longer keep up. "
+"Combining asyncio with threads is most useful here: by running an event loop "
+"per thread, the handling of different requests can run in parallel across "
+"multiple CPU cores. It is also useful when you need to run blocking or CPU-"
+"bound code from an asyncio application."
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:37
+msgid ""
+"`Scaling asyncio on Free-Threaded Python <https://labs.quansight.org/blog/"
+"scaling-asyncio-on-free-threaded-python>`__, a blog post by Kumar Aditya "
+"which explains the internal changes that make asyncio safe and efficient "
+"under free-threaded Python, together with benchmarks of the resulting "
+"improvements."
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:45
+msgid "Thread safety considerations"
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:47
+msgid ""
+"While asyncio is designed to be thread-safe in a free-threaded Python "
+"environment, there are still some considerations to keep in mind when using "
+"asyncio with threads:"
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:51
+msgid ""
+"**Event loop**: Each thread should have its own event loop which should not "
+"be shared across threads. This ensures that the event loop can manage its "
+"own tasks and callbacks without interference from other threads."
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:56
+msgid ""
+"**Task management**: Tasks and futures created in one thread should not be "
+"awaited or manipulated from another thread."
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:59
+msgid ""
+"**Thread-safe APIs**: When interacting with asyncio from multiple threads, "
+"it's important to use thread-safe APIs provided by asyncio, such as :func:"
+"`asyncio.run_coroutine_threadsafe` for submitting coroutines to an event "
+"loop from another thread. If you need to call a callback from a different "
+"thread, you can use :meth:`loop.call_soon_threadsafe` to schedule it safely."
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:66
+msgid ""
+"**Synchronization**: The synchronization primitives provided by asyncio "
+"(like :class:`asyncio.Lock` and :class:`asyncio.Event`) are not designed to "
+"be used across threads. If you need to synchronize between threads, you "
+"should use the synchronization primitives from the :mod:`threading` module "
+"instead."
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:74
+msgid "Using asyncio with threads"
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:76
+msgid ""
+"asyncio supports running one event loop per thread, which allows you to take "
+"advantage of multiple CPU cores in a free-threaded Python environment. Each "
+"thread can run its own event loop, and tasks can be scheduled on those loops "
+"independently."
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:81
+msgid "Here's an example of how to use asyncio with threads::"
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:83
+msgid ""
+"import asyncio\n"
+"import threading\n"
+"\n"
+"async def worker(name: str) -> None:\n"
+"    print(f\"Worker {name} starting\")\n"
+"    await asyncio.sleep(1)\n"
+"    print(f\"Worker {name} done\")\n"
+"\n"
+"def run_loop(name: str) -> None:\n"
+"    asyncio.run(worker(name))\n"
+"\n"
+"threads = [\n"
+"    threading.Thread(target=run_loop, args=(f\"T{i}\",))\n"
+"    for i in range(4)\n"
+"]\n"
+"for t in threads:\n"
+"    t.start()\n"
+"for t in threads:\n"
+"    t.join()"
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:103
+msgid ""
+"In this example, each thread creates its own event loop with :func:`asyncio."
+"run` and runs a coroutine on it. The threads execute concurrently, and in a "
+"free-threaded build they can run on separate CPU cores in parallel."
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:110
+msgid "Producer/consumer across threads"
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:112
+msgid ""
+"When a regular (non-asyncio) thread needs to hand work to an asyncio event "
+"loop running in another thread, use a thread-safe primitive such as :class:"
+"`queue.Queue` rather than :class:`asyncio.Queue`, which is only safe within "
+"a single event loop.::"
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:117
+msgid ""
+"import asyncio\n"
+"import queue\n"
+"import threading\n"
+"\n"
+"def producer(q: queue.Queue[int]) -> None:\n"
+"    for i in range(5):\n"
+"        print(f\"Producing {i}\")\n"
+"        q.put(i)\n"
+"    q.shutdown()\n"
+"\n"
+"async def consumer(q: queue.Queue[int]) -> None:\n"
+"    while True:\n"
+"        try:\n"
+"            item = q.get_nowait()\n"
+"        except queue.Empty:\n"
+"            await asyncio.sleep(0.1)\n"
+"            continue\n"
+"        except queue.ShutDown:\n"
+"            break\n"
+"        print(f\"Consumed {item}\")\n"
+"        await asyncio.sleep(item)\n"
+"\n"
+"q: queue.Queue[int] = queue.Queue()\n"
+"consumer_thread = threading.Thread(\n"
+"    target=lambda: asyncio.run(consumer(q))\n"
+")\n"
+"consumer_thread.start()\n"
+"producer(q)\n"
+"consumer_thread.join()"
+msgstr ""
+
+#: ../../library/asyncio-threading.rst:147
+msgid ""
+"The producer runs on the main thread while the consumer runs inside an event "
+"loop on its own thread, yet they communicate safely through ``queue.Queue``. "
+"When the queue is empty the consumer sleeps briefly and tries again. When "
+"the producer is done it calls :meth:`~queue.Queue.shutdown`, which causes "
+"subsequent :meth:`~queue.Queue.get_nowait` calls to raise :exc:`queue."
+"ShutDown` so the consumer can exit cleanly."
+msgstr ""
