@@ -317,7 +317,7 @@
 </pre></div>
 </div>
 <p>由於 <code class="xref c c-data docutils literal notranslate"><span class="pre">SpamError</span></code> 是一個全域變數，每次模組被重新初始化、即 <a class="reference internal" href="../c-api/module.html#c.Py_mod_exec" title="Py_mod_exec"><code class="xref c c-data docutils literal notranslate"><span class="pre">Py_mod_exec</span></code></a> 函式被呼叫時，它都會被覆寫。</p>
-<p>目前，讓我們先避免這個問題：我們會透過引發 <a class="reference internal" href="../library/exceptions.html#ImportError" title="ImportError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportError</span></code></a> 來阻止重複初始化：</p>
+<p>目前，讓我們先避免這個問題：我們會透過引發 <a class="reference internal" href="../builtins/exceptions.html#ImportError" title="ImportError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportError</span></code></a> 來阻止重複初始化：</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">SpamError</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 
 <span class="k">static</span><span class="w"> </span><span class="kt">int</span>
@@ -355,7 +355,7 @@
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>請注意，例外物件的 Python 名稱是 <code class="xref py py-exc docutils literal notranslate"><span class="pre">spam.error</span></code>。如同<a class="reference internal" href="../library/exceptions.html#bltin-exceptions"><span class="std std-ref">內建的例外</span></a>所述，<a class="reference internal" href="../c-api/exceptions.html#c.PyErr_NewException" title="PyErr_NewException"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_NewException()</span></code></a> 函式可能會建立一個基底類別為 <a class="reference internal" href="../library/exceptions.html#Exception" title="Exception"><code class="xref py py-exc docutils literal notranslate"><span class="pre">Exception</span></code></a> 的類別（除非傳入另一個類別來代替 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>）。</p>
+<p>請注意，例外物件的 Python 名稱是 <code class="xref py py-exc docutils literal notranslate"><span class="pre">spam.error</span></code>。如同<a class="reference internal" href="../builtins/exceptions.html#bltin-exceptions"><span class="std std-ref">Built-in Exceptions</span></a>所述，<a class="reference internal" href="../c-api/exceptions.html#c.PyErr_NewException" title="PyErr_NewException"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_NewException()</span></code></a> 函式可能會建立一個基底類別為 <a class="reference internal" href="../builtins/exceptions.html#Exception" title="Exception"><code class="xref py py-exc docutils literal notranslate"><span class="pre">Exception</span></code></a> 的類別（除非傳入另一個類別來代替 <code class="docutils literal notranslate"><span class="pre">NULL</span></code>）。</p>
 <p>請注意，<code class="xref c c-data docutils literal notranslate"><span class="pre">SpamError</span></code> 變數保留了對新建立的例外類別的參照；這是故意的！因為外部程式碼可能會從模組中移除這個例外，所以需要一個對這個類別的參照來確保它不會被丟棄而導致 <code class="xref c c-data docutils literal notranslate"><span class="pre">SpamError</span></code> 變成一個迷途指標 (dangling pointer)。如果它變成迷途指標，那產生例外的 C 程式碼可能會導致核心轉儲 (core dump) 或其他不預期的 side effect。</p>
 <p>目前，用來移除此參照的 <a class="reference internal" href="../c-api/refcounting.html#c.Py_DECREF" title="Py_DECREF"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_DECREF()</span></code></a> 呼叫是缺失的。即使 Python 直譯器關閉時，全域的 <code class="xref c c-data docutils literal notranslate"><span class="pre">SpamError</span></code> 變數也不會被垃圾回收。它會「洩漏」。然而，我們確實有確保這每個行程最多只會發生一次。</p>
 <p>我們稍後會討論 <a class="reference internal" href="../c-api/extension-modules.html#c.PyMODINIT_FUNC" title="PyMODINIT_FUNC"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PyMODINIT_FUNC</span></code></a> 作為函式回傳型別的用法。</p>
@@ -664,7 +664,7 @@ Python parser with a particular string as input, see <a class="reference interna
 <p><em>arg</em> 和 <em>format</em> 參數與 <a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTuple" title="PyArg_ParseTuple"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTuple()</span></code></a> 函式的相同。<em>kwdict</em> 參數是從 Python runtime 接收到的第三個參數，即關鍵字的字典。<em>kwlist</em> 參數是一個以 <code class="docutils literal notranslate"><span class="pre">NULL</span></code> 終止的字串 list，用於識別各參數；這些名稱會從左到右與 <em>format</em> 中的型別資訊進行配對。成功時，<a class="reference internal" href="../c-api/arg.html#c.PyArg_ParseTupleAndKeywords" title="PyArg_ParseTupleAndKeywords"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyArg_ParseTupleAndKeywords()</span></code></a> 會回傳 true，否則回傳 false 並引發適當的例外。</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>使用關鍵字引數時無法剖析巢狀的 tuple！傳入的關鍵字參數如果不在 <em>kwlist</em> 中，將會引發 <a class="reference internal" href="../library/exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a>。</p>
+<p>使用關鍵字引數時無法剖析巢狀的 tuple！傳入的關鍵字參數如果不在 <em>kwlist</em> 中，將會引發 <a class="reference internal" href="../builtins/exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a>。</p>
 </div>
 <p id="index-3">以下是一個使用關鍵字的範例模組，基於 Geoff Philbrick (<a class="reference external" href="mailto:philbrick&#37;&#52;&#48;hks&#46;com">philbrick<span>&#64;</span>hks<span>&#46;</span>com</a>) 的範例：</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#define PY_SSIZE_T_CLEAN</span>
@@ -1154,7 +1154,7 @@ code distribution).</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 9月 12, 2026 (00:25 UTC)。
+      最後更新於 9月 14, 2026 (00:27 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

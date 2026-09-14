@@ -205,7 +205,7 @@
       <a href="../index.html">3.14.7 Documentation</a> &#187;
     </li>
 
-          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >The Python standard library</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="markup.html" accesskey="U">結構化標記處理工具</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">xml.etree.cElementTree</span></code> --- ElementTree XML API</a></li>
                 <li class="right">
@@ -375,8 +375,35 @@ some storage device.  In such cases, blocking reads are unacceptable.</p>
 <p>Because it's so flexible, <a class="reference internal" href="#xml.etree.ElementTree.XMLPullParser" title="xml.etree.ElementTree.XMLPullParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">XMLPullParser</span></code></a> can be inconvenient to use for
 simpler use-cases.  If you don't mind your application blocking on reading XML
 data but would still like to have incremental parsing capabilities, take a look
-at <a class="reference internal" href="#xml.etree.ElementTree.iterparse" title="xml.etree.ElementTree.iterparse"><code class="xref py py-func docutils literal notranslate"><span class="pre">iterparse()</span></code></a>.  It can be useful when you're reading a large XML document
-and don't want to hold it wholly in memory.</p>
+at <a class="reference internal" href="#xml.etree.ElementTree.iterparse" title="xml.etree.ElementTree.iterparse"><code class="xref py py-func docutils literal notranslate"><span class="pre">iterparse()</span></code></a>.</p>
+<p>Note that both parsers build the tree incrementally: it is not freed
+incrementally, so every parsed element is kept until the whole document is
+read.  To keep the memory usage low, get rid of the data which is not needed
+any more.</p>
+<p>If the processed elements are large, it is enough to clear them.
+This works wherever they are in the tree,
+but the emptied elements are left in it:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">event</span><span class="p">,</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">ET</span><span class="o">.</span><span class="n">iterparse</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">'record'</span><span class="p">:</span>
+        <span class="n">process</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+        <span class="n">elem</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>If an element has a large number of children,
+remove the processed children from it:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">event</span><span class="p">,</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">ET</span><span class="o">.</span><span class="n">iterparse</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">events</span><span class="o">=</span><span class="p">(</span><span class="s1">'start'</span><span class="p">,</span> <span class="s1">'end'</span><span class="p">)):</span>
+    <span class="k">if</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">'start'</span> <span class="ow">and</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">'parent'</span><span class="p">:</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="n">elem</span>
+    <span class="k">elif</span> <span class="n">event</span> <span class="o">==</span> <span class="s1">'end'</span> <span class="ow">and</span> <span class="n">elem</span><span class="o">.</span><span class="n">tag</span> <span class="o">==</span> <span class="s1">'child'</span><span class="p">:</span>
+        <span class="n">process</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+        <span class="n">parent</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">elem</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>These examples are not universal,
+they only give an idea for two common cases.
+If you do not need a tree at all,
+parse with <a class="reference internal" href="#xml.etree.ElementTree.XMLParser" title="xml.etree.ElementTree.XMLParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">XMLParser</span></code></a> and a custom target instead;
+it is not built then, and nothing has to be removed.</p>
 <p>Where <em>immediate</em> feedback through events is wanted, calling method
 <a class="reference internal" href="#xml.etree.ElementTree.XMLPullParser.flush" title="xml.etree.ElementTree.XMLPullParser.flush"><code class="xref py py-meth docutils literal notranslate"><span class="pre">XMLPullParser.flush()</span></code></a> can help reduce delay;
 please make sure to study the related security notes.</p>
@@ -868,6 +895,9 @@ file object if <em>source</em> is a filename.</p>
 blocking reads on <em>source</em> (or the file it names).  As such, it's unsuitable
 for applications where blocking reads can't be made.  For fully non-blocking
 parsing, see <a class="reference internal" href="#xml.etree.ElementTree.XMLPullParser" title="xml.etree.ElementTree.XMLPullParser"><code class="xref py py-class docutils literal notranslate"><span class="pre">XMLPullParser</span></code></a>.</p>
+<p>The tree is only built incrementally, it is not freed incrementally:
+every parsed element is kept until the whole document is read.
+See <a class="reference internal" href="#elementtree-pull-parsing"><span class="std std-ref">Pull API for non-blocking parsing</span></a> for how to keep the memory usage low.</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
 <p><a class="reference internal" href="#xml.etree.ElementTree.iterparse" title="xml.etree.ElementTree.iterparse"><code class="xref py py-func docutils literal notranslate"><span class="pre">iterparse()</span></code></a> only guarantees that it has seen the &quot;&gt;&quot; character of a
@@ -1185,7 +1215,7 @@ attributes, and sets the text and tail attributes to <code class="docutils liter
 <dt class="sig sig-object py" id="xml.etree.ElementTree.Element.append">
 <span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subelement</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xml.etree.ElementTree.Element.append" title="連結到這個定義">¶</a></dt>
 <dd><p>Adds the element <em>subelement</em> to the end of this element's internal list
-of subelements.  Raises <a class="reference internal" href="exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a> if <em>subelement</em> is not an
+of subelements.  Raises <a class="reference internal" href="../builtins/exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a> if <em>subelement</em> is not an
 <a class="reference internal" href="#xml.etree.ElementTree.Element" title="xml.etree.ElementTree.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>.</p>
 </dd></dl>
 
@@ -1193,7 +1223,7 @@ of subelements.  Raises <a class="reference internal" href="exceptions.html#Type
 <dt class="sig sig-object py" id="xml.etree.ElementTree.Element.extend">
 <span class="sig-name descname"><span class="pre">extend</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subelements</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xml.etree.ElementTree.Element.extend" title="連結到這個定義">¶</a></dt>
 <dd><p>Appends <em>subelements</em> from an iterable of elements.
-Raises <a class="reference internal" href="exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a> if a subelement is not an <a class="reference internal" href="#xml.etree.ElementTree.Element" title="xml.etree.ElementTree.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>.</p>
+Raises <a class="reference internal" href="../builtins/exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a> if a subelement is not an <a class="reference internal" href="#xml.etree.ElementTree.Element" title="xml.etree.ElementTree.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.2 版被加入.</span></p>
 </div>
@@ -1235,7 +1265,7 @@ in the expression into the given namespace.</p>
 <dt class="sig sig-object py" id="xml.etree.ElementTree.Element.insert">
 <span class="sig-name descname"><span class="pre">insert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subelement</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xml.etree.ElementTree.Element.insert" title="連結到這個定義">¶</a></dt>
 <dd><p>Inserts <em>subelement</em> at the given position in this element.  Raises
-<a class="reference internal" href="exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a> if <em>subelement</em> is not an <a class="reference internal" href="#xml.etree.ElementTree.Element" title="xml.etree.ElementTree.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>.</p>
+<a class="reference internal" href="../builtins/exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a> if <em>subelement</em> is not an <a class="reference internal" href="#xml.etree.ElementTree.Element" title="xml.etree.ElementTree.Element"><code class="xref py py-class docutils literal notranslate"><span class="pre">Element</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1306,7 +1336,7 @@ subelements exist.  Instead, prefer explicit <code class="docutils literal notra
 </pre></div>
 </div>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.12 版的變更: </span>Testing the truth value of an Element emits <a class="reference internal" href="exceptions.html#DeprecationWarning" title="DeprecationWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DeprecationWarning</span></code></a>.</p>
+<p><span class="versionmodified changed">在 3.12 版的變更: </span>Testing the truth value of an Element emits <a class="reference internal" href="../builtins/exceptions.html#DeprecationWarning" title="DeprecationWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DeprecationWarning</span></code></a>.</p>
 </div>
 <p>Prior to Python 3.8, the serialisation order of the XML attributes of
 elements was artificially made predictable by sorting the attributes by
@@ -1422,7 +1452,7 @@ The keyword-only <em>short_empty_elements</em> parameter controls the formatting
 of elements that contain no content.  If <code class="docutils literal notranslate"><span class="pre">True</span></code> (the default), they are
 emitted as a single self-closed tag, otherwise they are emitted as a pair
 of start/end tags.</p>
-<p>The output is either a string (<a class="reference internal" href="stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) or binary (<a class="reference internal" href="stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>).
+<p>The output is either a string (<a class="reference internal" href="../builtins/stdtypes.html#str" title="str"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) or binary (<a class="reference internal" href="../builtins/stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a>).
 This is controlled by the <em>encoding</em> argument.  If <em>encoding</em> is
 <code class="docutils literal notranslate"><span class="pre">&quot;unicode&quot;</span></code>, the output is a string; otherwise, it's binary.  Note that
 this may conflict with the type of <em>file</em> if it's an open
@@ -1627,7 +1657,7 @@ this is the toplevel document element.</p>
 <dt class="sig sig-object py" id="xml.etree.ElementTree.XMLParser.feed">
 <span class="sig-name descname"><span class="pre">feed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xml.etree.ElementTree.XMLParser.feed" title="連結到這個定義">¶</a></dt>
 <dd><p>Feeds data to the parser.  <em>data</em> is a string
-or encoded data (<a class="reference internal" href="stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a> or a <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a>).</p>
+or encoded data (<a class="reference internal" href="../builtins/stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a> or a <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a>).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1641,7 +1671,7 @@ Disabling reparse deferral has security consequences; please see
 <a class="reference internal" href="pyexpat.html#xml.parsers.expat.xmlparser.SetReparseDeferralEnabled" title="xml.parsers.expat.xmlparser.SetReparseDeferralEnabled"><code class="xref py py-meth docutils literal notranslate"><span class="pre">xml.parsers.expat.xmlparser.SetReparseDeferralEnabled()</span></code></a> for details.</p>
 <p>Note that <a class="reference internal" href="#xml.etree.ElementTree.XMLParser.flush" title="xml.etree.ElementTree.XMLParser.flush"><code class="xref py py-meth docutils literal notranslate"><span class="pre">flush()</span></code></a> has been backported to some prior releases of
 CPython as a security fix.  Check for availability of <a class="reference internal" href="#xml.etree.ElementTree.XMLParser.flush" title="xml.etree.ElementTree.XMLParser.flush"><code class="xref py py-meth docutils literal notranslate"><span class="pre">flush()</span></code></a>
-using <a class="reference internal" href="functions.html#hasattr" title="hasattr"><code class="xref py py-func docutils literal notranslate"><span class="pre">hasattr()</span></code></a> if used in code running across a variety of Python
+using <a class="reference internal" href="../builtins/functions.html#hasattr" title="hasattr"><code class="xref py py-func docutils literal notranslate"><span class="pre">hasattr()</span></code></a> if used in code running across a variety of Python
 versions.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.13 版被加入.</span></p>
@@ -1708,7 +1738,7 @@ only <code class="docutils literal notranslate"><span class="pre">&quot;end&quot
 <dt class="sig sig-object py" id="xml.etree.ElementTree.XMLPullParser.feed">
 <span class="sig-name descname"><span class="pre">feed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#xml.etree.ElementTree.XMLPullParser.feed" title="連結到這個定義">¶</a></dt>
 <dd><p>Feed the given data to the parser.  <em>data</em> is a string
-or encoded data (<a class="reference internal" href="stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a> or a <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a>).</p>
+or encoded data (<a class="reference internal" href="../builtins/stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a> or a <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a>).</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1722,7 +1752,7 @@ Disabling reparse deferral has security consequences; please see
 <a class="reference internal" href="pyexpat.html#xml.parsers.expat.xmlparser.SetReparseDeferralEnabled" title="xml.parsers.expat.xmlparser.SetReparseDeferralEnabled"><code class="xref py py-meth docutils literal notranslate"><span class="pre">xml.parsers.expat.xmlparser.SetReparseDeferralEnabled()</span></code></a> for details.</p>
 <p>Note that <a class="reference internal" href="#xml.etree.ElementTree.XMLPullParser.flush" title="xml.etree.ElementTree.XMLPullParser.flush"><code class="xref py py-meth docutils literal notranslate"><span class="pre">flush()</span></code></a> has been backported to some prior releases of
 CPython as a security fix.  Check for availability of <a class="reference internal" href="#xml.etree.ElementTree.XMLPullParser.flush" title="xml.etree.ElementTree.XMLPullParser.flush"><code class="xref py py-meth docutils literal notranslate"><span class="pre">flush()</span></code></a>
-using <a class="reference internal" href="functions.html#hasattr" title="hasattr"><code class="xref py py-func docutils literal notranslate"><span class="pre">hasattr()</span></code></a> if used in code running across a variety of Python
+using <a class="reference internal" href="../builtins/functions.html#hasattr" title="hasattr"><code class="xref py py-func docutils literal notranslate"><span class="pre">hasattr()</span></code></a> if used in code running across a variety of Python
 versions.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.13 版被加入.</span></p>
@@ -1733,7 +1763,7 @@ versions.</p>
 <dt class="sig sig-object py" id="xml.etree.ElementTree.XMLPullParser.close">
 <span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#xml.etree.ElementTree.XMLPullParser.close" title="連結到這個定義">¶</a></dt>
 <dd><p>Signal the parser that the data stream is terminated. Unlike
-<a class="reference internal" href="#xml.etree.ElementTree.XMLParser.close" title="xml.etree.ElementTree.XMLParser.close"><code class="xref py py-meth docutils literal notranslate"><span class="pre">XMLParser.close()</span></code></a>, this method always returns <a class="reference internal" href="constants.html#None" title="None"><code class="xref py py-const docutils literal notranslate"><span class="pre">None</span></code></a>.
+<a class="reference internal" href="#xml.etree.ElementTree.XMLParser.close" title="xml.etree.ElementTree.XMLParser.close"><code class="xref py py-meth docutils literal notranslate"><span class="pre">XMLParser.close()</span></code></a>, this method always returns <a class="reference internal" href="../builtins/constants.html#None" title="None"><code class="xref py py-const docutils literal notranslate"><span class="pre">None</span></code></a>.
 Any events not yet retrieved when the parser is closed can still be
 read with <a class="reference internal" href="#xml.etree.ElementTree.XMLPullParser.read_events" title="xml.etree.ElementTree.XMLPullParser.read_events"><code class="xref py py-meth docutils literal notranslate"><span class="pre">read_events()</span></code></a>.</p>
 </dd></dl>
@@ -1751,7 +1781,7 @@ encountered <a class="reference internal" href="#xml.etree.ElementTree.Element" 
 <li><p><code class="docutils literal notranslate"><span class="pre">comment</span></code>, <code class="docutils literal notranslate"><span class="pre">pi</span></code>: the current comment / processing instruction</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">start-ns</span></code>: a tuple <code class="docutils literal notranslate"><span class="pre">(prefix,</span> <span class="pre">uri)</span></code> naming the declared namespace
 mapping.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">end-ns</span></code>: <a class="reference internal" href="constants.html#None" title="None"><code class="xref py py-const docutils literal notranslate"><span class="pre">None</span></code></a> (this may change in a future version)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">end-ns</span></code>: <a class="reference internal" href="../builtins/constants.html#None" title="None"><code class="xref py py-const docutils literal notranslate"><span class="pre">None</span></code></a> (this may change in a future version)</p></li>
 </ul>
 <p>Events provided in a previous call to <a class="reference internal" href="#xml.etree.ElementTree.XMLPullParser.read_events" title="xml.etree.ElementTree.XMLPullParser.read_events"><code class="xref py py-meth docutils literal notranslate"><span class="pre">read_events()</span></code></a> will not be
 yielded again.  Events are consumed from the internal queue only when
@@ -1946,7 +1976,7 @@ and <a class="reference external" href="https://www.iana.org/assignments/charact
       <a href="../index.html">3.14.7 Documentation</a> &#187;
     </li>
 
-          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >The Python standard library</a> &#187;</li>
           <li class="nav-item nav-item-2"><a href="markup.html" >結構化標記處理工具</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">xml.etree.cElementTree</span></code> --- ElementTree XML API</a></li>
                 <li class="right">
@@ -1989,7 +2019,7 @@ and <a class="reference external" href="https://www.iana.org/assignments/charact
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 9月 12, 2026 (00:25 UTC)。
+      最後更新於 9月 14, 2026 (00:27 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
