@@ -36,9 +36,8 @@ msgid "This module will use a fast implementation whenever available."
 msgstr ""
 
 #: ../../library/xml.etree.elementtree.rst:19
-#, fuzzy
 msgid "The :mod:`!xml.etree.cElementTree` alias of this module is deprecated."
-msgstr ":mod:`!xml.etree.cElementTree` 模組已被棄用。"
+msgstr "此模組的別名 :mod:`!xml.etree.cElementTree` 已被棄用。"
 
 #: ../../library/xml.etree.elementtree.rst:25
 msgid ""
@@ -286,6 +285,9 @@ msgid ""
 "reading XML data but would still like to have incremental parsing "
 "capabilities, take a look at :func:`iterparse`."
 msgstr ""
+"由於它非常靈活，:class:`XMLPullParser` 在較簡單的使用情境下可能較為不便。如果"
+"你不介意應用程式在讀取 XML 資料時被阻塞，但仍希望擁有漸進式剖析的能力，可以參"
+"考 :func:`iterparse`。"
 
 #: ../../library/xml.etree.elementtree.rst:167
 msgid ""
@@ -294,12 +296,17 @@ msgid ""
 "read.  To keep the memory usage low, get rid of the data which is not needed "
 "any more."
 msgstr ""
+"請注意，這兩種剖析器都是以漸進式的方式建立樹狀結構：但它不會以漸進式的方式釋"
+"放，因此每個已剖析的元素都會被保留，直到整份文件讀取完畢。若要降低記憶體用"
+"量，請自行移除不再需要的資料。"
 
 #: ../../library/xml.etree.elementtree.rst:172
 msgid ""
 "If the processed elements are large, it is enough to clear them. This works "
 "wherever they are in the tree, but the emptied elements are left in it::"
 msgstr ""
+"如果已處理的元素很大，將它們清空即已足夠。無論這些元素位在樹狀結構中的何處都"
+"適用此方法，但清空後的元素仍會留在樹中："
 
 #: ../../library/xml.etree.elementtree.rst:176
 msgid ""
@@ -308,12 +315,16 @@ msgid ""
 "        process(elem)\n"
 "        elem.clear()"
 msgstr ""
+"for event, elem in ET.iterparse(source):\n"
+"    if elem.tag == 'record':\n"
+"        process(elem)\n"
+"        elem.clear()"
 
 #: ../../library/xml.etree.elementtree.rst:181
 msgid ""
 "If an element has a large number of children, remove the processed children "
 "from it::"
-msgstr ""
+msgstr "如果某個元素有大量子節點，可將已處理的子節點從中移除："
 
 #: ../../library/xml.etree.elementtree.rst:184
 msgid ""
@@ -324,6 +335,12 @@ msgid ""
 "        process(elem)\n"
 "        parent.remove(elem)"
 msgstr ""
+"for event, elem in ET.iterparse(source, events=('start', 'end')):\n"
+"    if event == 'start' and elem.tag == 'parent':\n"
+"        parent = elem\n"
+"    elif event == 'end' and elem.tag == 'child':\n"
+"        process(elem)\n"
+"        parent.remove(elem)"
 
 #: ../../library/xml.etree.elementtree.rst:191
 msgid ""
@@ -331,6 +348,9 @@ msgid ""
 "cases. If you do not need a tree at all, parse with :class:`XMLParser` and a "
 "custom target instead; it is not built then, and nothing has to be removed."
 msgstr ""
+"這些範例並非通用，僅是針對兩種常見情況提供概念。如果你完全不需要樹狀結構，請"
+"改用 :class:`XMLParser` 搭配自訂的目標來剖析；如此就不會建立樹，也不需要移除"
+"任何東西。"
 
 #: ../../library/xml.etree.elementtree.rst:197
 msgid ""
@@ -1059,6 +1079,8 @@ msgid ""
 "is a string containing the comment string. Returns an element instance "
 "representing a comment."
 msgstr ""
+"註解元素工廠函式。這個工廠函式會建立一個特殊的元素，該元素會被標準序列化器序"
+"列化為 XML 註解。*text* 是包含註解字串的字串。回傳一個代表註解的元素實例。"
 
 #: ../../library/xml.etree.elementtree.rst:589
 msgid ""
@@ -1139,6 +1161,18 @@ msgid ""
 "fully read. The iterator has the :meth:`!close` method that closes the "
 "internal file object if *source* is a filename."
 msgstr ""
+"以漸進式的方式將一段 XML 剖析為元素樹，並向使用者回報目前的處理進度。"
+"*source* 是包含 XML 資料的檔案名稱或\\ :term:`檔案物件 <file object>`\\ 。"
+"*events* 是一個要回報的事件序列。支援的事件為字串 ``\"start\"``、"
+"``\"end\"``、``\"comment\"``、``\"pi\"``、``\"start-ns\"`` 和 ``\"end-"
+"ns\"``\\ （\"ns\" 事件用於取得詳細的命名空間資訊）。如果省略 *events*，則只會"
+"回報 ``\"end\"`` 事件。*parser* 是一個可選的剖析器實例。如果沒有提供，則會使"
+"用標準的 :class:`XMLParser` 剖析器。*parser* 必須是 :class:`XMLParser` 或其子"
+"類別的實例，並且只能使用預設的 :class:`TreeBuilder` 作為目標。回傳一個提供 "
+"``(event, elem)`` 配對的\\ :term:`疊代器 <iterator>`\\ ；它具有一個 ``root`` "
+"屬性，一旦 *source* 被完整讀取，該屬性即會參照最終產生的 XML 樹的根元素。如"
+"果 *source* 是檔案名稱，該疊代器具有 :meth:`!close` 方法，可用來關閉內部的檔"
+"案物件。"
 
 #: ../../library/xml.etree.elementtree.rst:664
 msgid ""
@@ -1154,6 +1188,9 @@ msgid ""
 "parsed element is kept until the whole document is read. See :ref:"
 "`elementtree-pull-parsing` for how to keep the memory usage low."
 msgstr ""
+"樹狀結構只會以漸進式的方式建立，但不會以漸進式的方式釋放：每個已剖析的元素都"
+"會被保留，直到整份文件讀取完畢。關於如何降低記憶體用量，請參閱 :ref:"
+"`elementtree-pull-parsing`\\ 。"
 
 #: ../../library/xml.etree.elementtree.rst:675
 msgid ""
@@ -1228,6 +1265,8 @@ msgid ""
 "additional attributes, given as keyword arguments.  Returns an element "
 "instance."
 msgstr ""
+"*parent* 是父元素。*tag* 是子元素的名稱。*attrib* 是一個可選的字典，包含元素"
+"屬性。*extra* 包含額外的屬性，以關鍵字引數的方式提供。回傳一個元素實例。"
 
 #: ../../library/xml.etree.elementtree.rst:740
 msgid ""
@@ -1455,6 +1494,8 @@ msgid ""
 "element attributes.  *extra* contains additional attributes, given as "
 "keyword arguments."
 msgstr ""
+"*tag* 是元素的名稱。*attrib* 是一個可選的字典，包含元素屬性。*extra* 包含額外"
+"的屬性，以關鍵字引數的方式提供。"
 
 #: ../../library/xml.etree.elementtree.rst:919
 msgid ""
@@ -1468,6 +1509,13 @@ msgid ""
 "``None``, which produces an empty attribute (such as ``checked``). Other "
 "objects can be stored in the tree, but they cannot be serialized."
 msgstr ""
+"元素名稱、屬性名稱和屬性值皆為字串或 :class:`QName` 的實例，而文字內容和尾端"
+"文字則為字串或 ``None``\\ 。元素名稱也可以是 :func:`Comment` 或 :func:"
+"`ProcessingInstruction`\\ ，用於特殊元素。如果元素名稱為 ``None``\\ ，則該元"
+"素本身不會被序列化：只會寫入它的文字內容和子元素，並且會忽略它的屬性。這可用"
+"於包含多個元素的片段。當 ``method=\"html\"`` 時，屬性值也可以是 ``None``\\ ，"
+"這會產生一個空屬性（例如 ``checked``\\ ）。其他物件可以被儲存在樹中，但無法被"
+"序列化。"
 
 #: ../../library/xml.etree.elementtree.rst:933
 msgid ""
@@ -1538,11 +1586,11 @@ msgstr ""
 
 #: ../../library/xml.etree.elementtree.rst:989
 msgid "Returns the element attributes as (name, value) pairs."
-msgstr ""
+msgstr "以 (name, value) 配對的形式回傳元素屬性。"
 
 #: ../../library/xml.etree.elementtree.rst:994
 msgid "Returns the element attribute names."
-msgstr ""
+msgstr "回傳元素屬性的名稱。"
 
 #: ../../library/xml.etree.elementtree.rst:999
 msgid "Set the attribute *key* on the element to *value*."
@@ -1907,7 +1955,7 @@ msgstr ""
 
 #: ../../library/xml.etree.elementtree.rst:1325
 msgid "Adds text to the current element.  *data* is a string."
-msgstr ""
+msgstr "將文字新增至目前的元素。*data* 是一個字串。"
 
 #: ../../library/xml.etree.elementtree.rst:1330
 msgid ""
@@ -2002,6 +2050,8 @@ msgid ""
 "Feeds data to the parser.  *data* is a string or encoded data (:class:"
 "`bytes` or a :term:`bytes-like object`)."
 msgstr ""
+"將資料餵入剖析器。*data* 是一個字串或已編碼的資料（:class:`bytes` 或\\ :term:"
+"`類位元組物件 <bytes-like object>`\\ ）。"
 
 #: ../../library/xml.etree.elementtree.rst:1434
 #: ../../library/xml.etree.elementtree.rst:1513
@@ -2089,6 +2139,8 @@ msgid ""
 "Feed the given data to the parser.  *data* is a string or encoded data (:"
 "class:`bytes` or a :term:`bytes-like object`)."
 msgstr ""
+"將給定的資料餵入剖析器。*data* 是一個字串或已編碼的資料（:class:`bytes` 或"
+"\\ :term:`類位元組物件 <bytes-like object>`\\ ）。"
 
 #: ../../library/xml.etree.elementtree.rst:1529
 msgid ""
