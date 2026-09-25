@@ -1802,6 +1802,13 @@ task with a name longer than 255 characters.</p></li>
 instance no longer replaces the Python handlers of SIGINT, SIGHUP and
 SIGTERM with Tk's handler which exits the process, so Ctrl-C raises
 <a class="reference internal" href="../builtins/exceptions.html#KeyboardInterrupt" title="KeyboardInterrupt"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyboardInterrupt</span></code></a> again.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/157639">gh-157639</a>: Fix a crash in <code class="xref py py-mod docutils literal notranslate"><span class="pre">cProfile</span></code> when an external timer
+re-enters the profiler. Profiling events raised while the external timer
+runs are now ignored.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/69919">gh-69919</a>: <a class="reference internal" href="../library/code.html#code.InteractiveInterpreter.runsource" title="code.InteractiveInterpreter.runsource"><code class="xref py py-meth docutils literal notranslate"><span class="pre">code.InteractiveInterpreter.runsource()</span></code></a> and the REPL now
+report any exception raised by compiling the source, such as
+<a class="reference internal" href="../builtins/exceptions.html#MemoryError" title="MemoryError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">MemoryError</span></code></a> or <a class="reference internal" href="../builtins/exceptions.html#RecursionError" title="RecursionError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RecursionError</span></code></a> for too deeply nested source,
+instead of propagating it or printing a traceback of the REPL internals.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/157451">gh-157451</a>: Fix <a class="reference internal" href="../library/gettext.html#module-gettext" title="gettext: Multilingual internationalization services."><code class="xref py py-mod docutils literal notranslate"><span class="pre">gettext</span></code></a> plural form selection when the
 <code class="docutils literal notranslate"><span class="pre">Plural-Forms</span></code> expression combines the unary <code class="docutils literal notranslate"><span class="pre">!</span></code> operator with a
 binary operator, for example <code class="docutils literal notranslate"><span class="pre">!n</span> <span class="pre">+</span> <span class="pre">1</span></code> or <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">!n</span></code>.  The latter raised
@@ -1998,10 +2005,19 @@ method. Patch by tonghuaroot.</p></li>
 <a class="reference internal" href="../library/io.html#io.TextIOWrapper.tell" title="io.TextIOWrapper.tell"><code class="xref py py-meth docutils literal notranslate"><span class="pre">io.TextIOWrapper.tell()</span></code></a> when the decoder's <code class="docutils literal notranslate"><span class="pre">getstate</span></code> method
 triggers a reentrant seek, or when another thread seeks the same stream
 concurrently. Patch by tonghuaroot.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/152907">gh-152907</a>: Restore cooked-mode terminal output flags around
+<a class="reference internal" href="../c-api/veryhigh.html#c.PyOS_InputHook" title="PyOS_InputHook"><code class="xref c c-data docutils literal notranslate"><span class="pre">PyOS_InputHook</span></code></a> callbacks in the new <a class="reference internal" href="../glossary.html#term-REPL"><span class="xref std std-term">REPL</span></a>
+(<code class="xref py py-mod docutils literal notranslate"><span class="pre">_pyrepl</span></code>), so that output written by an input hook (for example a
+GUI toolkit event loop) is no longer emitted with <code class="docutils literal notranslate"><span class="pre">OPOST</span></code> disabled and
+keeps its carriage returns.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/153319">gh-153319</a>: The <a class="reference internal" href="../library/turtle.html#module-turtledemo" title="turtledemo: A viewer for example turtle scripts"><code class="xref py py-mod docutils literal notranslate"><span class="pre">turtledemo</span></code></a> viewer now reads each demo script as
 UTF-8 instead of the locale encoding.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/153133">gh-153133</a>: Fix a socket leak in <a class="reference internal" href="../library/asyncio-eventloop.html#asyncio.loop.create_connection" title="asyncio.loop.create_connection"><code class="xref py py-meth docutils literal notranslate"><span class="pre">asyncio.loop.create_connection()</span></code></a>
 when the transport cannot be created.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/152068">gh-152068</a>: Fixes a bug when a line was split (particularly on macOS
+Terminal.app) in the middle of a colorized keyword, causing the ANSI Color
+Reset sequence (ESC0m) to not be properly printed, causing the output to
+be colored when it shouldn't</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/152204">gh-152204</a>: Fix the pure-Python implementations of
 <a class="reference internal" href="../library/datetime.html#datetime.date.fromisoformat" title="datetime.date.fromisoformat"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datetime.date.fromisoformat()</span></code></a>, <a class="reference internal" href="../library/datetime.html#datetime.time.fromisoformat" title="datetime.time.fromisoformat"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datetime.time.fromisoformat()</span></code></a>
 and <a class="reference internal" href="../library/datetime.html#datetime.datetime.fromisoformat" title="datetime.datetime.fromisoformat"><code class="xref py py-meth docutils literal notranslate"><span class="pre">datetime.datetime.fromisoformat()</span></code></a> silently accepting some
@@ -2020,6 +2036,9 @@ payload using the output charset, so <code class="docutils literal notranslate">
 non-string keys when the dictionary contains a mix of string and
 non-string keys.  Previously the sort ran before the filter and raised
 <a class="reference internal" href="../builtins/exceptions.html#TypeError" title="TypeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TypeError</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/140729">gh-140729</a>: Fix a pickling error in the <code class="docutils literal notranslate"><span class="pre">cProfile</span></code> module when profiling
+a script that uses <a class="reference internal" href="../library/multiprocessing.html#multiprocessing.Process" title="multiprocessing.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">multiprocessing.Process</span></code></a> with the <code class="docutils literal notranslate"><span class="pre">spawn</span></code> and
+<code class="docutils literal notranslate"><span class="pre">forkserver</span></code> start methods.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/113329">gh-113329</a>: Fix <a class="reference internal" href="../builtins/exceptions.html#OSError" title="OSError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">OSError</span></code></a> being raised when trying to run doctests on
 a class objects in the REPL. Patch by Sten Wessel.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/102967">gh-102967</a>: A bug in <code class="xref py py-func docutils literal notranslate"><span class="pre">doctest._SpoofOut.truncate()</span></code> was causing None
@@ -2132,10 +2151,18 @@ output from the user process.</p></li>
 its user process no longer fails to start, when the current directory
 contains user files with the same names as standard library modules that
 IDLE imports, such as <code class="docutils literal notranslate"><span class="pre">random.py</span></code> or <code class="docutils literal notranslate"><span class="pre">tkinter.py</span></code>.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/93016">gh-93016</a>: Fix parsing of command line arguments in the IDLE &quot;Run...
+Customized&quot; dialog on Windows: backslashes are no longer treated as escape
+characters. Fix also display of the previous arguments in the dialog.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/59568">gh-59568</a>: Fix &quot;Save As&quot; and &quot;Open&quot; dialogs in IDLE for a file whose name
+starts with <code class="docutils literal notranslate"><span class="pre">~</span></code> on Windows and X11 with Tcl/Tk older than 9.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/69004">gh-69004</a>: The Debugger item of the IDLE Debug menu is now disabled while
 user code runs, like Stack Viewer.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/69365">gh-69365</a>: The IDLE search dialogs now show a regular expression error
 below the entry instead of in a message box.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/93966">gh-93966</a>: The highlighting of a syntax error in the IDLE Shell is now
+removed when the next statement is entered, not only when the next syntax
+error occurs.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/105689">gh-105689</a>: Fix calltips, parenthesis matching and auto-indent in the IDLE
 Shell after output containing unbalanced quotes or parentheses.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/60402">gh-60402</a>: In IDLE, Tab in a string that is not the start of a file name
@@ -2145,6 +2172,9 @@ the command or script now runs after the startup file, without an error
 dialog and without restarting the shell.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/75234">gh-75234</a>: Fix editing help sources and key bindings in the IDLE Settings
 dialog after selecting them with the keyboard.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/69919">gh-69919</a>: IDLE now reports any exception raised by compiling the source,
+such as <a class="reference internal" href="../builtins/exceptions.html#MemoryError" title="MemoryError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">MemoryError</span></code></a> for too deeply nested source, instead of
+hanging the Shell.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/154511">gh-154511</a>: Consolidate IDLE's mouse wheel handling in <code class="docutils literal notranslate"><span class="pre">idlelib.util</span></code>.
 <code class="docutils literal notranslate"><span class="pre">wheel_event</span></code> moves there from <code class="docutils literal notranslate"><span class="pre">idlelib.tree</span></code> and joins
 <code class="docutils literal notranslate"><span class="pre">x11_buttons</span></code>, which tells whether Tk reports wheel rotations to a
@@ -47465,7 +47495,7 @@ Kilburn.</p></li>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 9月 24, 2026 (00:23 UTC)。
+      最後更新於 9月 25, 2026 (00:26 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

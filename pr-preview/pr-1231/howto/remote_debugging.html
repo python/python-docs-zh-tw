@@ -216,7 +216,8 @@
   <section id="remote-debugging-attachment-protocol">
 <span id="remote-debugging"></span><h1>遠端偵錯附加協定<a class="headerlink" href="#remote-debugging-attachment-protocol" title="連結到這個標頭">¶</a></h1>
 <p>此協定使外部工具能夠附加到正在執行的 CPython 行程並遠端執行 Python 程式碼。</p>
-<p>大多數平台上都會需要更高的權限才能附加到另一個 Python 行程。</p>
+<p>Attaching to another Python process may require additional permissions or
+configuration, depending on the platform.</p>
 <section id="disabling-remote-debugging">
 <h2>停用遠端偵錯<a class="headerlink" href="#disabling-remote-debugging" title="連結到這個標頭">¶</a></h2>
 <p>要停用遠端偵錯支援，請使用以下任一方法：</p>
@@ -229,25 +230,78 @@
 </section>
 <section id="permission-requirements">
 <span id="id1"></span><h1>權限需求<a class="headerlink" href="#permission-requirements" title="連結到這個標頭">¶</a></h1>
-<p>在大多數平台上，附加到正在執行的 Python 行程進行遠端偵錯需要更高的權限。具體要求和疑難排解步驟會取決於你的作業系統：</p>
+<p>Attaching to a running Python process for remote debugging requires special
+configuration on most platforms. The specific requirements and troubleshooting
+steps depend on your operating system:</p>
 <p class="rubric">Linux</p>
-<p>執行追蹤的行程 (tracer process) 必須具有 <code class="docutils literal notranslate"><span class="pre">CAP_SYS_PTRACE</span></code> 功能或同等權限。你只能追蹤你擁有且可以發送訊號的行程。如果行程已經被追蹤，或者它以 set-user-ID 或 set-group-ID 執行，則追蹤可能會失敗。像 Yama 這樣的安全模組可能會進一步限制追蹤。</p>
-<p>要暫時放寬 ptrace 限制（直到重新開機），請執行：</p>
+<p>In general, you can debug your own processes, but there are several common
+configurations that may disable this. Some Linux distributions enable <strong>ptrace
+restrictions</strong>, aka &quot;Yama,&quot; as a form of system hardening. Recent versions of
+the <code class="docutils literal notranslate"><span class="pre">setpriv</span></code> command (util-linux 2.41, released June 2025) let you loosen
+ptrace restrictions on a per-process basis:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">setpriv</span> <span class="pre">--ptracer</span> <span class="pre">any</span> <span class="pre">python3</span></code></p>
+</div></blockquote>
+<p>(This is configured on the process <em>being debugged</em>.) You can also turn off
+ptrace restrictions for all processes until reboot with:</p>
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">echo</span> <span class="pre">0</span> <span class="pre">|</span> <span class="pre">sudo</span> <span class="pre">tee</span> <span class="pre">/proc/sys/kernel/yama/ptrace_scope</span></code></p>
 </div></blockquote>
+<p>This can also be configured persistently, usually in <code class="docutils literal notranslate"><span class="pre">/etc/sysctl.d</span></code>.</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>停用 <code class="docutils literal notranslate"><span class="pre">ptrace_scope</span></code> 會降低系統安全性，應僅在受信任的環境中執行此操作。</p>
+<p>Disabling <code class="docutils literal notranslate"><span class="pre">ptrace_scope</span></code> reduces system hardening and should only be done
+in low-security environments.</p>
 </div>
-<p>如果在容器內執行，請使用 <code class="docutils literal notranslate"><span class="pre">--cap-add=SYS_PTRACE</span></code> 或 <code class="docutils literal notranslate"><span class="pre">--privileged</span></code>，並在需要時以 root 身分執行。</p>
-<p>嘗試使用提升後的權限重新執行命令：</p>
-<blockquote>
-<div><p><code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">-E</span> <span class="pre">!!</span></code></p>
-</div></blockquote>
+<p>It is also possible that the <code class="docutils literal notranslate"><span class="pre">ptrace</span></code> system call is disabled because of a
+security filter. In particular, this was common with older versions of some
+container software. Docker 19.03 or newer (released 2019) and containerd 1.6.7
+or newer (released 2022) will automatically allow usage of the <code class="docutils literal notranslate"><span class="pre">ptrace</span></code>
+system call inside containers, when running on Linux kernel 4.8 or higher. If
+you cannot upgrade to these versions, you can create your container with an
+option like <code class="docutils literal notranslate"><span class="pre">--security-opt</span> <span class="pre">seccomp=unconfined</span></code> to disable the system call
+security filter for that container. This weakens the container's isolation and
+should only be done in low-security environments.</p>
+<p>If you need to trace a process that you <em>do not</em> own, you will need superuser
+access or equivalent. This also applies to processes that have changed their
+security credentials, e.g., set-user-ID or set-group-ID processes (though this
+is unusual for Python). Try running the debugging command with <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">-E</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">CAP_SYS_PTRACE</span></code> capability is equivalent to superuser access, in
+that it allows debugging <em>any</em> process, not just your own. You may see
+advice on the internet suggesting using it to work around ptrace
+restrictions or system call filters. This may work in practice, as would
+<code class="docutils literal notranslate"><span class="pre">sudo</span></code>, but this gives the debugging process much more access than it
+needs and should only be done in low-security environments.</p>
+</div>
+<p>Finally, note that a process can only have one tracer at a time. If you have
+already attached to a Python process under <code class="docutils literal notranslate"><span class="pre">strace</span></code>, <code class="docutils literal notranslate"><span class="pre">gdb</span></code>, etc., you
+won't be able to simultaneously use remote debugging. (Superuser access cannot
+get around this restriction.)</p>
 <p class="rubric">macOS</p>
-<p>要附加到另一個行程，你通常需要以提升過的權限來執行偵錯工具。這可以透過使用 <code class="docutils literal notranslate"><span class="pre">sudo</span></code> 或以 root 身分執行來完成。</p>
-<p>即使附加到你擁有的行程，macOS 也可能會阻止偵錯，除非偵錯器以 root 權限執行，這是由於系統安全限制。</p>
+<p>By default, macOS disables the ability to debug other processes.</p>
+<p>You can modify your Python binary to opt in to being debugged by giving it an
+<strong>ad-hoc code signature</strong> with an <strong>entitlement</strong> enabling it to be debugged.
+(An ad-hoc &quot;signature&quot; is just a configuration without any actual cryptographic
+signature or a need for a certificate or anything else such as an Apple
+developer program membership.)</p>
+<p>The following commands will create a file <code class="docutils literal notranslate"><span class="pre">get-task-allow.plist</span></code> with the
+necessary entitlement and add it to the Python binary:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="s1">'{"com.apple.security.get-task-allow": true}'</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>plutil<span class="w"> </span>-convert<span class="w"> </span>xml1<span class="w"> </span>-o<span class="w"> </span>get-task-allow.plist<span class="w"> </span>-
+codesign<span class="w"> </span>--sign<span class="w"> </span>-<span class="w"> </span>--entitlements<span class="w"> </span>get-task-allow.plist<span class="w"> </span>path/to/bin/python3
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">path/to/bin/python3</span></code> is the path to your Python binary, which you can
+find by e.g. running <code class="docutils literal notranslate"><span class="pre">which</span> <span class="pre">python3</span></code> or evaluating <code class="docutils literal notranslate"><span class="pre">sys.base_executable</span></code> at
+the Python REPL. (These instructions are for a non-framework build of Python.
+Framework builds may need to be configured differently.)</p>
+<p>You should then be able to debug your own Python processes started with that
+binary.</p>
+<p>Alternatively, much as with Linux, processes with superuser privileges e.g. <code class="docutils literal notranslate"><span class="pre">sudo</span></code>
+are not subject to this check and can debug any user's process on the system
+(though there are additional checks on specific binaries, such as OS-provided
+commands, due to System Integrity Protection).</p>
 <p class="rubric">Windows</p>
 <p>要附加到另一個行程，你通常需要以系統管理員權限執行偵錯工具。以系統管理員身分啟動命令提示字元或終端機。</p>
 <p>即使具有系統管理員權限，某些行程仍可能無法存取，除非你啟用了 <code class="docutils literal notranslate"><span class="pre">SeDebugPrivilege</span></code> 權限。</p>
@@ -780,7 +834,7 @@ according to their own permission models.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 9月 24, 2026 (00:23 UTC)。
+      最後更新於 9月 25, 2026 (00:26 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
