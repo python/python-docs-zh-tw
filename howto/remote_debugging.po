@@ -32,7 +32,7 @@ msgstr ""
 msgid ""
 "Attaching to another Python process may require additional permissions or "
 "configuration, depending on the platform."
-msgstr ""
+msgstr "附加到另一個 Python 行程可能需要額外的權限或設定，實際情況取決於平台。"
 
 #: ../../howto/remote_debugging.rst:13
 msgid "Disabling remote debugging"
@@ -63,14 +63,13 @@ msgid "Permission requirements"
 msgstr "權限需求"
 
 #: ../../howto/remote_debugging.rst:27
-#, fuzzy
 msgid ""
 "Attaching to a running Python process for remote debugging requires special "
 "configuration on most platforms. The specific requirements and "
 "troubleshooting steps depend on your operating system:"
 msgstr ""
-"在大多數平台上，附加到正在執行的 Python 行程進行遠端偵錯需要更高的權限。具體"
-"要求和疑難排解步驟會取決於你的作業系統："
+"在大多數平台上，附加到正在執行的 Python 行程進行遠端偵錯需要特殊設定。具體要"
+"求和疑難排解步驟會取決於你的作業系統："
 
 #: ../../howto/remote_debugging.rst:32
 msgid "Linux"
@@ -84,16 +83,22 @@ msgid ""
 "versions of the ``setpriv`` command (util-linux 2.41, released June 2025) "
 "let you loosen ptrace restrictions on a per-process basis:"
 msgstr ""
+"一般來說，你可以偵錯自己的行程，但有幾種常見設定可能會停用此功能。部分 Linux "
+"發行版會啟用\\ **ptrace 限制** （又稱「Yama」）作為一種系統強化措施。較新版本"
+"的 ``setpriv`` 指令（util-linux 2.41，於 2025 年 6 月發布）可讓你以逐行程為單"
+"位放寬 ptrace 限制："
 
 #: ../../howto/remote_debugging.rst:39
 msgid "``setpriv --ptracer any python3``"
-msgstr ""
+msgstr "``setpriv --ptracer any python3``"
 
 #: ../../howto/remote_debugging.rst:41
 msgid ""
 "(This is configured on the process *being debugged*.) You can also turn off "
 "ptrace restrictions for all processes until reboot with:"
 msgstr ""
+"（這是設定在\\ *被偵錯*\\ 的行程上。）你也可以用以下方式關閉所有行程的 "
+"ptrace 限制，直到重新開機為止："
 
 #: ../../howto/remote_debugging.rst:44
 msgid "``echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope``"
@@ -101,15 +106,14 @@ msgstr "``echo 0 | sudo tee /proc/sys/kernel/yama/ptrace_scope``"
 
 #: ../../howto/remote_debugging.rst:46
 msgid "This can also be configured persistently, usually in ``/etc/sysctl.d``."
-msgstr ""
+msgstr "這項設定也可以永久生效，通常會寫在 ``/etc/sysctl.d`` 中。"
 
 #: ../../howto/remote_debugging.rst:50
-#, fuzzy
 msgid ""
 "Disabling ``ptrace_scope`` reduces system hardening and should only be done "
 "in low-security environments."
 msgstr ""
-"停用 ``ptrace_scope`` 會降低系統安全性，應僅在受信任的環境中執行此操作。"
+"停用 ``ptrace_scope`` 會降低系統強化程度，應僅在低安全性的環境中執行此操作。"
 
 #: ../../howto/remote_debugging.rst:53
 msgid ""
@@ -123,6 +127,12 @@ msgid ""
 "disable the system call security filter for that container. This weakens the "
 "container's isolation and should only be done in low-security environments."
 msgstr ""
+"``ptrace`` 系統呼叫也有可能是被安全過濾器停用的。這種情況在較舊版本的部分容器"
+"軟體中特別常見。Docker 19.03 或更新版本（2019 年發布）以及 containerd 1.6.7 "
+"或更新版本（2022 年發布），在執行於 Linux 4.8 或更高版本核心時，會自動允許在"
+"容器內使用 ``ptrace`` 系統呼叫。如果你無法升級到這些版本，可以在建立容器時加"
+"上類似 ``--security-opt seccomp=unconfined`` 的選項，停用該容器的系統呼叫安全"
+"過濾器。這會削弱容器的隔離性，應僅在低安全性的環境中執行此操作。"
 
 #: ../../howto/remote_debugging.rst:63
 msgid ""
@@ -132,6 +142,9 @@ msgid ""
 "processes (though this is unusual for Python). Try running the debugging "
 "command with ``sudo -E``."
 msgstr ""
+"如果你需要追蹤一個\\ *不屬於*\\ 你的行程，就需要超級使用者權限或同等權限。這"
+"也適用於已變更其安全憑證的行程，例如 set-user-ID 或 set-group-ID 行程（雖然這"
+"對 Python 來說並不常見）。可以試著以 ``sudo -E`` 執行偵錯指令。"
 
 #: ../../howto/remote_debugging.rst:70
 msgid ""
@@ -142,6 +155,10 @@ msgid ""
 "gives the debugging process much more access than it needs and should only "
 "be done in low-security environments."
 msgstr ""
+"``CAP_SYS_PTRACE`` 能力等同於超級使用者權限，因為它允許偵錯\\ *任何*\\ 行程，"
+"而不只是你自己的行程。你可能會在網路上看到有人建議用它來繞過 ptrace 限制或系"
+"統呼叫過濾器。這在實務上或許可行，就像使用 ``sudo`` 一樣，但這會讓偵錯行程獲"
+"得遠超過所需的權限，應僅在低安全性的環境中這樣做。"
 
 #: ../../howto/remote_debugging.rst:77
 msgid ""
@@ -150,6 +167,9 @@ msgid ""
 "won't be able to simultaneously use remote debugging. (Superuser access "
 "cannot get around this restriction.)"
 msgstr ""
+"最後要注意的是，一個行程同時只能有一個追蹤器。如果你已經用 ``strace``、"
+"``gdb`` 等工具附加到某個 Python 行程，就無法同時使用遠端偵錯功能。（超級使用"
+"者權限也無法繞過這項限制。）"
 
 #: ../../howto/remote_debugging.rst:83
 msgid "macOS"
@@ -157,7 +177,7 @@ msgstr "macOS"
 
 #: ../../howto/remote_debugging.rst:84
 msgid "By default, macOS disables the ability to debug other processes."
-msgstr ""
+msgstr "根據預設，macOS 會停用偵錯其他行程的能力。"
 
 #: ../../howto/remote_debugging.rst:86
 msgid ""
@@ -167,12 +187,18 @@ msgid ""
 "actual cryptographic signature or a need for a certificate or anything else "
 "such as an Apple developer program membership.)"
 msgstr ""
+"你可以修改自己的 Python 執行檔，透過賦予它\\ **臨時程式碼簽章 (ad-hoc code "
+"signature)**\\ 與一個允許被偵錯的\\ **權限 (entitlement)**\\ 來選擇讓它可被偵"
+"錯。（臨時「簽章」只是一種設定，並不涉及實際的加密簽章，也不需要憑證或 Apple "
+"開發者計畫會員資格等其他東西。）"
 
 #: ../../howto/remote_debugging.rst:92
 msgid ""
 "The following commands will create a file ``get-task-allow.plist`` with the "
 "necessary entitlement and add it to the Python binary:"
 msgstr ""
+"以下指令會建立一個帶有必要權限的 ``get-task-allow.plist`` 檔案，並將它加入 "
+"Python 執行檔："
 
 #: ../../howto/remote_debugging.rst:95
 msgid ""
@@ -180,6 +206,9 @@ msgid ""
 "o get-task-allow.plist -\n"
 "codesign --sign - --entitlements get-task-allow.plist path/to/bin/python3"
 msgstr ""
+"echo '{\"com.apple.security.get-task-allow\": true}' | plutil -convert xml1 -"
+"o get-task-allow.plist -\n"
+"codesign --sign - --entitlements get-task-allow.plist path/to/bin/python3"
 
 #: ../../howto/remote_debugging.rst:100
 msgid ""
@@ -189,12 +218,16 @@ msgid ""
 "framework build of Python. Framework builds may need to be configured "
 "differently.)"
 msgstr ""
+"其中 ``path/to/bin/python3`` 是你的 Python 執行檔路徑，你可以透過執行 "
+"``which python3`` 或在 Python REPL 中求值 ``sys.base_executable`` 來找到它。"
+"（這些說明適用於非 framework 建置的 Python，framework 建置可能需要不同的設定"
+"方式。）"
 
 #: ../../howto/remote_debugging.rst:105
 msgid ""
 "You should then be able to debug your own Python processes started with that "
 "binary."
-msgstr ""
+msgstr "之後你應該就能偵錯以該執行檔啟動的自己的 Python 行程。"
 
 #: ../../howto/remote_debugging.rst:108
 msgid ""
@@ -203,6 +236,10 @@ msgid ""
 "the system (though there are additional checks on specific binaries, such as "
 "OS-provided commands, due to System Integrity Protection)."
 msgstr ""
+"另外，就跟 Linux 一樣，具有超級使用者權限（例如透過 ``sudo``）的行程不受此檢"
+"查限制，可以偵錯系統上任何使用者的行程（不過由於系統完整性保護 (System "
+"Integrity Protection) 的緣故，部分執行檔，例如作業系統提供的指令，仍會受到額"
+"外的檢查）。"
 
 #: ../../howto/remote_debugging.rst:114
 msgid "Windows"
