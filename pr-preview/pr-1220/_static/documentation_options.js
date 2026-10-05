@@ -1,11 +1,11 @@
 const DOCUMENTATION_OPTIONS = {
-    VERSION: '3.14.3',
+    VERSION: '3.14.8',
     LANGUAGE: 'zh-TW',
     COLLAPSE_INDEX: false,
     BUILDER: 'html',
     FILE_SUFFIX: '.html',
     LINK_SUFFIX: '.html',
-    HAS_SOURCE: true,
+    HAS_SOURCE: false,
     SOURCELINK_SUFFIX: '.txt',
     NAVIGATION_WITH_KEYS: false,
     SHOW_SEARCH_SUMMARY: true,
