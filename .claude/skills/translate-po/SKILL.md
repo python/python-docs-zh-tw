@@ -15,6 +15,27 @@ Translate English PO msgid entries to Traditional Chinese msgstr following all p
 3. Look up terminology in `references/terminology.md`
 4. Check `references/forbidden-terms.md` for zh_CN terms to avoid
 
+## Translation Memory Lookup
+
+Before translating an entry that contains prose, look up how similar text was
+already translated in this repo:
+
+```bash
+.scripts/translation_memory.sh query "<msgid text or its key English terms>"
+```
+
+- Prints up to 5 translated, non-fuzzy entries as `path:line` followed by
+  `msgid:` / `msgstr:` lines (use `--top-k N` for more).
+- To see how one term is rendered elsewhere, query the term alone
+  (e.g. `"context manager"`) or a candidate Chinese rendering of 2+ characters
+  (e.g. `"情境管理器"`).
+- Treat hits as reference for phrasing and term choice, not as authority:
+  `references/terminology.md`, `glossary.po`, and the rules below win when they
+  disagree, and existing translations may contain mistakes.
+- Skip the lookup for code-only entries and very short entries.
+- If the command fails or prints nothing (for example, the engine is not
+  installed), continue without it and do not report the failure.
+
 ## Translation Process
 
 ### Step 1: Content Analysis
@@ -50,8 +71,10 @@ See `references/rst-cheatsheet.md` for complete rules.
 
 1. Check term in `references/terminology.md`
 2. If not found, check `glossary.po` in project root
-3. If uncertain, add `#, fuzzy` flag
-4. Never use zh_CN terms from `references/forbidden-terms.md`
+3. If still not found, run `.scripts/translation_memory.sh query "<term>"` and
+   follow the dominant existing rendering
+4. If uncertain, add `#, fuzzy` flag
+5. Never use zh_CN terms from `references/forbidden-terms.md`
 
 ## Output Format
 
@@ -71,6 +94,7 @@ Before outputting, verify:
 - [ ] reST syntax preserved
 - [ ] Terminology matches glossary
 - [ ] No forbidden zh_CN terms
+- [ ] Consistent with translation memory hits, unless they conflict with the glossary
 
 ## Examples
 
@@ -130,3 +154,4 @@ msgstr "可能需要審核的翻譯"
 - `references/terminology.md` - Key term translations (186 terms)
 - `references/forbidden-terms.md` - zh_CN to zh_TW mappings
 - `references/rst-cheatsheet.md` - reST syntax rules
+- `.scripts/translation_memory.sh` - Translation memory lookup over this repo's .po files

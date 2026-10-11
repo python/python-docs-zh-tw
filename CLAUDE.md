@@ -39,5 +39,6 @@ make progress         # Check translation progress
 
 - **Terminology:** `focused_terminology_dictionary.csv`, `glossary.po`
 - **zh_CN corrections:** `.scripts/google_translate/utils.py`
-- **Full guidelines:** `README.rst` (lines 240-377)
+- **Full guidelines:** `README.rst` (lines 240-368)
 - **Skills:** `.claude/skills/` for detailed translation workflows
+- **Translation memory:** `.scripts/translation_memory.sh query "<text>"` - similar translated entries from this repo's .po files (needs `AGENTIC_RETRIEVAL_ENGINE` or `retrieval` on PATH; see README.rst)

@@ -13,6 +13,7 @@ Check terminology against project glossary and zh_CN/zh_TW mappings.
 1. **Primary:** `glossary.po` - Official Python glossary translations
 2. **Secondary:** `focused_terminology_dictionary.csv` - 118 key terms
 3. **Tertiary:** `.scripts/google_translate/utils.py` - zh_CN to zh_TW mappings
+4. **Usage evidence (not authority):** `.scripts/translation_memory.sh query "<term>"` - how existing translated .po entries render the term (skip if the command fails)
 
 ## Check Process
 
@@ -21,12 +22,14 @@ Check terminology against project glossary and zh_CN/zh_TW mappings.
 2. Check if it's in `references/keep-in-english.md`
 3. If found, use the standard translation
 4. If not found, check `glossary.po` in project root
+5. Run `.scripts/translation_memory.sh query "<term>" --top-k 10` to see existing renderings with `path:line`; if the glossary is silent, report the dominant rendering as a suggestion
 
 ### For a PO File
 1. Extract all translated terms from msgstr
 2. Cross-reference against glossary
 3. Identify forbidden zh_CN terms
-4. Report inconsistencies
+4. For each term that looks inconsistent, run `.scripts/translation_memory.sh query "<English term>" --top-k 10` and compare renderings across files
+5. Report inconsistencies, citing `path:line` from the lookup
 
 ## Error Categories
 
@@ -40,6 +43,10 @@ Example violations:
 
 ### Category 2: Inconsistent Terms (Should Review)
 Same English term translated differently across files.
+
+Gather evidence with the translation memory lookup and cite each rendering with
+`path:line`. The glossary decides; majority usage only informs a suggestion
+when the glossary is silent.
 
 ### Category 3: Missing from Glossary (Informational)
 New terms not yet in the glossary.
@@ -71,6 +78,7 @@ Decision Log:
 
 1. Check `../translate-po/references/terminology.md` first (authoritative, 186 terms)
 2. If term should stay in English, see `references/keep-in-english.md`
+3. To see how a term is actually rendered across files: `.scripts/translation_memory.sh query "<term>"`
 
 ## References
 

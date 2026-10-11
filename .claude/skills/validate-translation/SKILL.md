@@ -14,6 +14,10 @@ Validate translated PO entries against project rules and report issues.
 - Compare terms against `glossary.po` and terminology dictionary
 - Flag zh_CN terms that should be zh_TW (see `references/validation-rules.md`)
 - Check for inconsistent translations of the same term
+  - Run `.scripts/translation_memory.sh query "<English term>" --top-k 10` to
+    compare with how other files render it. Report a deviation from the
+    dominant rendering as WARNING only when `glossary.po` and the terminology
+    dictionary are silent. Skip silently if the command fails.
 
 ### 2. Punctuation Rules
 - Chinese text must use full-width: `「」（）、，。：；！？`
@@ -56,3 +60,4 @@ After review, run: `make lint`, `make wrap`, `make build <file>.po`
 ## References
 
 - `references/validation-rules.md` - Complete validation checklist
+- `.scripts/translation_memory.sh` - Translation memory lookup (existing renderings with `path:line`)
