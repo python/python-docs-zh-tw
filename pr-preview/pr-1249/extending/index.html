@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>擴充和嵌入 Python 直譯器 &#8212; Python 3.14.8 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>擴充和嵌入 Python 直譯器 &#8212; Python 3.15.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=48df1187" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=0fc419ee" />
     
-    <script src="../_static/documentation_options.js?v=cb50f8de"></script>
+    <script src="../_static/documentation_options.js?v=5d502324"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,13 +20,13 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.14.8 說明文件 中搜尋"
+          title="在 Python 3.15.0 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜尋" href="../search.html" />
     <link rel="copyright" title="版權所有" href="../copyright.html" />
-    <link rel="next" title="1. Extending Python with C or C++" href="extending.html" />
+    <link rel="next" title="Your first C API extension module" href="first-extension-module.html" />
     <link rel="prev" title="安全性注意事項" href="../library/security_warnings.html" />
     
       
@@ -91,7 +91,8 @@
     <ul>
 <li><a class="reference internal" href="#">擴充和嵌入 Python 直譯器</a><ul>
 <li><a class="reference internal" href="#recommended-third-party-tools">推薦的第三方工具</a></li>
-<li><a class="reference internal" href="#creating-extensions-without-third-party-tools">Creating extensions without third party tools</a></li>
+<li><a class="reference internal" href="#c-api-tutorial">C API Tutorial</a></li>
+<li><a class="reference internal" href="#guides-for-intermediate-topics">Guides for intermediate topics</a></li>
 <li><a class="reference internal" href="#embedding-the-cpython-runtime-in-a-larger-application">在更大的應用程式中嵌入 CPython 運行環境 (runtime)</a></li>
 </ul>
 </li>
@@ -105,8 +106,8 @@
   </div>
   <div>
     <h4>下個主題</h4>
-    <p class="topless"><a href="extending.html"
-                          title="下一章"><span class="section-number">1. </span>Extending Python with C or C++</a></p>
+    <p class="topless"><a href="first-extension-module.html"
+                          title="下一章">Your first C API extension module</a></p>
   </div>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -128,13 +129,13 @@
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.14/Doc/extending/index.rst?plain=1"
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/extending/index.rst?plain=1"
             rel="nofollow">顯示原始碼
         </a>
       </li>
       
       <li>
-        <a href="https://github.com/python/python-docs-zh-tw/blob/3.14/extending/index.po?plain=1"
+        <a href="https://github.com/python/python-docs-zh-tw/blob/3.15/extending/index.po?plain=1"
            rel="nofollow">顯示翻譯原始碼</a>
       </li>
       
@@ -155,7 +156,7 @@
           <a href="../py-modindex.html" title="Python 模組索引"
              >模組</a> |</li>
         <li class="right" >
-          <a href="extending.html" title="1. Extending Python with C or C++"
+          <a href="first-extension-module.html" title="Your first C API extension module"
              accesskey="N">下一頁</a> |</li>
         <li class="right" >
           <a href="../library/security_warnings.html" title="安全性注意事項"
@@ -171,7 +172,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.8 Documentation</a> &#187;
+      <a href="../index.html">3.15.0 Documentation</a> &#187;
     </li>
 
         <li class="nav-item nav-item-this"><a href="">擴充和嵌入 Python 直譯器</a></li>
@@ -207,91 +208,70 @@
   <section id="extending-and-embedding-the-python-interpreter">
 <span id="extending-index"></span><h1>擴充和嵌入 Python 直譯器<a class="headerlink" href="#extending-and-embedding-the-python-interpreter" title="連結到這個標頭">¶</a></h1>
 <p>This document describes how to write modules in C or C++ to extend the Python
-interpreter with new modules.  Those modules can not only define new functions
-but also new object types and their methods.  The document also describes how
+interpreter with new modules.  Those modules can do what Python code does --
+define functions, object types and methods -- but also interact with native
+libraries or achieve better performance by avoiding the overhead of an
+interpreter.  The document also describes how
 to embed the Python interpreter in another application, for use as an extension
 language.  Finally, it shows how to compile and link extension modules so that
 they can be loaded dynamically (at run time) into the interpreter, if the
 underlying operating system supports this feature.</p>
 <p>這份說明文件假設你具備 C 和 Python 的基礎知識。關於 Python 的非正式介紹，請參閱 <a class="reference internal" href="../tutorial/index.html#tutorial-index"><span class="std std-ref">Python 教學</span></a>。<a class="reference internal" href="../reference/index.html#reference-index"><span class="std std-ref">Python 語言參考手冊</span></a>給予此語言更為正式的定義。<a class="reference internal" href="../builtins/index.html#builtins-index"><span class="std std-ref">Python built-ins reference</span></a>記錄了內建函式與物件型別，而 <a class="reference internal" href="../library/index.html#library-index"><span class="std std-ref">Python 標準函式庫 (Standard Library)</span></a>則記錄了賦予此語言廣泛應用範圍的模組（包含內建模組與以 Python 撰寫的模組）。</p>
 <p>關於完整的 Python/C API 詳細介紹，請參閱另外一份 <a class="reference internal" href="../c-api/index.html#c-api-index"><span class="std std-ref">Python/C API 參考手冊</span></a>。</p>
-<section id="recommended-third-party-tools">
-<h2>推薦的第三方工具<a class="headerlink" href="#recommended-third-party-tools" title="連結到這個標頭">¶</a></h2>
-<p>This guide only covers the basic tools for creating extensions provided
-as part of this version of CPython. Some <a class="reference internal" href="../c-api/intro.html#c-api-tools"><span class="std std-ref">third party tools</span></a> offer both simpler and more sophisticated approaches to creating
-C and C++ extensions for Python.</p>
-</section>
-<section id="creating-extensions-without-third-party-tools">
-<h2>Creating extensions without third party tools<a class="headerlink" href="#creating-extensions-without-third-party-tools" title="連結到這個標頭">¶</a></h2>
-<p>本指南中的這一節將說明，在沒有第三方工具的協助下，如何建立 C 和 C ++ 擴充。它主要是寫給使用那些工具的創作者們，而不是讓你建立自己的 C 擴充的推薦方法。</p>
-<div class="admonition seealso">
-<p class="admonition-title">也參考</p>
-<p><span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0489/"><strong>PEP 489</strong></a> -- Multi-phase extension module initialization</p>
+<p>To support extensions, Python's C API (Application Programmers Interface)
+defines a set of functions, macros and variables that provide access to most
+aspects of the Python run-time system.  The Python API is incorporated in a C
+source file by including the header <code class="docutils literal notranslate"><span class="pre">&quot;Python.h&quot;</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>The C extension interface is specific to CPython, and extension modules do
+not work on other Python implementations.  In many cases, it is possible to
+avoid writing C extensions and preserve portability to other implementations.
+For example, if your use case is calling C library functions or system calls,
+you should consider using the <a class="reference internal" href="../library/ctypes.html#module-ctypes" title="ctypes: A foreign function library for Python."><code class="xref py py-mod docutils literal notranslate"><span class="pre">ctypes</span></code></a> module or the <a class="reference external" href="https://cffi.readthedocs.io/">cffi</a> library rather than writing
+custom C code.
+These modules let you write Python code to interface with C code and are more
+portable between implementations of Python than writing and compiling a C
+extension module.</p>
 </div>
 <div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="extending.html">1. Extending Python with C or C++</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="extending.html#a-simple-example">1.1. A Simple Example</a></li>
-<li class="toctree-l2"><a class="reference internal" href="extending.html#intermezzo-errors-and-exceptions">1.2. Intermezzo: Errors and Exceptions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="extending.html#back-to-the-example">1.3. Back to the Example</a></li>
-<li class="toctree-l2"><a class="reference internal" href="extending.html#the-module-s-method-table-and-initialization-function">1.4. The Module's Method Table and Initialization Function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="extending.html#compilation-and-linkage">1.5. Compilation and Linkage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="extending.html#calling-python-functions-from-c">1.6. 從 C 呼叫 Python 函式</a></li>
-<li class="toctree-l2"><a class="reference internal" href="extending.html#extracting-parameters-in-extension-functions">1.7. 擴充函式中的參數提取</a></li>
-<li class="toctree-l2"><a class="reference internal" href="extending.html#keyword-parameters-for-extension-functions">1.8. 擴充函式的關鍵字參數</a></li>
-<li class="toctree-l2"><a class="reference internal" href="extending.html#building-arbitrary-values">1.9. 建構任意值</a></li>
-<li class="toctree-l2"><a class="reference internal" href="extending.html#reference-counts">1.10. 參照計數</a></li>
-<li class="toctree-l2"><a class="reference internal" href="extending.html#writing-extensions-in-c">1.11. 以 C++ 撰寫擴充</a></li>
-<li class="toctree-l2"><a class="reference internal" href="extending.html#providing-a-c-api-for-an-extension-module">1.12. 為擴充模組提供 C API</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="newtypes_tutorial.html">2. 擴充型別定義教學</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="newtypes_tutorial.html#the-basics">2.1. The Basics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="newtypes_tutorial.html#adding-data-and-methods-to-the-basic-example">2.2. Adding data and methods to the Basic example</a></li>
-<li class="toctree-l2"><a class="reference internal" href="newtypes_tutorial.html#providing-finer-control-over-data-attributes">2.3. Providing finer control over data attributes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="newtypes_tutorial.html#supporting-cyclic-garbage-collection">2.4. Supporting cyclic garbage collection</a></li>
-<li class="toctree-l2"><a class="reference internal" href="newtypes_tutorial.html#subclassing-other-types">2.5. Subclassing other types</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="newtypes.html">3. Defining Extension Types: Assorted Topics</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="newtypes.html#finalization-and-de-allocation">3.1. Finalization and De-allocation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="newtypes.html#object-presentation">3.2. Object Presentation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="newtypes.html#attribute-management">3.3. Attribute Management</a></li>
-<li class="toctree-l2"><a class="reference internal" href="newtypes.html#object-comparison">3.4. Object Comparison</a></li>
-<li class="toctree-l2"><a class="reference internal" href="newtypes.html#abstract-protocol-support">3.5. Abstract Protocol Support</a></li>
-<li class="toctree-l2"><a class="reference internal" href="newtypes.html#weak-reference-support">3.6. Weak Reference Support</a></li>
-<li class="toctree-l2"><a class="reference internal" href="newtypes.html#more-suggestions">3.7. More Suggestions</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="building.html">4. 建立 C 與 C++ 擴充套件</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="building.html#building-c-and-c-extensions-with-setuptools">4.1. 用 setuptools 建置 C 與 C++ 擴充套件</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="windows.html">5. 建置 Windows 上的 C 和 C++ 擴充</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="windows.html#a-cookbook-approach">5.1. A Cookbook Approach</a></li>
-<li class="toctree-l2"><a class="reference internal" href="windows.html#differences-between-unix-and-windows">5.2. Differences Between Unix and Windows</a></li>
-<li class="toctree-l2"><a class="reference internal" href="windows.html#using-dlls-in-practice">5.3. Using DLLs in Practice</a></li>
-</ul>
-</li>
-</ul>
 </div>
+<section id="recommended-third-party-tools">
+<h2>推薦的第三方工具<a class="headerlink" href="#recommended-third-party-tools" title="連結到這個標頭">¶</a></h2>
+<p>This document only covers the basic tools for creating extensions provided
+as part of this version of CPython. Some <a class="reference internal" href="../c-api/intro.html#c-api-tools"><span class="std std-ref">third party tools</span></a> offer both simpler and more sophisticated approaches to creating
+C and C++ extensions for Python.</p>
+<p>While this document is aimed at extension authors, it should also be helpful to
+the authors of such tools.
+For example, the tutorial module can serve as a simple test case for a build
+tool or sample expected output of a code generator.</p>
+</section>
+<section id="c-api-tutorial">
+<h2>C API Tutorial<a class="headerlink" href="#c-api-tutorial" title="連結到這個標頭">¶</a></h2>
+<p>This tutorial describes how to write a simple module in C or C++,
+using the Python C API -- that is, using the basic tools provided
+as part of this version of CPython.</p>
+<ol class="arabic simple">
+<li><p><a class="reference internal" href="first-extension-module.html#first-extension-module"><span class="std std-ref">Your first C API extension module</span></a></p></li>
+</ol>
+</section>
+<section id="guides-for-intermediate-topics">
+<h2>Guides for intermediate topics<a class="headerlink" href="#guides-for-intermediate-topics" title="連結到這個標頭">¶</a></h2>
+<p>本指南中的這一節將說明，在沒有第三方工具的協助下，如何建立 C 和 C ++ 擴充。它主要是寫給使用那些工具的創作者們，而不是讓你建立自己的 C 擴充的推薦方法。</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="extending.html#extending-intro"><span class="std std-ref">Using the C API: Assorted topics</span></a></p></li>
+<li><p><a class="reference internal" href="newtypes_tutorial.html#defining-new-types"><span class="std std-ref">擴充型別定義教學</span></a></p></li>
+<li><p><a class="reference internal" href="newtypes.html#new-types-topics"><span class="std std-ref">Defining Extension Types: Assorted Topics</span></a></p></li>
+<li><p><a class="reference internal" href="building.html#building"><span class="std std-ref">建立 C 與 C++ 擴充套件</span></a></p></li>
+<li><p><a class="reference internal" href="windows.html#building-on-windows"><span class="std std-ref">建置 Windows 上的 C 和 C++ 擴充</span></a></p></li>
+</ul>
 </section>
 <section id="embedding-the-cpython-runtime-in-a-larger-application">
 <h2>在更大的應用程式中嵌入 CPython 運行環境 (runtime)<a class="headerlink" href="#embedding-the-cpython-runtime-in-a-larger-application" title="連結到這個標頭">¶</a></h2>
 <p>有時候，相較於建立一個擴充，使其在 Python 直譯器中可作為主應用程式運行，還不如將 CPython 運行環境嵌入至一個更大的應用程式中更可取。本節將涵蓋一些要成功完成此任務所涉及的細節。</p>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="embedding.html">1. 在其它 App 內嵌入 Python</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="embedding.html#very-high-level-embedding">1.1. 非常高階的嵌入</a></li>
-<li class="toctree-l2"><a class="reference internal" href="embedding.html#beyond-very-high-level-embedding-an-overview">1.2. 超越非常高階嵌入：概觀</a></li>
-<li class="toctree-l2"><a class="reference internal" href="embedding.html#pure-embedding">1.3. 純嵌入</a></li>
-<li class="toctree-l2"><a class="reference internal" href="embedding.html#extending-embedded-python">1.4. 擴充嵌入式 Python</a></li>
-<li class="toctree-l2"><a class="reference internal" href="embedding.html#embedding-python-in-c">1.5. 在 C++ 中嵌入 Python</a></li>
-<li class="toctree-l2"><a class="reference internal" href="embedding.html#compiling-and-linking-under-unix-like-systems">1.6. 在類 Unix 系統下編譯和連結</a></li>
+<ul class="simple">
+<li><p><a class="reference internal" href="embedding.html#embedding"><span class="std std-ref">在其它 App 內嵌入 Python</span></a></p></li>
 </ul>
-</li>
-</ul>
-</div>
 </section>
 </section>
 
@@ -307,7 +287,8 @@ C and C++ extensions for Python.</p>
     <ul>
 <li><a class="reference internal" href="#">擴充和嵌入 Python 直譯器</a><ul>
 <li><a class="reference internal" href="#recommended-third-party-tools">推薦的第三方工具</a></li>
-<li><a class="reference internal" href="#creating-extensions-without-third-party-tools">Creating extensions without third party tools</a></li>
+<li><a class="reference internal" href="#c-api-tutorial">C API Tutorial</a></li>
+<li><a class="reference internal" href="#guides-for-intermediate-topics">Guides for intermediate topics</a></li>
 <li><a class="reference internal" href="#embedding-the-cpython-runtime-in-a-larger-application">在更大的應用程式中嵌入 CPython 運行環境 (runtime)</a></li>
 </ul>
 </li>
@@ -321,8 +302,8 @@ C and C++ extensions for Python.</p>
   </div>
   <div>
     <h4>下個主題</h4>
-    <p class="topless"><a href="extending.html"
-                          title="下一章"><span class="section-number">1. </span>Extending Python with C or C++</a></p>
+    <p class="topless"><a href="first-extension-module.html"
+                          title="下一章">Your first C API extension module</a></p>
   </div>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -344,13 +325,13 @@ C and C++ extensions for Python.</p>
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.14/Doc/extending/index.rst?plain=1"
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/extending/index.rst?plain=1"
             rel="nofollow">顯示原始碼
         </a>
       </li>
       
       <li>
-        <a href="https://github.com/python/python-docs-zh-tw/blob/3.14/extending/index.po?plain=1"
+        <a href="https://github.com/python/python-docs-zh-tw/blob/3.15/extending/index.po?plain=1"
            rel="nofollow">顯示翻譯原始碼</a>
       </li>
       
@@ -374,7 +355,7 @@ C and C++ extensions for Python.</p>
           <a href="../py-modindex.html" title="Python 模組索引"
              >模組</a> |</li>
         <li class="right" >
-          <a href="extending.html" title="1. Extending Python with C or C++"
+          <a href="first-extension-module.html" title="Your first C API extension module"
              >下一頁</a> |</li>
         <li class="right" >
           <a href="../library/security_warnings.html" title="安全性注意事項"
@@ -390,7 +371,7 @@ C and C++ extensions for Python.</p>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.8 Documentation</a> &#187;
+      <a href="../index.html">3.15.0 Documentation</a> &#187;
     </li>
 
         <li class="nav-item nav-item-this"><a href="">擴充和嵌入 Python 直譯器</a></li>
@@ -434,7 +415,7 @@ C and C++ extensions for Python.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 10月 15, 2026 (11:54 UTC)。
+      最後更新於 10月 15, 2026 (20:22 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

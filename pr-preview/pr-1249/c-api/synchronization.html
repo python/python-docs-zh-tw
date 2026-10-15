@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>同步原語 &#8212; Python 3.14.8 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>同步原語 &#8212; Python 3.15.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=48df1187" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=0fc419ee" />
     
-    <script src="../_static/documentation_options.js?v=cb50f8de"></script>
+    <script src="../_static/documentation_options.js?v=5d502324"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,7 +20,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.14.8 說明文件 中搜尋"
+          title="在 Python 3.15.0 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -90,7 +90,10 @@
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#">同步原語</a><ul>
-<li><a class="reference internal" href="#python-critical-section-api">Python critical section API</a></li>
+<li><a class="reference internal" href="#python-critical-section-api">Python critical section API</a><ul>
+<li><a class="reference internal" href="#low-level-critical-section-api">Low-level critical section API</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#legacy-locking-apis">Legacy locking APIs</a></li>
 </ul>
 </li>
@@ -127,13 +130,13 @@
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.14/Doc/c-api/synchronization.rst?plain=1"
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/c-api/synchronization.rst?plain=1"
             rel="nofollow">顯示原始碼
         </a>
       </li>
       
       <li>
-        <a href="https://github.com/python/python-docs-zh-tw/blob/3.14/c-api/synchronization.po?plain=1"
+        <a href="https://github.com/python/python-docs-zh-tw/blob/3.15/c-api/synchronization.po?plain=1"
            rel="nofollow">顯示翻譯原始碼</a>
       </li>
       
@@ -170,7 +173,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.8 Documentation</a> &#187;
+      <a href="../index.html">3.15.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python/C API 參考手冊</a> &#187;</li>
@@ -289,10 +292,6 @@ available. Use these variants to start a critical section in a situation where
 there is no <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyObject</span></code></a> -- for example, when working with a C type that
 does not extend or wrap <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyObject</span></code></a> but still needs to call into the C
 API in a manner that might lead to deadlocks.</p>
-<p>The functions and structs used by the macros are exposed for cases
-where C macros are not available. They should only be used as in the
-given macro expansions. Note that the sizes and contents of the structures may
-change in future Python versions.</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
 <p>Operations that need to lock two objects at once must use
@@ -317,12 +316,13 @@ can call arbitrary code through an object's deallocation function.  The critical
 section API avoids potential deadlocks due to reentrancy and lock ordering
 by allowing the runtime to temporarily suspend the critical section if the
 code triggered by the finalizer blocks and calls <a class="reference internal" href="threads.html#c.PyEval_SaveThread" title="PyEval_SaveThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SaveThread()</span></code></a>.</p>
-<dl class="c macro">
+<dl class="c macro" id="critical-section-macros">
 <dt class="sig sig-object c" id="c.Py_BEGIN_CRITICAL_SECTION">
 <span class="sig-name descname"><span class="n"><span class="pre">Py_BEGIN_CRITICAL_SECTION</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">op</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_BEGIN_CRITICAL_SECTION" title="連結到這個定義">¶</a><br /></dt>
-<dd><p>Acquires the per-object lock for the object <em>op</em> and begins a
+<dd><em class="stableabi"> This macro is available when compiling for the <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.15 版本開始.</em><p>Acquires the per-object lock for the object <em>op</em> and begins a
 critical section.</p>
-<p>In the free-threaded build, this macro expands to:</p>
+<p>In the free-threaded build, and when building for the
+<a class="reference internal" href="stable.html#stable-abi"><span class="std std-ref">Stable ABI</span></a>, this macro expands to:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">    </span><span class="n">PyCriticalSection</span><span class="w"> </span><span class="n">_py_cs</span><span class="p">;</span>
 <span class="w">    </span><span class="n">PyCriticalSection_Begin</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_py_cs</span><span class="p">,</span><span class="w"> </span><span class="p">(</span><span class="n">PyObject</span><span class="o">*</span><span class="p">)(</span><span class="n">op</span><span class="p">))</span>
@@ -355,8 +355,9 @@ the argument of the macro - it must be a <a class="reference internal" href="#c.
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_END_CRITICAL_SECTION">
 <span class="sig-name descname"><span class="n"><span class="pre">Py_END_CRITICAL_SECTION</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_END_CRITICAL_SECTION" title="連結到這個定義">¶</a><br /></dt>
-<dd><p>Ends the critical section and releases the per-object lock.</p>
-<p>In the free-threaded build, this macro expands to:</p>
+<dd><em class="stableabi"> This macro is available when compiling for the <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.15 版本開始.</em><p>Ends the critical section and releases the per-object lock.</p>
+<p>In the free-threaded build, and when building for the
+<a class="reference internal" href="stable.html#stable-abi"><span class="std std-ref">Stable ABI</span></a>, this macro expands to:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="n">PyCriticalSection_End</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_py_cs</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
@@ -370,7 +371,7 @@ the argument of the macro - it must be a <a class="reference internal" href="#c.
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_BEGIN_CRITICAL_SECTION2">
 <span class="sig-name descname"><span class="n"><span class="pre">Py_BEGIN_CRITICAL_SECTION2</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">a</span></span>, <span class="n"><span class="pre">b</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_BEGIN_CRITICAL_SECTION2" title="連結到這個定義">¶</a><br /></dt>
-<dd><p>Acquires the per-object locks for the objects <em>a</em> and <em>b</em> and begins a
+<dd><em class="stableabi"> This macro is available when compiling for the <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.15 版本開始.</em><p>Acquires the per-object locks for the objects <em>a</em> and <em>b</em> and begins a
 critical section.  The locks are acquired in a consistent order (lowest
 address first) to avoid lock ordering deadlocks.</p>
 <p>In the free-threaded build, this macro expands to:</p>
@@ -389,7 +390,8 @@ address first) to avoid lock ordering deadlocks.</p>
 <dt class="sig sig-object c" id="c.Py_BEGIN_CRITICAL_SECTION2_MUTEX">
 <span class="sig-name descname"><span class="n"><span class="pre">Py_BEGIN_CRITICAL_SECTION2_MUTEX</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">m1</span></span>, <span class="n"><span class="pre">m2</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_BEGIN_CRITICAL_SECTION2_MUTEX" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Locks the mutexes <em>m1</em> and <em>m2</em> and begins a critical section.</p>
-<p>In the free-threaded build, this macro expands to:</p>
+<p>In the free-threaded build, and when building for the
+<a class="reference internal" href="stable.html#stable-abi"><span class="std std-ref">Stable ABI</span></a>, this macro expands to:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
 <span class="w">     </span><span class="n">PyCriticalSection2</span><span class="w"> </span><span class="n">_py_cs2</span><span class="p">;</span>
 <span class="w">     </span><span class="n">PyCriticalSection2_BeginMutex</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_py_cs2</span><span class="p">,</span><span class="w"> </span><span class="n">m1</span><span class="p">,</span><span class="w"> </span><span class="n">m2</span><span class="p">)</span>
@@ -406,8 +408,9 @@ the arguments of the macro - they must be <a class="reference internal" href="#c
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.Py_END_CRITICAL_SECTION2">
 <span class="sig-name descname"><span class="n"><span class="pre">Py_END_CRITICAL_SECTION2</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_END_CRITICAL_SECTION2" title="連結到這個定義">¶</a><br /></dt>
-<dd><p>Ends the critical section and releases the per-object locks.</p>
-<p>In the free-threaded build, this macro expands to:</p>
+<dd><em class="stableabi"> This macro is available when compiling for the <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.15 版本開始.</em><p>Ends the critical section and releases the per-object locks.</p>
+<p>In the free-threaded build, and when building for the
+<a class="reference internal" href="stable.html#stable-abi"><span class="std std-ref">Stable ABI</span></a>, this macro expands to:</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="w">    </span><span class="n">PyCriticalSection2_End</span><span class="p">(</span><span class="o">&amp;</span><span class="n">_py_cs2</span><span class="p">);</span>
 <span class="p">}</span>
 </pre></div>
@@ -418,11 +421,65 @@ the arguments of the macro - they must be <a class="reference internal" href="#c
 </div>
 </dd></dl>
 
+<section id="low-level-critical-section-api">
+<h3>Low-level critical section API<a class="headerlink" href="#low-level-critical-section-api" title="連結到這個標頭">¶</a></h3>
+<p>The following functions and structs are exposed for cases where C macros
+are not available.</p>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyCriticalSection_Begin">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyCriticalSection_Begin</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyCriticalSection" title="PyCriticalSection"><span class="n"><span class="pre">PyCriticalSection</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">c</span></span>, <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">op</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyCriticalSection_Begin" title="連結到這個定義">¶</a><br /></dt>
+<dt class="sig sig-object c" id="c.PyCriticalSection_End">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyCriticalSection_End</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyCriticalSection" title="PyCriticalSection"><span class="n"><span class="pre">PyCriticalSection</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">c</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyCriticalSection_End" title="連結到這個定義">¶</a><br /></dt>
+<dt class="sig sig-object c" id="c.PyCriticalSection2_Begin">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyCriticalSection2_Begin</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyCriticalSection2" title="PyCriticalSection2"><span class="n"><span class="pre">PyCriticalSection2</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">c</span></span>, <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">a</span></span>, <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">b</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyCriticalSection2_Begin" title="連結到這個定義">¶</a><br /></dt>
+<dt class="sig sig-object c" id="c.PyCriticalSection2_End">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyCriticalSection2_End</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyCriticalSection2" title="PyCriticalSection2"><span class="n"><span class="pre">PyCriticalSection2</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">c</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.PyCriticalSection2_End" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.15 版本開始.</em><p>To be used only as in the macro expansions
+listed <a class="reference internal" href="#critical-section-macros"><span class="std std-ref">earlier in this section</span></a>.</p>
+<p>In non-<a class="reference internal" href="../glossary.html#term-free-threading"><span class="xref std std-term">free-threaded</span></a> builds of CPython, these
+functions do nothing.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c type">
+<dt class="sig sig-object c" id="c.PyCriticalSection">
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyCriticalSection</span></span></span><a class="headerlink" href="#c.PyCriticalSection" title="連結到這個定義">¶</a><br /></dt>
+<dt class="sig sig-object c" id="c.PyCriticalSection2">
+<span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyCriticalSection2</span></span></span><a class="headerlink" href="#c.PyCriticalSection2" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> （包含所有成員） 自 3.15 版本開始.</em><p>To be used only as in the macro expansions
+listed <a class="reference internal" href="#critical-section-macros"><span class="std std-ref">earlier in this section</span></a>.
+Note that the contents of the structures are private and their meaning may
+change in future Python versions.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.13 版被加入.</span></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyCriticalSection_BeginMutex">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyCriticalSection_BeginMutex</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyCriticalSection" title="PyCriticalSection"><span class="n"><span class="pre">PyCriticalSection</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">c</span></span>, <a class="reference internal" href="#c.PyMutex" title="PyMutex"><span class="n"><span class="pre">PyMutex</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">m</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.PyCriticalSection_BeginMutex" title="連結到這個定義">¶</a><br /></dt>
+<dt class="sig sig-object c" id="c.PyCriticalSection2_BeginMutex">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyCriticalSection2_BeginMutex</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyCriticalSection2" title="PyCriticalSection2"><span class="n"><span class="pre">PyCriticalSection2</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">c</span></span>, <a class="reference internal" href="#c.PyMutex" title="PyMutex"><span class="n"><span class="pre">PyMutex</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">m1</span></span>, <a class="reference internal" href="#c.PyMutex" title="PyMutex"><span class="n"><span class="pre">PyMutex</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">m2</span></span><span class="sig-paren">)</span><span class="p"><span class="pre">;</span></span><a class="headerlink" href="#c.PyCriticalSection2_BeginMutex" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>To be used only as in the macro expansions
+listed <a class="reference internal" href="#critical-section-macros"><span class="std std-ref">earlier in this section</span></a>.</p>
+<p>In non-<a class="reference internal" href="../glossary.html#term-free-threading"><span class="xref std std-term">free-threaded</span></a> builds of CPython, these
+functions do nothing.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.14 版被加入.</span></p>
+</div>
+</dd></dl>
+
+</section>
 </section>
 <section id="legacy-locking-apis">
 <h2>Legacy locking APIs<a class="headerlink" href="#legacy-locking-apis" title="連結到這個標頭">¶</a></h2>
 <p>These APIs are obsolete since Python 3.13 with the introduction of
 <a class="reference internal" href="#c.PyMutex" title="PyMutex"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMutex</span></code></a>.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.15 版的變更: </span>These APIs are now a simple wrapper around <code class="docutils literal notranslate"><span class="pre">PyMutex</span></code>.</p>
+</div>
 <dl class="c type">
 <dt class="sig sig-object c" id="c.PyThread_type_lock">
 <span class="k"><span class="pre">type</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyThread_type_lock</span></span></span><a class="headerlink" href="#c.PyThread_type_lock" title="連結到這個定義">¶</a><br /></dt>
@@ -460,6 +517,10 @@ the arguments of the macro - they must be <a class="reference internal" href="#c
 <p>On success, this function returns a lock; on failure, this
 function returns <code class="docutils literal notranslate"><span class="pre">0</span></code> without an exception set.</p>
 <p>呼叫者不需擁有一個 <a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached thread state</span></a>。</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.15 版的變更: </span>This function now always uses <a class="reference internal" href="#c.PyMutex" title="PyMutex"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMutex</span></code></a>. In prior versions, this
+would use a lock provided by the operating system.</p>
+</div>
 </dd></dl>
 
 <dl class="c function">
@@ -524,7 +585,10 @@ fatal error.</p>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#">同步原語</a><ul>
-<li><a class="reference internal" href="#python-critical-section-api">Python critical section API</a></li>
+<li><a class="reference internal" href="#python-critical-section-api">Python critical section API</a><ul>
+<li><a class="reference internal" href="#low-level-critical-section-api">Low-level critical section API</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#legacy-locking-apis">Legacy locking APIs</a></li>
 </ul>
 </li>
@@ -561,13 +625,13 @@ fatal error.</p>
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.14/Doc/c-api/synchronization.rst?plain=1"
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/c-api/synchronization.rst?plain=1"
             rel="nofollow">顯示原始碼
         </a>
       </li>
       
       <li>
-        <a href="https://github.com/python/python-docs-zh-tw/blob/3.14/c-api/synchronization.po?plain=1"
+        <a href="https://github.com/python/python-docs-zh-tw/blob/3.15/c-api/synchronization.po?plain=1"
            rel="nofollow">顯示翻譯原始碼</a>
       </li>
       
@@ -607,7 +671,7 @@ fatal error.</p>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.8 Documentation</a> &#187;
+      <a href="../index.html">3.15.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python/C API 參考手冊</a> &#187;</li>
@@ -652,7 +716,7 @@ fatal error.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 10月 15, 2026 (11:54 UTC)。
+      最後更新於 10月 15, 2026 (20:22 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

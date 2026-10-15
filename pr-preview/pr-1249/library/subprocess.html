@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>subprocess --- 子行程管理 &#8212; Python 3.14.8 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>subprocess --- 子行程管理 &#8212; Python 3.15.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=48df1187" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=0fc419ee" />
     
-    <script src="../_static/documentation_options.js?v=cb50f8de"></script>
+    <script src="../_static/documentation_options.js?v=5d502324"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,7 +20,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.14.8 說明文件 中搜尋"
+          title="在 Python 3.15.0 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -153,13 +153,13 @@
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.14/Doc/library/subprocess.rst?plain=1"
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/library/subprocess.rst?plain=1"
             rel="nofollow">顯示原始碼
         </a>
       </li>
       
       <li>
-        <a href="https://github.com/python/python-docs-zh-tw/blob/3.14/library/subprocess.po?plain=1"
+        <a href="https://github.com/python/python-docs-zh-tw/blob/3.15/library/subprocess.po?plain=1"
            rel="nofollow">顯示翻譯原始碼</a>
       </li>
       
@@ -196,7 +196,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.8 Documentation</a> &#187;
+      <a href="../index.html">3.15.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -233,7 +233,7 @@
             
   <section id="module-subprocess">
 <span id="subprocess-subprocess-management"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">subprocess</span></code> --- 子行程管理<a class="headerlink" href="#module-subprocess" title="連結到這個標頭">¶</a></h1>
-<p><strong>原始碼：</strong><a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.14/Lib/subprocess.py">Lib/subprocess.py</a></p>
+<p><strong>原始碼：</strong><a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.15/Lib/subprocess.py">Lib/subprocess.py</a></p>
 <hr class="docutils" />
 <p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">subprocess</span></code> module allows you to spawn new processes, connect to their
 input/output/error pipes, and obtain their return codes.  This module intends to
@@ -1013,13 +1013,28 @@ Use <a class="reference internal" href="#subprocess.Popen.communicate" title="su
 </div>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>When the <code class="docutils literal notranslate"><span class="pre">timeout</span></code> parameter is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, then (on POSIX) the
-function is implemented using a busy loop (non-blocking call and short
-sleeps). Use the <a class="reference internal" href="asyncio.html#module-asyncio" title="asyncio: Asynchronous I/O."><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code></a> module for an asynchronous wait: see
+<p>When <code class="docutils literal notranslate"><span class="pre">timeout</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code> and the platform supports it, an
+efficient event-driven mechanism is used to wait for process termination:</p>
+<ul class="simple">
+<li><p>Linux &gt;= 5.3 uses <a class="reference internal" href="os.html#os.pidfd_open" title="os.pidfd_open"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.pidfd_open()</span></code></a> + <a class="reference internal" href="select.html#select.poll" title="select.poll"><code class="xref py py-func docutils literal notranslate"><span class="pre">select.poll()</span></code></a></p></li>
+<li><p>macOS and other BSD variants use <a class="reference internal" href="select.html#select.kqueue" title="select.kqueue"><code class="xref py py-func docutils literal notranslate"><span class="pre">select.kqueue()</span></code></a> +
+<code class="docutils literal notranslate"><span class="pre">KQ_FILTER_PROC</span></code> + <code class="docutils literal notranslate"><span class="pre">KQ_NOTE_EXIT</span></code></p></li>
+<li><p>Windows uses <code class="docutils literal notranslate"><span class="pre">WaitForSingleObject</span></code></p></li>
+</ul>
+<p>If none of these mechanisms are available, the function falls back to a
+busy loop (non-blocking call and short sleeps).</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Use the <a class="reference internal" href="asyncio.html#module-asyncio" title="asyncio: Asynchronous I/O."><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code></a> module for an asynchronous wait: see
 <a class="reference internal" href="asyncio-subprocess.html#asyncio.create_subprocess_exec" title="asyncio.create_subprocess_exec"><code class="xref py py-class docutils literal notranslate"><span class="pre">asyncio.create_subprocess_exec</span></code></a>.</p>
 </div>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.3 版的變更: </span>新增 <em>timeout</em>。</p>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.15 版的變更: </span>if <em>timeout</em> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, use efficient event-driven implementation
+on Linux &gt;= 5.3 and macOS / BSD.</p>
 </div>
 </dd></dl>
 
@@ -1916,13 +1931,13 @@ described in rule 3.</p></li>
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.14/Doc/library/subprocess.rst?plain=1"
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/library/subprocess.rst?plain=1"
             rel="nofollow">顯示原始碼
         </a>
       </li>
       
       <li>
-        <a href="https://github.com/python/python-docs-zh-tw/blob/3.14/library/subprocess.po?plain=1"
+        <a href="https://github.com/python/python-docs-zh-tw/blob/3.15/library/subprocess.po?plain=1"
            rel="nofollow">顯示翻譯原始碼</a>
       </li>
       
@@ -1962,7 +1977,7 @@ described in rule 3.</p></li>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.8 Documentation</a> &#187;
+      <a href="../index.html">3.15.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -2008,7 +2023,7 @@ described in rule 3.</p></li>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 10月 15, 2026 (11:54 UTC)。
+      最後更新於 10月 15, 2026 (20:22 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

@@ -1,0 +1,2063 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>profiling.sampling --- Statistical profiler &#8212; Python 3.15.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+    <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
+    <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=48df1187" />
+    <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=0fc419ee" />
+    <link rel="stylesheet" type="text/css" href="../_static/profiling-sampling-visualization.css?v=0c2600ae" />
+    
+    <script src="../_static/documentation_options.js?v=5d502324"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/translations.js?v=cbf116e0"></script>
+    <script src="../_static/profiling-sampling-visualization.js?v=9811ed04"></script>
+    
+    <script src="../_static/sidebar.js"></script>
+    
+    <link rel="search" type="application/opensearchdescription+xml"
+          title="在 Python 3.15.0 說明文件 中搜尋"
+          href="../_static/opensearch.xml"/>
+    <link rel="author" title="關於這些文件" href="../about.html" />
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜尋" href="../search.html" />
+    <link rel="copyright" title="版權所有" href="../copyright.html" />
+    <link rel="next" title="pstats --- Statistics for profilers" href="pstats.html" />
+    <link rel="prev" title="profiling.tracing --- Deterministic profiler" href="profiling.tracing.html" />
+    
+      
+      <link rel="canonical" href="https://docs.python.org/3/library/profiling.sampling.html">
+      
+    
+
+    
+    <style>
+      @media only screen {
+        table.full-width-table {
+            width: 100%;
+        }
+      }
+    </style>
+<link rel="stylesheet" href="../_static/pydoctheme_dark.css" media="(prefers-color-scheme: dark)" id="pydoctheme_dark_css">
+    <link rel="shortcut icon" type="image/png" href="../_static/py.svg">
+            <script type="text/javascript" src="../_static/copybutton.js"></script>
+            <script type="text/javascript" src="../_static/menu.js"></script>
+            <script type="text/javascript" src="../_static/search-focus.js"></script>
+            <script type="text/javascript" src="../_static/themetoggle.js"></script> 
+            <script type="text/javascript" src="../_static/rtd_switcher.js"></script>
+            <meta name="readthedocs-addons-api-version" content="1">
+
+  </head>
+<body>
+<div class="mobile-nav">
+    <input type="checkbox" id="menuToggler" class="toggler__input" aria-controls="navigation"
+           aria-pressed="false" aria-expanded="false" role="button" aria-label="選單">
+    <nav class="nav-content" role="navigation">
+        <label for="menuToggler" class="toggler__label">
+            <span></span>
+        </label>
+        <span class="nav-items-wrapper">
+            <a href="https://www.python.org/" class="nav-logo">
+                <img src="../_static/py.svg" alt="Python logo">
+            </a>
+            <span class="version_switcher_placeholder"></span>
+            <form role="search" class="search" action="../search.html" method="get">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" class="search-icon">
+                    <path fill-rule="nonzero" fill="currentColor" d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
+                </svg>
+                <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q">
+                <input type="submit" value="前往">
+            </form>
+        </span>
+    </nav>
+    <div class="menu-wrapper">
+        <nav class="menu" role="navigation" aria-label="main navigation">
+            <div class="language_switcher_placeholder"></div>
+            
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label>
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling.sampling</span></code> --- Statistical profiler</a><ul>
+<li><a class="reference internal" href="#what-is-statistical-profiling">What is statistical profiling?</a><ul>
+<li><a class="reference internal" href="#how-time-is-estimated">How time is estimated</a></li>
+<li><a class="reference internal" href="#when-to-use-a-different-approach">When to use a different approach</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#quick-examples">Quick examples</a></li>
+<li><a class="reference internal" href="#commands">Commands</a><ul>
+<li><a class="reference internal" href="#the-run-command">The <code class="docutils literal notranslate"><span class="pre">run</span></code> command</a></li>
+<li><a class="reference internal" href="#the-attach-command">The <code class="docutils literal notranslate"><span class="pre">attach</span></code> command</a></li>
+<li><a class="reference internal" href="#the-dump-command">The <code class="docutils literal notranslate"><span class="pre">dump</span></code> command</a></li>
+<li><a class="reference internal" href="#the-replay-command">The <code class="docutils literal notranslate"><span class="pre">replay</span></code> command</a></li>
+<li><a class="reference internal" href="#profiling-in-production">Profiling in production</a></li>
+<li><a class="reference internal" href="#platform-requirements">Platform requirements</a></li>
+<li><a class="reference internal" href="#version-compatibility">Version compatibility</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sampling-configuration">Sampling configuration</a><ul>
+<li><a class="reference internal" href="#sampling-rate-and-duration">Sampling rate and duration</a></li>
+<li><a class="reference internal" href="#thread-selection">Thread selection</a></li>
+<li><a class="reference internal" href="#blocking-mode">Blocking mode</a></li>
+<li><a class="reference internal" href="#special-frames">Special frames</a></li>
+<li><a class="reference internal" href="#opcode-aware-profiling">Opcode-aware profiling</a></li>
+<li><a class="reference internal" href="#real-time-statistics">Real-time statistics</a></li>
+<li><a class="reference internal" href="#subprocess-profiling">Subprocess profiling</a></li>
+<li><a class="reference internal" href="#sampling-efficiency">Sampling efficiency</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#profiling-modes">Profiling modes</a><ul>
+<li><a class="reference internal" href="#wall-clock-mode">Wall-clock mode</a></li>
+<li><a class="reference internal" href="#cpu-mode">CPU mode</a></li>
+<li><a class="reference internal" href="#comparing-wall-clock-and-cpu-profiles">Comparing wall-clock and CPU profiles</a></li>
+<li><a class="reference internal" href="#gil-mode">GIL mode</a></li>
+<li><a class="reference internal" href="#exception-mode">Exception mode</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#output-formats">Output formats</a><ul>
+<li><a class="reference internal" href="#pstats-format">pstats format</a></li>
+<li><a class="reference internal" href="#collapsed-stacks-format">Collapsed stacks format</a></li>
+<li><a class="reference internal" href="#flame-graph-format">Flame graph format</a><ul>
+<li><a class="reference internal" href="#differential-flame-graphs">Differential flame graphs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gecko-format">Gecko format</a></li>
+<li><a class="reference internal" href="#heatmap-format">Heatmap format</a></li>
+<li><a class="reference internal" href="#binary-format">Binary format</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#record-and-replay-workflow">Record and replay workflow</a></li>
+<li><a class="reference internal" href="#live-mode">Live mode</a><ul>
+<li><a class="reference internal" href="#keyboard-commands">Keyboard commands</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#async-aware-profiling">Async-aware profiling</a><ul>
+<li><a class="reference internal" href="#async-modes">Async modes</a></li>
+<li><a class="reference internal" href="#task-markers-and-stack-reconstruction">Task markers and stack reconstruction</a></li>
+<li><a class="reference internal" href="#option-restrictions">Option restrictions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#command-line-interface">Command-line interface</a><ul>
+<li><a class="reference internal" href="#global-options">Global options</a></li>
+<li><a class="reference internal" href="#dump-options">Dump options</a></li>
+<li><a class="reference internal" href="#sampling-options">Sampling options</a></li>
+<li><a class="reference internal" href="#mode-options">Mode options</a></li>
+<li><a class="reference internal" href="#output-options">Output options</a></li>
+<li><a class="reference internal" href="#pstats-display-options">pstats display options</a></li>
+<li><a class="reference internal" href="#run-command-options">Run command options</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="profiling.tracing.html"
+                          title="上一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling.tracing</span></code> --- Deterministic profiler</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="pstats.html"
+                          title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pstats</span></code> --- Statistics for profilers</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "library/profiling.sampling.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/library/profiling.sampling.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-tw/blob/3.15/library/profiling.sampling.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </nav>
+    </div>
+</div>
+
+  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="pstats.html" title="pstats --- Statistics for profilers"
+             accesskey="N">下一頁</a> |</li>
+        <li class="right" >
+          <a href="profiling.tracing.html" title="profiling.tracing --- Deterministic profiler"
+             accesskey="P">上一頁</a> |</li>
+
+          <li class="root-icon"><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.15.0 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="debug.html" >Debugging and profiling</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="profiling.html" accesskey="U"><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling</span></code> --- Python profilers</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling.sampling</span></code> --- Statistical profiler</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>    
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="module-profiling.sampling">
+<span id="profiling-sampling-statistical-profiler"></span><span id="profiling-sampling"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling.sampling</span></code> --- Statistical profiler<a class="headerlink" href="#module-profiling.sampling" title="連結到這個標頭">¶</a></h1>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.15 版被加入.</span></p>
+</div>
+<p><strong>Source code:</strong> <a class="extlink-source reference external" href="https://github.com/python/cpython/tree/3.15/Lib/profiling/sampling/">Lib/profiling/sampling/</a></p>
+<hr class="docutils" />
+<a class="reference internal image-reference" href="../_images/tachyon-logo.png"><img alt="Tachyon logo" class="align-center" src="../_images/tachyon-logo.png" style="width: 300px;" />
+</a>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling.sampling</span></code> module, named <strong>Tachyon</strong>, provides statistical
+profiling of Python programs through periodic stack sampling. Tachyon can
+run scripts directly or attach to any running Python process without requiring
+code changes or restarts. Because sampling occurs externally to the target
+process, overhead is virtually zero, making Tachyon suitable for both
+development and production environments.</p>
+<section id="what-is-statistical-profiling">
+<h2>What is statistical profiling?<a class="headerlink" href="#what-is-statistical-profiling" title="連結到這個標頭">¶</a></h2>
+<p>Statistical profiling builds a picture of program behavior by periodically
+capturing snapshots of the call stack. Rather than instrumenting every function
+call and return as deterministic profilers do, Tachyon reads the call stack at
+regular intervals to record what code is currently running.</p>
+<p>This approach rests on a simple principle: functions that consume significant
+CPU time will appear frequently in the collected samples. By gathering thousands
+of samples over a profiling session, Tachyon constructs an accurate statistical
+estimate of where time is spent. The more samples collected, the
+more precise this estimate becomes.</p>
+<p>The following interactive visualization demonstrates how sampling profiling
+works. Press <strong>Play</strong> to watch a Python program execute, and observe how the
+profiler periodically captures snapshots of the call stack. Adjust the
+<strong>sample interval</strong> to see how sampling frequency affects the results.</p>
+<div id="sampling-profiler-viz" class="sampling-profiler-viz"></div>
+<section id="how-time-is-estimated">
+<h3>How time is estimated<a class="headerlink" href="#how-time-is-estimated" title="連結到這個標頭">¶</a></h3>
+<p>The time values shown in Tachyon's output are <strong>estimates derived from sample
+counts</strong>, not direct measurements. Tachyon counts how many times each function
+appears in the collected samples, then multiplies by the sampling interval to
+estimate time.</p>
+<p>For example, with a 10 kHz sampling rate over a 10-second profile,
+Tachyon collects approximately 100,000 samples. If a function appears in 5,000
+samples (5% of total), Tachyon estimates it consumed 5% of the 10-second
+duration, or about 500 milliseconds. This is a statistical estimate, not a
+precise measurement.</p>
+<p>The accuracy of these estimates depends on sample count. With 100,000 samples,
+a function showing 5% has a margin of error of roughly ±0.5%. With only 1,000
+samples, the same 5% measurement could actually represent anywhere from 3% to
+7% of real time.</p>
+<p>This is why longer profiling durations and shorter sampling intervals produce
+more reliable results---they collect more samples. For most performance
+analysis, the default settings provide sufficient accuracy to identify
+bottlenecks and guide optimization efforts.</p>
+<p>Because sampling is statistical, results will vary slightly between runs. A
+function showing 12% in one run might show 11% or 13% in the next. This is
+normal and expected. Focus on the overall pattern rather than exact percentages,
+and don't worry about small variations between runs.</p>
+</section>
+<section id="when-to-use-a-different-approach">
+<h3>When to use a different approach<a class="headerlink" href="#when-to-use-a-different-approach" title="連結到這個標頭">¶</a></h3>
+<p>Statistical sampling is not ideal for every situation.</p>
+<p>For very short scripts that complete in under one second, the profiler may not
+collect enough samples for reliable results. Use <a class="reference internal" href="profiling.tracing.html#module-profiling.tracing" title="profiling.tracing: Deterministic tracing profiler for Python programs."><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling.tracing</span></code></a>
+instead, or run the script in a loop to extend profiling time.</p>
+<p>When you need exact call counts, sampling cannot provide them. Sampling
+estimates frequency from snapshots, so if you need to know precisely how many
+times a function was called, use <a class="reference internal" href="profiling.tracing.html#module-profiling.tracing" title="profiling.tracing: Deterministic tracing profiler for Python programs."><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling.tracing</span></code></a>.</p>
+<p>When comparing two implementations where the difference might be only 1-2%,
+sampling noise can obscure real differences. Use <a class="reference internal" href="timeit.html#module-timeit" title="timeit: Measure the execution time of small code snippets."><code class="xref py py-mod docutils literal notranslate"><span class="pre">timeit</span></code></a> for
+micro-benchmarks or <a class="reference internal" href="profiling.tracing.html#module-profiling.tracing" title="profiling.tracing: Deterministic tracing profiler for Python programs."><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling.tracing</span></code></a> for precise measurements.</p>
+<p>The key difference from <a class="reference internal" href="profiling.tracing.html#module-profiling.tracing" title="profiling.tracing: Deterministic tracing profiler for Python programs."><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling.tracing</span></code></a> is how measurement happens.
+A tracing profiler instruments your code, recording every function call and
+return. This provides exact call counts and precise timing but adds overhead
+to every function call. A sampling profiler, by contrast, observes the program
+from outside at fixed intervals without modifying its execution. Think of the
+difference like this: tracing is like having someone follow you and write down
+every step you take, while sampling is like taking photographs every second
+and inferring your path from those snapshots.</p>
+<p>This external observation model is what makes sampling profiling practical for
+production use. The profiled program runs at full speed because there is no
+instrumentation code running inside it, and the target process is never stopped
+or paused during sampling---Tachyon reads the call stack directly from the
+process's memory while it continues to run. You can attach to a live server,
+collect data, and detach without the application ever knowing it was observed.
+The trade-off is that very short-lived functions may be missed if they happen
+to complete between samples.</p>
+<p>Statistical profiling excels at answering the question, &quot;Where is my program
+spending time?&quot; It reveals hotspots and bottlenecks in production code where
+deterministic profiling overhead would be unacceptable. For exact call counts
+and complete call graphs, use <a class="reference internal" href="profiling.tracing.html#module-profiling.tracing" title="profiling.tracing: Deterministic tracing profiler for Python programs."><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling.tracing</span></code></a> instead.</p>
+</section>
+</section>
+<section id="quick-examples">
+<h2>Quick examples<a class="headerlink" href="#quick-examples" title="連結到這個標頭">¶</a></h2>
+<p>Profile a script and see the results immediately:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>Profile a module with arguments:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>-m<span class="w"> </span>mypackage.module<span class="w"> </span>arg1<span class="w"> </span>arg2
+</pre></div>
+</div>
+<p>Generate an interactive flame graph:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--flamegraph<span class="w"> </span>-o<span class="w"> </span>profile.html<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>Attach to a running process by PID:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>attach<span class="w"> </span><span class="m">12345</span>
+</pre></div>
+</div>
+<p>Print a single snapshot of a running process's stack:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>dump<span class="w"> </span><span class="m">12345</span>
+</pre></div>
+</div>
+<p>Use live mode for real-time monitoring (press <code class="docutils literal notranslate"><span class="pre">q</span></code> to quit):</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--live<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>Profile for 60 seconds with a faster sampling rate:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span><span class="m">60</span><span class="w"> </span>-r<span class="w"> </span>20khz<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>Generate a line-by-line heatmap:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--heatmap<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>Enable opcode-level profiling to see which bytecode instructions are executing:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--opcodes<span class="w"> </span>--flamegraph<span class="w"> </span>script.py
+</pre></div>
+</div>
+</section>
+<section id="commands">
+<h2>Commands<a class="headerlink" href="#commands" title="連結到這個標頭">¶</a></h2>
+<p>Tachyon operates through several subcommands. <code class="docutils literal notranslate"><span class="pre">run</span></code> and <code class="docutils literal notranslate"><span class="pre">attach</span></code> collect
+samples over time; <code class="docutils literal notranslate"><span class="pre">dump</span></code> captures a single snapshot; <code class="docutils literal notranslate"><span class="pre">replay</span></code> converts
+binary profiles to other formats.</p>
+<section id="the-run-command">
+<h3>The <code class="docutils literal notranslate"><span class="pre">run</span></code> command<a class="headerlink" href="#the-run-command" title="連結到這個標頭">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">run</span></code> command launches a Python script or module and profiles it from
+startup:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>script.py
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>-m<span class="w"> </span>mypackage.module
+</pre></div>
+</div>
+<p>When profiling a script, the profiler starts the target in a subprocess, waits
+for it to initialize, then begins collecting samples. The <code class="docutils literal notranslate"><span class="pre">-m</span></code> flag
+indicates that the target should be run as a module (equivalent to
+<code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">-m</span></code>). Arguments after the target are passed through to the
+profiled program:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>script.py<span class="w"> </span>--config<span class="w"> </span>settings.yaml
+</pre></div>
+</div>
+</section>
+<section id="the-attach-command">
+<h3>The <code class="docutils literal notranslate"><span class="pre">attach</span></code> command<a class="headerlink" href="#the-attach-command" title="連結到這個標頭">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">attach</span></code> command connects to an already-running Python process by its
+process ID:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>attach<span class="w"> </span><span class="m">12345</span>
+</pre></div>
+</div>
+<p>This command is particularly valuable for investigating performance issues in
+production systems. The target process requires no modification and need not
+be restarted. The profiler attaches, collects samples for the specified
+duration, then detaches and produces output.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>attach<span class="w"> </span>--live<span class="w"> </span><span class="m">12345</span>
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>attach<span class="w"> </span>--flamegraph<span class="w"> </span>-d<span class="w"> </span><span class="m">30</span><span class="w"> </span>-o<span class="w"> </span>profile.html<span class="w"> </span><span class="m">12345</span>
+</pre></div>
+</div>
+<p>On most systems, attaching to another process requires appropriate permissions.
+See <a class="reference internal" href="#profiling-permissions"><span class="std std-ref">Platform requirements</span></a> for platform-specific requirements.</p>
+</section>
+<section id="the-dump-command">
+<span id="dump-command"></span><h3>The <code class="docutils literal notranslate"><span class="pre">dump</span></code> command<a class="headerlink" href="#the-dump-command" title="連結到這個標頭">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">dump</span></code> command prints a single snapshot of a running process's Python
+stack and exits, similar to a traceback:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>dump<span class="w"> </span><span class="m">12345</span>
+</pre></div>
+</div>
+<p>Unlike <code class="docutils literal notranslate"><span class="pre">attach</span></code>, <code class="docutils literal notranslate"><span class="pre">dump</span></code> does not run a sampling loop: it reads the
+stack once. This is useful for investigating hung or unresponsive
+processes, or for answering &quot;what is this process doing right now?&quot;.</p>
+<p>The output mirrors a traceback (most recent call last) and annotates each
+thread with its current state (main thread, has GIL, on CPU, waiting for
+GIL, has exception, or idle):</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Stack dump for PID 12345, thread 140735 (main thread, has GIL, on CPU; most recent call last):
+  File "server.py", line 28, in serve
+    await handle_request(req)
+  File "handler.py", line 91, in handle_request
+    result = expensive_call(req)
+</pre></div>
+</div>
+<p>When the target's source files are readable, <code class="docutils literal notranslate"><span class="pre">dump</span></code> prints the source
+line for each frame and highlights the executing expression.</p>
+<p>Like <code class="docutils literal notranslate"><span class="pre">attach</span></code>, <code class="docutils literal notranslate"><span class="pre">dump</span></code> requires permission to read the target process's
+memory. See <a class="reference internal" href="#profiling-permissions"><span class="std std-ref">Platform requirements</span></a>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">dump</span></code> command supports the following options:</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">-a</span></code>, <code class="docutils literal notranslate"><span class="pre">--all-threads</span></code></dt><dd><p>Dump every thread in the target process. Without this flag only the main
+thread is shown.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--native</span></code></dt><dd><p>Include synthetic <code class="docutils literal notranslate"><span class="pre">&lt;native&gt;</span></code> frames marking transitions into C
+extensions or other non-Python code.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--no-gc</span></code></dt><dd><p>Hide the synthetic <code class="docutils literal notranslate"><span class="pre">&lt;GC&gt;</span></code> frames that mark active garbage collection.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--opcodes</span></code></dt><dd><p>Annotate each frame with the bytecode opcode the thread is currently
+executing (for example, <code class="docutils literal notranslate"><span class="pre">opcode=CALL_KW</span></code>). Useful for
+instruction-level investigation, including identifying specializations
+chosen by the adaptive interpreter.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--async-aware</span></code></dt><dd><p>Reconstruct stacks across <code class="docutils literal notranslate"><span class="pre">await</span></code> boundaries. <code class="docutils literal notranslate"><span class="pre">dump</span></code> walks the task
+graph and emits one section per task, with <code class="docutils literal notranslate"><span class="pre">&lt;task&gt;</span></code> markers separating
+coroutines awaiting each other.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--async-mode</span> <span class="pre">{running,all}</span></code></dt><dd><p>Controls which tasks are included when <code class="docutils literal notranslate"><span class="pre">--async-aware</span></code> is enabled.
+<code class="docutils literal notranslate"><span class="pre">running</span></code> shows only the task currently executing on each thread;
+<code class="docutils literal notranslate"><span class="pre">all</span></code> (the default for <code class="docutils literal notranslate"><span class="pre">dump</span></code>) also includes tasks suspended on a
+wait. <code class="docutils literal notranslate"><span class="pre">attach</span></code>'s default for this flag is <code class="docutils literal notranslate"><span class="pre">running</span></code>; <code class="docutils literal notranslate"><span class="pre">dump</span></code>
+defaults to <code class="docutils literal notranslate"><span class="pre">all</span></code> because a single snapshot is most useful when it
+shows the full task graph.</p>
+</dd>
+<dt><code class="docutils literal notranslate"><span class="pre">--blocking</span></code></dt><dd><p>Pause every thread in the target while reading its stack and resume
+them after. Guarantees a fully consistent snapshot at the cost of
+briefly stopping the target. Without it, <code class="docutils literal notranslate"><span class="pre">dump</span></code> reads memory while
+the target keeps running, which is faster but can occasionally produce
+a torn stack.</p>
+</dd>
+</dl>
+</section>
+<section id="the-replay-command">
+<span id="replay-command"></span><h3>The <code class="docutils literal notranslate"><span class="pre">replay</span></code> command<a class="headerlink" href="#the-replay-command" title="連結到這個標頭">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">replay</span></code> command converts binary profile files to other output formats:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>replay<span class="w"> </span>profile.bin
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>replay<span class="w"> </span>--flamegraph<span class="w"> </span>-o<span class="w"> </span>profile.html<span class="w"> </span>profile.bin
+</pre></div>
+</div>
+<p>This command is useful when you have captured profiling data in binary format
+and want to analyze it later or convert it to a visualization format. Binary
+profiles can be replayed multiple times to different formats without
+re-profiling.</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert binary to pstats (default, prints to stdout)</span>
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>replay<span class="w"> </span>profile.bin
+
+<span class="c1"># Convert binary to flame graph</span>
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>replay<span class="w"> </span>--flamegraph<span class="w"> </span>-o<span class="w"> </span>output.html<span class="w"> </span>profile.bin
+
+<span class="c1"># Convert binary to gecko format for Firefox Profiler</span>
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>replay<span class="w"> </span>--gecko<span class="w"> </span>-o<span class="w"> </span>profile.json<span class="w"> </span>profile.bin
+
+<span class="c1"># Convert binary to heatmap</span>
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>replay<span class="w"> </span>--heatmap<span class="w"> </span>-o<span class="w"> </span>my_heatmap<span class="w"> </span>profile.bin
+</pre></div>
+</div>
+</section>
+<section id="profiling-in-production">
+<h3>Profiling in production<a class="headerlink" href="#profiling-in-production" title="連結到這個標頭">¶</a></h3>
+<p>The sampling profiler is designed for production use. It imposes no measurable
+overhead on the target process because it reads memory externally rather than
+instrumenting code. The target application continues running at full speed and
+is unaware it is being profiled.</p>
+<p>When profiling production systems, keep these guidelines in mind:</p>
+<p>Start with shorter durations (10-30 seconds) to get quick results, then extend
+if you need more statistical accuracy. By default, profiling runs until the
+target process completes, which is usually sufficient to identify major hotspots.</p>
+<p>If possible, profile during representative load rather than peak traffic.
+Profiles collected during normal operation are easier to interpret than those
+collected during unusual spikes.</p>
+<p>The profiler itself consumes some CPU on the machine where it runs (not on the
+target process). On the same machine, this is typically negligible. When
+profiling remote processes, network latency does not affect the target.</p>
+<p>Results from production may differ from development due to different data
+sizes, concurrent load, or caching effects. This is expected and is often
+exactly what you want to capture.</p>
+</section>
+<section id="platform-requirements">
+<span id="profiling-permissions"></span><h3>Platform requirements<a class="headerlink" href="#platform-requirements" title="連結到這個標頭">¶</a></h3>
+<p>The profiler reads the target process's memory to capture stack traces. This
+requires elevated permissions on most operating systems.</p>
+<p><strong>Linux</strong></p>
+<p>On Linux, the profiler uses <code class="docutils literal notranslate"><span class="pre">ptrace</span></code> or <code class="docutils literal notranslate"><span class="pre">process_vm_readv</span></code> to read the
+target process's memory. This typically requires one of:</p>
+<ul class="simple">
+<li><p>Running as root</p></li>
+<li><p>Having the <code class="docutils literal notranslate"><span class="pre">CAP_SYS_PTRACE</span></code> capability</p></li>
+<li><p>Adjusting the Yama ptrace scope: <code class="docutils literal notranslate"><span class="pre">/proc/sys/kernel/yama/ptrace_scope</span></code></p></li>
+</ul>
+<p>The default ptrace_scope of 1 restricts ptrace to parent processes only. To
+allow attaching to any process owned by the same user, set it to 0:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/proc/sys/kernel/yama/ptrace_scope
+</pre></div>
+</div>
+<p><strong>macOS</strong></p>
+<p>On macOS, the profiler uses <code class="docutils literal notranslate"><span class="pre">task_for_pid()</span></code> to access the target process.
+This requires one of:</p>
+<ul class="simple">
+<li><p>Running as root</p></li>
+<li><p>The profiler binary having the <code class="docutils literal notranslate"><span class="pre">com.apple.security.cs.debugger</span></code> entitlement</p></li>
+<li><p>System Integrity Protection (SIP) being disabled (not recommended)</p></li>
+</ul>
+<p><strong>Windows</strong></p>
+<p>On Windows, the profiler requires administrative privileges or the
+<code class="docutils literal notranslate"><span class="pre">SeDebugPrivilege</span></code> privilege to read another process's memory.</p>
+</section>
+<section id="version-compatibility">
+<h3>Version compatibility<a class="headerlink" href="#version-compatibility" title="連結到這個標頭">¶</a></h3>
+<p>The profiler and target process must run the same Python minor version (for
+example, both Python 3.15). Attaching from Python 3.14 to a Python 3.15 process
+is not supported.</p>
+<p>Additional restrictions apply to pre-release Python versions: if either the
+profiler or target is running a pre-release (alpha, beta, or release candidate),
+both must run the exact same version.</p>
+<p>On free-threaded Python builds, the profiler cannot attach from a free-threaded
+build to a standard build, or vice versa.</p>
+</section>
+</section>
+<section id="sampling-configuration">
+<h2>Sampling configuration<a class="headerlink" href="#sampling-configuration" title="連結到這個標頭">¶</a></h2>
+<p>Before exploring the various output formats and visualization options, it is
+important to understand how to configure the sampling process itself. The
+profiler offers several options that control how frequently samples are
+collected, how long profiling runs, which threads are observed, and what
+additional context is captured in each sample.</p>
+<p>The default configuration works well for most use cases:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25.0%" />
+<col style="width: 75.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Default for <code class="docutils literal notranslate"><span class="pre">--sampling-rate</span></code> / <code class="docutils literal notranslate"><span class="pre">-r</span></code></p></td>
+<td><p>1 kHz</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default for <code class="docutils literal notranslate"><span class="pre">--duration</span></code> / <code class="docutils literal notranslate"><span class="pre">-d</span></code></p></td>
+<td><p>Run to completion</p></td>
+</tr>
+<tr class="row-even"><td><p>Default for <code class="docutils literal notranslate"><span class="pre">--all-threads</span></code> / <code class="docutils literal notranslate"><span class="pre">-a</span></code></p></td>
+<td><p>Main thread only</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default for <code class="docutils literal notranslate"><span class="pre">--native</span></code></p></td>
+<td><p>No <code class="docutils literal notranslate"><span class="pre">&lt;native&gt;</span></code> frames (C code time attributed to caller)</p></td>
+</tr>
+<tr class="row-even"><td><p>Default for <code class="docutils literal notranslate"><span class="pre">--no-gc</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&lt;GC&gt;</span></code> frames included when garbage collection is active</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default for <code class="docutils literal notranslate"><span class="pre">--mode</span></code></p></td>
+<td><p>Wall-clock mode (all samples recorded)</p></td>
+</tr>
+<tr class="row-even"><td><p>Default for <code class="docutils literal notranslate"><span class="pre">--realtime-stats</span></code></p></td>
+<td><p>Disabled</p></td>
+</tr>
+<tr class="row-odd"><td><p>Default for <code class="docutils literal notranslate"><span class="pre">--subprocesses</span></code></p></td>
+<td><p>Disabled</p></td>
+</tr>
+<tr class="row-even"><td><p>Default for <code class="docutils literal notranslate"><span class="pre">--blocking</span></code></p></td>
+<td><p>Disabled (non-blocking sampling)</p></td>
+</tr>
+</tbody>
+</table>
+<section id="sampling-rate-and-duration">
+<h3>Sampling rate and duration<a class="headerlink" href="#sampling-rate-and-duration" title="連結到這個標頭">¶</a></h3>
+<p>The two most fundamental parameters are the sampling rate and duration.
+Together, these determine how many samples will be collected during a profiling
+session.</p>
+<p>The <a class="reference internal" href="#cmdoption-profiling.sampling-r"><code class="xref std std-option docutils literal notranslate"><span class="pre">--sampling-rate</span></code></a> option (<a class="reference internal" href="#cmdoption-profiling.sampling-r"><code class="xref std std-option docutils literal notranslate"><span class="pre">-r</span></code></a>) sets how frequently samples
+are collected. The default is 1 kHz (1,000 samples per second):</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>-r<span class="w"> </span>20khz<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>Higher rates capture more samples and provide finer-grained data at the
+cost of slightly higher profiler CPU usage. Lower rates reduce profiler
+overhead but may miss short-lived functions. For most applications, the
+default rate provides a good balance between accuracy and overhead.</p>
+<p>The <a class="reference internal" href="#cmdoption-profiling.sampling-d"><code class="xref std std-option docutils literal notranslate"><span class="pre">--duration</span></code></a> option (<a class="reference internal" href="#cmdoption-profiling.sampling-d"><code class="xref std std-option docutils literal notranslate"><span class="pre">-d</span></code></a>) sets how long to profile in seconds. By
+default, profiling continues until the target process exits or is interrupted:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>-d<span class="w"> </span><span class="m">60</span><span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>Specifying a duration is useful when attaching to long-running processes or when
+you want to limit profiling to a specific time window. When profiling a script,
+the default behavior of running to completion is usually what you want.</p>
+</section>
+<section id="thread-selection">
+<h3>Thread selection<a class="headerlink" href="#thread-selection" title="連結到這個標頭">¶</a></h3>
+<p>Python programs often use multiple threads, whether explicitly through the
+<a class="reference internal" href="threading.html#module-threading" title="threading: Thread-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">threading</span></code></a> module or implicitly through libraries that manage thread
+pools.</p>
+<p>By default, the profiler samples only the main thread. The <a class="reference internal" href="#cmdoption-profiling.sampling-a"><code class="xref std std-option docutils literal notranslate"><span class="pre">--all-threads</span></code></a>
+option (<a class="reference internal" href="#cmdoption-profiling.sampling-a"><code class="xref std std-option docutils literal notranslate"><span class="pre">-a</span></code></a>) enables sampling of all threads in the process:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>-a<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>Multi-thread profiling reveals how work is distributed across threads and can
+identify threads that are blocked or starved. Each thread's samples are
+combined in the output, with the ability to filter by thread in some formats.
+This option is particularly useful when investigating concurrency issues or
+when work is distributed across a thread pool.</p>
+</section>
+<section id="blocking-mode">
+<span id="id1"></span><h3>Blocking mode<a class="headerlink" href="#blocking-mode" title="連結到這個標頭">¶</a></h3>
+<p>By default, Tachyon reads the target process's memory without stopping it.
+This non-blocking approach is ideal for most profiling scenarios because it
+imposes virtually zero overhead on the target application: the profiled
+program runs at full speed and is unaware it is being observed.</p>
+<p>However, non-blocking sampling can occasionally produce incomplete or
+inconsistent stack traces in applications with many generators or coroutines
+that rapidly switch between yield points, or in programs with very fast-changing
+call stacks where functions enter and exit between the start and end of a single
+stack read, resulting in reconstructed stacks that mix frames from different
+execution states or that never actually existed.</p>
+<p>For these cases, the <a class="reference internal" href="#cmdoption-profiling.sampling-blocking"><code class="xref std std-option docutils literal notranslate"><span class="pre">--blocking</span></code></a> option stops the target process during
+each sample:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--blocking<span class="w"> </span>script.py
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>attach<span class="w"> </span>--blocking<span class="w"> </span><span class="m">12345</span>
+</pre></div>
+</div>
+<p>When blocking mode is enabled, the profiler suspends the target process,
+reads its stack, then resumes it. This guarantees that each captured stack
+represents a real, consistent snapshot of what the process was doing at that
+instant. The trade-off is that the target process runs slower because it is
+repeatedly paused.</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>Do not use very high sample rates (low <code class="docutils literal notranslate"><span class="pre">--interval</span></code> values) with blocking
+mode. Suspending and resuming a process takes time, and if the sampling
+interval is too short, the target will spend more time stopped than running.
+For blocking mode, intervals of 1000 microseconds (1 millisecond) or higher
+are recommended. The default 100 microsecond interval may cause noticeable
+slowdown in the target application.</p>
+</div>
+<p>Use blocking mode only when you observe inconsistent stacks in your profiles,
+particularly with generator-heavy or coroutine-heavy code. For most
+applications, the default non-blocking mode provides accurate results with
+zero impact on the target process.</p>
+</section>
+<section id="special-frames">
+<h3>Special frames<a class="headerlink" href="#special-frames" title="連結到這個標頭">¶</a></h3>
+<p>The profiler can inject artificial frames into the captured stacks to provide
+additional context about what the interpreter is doing at the moment each
+sample is taken. These synthetic frames help distinguish different types of
+execution that would otherwise be invisible.</p>
+<p>The <a class="reference internal" href="#cmdoption-profiling.sampling-native"><code class="xref std std-option docutils literal notranslate"><span class="pre">--native</span></code></a> option adds <code class="docutils literal notranslate"><span class="pre">&lt;native&gt;</span></code> frames to indicate when Python has
+called into C code (extension modules, built-in functions, or the interpreter
+itself):</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--native<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>These frames help distinguish time spent in Python code versus time spent in
+native libraries. Without this option, native code execution appears as time
+in the Python function that made the call. This is useful when optimizing
+code that makes heavy use of C extensions like NumPy or database drivers.</p>
+<p>By default, the profiler includes <code class="docutils literal notranslate"><span class="pre">&lt;GC&gt;</span></code> frames when garbage collection is
+active. The <a class="reference internal" href="#cmdoption-profiling.sampling-no-gc"><code class="xref std std-option docutils literal notranslate"><span class="pre">--no-gc</span></code></a> option suppresses these frames:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--no-gc<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>GC frames help identify programs where garbage collection consumes significant
+time, which may indicate memory allocation patterns worth optimizing. If you
+see substantial time in <code class="docutils literal notranslate"><span class="pre">&lt;GC&gt;</span></code> frames, consider investigating object
+allocation rates or using object pooling.</p>
+</section>
+<section id="opcode-aware-profiling">
+<h3>Opcode-aware profiling<a class="headerlink" href="#opcode-aware-profiling" title="連結到這個標頭">¶</a></h3>
+<p>The <a class="reference internal" href="#cmdoption-profiling.sampling-opcodes"><code class="xref std std-option docutils literal notranslate"><span class="pre">--opcodes</span></code></a> option enables instruction-level profiling that captures
+which Python bytecode instructions are executing at each sample:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--opcodes<span class="w"> </span>--flamegraph<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>This feature provides visibility into Python's bytecode execution, including
+adaptive specialization optimizations. When a generic instruction like
+<code class="docutils literal notranslate"><span class="pre">LOAD_ATTR</span></code> is specialized at runtime into a more efficient variant like
+<code class="docutils literal notranslate"><span class="pre">LOAD_ATTR_INSTANCE_VALUE</span></code>, the profiler shows both the specialized name
+and the base instruction.</p>
+<p>Opcode information appears in several output formats:</p>
+<ul class="simple">
+<li><p><strong>Flame graphs</strong>: Hovering over a frame displays a tooltip with a bytecode
+instruction breakdown, showing which opcodes consumed time in that function</p></li>
+<li><p><strong>Heatmap</strong>: Expandable bytecode panels per source line show instruction
+breakdown with specialization percentages</p></li>
+<li><p><strong>Live mode</strong>: An opcode panel shows instruction-level statistics for the
+selected function, accessible via keyboard navigation</p></li>
+<li><p><strong>Gecko format</strong>: Opcode transitions are emitted as interval markers in the
+Firefox Profiler timeline</p></li>
+</ul>
+<p>This level of detail is particularly useful for:</p>
+<ul class="simple">
+<li><p>Understanding the performance impact of Python's adaptive specialization</p></li>
+<li><p>Identifying hot bytecode instructions that might benefit from optimization</p></li>
+<li><p>Analyzing the effectiveness of different code patterns at the instruction level</p></li>
+<li><p>Debugging performance issues that occur at the bytecode level</p></li>
+</ul>
+<p>The <a class="reference internal" href="#cmdoption-profiling.sampling-opcodes"><code class="xref std std-option docutils literal notranslate"><span class="pre">--opcodes</span></code></a> option is compatible with <a class="reference internal" href="#cmdoption-profiling.sampling-live"><code class="xref std std-option docutils literal notranslate"><span class="pre">--live</span></code></a>, <a class="reference internal" href="#cmdoption-profiling.sampling-flamegraph"><code class="xref std std-option docutils literal notranslate"><span class="pre">--flamegraph</span></code></a>,
+<a class="reference internal" href="#cmdoption-profiling.sampling-heatmap"><code class="xref std std-option docutils literal notranslate"><span class="pre">--heatmap</span></code></a>, and <a class="reference internal" href="#cmdoption-profiling.sampling-gecko"><code class="xref std std-option docutils literal notranslate"><span class="pre">--gecko</span></code></a> formats. It requires additional memory to store
+opcode information and may slightly reduce sampling performance, but provides
+unprecedented visibility into Python's execution model.</p>
+</section>
+<section id="real-time-statistics">
+<h3>Real-time statistics<a class="headerlink" href="#real-time-statistics" title="連結到這個標頭">¶</a></h3>
+<p>The <a class="reference internal" href="#cmdoption-profiling.sampling-realtime-stats"><code class="xref std std-option docutils literal notranslate"><span class="pre">--realtime-stats</span></code></a> option displays sampling rate statistics during
+profiling:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--realtime-stats<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>This shows the actual achieved sampling rate, which may be lower than requested
+if the profiler cannot keep up. The statistics help verify that profiling is
+working correctly and that sufficient samples are being collected. See
+<a class="reference internal" href="#sampling-efficiency"><span class="std std-ref">Sampling efficiency</span></a> for details on interpreting these metrics.</p>
+</section>
+<section id="subprocess-profiling">
+<h3>Subprocess profiling<a class="headerlink" href="#subprocess-profiling" title="連結到這個標頭">¶</a></h3>
+<p>The <a class="reference internal" href="#cmdoption-profiling.sampling-subprocesses"><code class="xref std std-option docutils literal notranslate"><span class="pre">--subprocesses</span></code></a> option enables automatic profiling of subprocesses
+spawned by the target:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--subprocesses<span class="w"> </span>script.py
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>attach<span class="w"> </span>--subprocesses<span class="w"> </span><span class="m">12345</span>
+</pre></div>
+</div>
+<p>When enabled, the profiler monitors the target process for child process
+creation. When a new Python child process is detected, a separate profiler
+instance is automatically spawned to profile it. This is useful for
+applications that use <a class="reference internal" href="multiprocessing.html#module-multiprocessing" title="multiprocessing: Process-based parallelism."><code class="xref py py-mod docutils literal notranslate"><span class="pre">multiprocessing</span></code></a>, <a class="reference internal" href="subprocess.html#module-subprocess" title="subprocess: Subprocess management."><code class="xref py py-mod docutils literal notranslate"><span class="pre">subprocess</span></code></a>,
+<a class="reference internal" href="concurrent.futures.html#module-concurrent.futures" title="concurrent.futures: Execute computations concurrently using threads or processes."><code class="xref py py-mod docutils literal notranslate"><span class="pre">concurrent.futures</span></code></a> with <a class="reference internal" href="concurrent.futures.html#concurrent.futures.ProcessPoolExecutor" title="concurrent.futures.ProcessPoolExecutor"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessPoolExecutor</span></code></a>,
+or other process spawning mechanisms.</p>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">worker_pool.py</span><a class="headerlink" href="#id3" title="連結到這個程式碼">¶</a></div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">concurrent.futures</span><span class="w"> </span><span class="kn">import</span> <span class="n">ProcessPoolExecutor</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">math</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">compute_factorial</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">):</span>
+        <span class="n">total</span> <span class="o">+=</span> <span class="n">math</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">total</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">numbers</span> <span class="o">=</span> <span class="p">[</span><span class="mi">5000</span> <span class="o">+</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">100</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">)]</span>
+    <span class="k">with</span> <span class="n">ProcessPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+        <span class="n">results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">executor</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">compute_factorial</span><span class="p">,</span> <span class="n">numbers</span><span class="p">))</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Computed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s2"> factorials"</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--subprocesses<span class="w"> </span>--flamegraph<span class="w"> </span>worker_pool.py
+</pre></div>
+</div>
+<p>This produces separate flame graphs for the main process and each worker
+process: <code class="docutils literal notranslate"><span class="pre">flamegraph_&lt;main_pid&gt;.html</span></code>, <code class="docutils literal notranslate"><span class="pre">flamegraph_&lt;worker1_pid&gt;.html</span></code>,
+and so on.</p>
+<p>Each subprocess receives its own output file. The filename is derived from
+the specified output path (or the default) with the subprocess's process ID
+appended:</p>
+<ul class="simple">
+<li><p>If you specify <code class="docutils literal notranslate"><span class="pre">-o</span> <span class="pre">profile.html</span></code>, subprocesses produce <code class="docutils literal notranslate"><span class="pre">profile_12345.html</span></code>,
+<code class="docutils literal notranslate"><span class="pre">profile_12346.html</span></code>, and so on</p></li>
+<li><p>With default output, subprocesses produce files like <code class="docutils literal notranslate"><span class="pre">flamegraph_12345.html</span></code>
+or directories like <code class="docutils literal notranslate"><span class="pre">heatmap_12345</span></code></p></li>
+<li><p>For pstats format (which defaults to stdout), subprocesses produce files like
+<code class="docutils literal notranslate"><span class="pre">profile_12345.pstats</span></code></p></li>
+</ul>
+<p>The subprocess profilers inherit most sampling options from the parent (sampling
+rate, duration, thread selection, native frames, GC frames, async-aware mode,
+and output format). All Python descendant processes are profiled recursively,
+including grandchildren and further descendants.</p>
+<p>Subprocess detection works by periodically scanning for new descendants of
+the target process and checking whether each new process is a Python process
+by probing the process memory for Python runtime structures. Non-Python
+subprocesses (such as shell commands or external tools) are ignored.</p>
+<p>There is a limit of 100 concurrent subprocess profilers to prevent resource
+exhaustion in programs that spawn many processes. If this limit is reached,
+additional subprocesses are not profiled and a warning is printed.</p>
+<p>The <a class="reference internal" href="#cmdoption-profiling.sampling-subprocesses"><code class="xref std std-option docutils literal notranslate"><span class="pre">--subprocesses</span></code></a> option is incompatible with <a class="reference internal" href="#cmdoption-profiling.sampling-live"><code class="xref std std-option docutils literal notranslate"><span class="pre">--live</span></code></a> mode
+because live mode uses an interactive terminal interface that cannot
+accommodate multiple concurrent profiler displays.</p>
+</section>
+<section id="sampling-efficiency">
+<span id="id2"></span><h3>Sampling efficiency<a class="headerlink" href="#sampling-efficiency" title="連結到這個標頭">¶</a></h3>
+<p>Sampling efficiency metrics help assess the quality of the collected data.
+These metrics appear in the profiler's terminal output and in the flame graph
+sidebar.</p>
+<p><strong>Sampling efficiency</strong> is the percentage of sample attempts that succeeded.
+Each sample attempt reads the target process's call stack from memory. An
+attempt can fail if the process is in an inconsistent state at the moment of
+reading, such as during a context switch or while the interpreter is updating
+its internal structures. A low efficiency may indicate that the profiler could
+not keep up with the requested sampling rate, often due to system load or an
+overly aggressive interval setting.</p>
+<p><strong>Missed samples</strong> is the percentage of expected samples that were not
+collected. Based on the configured interval and duration, the profiler expects
+to collect a certain number of samples. Some samples may be missed if the
+profiler falls behind schedule, for example when the system is under heavy
+load. A small percentage of missed samples is normal and does not significantly
+affect the statistical accuracy of the profile.</p>
+<p>Both metrics are informational. Even with some failed attempts or missed
+samples, the profile remains statistically valid as long as enough samples
+were collected. The profiler reports the actual number of samples captured,
+which you can use to judge whether the data is sufficient for your analysis.</p>
+</section>
+</section>
+<section id="profiling-modes">
+<h2>Profiling modes<a class="headerlink" href="#profiling-modes" title="連結到這個標頭">¶</a></h2>
+<p>The sampling profiler supports four modes that control which samples are
+recorded. The mode determines what the profile measures: total elapsed time,
+CPU execution time, time spent holding the global interpreter lock, or
+exception handling.</p>
+<section id="wall-clock-mode">
+<h3>Wall-clock mode<a class="headerlink" href="#wall-clock-mode" title="連結到這個標頭">¶</a></h3>
+<p>Wall-clock mode (<a class="reference internal" href="#cmdoption-profiling.sampling-mode"><code class="xref std std-option docutils literal notranslate"><span class="pre">--mode</span></code></a><code class="docutils literal notranslate"><span class="pre">=wall</span></code>) captures all samples regardless of what the
+thread is doing. This is the default mode and provides a complete picture of
+where time passes during program execution:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--mode<span class="o">=</span>wall<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>In wall-clock mode, samples are recorded whether the thread is actively
+executing Python code, waiting for I/O, blocked on a lock, or sleeping.
+This makes wall-clock profiling ideal for understanding the overall time
+distribution in your program, including time spent waiting.</p>
+<p>If your program spends significant time in I/O operations, network calls, or
+sleep, wall-clock mode will show these waits as time attributed to the calling
+function. This is often exactly what you want when optimizing end-to-end
+latency.</p>
+</section>
+<section id="cpu-mode">
+<h3>CPU mode<a class="headerlink" href="#cpu-mode" title="連結到這個標頭">¶</a></h3>
+<p>CPU mode (<a class="reference internal" href="#cmdoption-profiling.sampling-mode"><code class="xref std std-option docutils literal notranslate"><span class="pre">--mode</span></code></a><code class="docutils literal notranslate"><span class="pre">=cpu</span></code>) records samples only when the thread is actually
+executing on a CPU core:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--mode<span class="o">=</span>cpu<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>Samples taken while the thread is sleeping, blocked on I/O, or waiting for
+a lock are discarded. The resulting profile shows where CPU cycles are consumed,
+filtering out idle time.</p>
+<p>CPU mode is useful when you want to focus on computational hotspots without
+being distracted by I/O waits. If your program alternates between computation
+and network calls, CPU mode reveals which computational sections are most
+expensive.</p>
+</section>
+<section id="comparing-wall-clock-and-cpu-profiles">
+<h3>Comparing wall-clock and CPU profiles<a class="headerlink" href="#comparing-wall-clock-and-cpu-profiles" title="連結到這個標頭">¶</a></h3>
+<p>Running both wall-clock and CPU mode profiles can reveal whether a function's
+time is spent computing or waiting.</p>
+<p>If a function appears prominently in both profiles, it is a true computational
+hotspot---actively using the CPU. Optimization should focus on algorithmic
+improvements or more efficient code.</p>
+<p>If a function is high in wall-clock mode but low or absent in CPU mode, it is
+I/O-bound or waiting. The function spends most of its time waiting for network,
+disk, locks, or sleep. CPU optimization won't help here; consider async I/O,
+connection pooling, or reducing wait time instead.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">do_sleep</span><span class="p">():</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">do_compute</span><span class="p">():</span>
+    <span class="nb">sum</span><span class="p">(</span><span class="n">i</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000000</span><span class="p">))</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">do_sleep</span><span class="p">()</span>
+    <span class="n">do_compute</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--mode<span class="o">=</span>wall<span class="w"> </span>script.py<span class="w">  </span><span class="c1"># do_sleep ~98%, do_compute ~1%</span>
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--mode<span class="o">=</span>cpu<span class="w"> </span>script.py<span class="w">   </span><span class="c1"># do_sleep absent, do_compute dominates</span>
+</pre></div>
+</div>
+</section>
+<section id="gil-mode">
+<h3>GIL mode<a class="headerlink" href="#gil-mode" title="連結到這個標頭">¶</a></h3>
+<p>GIL mode (<a class="reference internal" href="#cmdoption-profiling.sampling-mode"><code class="xref std std-option docutils literal notranslate"><span class="pre">--mode</span></code></a><code class="docutils literal notranslate"><span class="pre">=gil</span></code>) records samples only when the thread holds Python's
+global interpreter lock:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--mode<span class="o">=</span>gil<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>The GIL is held only while executing Python bytecode. When Python calls into
+C extensions, performs I/O operations, or executes native code, the GIL is
+typically released. This means GIL mode effectively measures time spent
+running Python code specifically, filtering out time in native libraries.</p>
+<p>In multi-threaded programs, GIL mode reveals which code is preventing other
+threads from running Python bytecode. Since only one thread can hold the GIL
+at a time, functions that appear frequently in GIL mode profiles are
+monopolizing the interpreter.</p>
+<p>GIL mode helps answer questions like &quot;which functions are monopolizing the
+GIL?&quot; and &quot;why are my other threads starving?&quot; It can also be useful in
+single-threaded programs to distinguish Python execution time from time spent
+in C extensions or I/O.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">hashlib</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">hash_work</span><span class="p">():</span>
+    <span class="c1"># C extension - releases GIL during computation</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">200</span><span class="p">):</span>
+        <span class="n">hashlib</span><span class="o">.</span><span class="n">sha256</span><span class="p">(</span><span class="sa">b</span><span class="s2">"data"</span> <span class="o">*</span> <span class="mi">250000</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">python_work</span><span class="p">():</span>
+    <span class="c1"># Pure Python - holds GIL during computation</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+        <span class="nb">sum</span><span class="p">(</span><span class="n">i</span><span class="o">**</span><span class="mi">2</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1000000</span><span class="p">))</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">hash_work</span><span class="p">()</span>
+    <span class="n">python_work</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--mode<span class="o">=</span>cpu<span class="w"> </span>script.py<span class="w">  </span><span class="c1"># hash_work ~42%, python_work ~38%</span>
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--mode<span class="o">=</span>gil<span class="w"> </span>script.py<span class="w">  </span><span class="c1"># hash_work ~5%, python_work ~60%</span>
+</pre></div>
+</div>
+</section>
+<section id="exception-mode">
+<h3>Exception mode<a class="headerlink" href="#exception-mode" title="連結到這個標頭">¶</a></h3>
+<p>Exception mode (<code class="docutils literal notranslate"><span class="pre">--mode=exception</span></code>) records samples only when a thread has
+an active exception:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--mode<span class="o">=</span>exception<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>Samples are recorded in two situations: when an exception is being propagated
+up the call stack (after <code class="docutils literal notranslate"><span class="pre">raise</span></code> but before being caught), or when code is
+executing inside an <code class="docutils literal notranslate"><span class="pre">except</span></code> block where exception information is still
+present in the thread state.</p>
+<p>The following example illustrates which code regions are captured:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">example</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"error"</span><span class="p">)</span>    <span class="c1"># Captured: exception being raised</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="n">process_error</span><span class="p">()</span>              <span class="c1"># Captured: inside except block</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">cleanup</span><span class="p">()</span>                    <span class="c1"># NOT captured: exception already handled</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">example_propagating</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"error"</span><span class="p">)</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">cleanup</span><span class="p">()</span>                <span class="c1"># Captured: exception propagating through</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">pass</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">example_no_exception</span><span class="p">():</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">do_work</span><span class="p">()</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">cleanup</span><span class="p">()</span>                    <span class="c1"># NOT captured: no exception involved</span>
+</pre></div>
+</div>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">finally</span></code> blocks are only captured when an exception is actively
+propagating through them. Once an <code class="docutils literal notranslate"><span class="pre">except</span></code> block finishes executing, Python
+clears the exception information before running any subsequent <code class="docutils literal notranslate"><span class="pre">finally</span></code>
+block. Similarly, <code class="docutils literal notranslate"><span class="pre">finally</span></code> blocks that run during normal execution (when no
+exception was raised) are not captured because no exception state is present.</p>
+<p>This mode is useful for understanding where your program spends time handling
+errors. Exception handling can be a significant source of overhead in code
+that uses exceptions for flow control (such as <code class="docutils literal notranslate"><span class="pre">StopIteration</span></code> in iterators)
+or in applications that process many error conditions (such as network servers
+handling connection failures).</p>
+<p>Exception mode helps answer questions like &quot;how much time is spent handling
+exceptions?&quot; and &quot;which exception handlers are the most expensive?&quot; It can
+reveal hidden performance costs in code that catches and processes many
+exceptions, even when those exceptions are handled gracefully. For example,
+if a parsing library uses exceptions internally to signal format errors, this
+mode will capture time spent in those handlers even if the calling code never
+sees the exceptions.</p>
+</section>
+</section>
+<section id="output-formats">
+<h2>Output formats<a class="headerlink" href="#output-formats" title="連結到這個標頭">¶</a></h2>
+<p>The profiler produces output in several formats, each suited to different
+analysis workflows. The format is selected with a command-line flag, and
+output goes to stdout, a file, or a directory depending on the format.</p>
+<section id="pstats-format">
+<h3>pstats format<a class="headerlink" href="#pstats-format" title="連結到這個標頭">¶</a></h3>
+<p>The pstats format (<a class="reference internal" href="#cmdoption-profiling.sampling-pstats"><code class="xref std std-option docutils literal notranslate"><span class="pre">--pstats</span></code></a>) produces a text table similar to what
+deterministic profilers generate. This is the default output format:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>script.py
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--pstats<span class="w"> </span>script.py
+</pre></div>
+</div>
+<figure class="align-center" id="id4">
+<a class="reference internal image-reference" href="../_images/tachyon-pstats.png"><img alt="Tachyon pstats terminal output" src="../_images/tachyon-pstats.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">The pstats format displays profiling results in a color-coded table showing
+function hotspots, sample counts, and timing estimates.</span><a class="headerlink" href="#id4" title="連結到這個圖片">¶</a></p>
+</figcaption>
+</figure>
+<p>Output appears on stdout by default:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>Profile<span class="w"> </span>Stats<span class="w"> </span><span class="o">(</span>Mode:<span class="w"> </span>wall<span class="o">)</span>:
+<span class="w">     </span>nsamples<span class="w">  </span>sample%<span class="w">    </span>tottime<span class="w"> </span><span class="o">(</span>ms<span class="o">)</span><span class="w">  </span>cumul%<span class="w">   </span>cumtime<span class="w"> </span><span class="o">(</span>ms<span class="o">)</span><span class="w">  </span>filename:lineno<span class="o">(</span><span class="k">function</span><span class="o">)</span>
+<span class="w">       </span><span class="m">234</span>/892<span class="w">    </span><span class="m">11</span>.7%<span class="w">       </span><span class="m">234</span>.00<span class="w">     </span><span class="m">44</span>.6%<span class="w">       </span><span class="m">892</span>.00<span class="w">    </span>server.py:145<span class="o">(</span>handle_request<span class="o">)</span>
+<span class="w">       </span><span class="m">156</span>/156<span class="w">     </span><span class="m">7</span>.8%<span class="w">       </span><span class="m">156</span>.00<span class="w">      </span><span class="m">7</span>.8%<span class="w">       </span><span class="m">156</span>.00<span class="w">    </span>&lt;built-in&gt;:0<span class="o">(</span>socket.recv<span class="o">)</span>
+<span class="w">        </span><span class="m">98</span>/421<span class="w">     </span><span class="m">4</span>.9%<span class="w">        </span><span class="m">98</span>.00<span class="w">     </span><span class="m">21</span>.1%<span class="w">       </span><span class="m">421</span>.00<span class="w">    </span>parser.py:67<span class="o">(</span>parse_message<span class="o">)</span>
+</pre></div>
+</div>
+<p>The columns show sampling counts and estimated times:</p>
+<ul class="simple">
+<li><p><strong>nsamples</strong>: Displayed as <code class="docutils literal notranslate"><span class="pre">direct/cumulative</span></code> (for example, <code class="docutils literal notranslate"><span class="pre">10/50</span></code>).
+Direct samples are when the function was at the top of the stack, actively
+executing. Cumulative samples are when the function appeared anywhere on the
+stack, including when it was waiting for functions it called. If a function
+shows <code class="docutils literal notranslate"><span class="pre">10/50</span></code>, it was directly executing in 10 samples and was on the call
+stack in 50 samples total.</p></li>
+<li><p><strong>sample%</strong> and <strong>cumul%</strong>: Percentages of total samples for direct and
+cumulative counts respectively.</p></li>
+<li><p><strong>tottime</strong> and <strong>cumtime</strong>: Estimated wall-clock time based on sample counts
+and the profiling duration. Time units are selected automatically based on
+the magnitude: seconds for large values, milliseconds for moderate values,
+or microseconds for small values.</p></li>
+</ul>
+<p>The output includes a legend explaining each column and a summary of
+interesting functions that highlights:</p>
+<ul class="simple">
+<li><p><strong>Hot spots</strong>: Functions with high direct/cumulative sample ratio (ratio
+close to 1.0). These functions spend most of their time executing their own
+code rather than waiting for callees. High ratios indicate where CPU time
+is actually consumed.</p></li>
+<li><p><strong>Indirect calls</strong>: Functions with large differences between cumulative and
+direct samples. These are orchestration functions that delegate work to
+other functions. They appear frequently on the stack but rarely at the top.</p></li>
+<li><p><strong>Call magnification</strong>: Functions where cumulative samples far exceed direct
+samples (high cumulative/direct multiplier). These are frequently-nested
+functions that appear deep in many call chains.</p></li>
+</ul>
+<p>Use <a class="reference internal" href="#cmdoption-profiling.sampling-no-summary"><code class="xref std std-option docutils literal notranslate"><span class="pre">--no-summary</span></code></a> to suppress both the legend and summary sections.</p>
+<p>To save pstats output to a binary file instead of stdout:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>-o<span class="w"> </span>profile.pstats<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>The pstats format supports several options for controlling the display.
+The <a class="reference internal" href="#cmdoption-profiling.sampling-sort"><code class="xref std std-option docutils literal notranslate"><span class="pre">--sort</span></code></a> option determines the column used for ordering results:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--sort<span class="o">=</span>tottime<span class="w"> </span>script.py
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--sort<span class="o">=</span>cumtime<span class="w"> </span>script.py
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--sort<span class="o">=</span>nsamples<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="#cmdoption-profiling.sampling-l"><code class="xref std std-option docutils literal notranslate"><span class="pre">--limit</span></code></a> option restricts output to the top N entries:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--limit<span class="o">=</span><span class="m">30</span><span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="#cmdoption-profiling.sampling-no-summary"><code class="xref std std-option docutils literal notranslate"><span class="pre">--no-summary</span></code></a> option suppresses the header summary that precedes the
+statistics table.</p>
+</section>
+<section id="collapsed-stacks-format">
+<h3>Collapsed stacks format<a class="headerlink" href="#collapsed-stacks-format" title="連結到這個標頭">¶</a></h3>
+<p>Collapsed stacks format (<a class="reference internal" href="#cmdoption-profiling.sampling-collapsed"><code class="xref std std-option docutils literal notranslate"><span class="pre">--collapsed</span></code></a>) produces one line per unique call
+stack, with a count of how many times that stack was sampled:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--collapsed<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>The output looks like:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>main;process_data;parse_json;decode_utf8 42
+main;process_data;parse_json 156
+main;handle_request;send_response 89
+</pre></div>
+</div>
+<p>Each line contains semicolon-separated function names representing the call
+stack from bottom to top, followed by a space and the sample count. This
+format is designed for compatibility with external flame graph tools,
+particularly Brendan Gregg's <code class="docutils literal notranslate"><span class="pre">flamegraph.pl</span></code> script.</p>
+<p>To generate a flame graph from collapsed stacks:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--collapsed<span class="w"> </span>script.py<span class="w"> </span>&gt;<span class="w"> </span>stacks.txt
+flamegraph.pl<span class="w"> </span>stacks.txt<span class="w"> </span>&gt;<span class="w"> </span>profile.svg
+</pre></div>
+</div>
+<p>The resulting SVG can be viewed in any web browser and provides an interactive
+visualization where you can click to zoom into specific call paths.</p>
+</section>
+<section id="flame-graph-format">
+<h3>Flame graph format<a class="headerlink" href="#flame-graph-format" title="連結到這個標頭">¶</a></h3>
+<p>Flame graph format (<a class="reference internal" href="#cmdoption-profiling.sampling-flamegraph"><code class="xref std std-option docutils literal notranslate"><span class="pre">--flamegraph</span></code></a>) produces a self-contained HTML file with
+an interactive flame graph visualization:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--flamegraph<span class="w"> </span>script.py
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--flamegraph<span class="w"> </span>-o<span class="w"> </span>profile.html<span class="w"> </span>script.py
+</pre></div>
+</div>
+<figure class="align-center" id="id5">
+<a class="reference internal image-reference" href="../_images/tachyon-flamegraph.png"><img alt="Tachyon interactive flame graph" src="../_images/tachyon-flamegraph.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">The flame graph visualization shows call stacks as nested rectangles, with
+width proportional to time spent. The sidebar displays runtime statistics,
+GIL metrics, and hotspot functions.</span><a class="headerlink" href="#id5" title="連結到這個圖片">¶</a></p>
+</figcaption>
+</figure>
+<p><a class="reference external" href="../_static/tachyon-example-flamegraph.html">Try the interactive example</a>!</p>
+<p>If no output file is specified, the profiler generates a filename based on
+the process ID (for example, <code class="docutils literal notranslate"><span class="pre">flamegraph.12345.html</span></code>).</p>
+<p>The generated HTML file requires no external dependencies and can be opened
+directly in a web browser. The visualization displays call stacks as nested
+rectangles, with width proportional to time spent. Hovering over a rectangle
+shows details about that function including source code context, and clicking
+zooms into that portion of the call tree.</p>
+<p>The flame graph interface includes:</p>
+<ul class="simple">
+<li><p>A sidebar showing profile summary, thread statistics, sampling efficiency
+metrics (see <a class="reference internal" href="#sampling-efficiency"><span class="std std-ref">Sampling efficiency</span></a>), and top hotspot functions</p></li>
+<li><p>Search functionality supporting both function name matching and
+<code class="docutils literal notranslate"><span class="pre">file.py:42</span></code> line patterns</p></li>
+<li><p>Per-thread filtering via dropdown</p></li>
+<li><p>Dark/light theme toggle (preference saved across sessions)</p></li>
+<li><p>SVG export for saving the current view</p></li>
+</ul>
+<p>The thread statistics section shows runtime behavior metrics:</p>
+<ul class="simple">
+<li><p><strong>GIL Held</strong>: percentage of samples where a thread held the global interpreter
+lock (actively running Python code)</p></li>
+<li><p><strong>GIL Released</strong>: percentage of samples where no thread held the GIL</p></li>
+<li><p><strong>Waiting GIL</strong>: percentage of samples where a thread was waiting to acquire
+the GIL</p></li>
+<li><p><strong>GC</strong>: percentage of samples during garbage collection</p></li>
+</ul>
+<p>These statistics help identify GIL contention and understand how time is
+distributed between Python execution, native code, and waiting.</p>
+<p>Flame graphs are particularly effective for identifying deep call stacks and
+understanding the hierarchical structure of time consumption. Wide rectangles
+at the top indicate functions that consume significant time either directly
+or through their callees.</p>
+<section id="differential-flame-graphs">
+<h4>Differential flame graphs<a class="headerlink" href="#differential-flame-graphs" title="連結到這個標頭">¶</a></h4>
+<p>Differential flame graphs compare two profiling runs to highlight where
+performance changed. This helps identify regressions introduced by code changes
+and validate that optimizations achieved their intended effect:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Capture baseline profile</span>
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--binary<span class="w"> </span>-o<span class="w"> </span>baseline.bin<span class="w"> </span>script.py
+
+<span class="c1"># After modifying code, generate differential flamegraph</span>
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--diff-flamegraph<span class="w"> </span>baseline.bin<span class="w"> </span>-o<span class="w"> </span>diff.html<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>The visualization draws the current profile with frame widths showing current
+time consumption, then applies color to indicate how each function changed
+relative to the baseline.</p>
+<p><strong>Color coding</strong>:</p>
+<ul class="simple">
+<li><p><strong>Red</strong>: Functions consuming more time (regressions). Lighter shades indicate
+modest increases, while darker shades show severe regressions.</p></li>
+<li><p><strong>Blue</strong>: Functions consuming less time (improvements). Lighter shades for
+modest reductions, darker shades for significant speedups.</p></li>
+<li><p><strong>Gray</strong>: Minimal or no change.</p></li>
+<li><p><strong>Purple</strong>: New functions not present in the baseline.</p></li>
+</ul>
+<p>Frame colors indicate changes in <strong>direct time</strong> (time when the function was at
+the top of the stack, actively executing), not cumulative time including callees.
+Hovering over a frame shows comparison details including baseline time, current
+time, and the percentage change.</p>
+<p>Some call paths may disappear entirely between profiles. These are called
+<strong>elided stacks</strong> and occur when optimizations eliminate code paths or certain
+branches stop executing. If elided stacks are present, an elided toggle appears
+allowing you to switch between the main differential view and an elided-only
+view that shows just the removed paths (colored purple).</p>
+</section>
+</section>
+<section id="gecko-format">
+<h3>Gecko format<a class="headerlink" href="#gecko-format" title="連結到這個標頭">¶</a></h3>
+<p>Gecko format (<a class="reference internal" href="#cmdoption-profiling.sampling-gecko"><code class="xref std std-option docutils literal notranslate"><span class="pre">--gecko</span></code></a>) produces JSON output compatible with the Firefox
+Profiler:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--gecko<span class="w"> </span>script.py
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--gecko<span class="w"> </span>-o<span class="w"> </span>profile.json<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>The <a class="reference external" href="https://profiler.firefox.com">Firefox Profiler</a> is a sophisticated
+web-based tool originally built for profiling Firefox itself. It provides
+features beyond basic flame graphs, including a timeline view, call tree
+exploration, and marker visualization. See the
+<a class="reference external" href="https://profiler.firefox.com/docs/#/">Firefox Profiler documentation</a> for
+detailed usage instructions.</p>
+<p>To use the output, open the Firefox Profiler in your browser and load the
+JSON file. The profiler runs entirely client-side, so your profiling data
+never leaves your machine.</p>
+<p>Gecko format automatically collects additional metadata about GIL state and
+CPU activity, enabling analysis features specific to Python's threading model.
+The profiler emits interval markers that appear as colored bands in the
+Firefox Profiler timeline:</p>
+<ul class="simple">
+<li><p><strong>GIL markers</strong>: show when threads hold or release the global interpreter lock</p></li>
+<li><p><strong>CPU markers</strong>: show when threads are executing on CPU versus idle</p></li>
+<li><p><strong>Code type markers</strong>: distinguish Python code from native (C extension) code</p></li>
+<li><p><strong>GC markers</strong>: indicate garbage collection activity</p></li>
+</ul>
+<p>For this reason, the <a class="reference internal" href="#cmdoption-profiling.sampling-mode"><code class="xref std std-option docutils literal notranslate"><span class="pre">--mode</span></code></a> option is not available with Gecko format;
+all relevant data is captured automatically.</p>
+<figure class="align-center" id="id6">
+<a class="reference internal image-reference" href="../_images/tachyon-gecko-calltree.png"><img alt="Firefox Profiler Call Tree view" src="../_images/tachyon-gecko-calltree.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">The Call Tree view shows the complete call hierarchy with sample counts
+and percentages. The sidebar displays detailed statistics for the
+selected function including running time and sample distribution.</span><a class="headerlink" href="#id6" title="連結到這個圖片">¶</a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id7">
+<a class="reference internal image-reference" href="../_images/tachyon-gecko-flamegraph.png"><img alt="Firefox Profiler Flame Graph view" src="../_images/tachyon-gecko-flamegraph.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">The Flame Graph visualization shows call stacks as nested rectangles.
+Functions names are visible in the call hierarchy.</span><a class="headerlink" href="#id7" title="連結到這個圖片">¶</a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id8">
+<a class="reference internal image-reference" href="../_images/tachyon-gecko-opcodes.png"><img alt="Firefox Profiler Marker Chart with opcodes" src="../_images/tachyon-gecko-opcodes.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">The Marker Chart displays interval markers including CPU state, GIL
+status, and opcodes. With <code class="docutils literal notranslate"><span class="pre">--opcodes</span></code> enabled, bytecode instructions
+like <code class="docutils literal notranslate"><span class="pre">BINARY_OP_ADD_FLOAT</span></code>, <code class="docutils literal notranslate"><span class="pre">CALL_PY_EXACT_ARGS</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">CALL_LIST_APPEND</span></code> appear as markers showing execution over time.</span><a class="headerlink" href="#id8" title="連結到這個圖片">¶</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="heatmap-format">
+<h3>Heatmap format<a class="headerlink" href="#heatmap-format" title="連結到這個標頭">¶</a></h3>
+<p>Heatmap format (<a class="reference internal" href="#cmdoption-profiling.sampling-heatmap"><code class="xref std std-option docutils literal notranslate"><span class="pre">--heatmap</span></code></a>) generates an interactive HTML visualization
+showing sample counts at the source line level:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--heatmap<span class="w"> </span>script.py
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--heatmap<span class="w"> </span>-o<span class="w"> </span>my_heatmap<span class="w"> </span>script.py
+</pre></div>
+</div>
+<figure class="align-center" id="id9">
+<a class="reference internal image-reference" href="../_images/tachyon-heatmap.png"><img alt="Tachyon heatmap visualization" src="../_images/tachyon-heatmap.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">The heatmap overlays sample counts directly on your source code. Lines are
+color-coded from cool (few samples) to hot (many samples). Navigation
+buttons (▲▼) let you jump between callers and callees.</span><a class="headerlink" href="#id9" title="連結到這個圖片">¶</a></p>
+</figcaption>
+</figure>
+<p>Unlike other formats that produce a single file, heatmap output creates a
+directory containing HTML files for each profiled source file. If no output
+path is specified, the directory is named <code class="docutils literal notranslate"><span class="pre">heatmap_PID</span></code>.</p>
+<p>The heatmap visualization displays your source code with a color gradient
+indicating how many samples were collected at each line. Hot lines (many
+samples) appear in warm colors, while cold lines (few or no samples) appear
+in cool colors. This view helps pinpoint exactly which lines of code are
+responsible for time consumption.</p>
+<p>The heatmap interface provides several interactive features:</p>
+<ul class="simple">
+<li><p><strong>Coloring modes</strong>: toggle between &quot;Self Time&quot; (direct execution) and
+&quot;Total Time&quot; (cumulative, including time in called functions)</p></li>
+<li><p><strong>Cold code filtering</strong>: show all lines or only lines with samples</p></li>
+<li><p><strong>Call graph navigation</strong>: each line shows navigation buttons (▲ for callers,
+▼ for callees) that let you trace execution paths through your code. When
+multiple functions called or were called from a line, a menu appears showing
+all options with their sample counts.</p></li>
+<li><p><strong>Scroll minimap</strong>: a vertical overview showing the heat distribution across
+the entire file</p></li>
+<li><p><strong>Hierarchical index</strong>: files organized by type (stdlib, site-packages,
+project) with aggregate sample counts per folder</p></li>
+<li><p><strong>Dark/light theme</strong>: toggle with preference saved across sessions</p></li>
+<li><p><strong>Line linking</strong>: click line numbers to create shareable URLs</p></li>
+</ul>
+<p>When opcode-level profiling is enabled with <a class="reference internal" href="#cmdoption-profiling.sampling-opcodes"><code class="xref std std-option docutils literal notranslate"><span class="pre">--opcodes</span></code></a>, each hot line
+can be expanded to show which bytecode instructions consumed time:</p>
+<figure class="align-center" id="id10">
+<a class="reference internal image-reference" href="../_images/tachyon-heatmap-with-opcodes.png"><img alt="Heatmap with expanded bytecode panel" src="../_images/tachyon-heatmap-with-opcodes.png" style="width: 100%;" />
+</a>
+<figcaption>
+<p><span class="caption-text">Expanding a hot line reveals the bytecode instructions executed, including
+specialized variants. The panel shows sample counts per instruction and the
+overall specialization percentage for the line.</span><a class="headerlink" href="#id10" title="連結到這個圖片">¶</a></p>
+</figcaption>
+</figure>
+<p><a class="reference external" href="../_static/tachyon-example-heatmap.html">Try the interactive example</a>!</p>
+<p>Heatmaps are especially useful when you know which file contains a performance
+issue but need to identify the specific lines. Many developers prefer this
+format because it maps directly to their source code, making it easy to read
+and navigate. For smaller scripts and focused analysis, heatmaps provide an
+intuitive view that shows exactly where time is spent without requiring
+interpretation of hierarchical visualizations.</p>
+</section>
+<section id="binary-format">
+<h3>Binary format<a class="headerlink" href="#binary-format" title="連結到這個標頭">¶</a></h3>
+<p>Binary format (<a class="reference internal" href="#cmdoption-profiling.sampling-binary"><code class="xref std std-option docutils literal notranslate"><span class="pre">--binary</span></code></a>) produces a compact binary file for efficient
+storage of profiling data:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--binary<span class="w"> </span>-o<span class="w"> </span>profile.bin<span class="w"> </span>script.py
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>attach<span class="w"> </span>--binary<span class="w"> </span>-o<span class="w"> </span>profile.bin<span class="w"> </span><span class="m">12345</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="#cmdoption-profiling.sampling-compression"><code class="xref std std-option docutils literal notranslate"><span class="pre">--compression</span></code></a> option controls data compression:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">auto</span></code> (default): Use zstd compression if available, otherwise no
+compression</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">zstd</span></code>: Force zstd compression (requires <a class="reference internal" href="compression.zstd.html#module-compression.zstd" title="compression.zstd: Low-level interface to compression and decompression routines in the zstd library."><code class="xref py py-mod docutils literal notranslate"><span class="pre">compression.zstd</span></code></a> support)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">none</span></code>: Disable compression</p></li>
+</ul>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--binary<span class="w"> </span>--compression<span class="o">=</span>zstd<span class="w"> </span>-o<span class="w"> </span>profile.bin<span class="w"> </span>script.py
+</pre></div>
+</div>
+<p>To analyze binary profiles, use the <a class="reference internal" href="#replay-command"><span class="std std-ref">The replay command</span></a> to convert them to
+other formats like flame graphs or pstats output.</p>
+</section>
+</section>
+<section id="record-and-replay-workflow">
+<h2>Record and replay workflow<a class="headerlink" href="#record-and-replay-workflow" title="連結到這個標頭">¶</a></h2>
+<p>The binary format combined with the replay command enables a record-and-replay
+workflow that separates data capture from analysis. Rather than generating
+visualizations during profiling, you capture raw data to a compact binary file
+and convert it to different formats later.</p>
+<p>This approach has three main benefits:</p>
+<ul class="simple">
+<li><p>Sampling runs faster because the work of building data structures for
+visualization is deferred until replay.</p></li>
+<li><p>A single binary capture can be converted to multiple output formats
+without re-profiling: pstats for a quick overview, flame graph for visual
+exploration, heatmap for line-level detail.</p></li>
+<li><p>Binary files are compact and easy to share with colleagues who can convert
+them to their preferred format.</p></li>
+</ul>
+<p>A typical workflow:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="c1"># Capture profile in production or during tests</span>
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>attach<span class="w"> </span>--binary<span class="w"> </span>-o<span class="w"> </span>profile.bin<span class="w"> </span><span class="m">12345</span>
+
+<span class="c1"># Later, analyze with different formats</span>
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>replay<span class="w"> </span>profile.bin
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>replay<span class="w"> </span>--flamegraph<span class="w"> </span>-o<span class="w"> </span>profile.html<span class="w"> </span>profile.bin
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>replay<span class="w"> </span>--heatmap<span class="w"> </span>-o<span class="w"> </span>heatmap<span class="w"> </span>profile.bin
+</pre></div>
+</div>
+</section>
+<section id="live-mode">
+<h2>Live mode<a class="headerlink" href="#live-mode" title="連結到這個標頭">¶</a></h2>
+<p>Live mode (<a class="reference internal" href="#cmdoption-profiling.sampling-live"><code class="xref std std-option docutils literal notranslate"><span class="pre">--live</span></code></a>) provides a terminal-based real-time view of profiling
+data, similar to the <code class="docutils literal notranslate"><span class="pre">top</span></code> command for system processes:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--live<span class="w"> </span>script.py
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>attach<span class="w"> </span>--live<span class="w"> </span><span class="m">12345</span>
+</pre></div>
+</div>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/tachyon-live-mode-2.gif"><img alt="Tachyon live mode showing all threads" src="../_images/tachyon-live-mode-2.gif" style="width: 100%;" />
+</a>
+</figure>
+<p>Live mode displays real-time profiling statistics, showing combined
+data from multiple threads in a multi-threaded application.</p>
+<p>The display updates continuously as new samples arrive, showing the current
+hottest functions. This mode requires the <a class="reference internal" href="curses.html#module-curses" title="curses: An interface to the curses library, providing portable terminal handling."><code class="xref py py-mod docutils literal notranslate"><span class="pre">curses</span></code></a> module, which is
+available on Unix-like systems but not on Windows. The terminal must be at
+least 60 columns wide and 12 lines tall; larger terminals display more columns.</p>
+<p>The header displays the top 3 hottest functions, sampling efficiency metrics,
+and thread status statistics (GIL held percentage, CPU usage, GC time). The
+main table shows function statistics with the currently sorted column indicated
+by an arrow (▼).</p>
+<p>When <a class="reference internal" href="#cmdoption-profiling.sampling-opcodes"><code class="xref std std-option docutils literal notranslate"><span class="pre">--opcodes</span></code></a> is enabled, an additional opcode panel appears below the
+main table, showing instruction-level statistics for the currently selected
+function. This panel displays which bytecode instructions are executing most
+frequently, including specialized variants and their base opcodes.</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/tachyon-live-mode-1.gif"><img alt="Tachyon live mode with opcode panel" src="../_images/tachyon-live-mode-1.gif" style="width: 100%;" />
+</a>
+</figure>
+<p>Live mode with <code class="docutils literal notranslate"><span class="pre">--opcodes</span></code> enabled shows an opcode panel with a bytecode
+instruction breakdown for the selected function.</p>
+<section id="keyboard-commands">
+<h3>Keyboard commands<a class="headerlink" href="#keyboard-commands" title="連結到這個標頭">¶</a></h3>
+<p>Within live mode, keyboard commands control the display:</p>
+<dl class="simple">
+<dt><kbd class="kbd docutils literal notranslate">q</kbd></dt><dd><p>Quit the profiler and return to the shell.</p>
+</dd>
+<dt><kbd class="kbd docutils literal notranslate">s</kbd> / <kbd class="kbd docutils literal notranslate">S</kbd></dt><dd><p>Cycle through sort orders forward/backward (sample count, percentage,
+total time, cumulative percentage, cumulative time).</p>
+</dd>
+<dt><kbd class="kbd docutils literal notranslate">p</kbd></dt><dd><p>Pause or resume display updates. Sampling continues in the background
+while the display is paused, so you can freeze the view to examine results
+without stopping data collection.</p>
+</dd>
+<dt><kbd class="kbd docutils literal notranslate">r</kbd></dt><dd><p>Reset all statistics and start fresh. This is disabled after profiling
+finishes to prevent accidental data loss.</p>
+</dd>
+<dt><kbd class="kbd docutils literal notranslate">/</kbd></dt><dd><p>Enter filter mode to search for functions by name. The filter uses
+case-insensitive substring matching against the filename and function name.
+Type a pattern and press Enter to apply, or Escape to cancel. Glob patterns
+and regular expressions are not supported.</p>
+</dd>
+<dt><kbd class="kbd docutils literal notranslate">c</kbd></dt><dd><p>Clear the current filter and show all functions again.</p>
+</dd>
+<dt><kbd class="kbd docutils literal notranslate">t</kbd></dt><dd><p>Toggle between viewing all threads combined or per-thread statistics.
+In per-thread mode, a thread counter (for example, <code class="docutils literal notranslate"><span class="pre">1/4</span></code>) appears showing
+your position among the available threads.</p>
+</dd>
+<dt><kbd class="kbd docutils literal notranslate">←</kbd> <kbd class="kbd docutils literal notranslate">→</kbd> or <kbd class="kbd docutils literal notranslate">↑</kbd> <kbd class="kbd docutils literal notranslate">↓</kbd></dt><dd><p>In per-thread view, navigate between threads. Navigation wraps around
+from the last thread to the first and vice versa.</p>
+</dd>
+<dt><kbd class="kbd docutils literal notranslate">+</kbd> / <kbd class="kbd docutils literal notranslate">-</kbd></dt><dd><p>Increase or decrease the display refresh rate. The range is 0.05 seconds
+(20 Hz, very responsive) to 1.0 second (1 Hz, lower overhead). Faster refresh
+rates use more CPU. The default is 0.1 seconds (10 Hz).</p>
+</dd>
+<dt><kbd class="kbd docutils literal notranslate">x</kbd></dt><dd><p>Toggle trend indicators that show whether functions are becoming hotter
+or cooler over time. When enabled, increasing metrics appear in green and
+decreasing metrics appear in red, comparing each update to the previous one.</p>
+</dd>
+<dt><kbd class="kbd docutils literal notranslate">h</kbd> or <kbd class="kbd docutils literal notranslate">?</kbd></dt><dd><p>Show the help screen with all available commands.</p>
+</dd>
+<dt><kbd class="kbd docutils literal notranslate">j</kbd> / <kbd class="kbd docutils literal notranslate">k</kbd> (or <kbd class="kbd docutils literal notranslate">Up</kbd> / <kbd class="kbd docutils literal notranslate">Down</kbd>)</dt><dd><p>Navigate through opcode entries in the opcode panel (when <code class="docutils literal notranslate"><span class="pre">--opcodes</span></code> is
+enabled). These keys scroll through the instruction-level statistics for the
+currently selected function.</p>
+</dd>
+</dl>
+<p>When profiling finishes (duration expires or target process exits), the display
+shows a &quot;PROFILING COMPLETE&quot; banner and freezes the final results. You can
+still navigate, sort, and filter the results before pressing <kbd class="kbd docutils literal notranslate">q</kbd> to exit.</p>
+<p>Live mode is incompatible with output format options (<a class="reference internal" href="#cmdoption-profiling.sampling-collapsed"><code class="xref std std-option docutils literal notranslate"><span class="pre">--collapsed</span></code></a>,
+<a class="reference internal" href="#cmdoption-profiling.sampling-flamegraph"><code class="xref std std-option docutils literal notranslate"><span class="pre">--flamegraph</span></code></a>, and so on) because it uses an interactive terminal
+interface rather than producing file output.</p>
+</section>
+</section>
+<section id="async-aware-profiling">
+<h2>Async-aware profiling<a class="headerlink" href="#async-aware-profiling" title="連結到這個標頭">¶</a></h2>
+<p>For programs using <a class="reference internal" href="asyncio.html#module-asyncio" title="asyncio: Asynchronous I/O."><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code></a>, the profiler offers async-aware mode
+(<a class="reference internal" href="#cmdoption-profiling.sampling-async-aware"><code class="xref std std-option docutils literal notranslate"><span class="pre">--async-aware</span></code></a>) that reconstructs call stacks based on the task structure
+rather than the raw Python frames:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--async-aware<span class="w"> </span>async_script.py
+</pre></div>
+</div>
+<p>Standard profiling of async code can be confusing because the physical call
+stack often shows event loop internals rather than the logical flow of your
+coroutines. Async-aware mode addresses this by tracking which task is running
+and presenting stacks that reflect the <code class="docutils literal notranslate"><span class="pre">await</span></code> chain.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch</span><span class="p">(</span><span class="n">url</span><span class="p">):</span>
+    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">url</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">50</span><span class="p">):</span>
+        <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">fetch</span><span class="p">(</span><span class="s2">"a"</span><span class="p">),</span> <span class="n">fetch</span><span class="p">(</span><span class="s2">"b"</span><span class="p">),</span> <span class="n">fetch</span><span class="p">(</span><span class="s2">"c"</span><span class="p">))</span>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+    <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--async-aware<span class="w"> </span>--flamegraph<span class="w"> </span>-o<span class="w"> </span>out.html<span class="w"> </span>script.py
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>Async-aware profiling requires the target process to have the <a class="reference internal" href="asyncio.html#module-asyncio" title="asyncio: Asynchronous I/O."><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code></a>
+module loaded. If you profile a script before it imports asyncio, async-aware
+mode will not be able to capture task information.</p>
+</div>
+<section id="async-modes">
+<h3>Async modes<a class="headerlink" href="#async-modes" title="連結到這個標頭">¶</a></h3>
+<p>The <a class="reference internal" href="#cmdoption-profiling.sampling-async-mode"><code class="xref std std-option docutils literal notranslate"><span class="pre">--async-mode</span></code></a> option controls which tasks appear in the profile:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--async-aware<span class="w"> </span>--async-mode<span class="o">=</span>running<span class="w"> </span>async_script.py
+python<span class="w"> </span>-m<span class="w"> </span>profiling.sampling<span class="w"> </span>run<span class="w"> </span>--async-aware<span class="w"> </span>--async-mode<span class="o">=</span>all<span class="w"> </span>async_script.py
+</pre></div>
+</div>
+<p>With <a class="reference internal" href="#cmdoption-profiling.sampling-async-mode"><code class="xref std std-option docutils literal notranslate"><span class="pre">--async-mode</span></code></a><code class="docutils literal notranslate"><span class="pre">=running</span></code> (the default), only the task currently executing
+on the CPU is profiled. This shows where your program is actively spending time
+and is the typical choice for performance analysis.</p>
+<p>With <a class="reference internal" href="#cmdoption-profiling.sampling-async-mode"><code class="xref std std-option docutils literal notranslate"><span class="pre">--async-mode</span></code></a><code class="docutils literal notranslate"><span class="pre">=all</span></code>, tasks that are suspended (awaiting I/O, locks, or
+other tasks) are also included. This mode is useful for understanding what your
+program is waiting on, but produces larger profiles since every suspended task
+appears in each sample.</p>
+</section>
+<section id="task-markers-and-stack-reconstruction">
+<h3>Task markers and stack reconstruction<a class="headerlink" href="#task-markers-and-stack-reconstruction" title="連結到這個標頭">¶</a></h3>
+<p>In async-aware profiles, you will see <code class="docutils literal notranslate"><span class="pre">&lt;task&gt;</span></code> frames that mark boundaries
+between asyncio tasks. These are synthetic frames inserted by the profiler to
+show the task structure. The task name appears as the function name in these
+frames.</p>
+<p>When a task awaits another task, the profiler reconstructs the logical call
+chain by following the <code class="docutils literal notranslate"><span class="pre">await</span></code> relationships. Only &quot;leaf&quot; tasks (tasks that
+no other task is currently awaiting) generate their own stack entries. Tasks
+being awaited by other tasks appear as part of their awaiter's stack instead.</p>
+<p>If a task has multiple awaiters (a diamond pattern in the task graph), the
+profiler deterministically selects one parent and annotates the task marker
+with the number of parents, for example <code class="docutils literal notranslate"><span class="pre">MyTask</span> <span class="pre">(2</span> <span class="pre">parents)</span></code>. This indicates
+that alternate execution paths exist but are not shown in this particular stack.</p>
+</section>
+<section id="option-restrictions">
+<h3>Option restrictions<a class="headerlink" href="#option-restrictions" title="連結到這個標頭">¶</a></h3>
+<p>Async-aware mode uses a different stack reconstruction mechanism and is
+incompatible with: <a class="reference internal" href="#cmdoption-profiling.sampling-native"><code class="xref std std-option docutils literal notranslate"><span class="pre">--native</span></code></a>, <a class="reference internal" href="#cmdoption-profiling.sampling-no-gc"><code class="xref std std-option docutils literal notranslate"><span class="pre">--no-gc</span></code></a>, <a class="reference internal" href="#cmdoption-profiling.sampling-a"><code class="xref std std-option docutils literal notranslate"><span class="pre">--all-threads</span></code></a>, and
+<a class="reference internal" href="#cmdoption-profiling.sampling-mode"><code class="xref std std-option docutils literal notranslate"><span class="pre">--mode</span></code></a><code class="docutils literal notranslate"><span class="pre">=cpu</span></code> or <a class="reference internal" href="#cmdoption-profiling.sampling-mode"><code class="xref std std-option docutils literal notranslate"><span class="pre">--mode</span></code></a><code class="docutils literal notranslate"><span class="pre">=gil</span></code>.</p>
+</section>
+</section>
+<section id="command-line-interface">
+<h2>Command-line interface<a class="headerlink" href="#command-line-interface" title="連結到這個標頭">¶</a></h2>
+<p>The complete command-line interface for reference.</p>
+<section id="global-options">
+<h3>Global options<a class="headerlink" href="#global-options" title="連結到這個標頭">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-arg-run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-arg-run" title="連結到這個定義">¶</a></dt>
+<dd><p>Run and profile a Python script or module.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-arg-attach">
+<span class="sig-name descname"><span class="pre">attach</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-arg-attach" title="連結到這個定義">¶</a></dt>
+<dd><p>Attach to and profile a running process by PID.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-arg-dump">
+<span class="sig-name descname"><span class="pre">dump</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-arg-dump" title="連結到這個定義">¶</a></dt>
+<dd><p>Print a single one-shot snapshot of a running process's Python stack.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-arg-replay">
+<span class="sig-name descname"><span class="pre">replay</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-arg-replay" title="連結到這個定義">¶</a></dt>
+<dd><p>Convert a binary profile file to another output format.</p>
+</dd></dl>
+
+</section>
+<section id="dump-options">
+<h3>Dump options<a class="headerlink" href="#dump-options" title="連結到這個標頭">¶</a></h3>
+<p>The following options apply to the <code class="docutils literal notranslate"><span class="pre">dump</span></code> subcommand:</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-a">
+<span id="cmdoption-profiling.sampling-all-threads"></span><span class="sig-name descname"><span class="pre">-a</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--all-threads</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-a" title="連結到這個定義">¶</a></dt>
+<dd><p>Dump all threads in the target process instead of just the main thread.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-native">
+<span class="sig-name descname"><span class="pre">--native</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-native" title="連結到這個定義">¶</a></dt>
+<dd><p>Include <code class="docutils literal notranslate"><span class="pre">&lt;native&gt;</span></code> frames for non-Python code.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-no-gc">
+<span class="sig-name descname"><span class="pre">--no-gc</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-no-gc" title="連結到這個定義">¶</a></dt>
+<dd><p>Exclude <code class="docutils literal notranslate"><span class="pre">&lt;GC&gt;</span></code> frames for active garbage collection.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-opcodes">
+<span class="sig-name descname"><span class="pre">--opcodes</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-opcodes" title="連結到這個定義">¶</a></dt>
+<dd><p>Show bytecode opcode names when available.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-async-aware">
+<span class="sig-name descname"><span class="pre">--async-aware</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-async-aware" title="連結到這個定義">¶</a></dt>
+<dd><p>Reconstruct the stack across <code class="docutils literal notranslate"><span class="pre">await</span></code> boundaries for asyncio
+applications.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-async-mode">
+<span class="sig-name descname"><span class="pre">--async-mode</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;mode&gt;</span></span><a class="headerlink" href="#cmdoption-profiling.sampling-async-mode" title="連結到這個定義">¶</a></dt>
+<dd><p>Async stack mode: <code class="docutils literal notranslate"><span class="pre">running</span></code> (only the running task) or <code class="docutils literal notranslate"><span class="pre">all</span></code>
+(all tasks including waiting). Defaults to <code class="docutils literal notranslate"><span class="pre">all</span></code> for <code class="docutils literal notranslate"><span class="pre">dump</span></code>.
+Requires <a class="reference internal" href="#cmdoption-profiling.sampling-async-aware"><code class="xref std std-option docutils literal notranslate"><span class="pre">--async-aware</span></code></a>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-blocking">
+<span class="sig-name descname"><span class="pre">--blocking</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-blocking" title="連結到這個定義">¶</a></dt>
+<dd><p>Pause all threads in the target process while reading the stack.</p>
+</dd></dl>
+
+</section>
+<section id="sampling-options">
+<h3>Sampling options<a class="headerlink" href="#sampling-options" title="連結到這個標頭">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-r">
+<span id="cmdoption-profiling.sampling-sampling-rate"></span><span class="sig-name descname"><span class="pre">-r</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;rate&gt;</span></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--sampling-rate</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;rate&gt;</span></span><a class="headerlink" href="#cmdoption-profiling.sampling-r" title="連結到這個定義">¶</a></dt>
+<dd><p>Sampling rate (for example, <code class="docutils literal notranslate"><span class="pre">10000</span></code>, <code class="docutils literal notranslate"><span class="pre">10khz</span></code>, <code class="docutils literal notranslate"><span class="pre">10k</span></code>). Default: <code class="docutils literal notranslate"><span class="pre">1khz</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-d">
+<span id="cmdoption-profiling.sampling-duration"></span><span class="sig-name descname"><span class="pre">-d</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;seconds&gt;</span></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--duration</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;seconds&gt;</span></span><a class="headerlink" href="#cmdoption-profiling.sampling-d" title="連結到這個定義">¶</a></dt>
+<dd><p>Profiling duration in seconds. Default: run to completion.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-0">
+<span id="cmdoption-profiling.sampling-1"></span><span class="sig-name descname"><span class="pre">-a</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--all-threads</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-0" title="連結到這個定義">¶</a></dt>
+<dd><p>Sample all threads, not just the main thread.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-realtime-stats">
+<span class="sig-name descname"><span class="pre">--realtime-stats</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-realtime-stats" title="連結到這個定義">¶</a></dt>
+<dd><p>Display sampling statistics during profiling.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-2">
+<span class="sig-name descname"><span class="pre">--native</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-2" title="連結到這個定義">¶</a></dt>
+<dd><p>Include <code class="docutils literal notranslate"><span class="pre">&lt;native&gt;</span></code> frames for non-Python code.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-3">
+<span class="sig-name descname"><span class="pre">--no-gc</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-3" title="連結到這個定義">¶</a></dt>
+<dd><p>Exclude <code class="docutils literal notranslate"><span class="pre">&lt;GC&gt;</span></code> frames for garbage collection.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-4">
+<span class="sig-name descname"><span class="pre">--async-aware</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-4" title="連結到這個定義">¶</a></dt>
+<dd><p>Enable async-aware profiling for asyncio programs.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-5">
+<span class="sig-name descname"><span class="pre">--opcodes</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-5" title="連結到這個定義">¶</a></dt>
+<dd><p>Gather bytecode opcode information for instruction-level profiling. Shows
+which bytecode instructions are executing, including specializations.
+Compatible with <code class="docutils literal notranslate"><span class="pre">--live</span></code>, <code class="docutils literal notranslate"><span class="pre">--flamegraph</span></code>, <code class="docutils literal notranslate"><span class="pre">--heatmap</span></code>, and <code class="docutils literal notranslate"><span class="pre">--gecko</span></code>
+formats only.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-subprocesses">
+<span class="sig-name descname"><span class="pre">--subprocesses</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-subprocesses" title="連結到這個定義">¶</a></dt>
+<dd><p>Also profile subprocesses. Each subprocess gets its own profiler
+instance and output file. Incompatible with <code class="docutils literal notranslate"><span class="pre">--live</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-6">
+<span class="sig-name descname"><span class="pre">--blocking</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-6" title="連結到這個定義">¶</a></dt>
+<dd><p>Pause the target process during each sample. This ensures consistent
+stack traces at the cost of slowing down the target. Use with longer
+intervals (1000 µs or higher) to minimize impact. See <a class="reference internal" href="#blocking-mode"><span class="std std-ref">Blocking mode</span></a>
+for details.</p>
+</dd></dl>
+
+</section>
+<section id="mode-options">
+<h3>Mode options<a class="headerlink" href="#mode-options" title="連結到這個標頭">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-mode">
+<span class="sig-name descname"><span class="pre">--mode</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;mode&gt;</span></span><a class="headerlink" href="#cmdoption-profiling.sampling-mode" title="連結到這個定義">¶</a></dt>
+<dd><p>Sampling mode: <code class="docutils literal notranslate"><span class="pre">wall</span></code> (default), <code class="docutils literal notranslate"><span class="pre">cpu</span></code>, <code class="docutils literal notranslate"><span class="pre">gil</span></code>, or <code class="docutils literal notranslate"><span class="pre">exception</span></code>.
+The <code class="docutils literal notranslate"><span class="pre">cpu</span></code>, <code class="docutils literal notranslate"><span class="pre">gil</span></code>, and <code class="docutils literal notranslate"><span class="pre">exception</span></code> modes are incompatible with
+<code class="docutils literal notranslate"><span class="pre">--async-aware</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-7">
+<span class="sig-name descname"><span class="pre">--async-mode</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;mode&gt;</span></span><a class="headerlink" href="#cmdoption-profiling.sampling-7" title="連結到這個定義">¶</a></dt>
+<dd><p>Async profiling mode: <code class="docutils literal notranslate"><span class="pre">running</span></code> (default) or <code class="docutils literal notranslate"><span class="pre">all</span></code>.
+Requires <code class="docutils literal notranslate"><span class="pre">--async-aware</span></code>.</p>
+</dd></dl>
+
+</section>
+<section id="output-options">
+<h3>Output options<a class="headerlink" href="#output-options" title="連結到這個標頭">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-pstats">
+<span class="sig-name descname"><span class="pre">--pstats</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-pstats" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate pstats statistics. This is the default.
+When written to stdout, the output is a text table; with <a class="reference internal" href="#cmdoption-profiling.sampling-o"><code class="xref std std-option docutils literal notranslate"><span class="pre">-o</span></code></a>,
+it is a binary pstats file.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-collapsed">
+<span class="sig-name descname"><span class="pre">--collapsed</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-collapsed" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate collapsed stack format for external flame graph tools.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-flamegraph">
+<span class="sig-name descname"><span class="pre">--flamegraph</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-flamegraph" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate self-contained HTML flame graph.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-diff-flamegraph">
+<span class="sig-name descname"><span class="pre">--diff-flamegraph</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;baseline.bin&gt;</span></span><a class="headerlink" href="#cmdoption-profiling.sampling-diff-flamegraph" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate differential flamegraph comparing to a baseline binary profile.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-gecko">
+<span class="sig-name descname"><span class="pre">--gecko</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-gecko" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate Gecko JSON format for Firefox Profiler.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-heatmap">
+<span class="sig-name descname"><span class="pre">--heatmap</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-heatmap" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate HTML heatmap with line-level sample counts.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-binary">
+<span class="sig-name descname"><span class="pre">--binary</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-binary" title="連結到這個定義">¶</a></dt>
+<dd><p>Generate high-performance binary format for later conversion with the
+<code class="docutils literal notranslate"><span class="pre">replay</span></code> command.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-compression">
+<span class="sig-name descname"><span class="pre">--compression</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;type&gt;</span></span><a class="headerlink" href="#cmdoption-profiling.sampling-compression" title="連結到這個定義">¶</a></dt>
+<dd><p>Compression for binary format: <code class="docutils literal notranslate"><span class="pre">auto</span></code> (use zstd if available, default),
+<code class="docutils literal notranslate"><span class="pre">zstd</span></code>, or <code class="docutils literal notranslate"><span class="pre">none</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-o">
+<span id="cmdoption-profiling.sampling-output"></span><span class="sig-name descname"><span class="pre">-o</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--output</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;path&gt;</span></span><a class="headerlink" href="#cmdoption-profiling.sampling-o" title="連結到這個定義">¶</a></dt>
+<dd><p>Output file or directory path. Default behavior varies by format:
+<a class="reference internal" href="#cmdoption-profiling.sampling-pstats"><code class="xref std std-option docutils literal notranslate"><span class="pre">--pstats</span></code></a> prints a text table to stdout, while <code class="docutils literal notranslate"><span class="pre">-o</span></code> writes a
+binary pstats file. Other formats generate a file named
+<code class="docutils literal notranslate"><span class="pre">&lt;format&gt;_&lt;PID&gt;.&lt;ext&gt;</span></code> (for example, <code class="docutils literal notranslate"><span class="pre">flamegraph_12345.html</span></code>).
+<a class="reference internal" href="#cmdoption-profiling.sampling-heatmap"><code class="xref std std-option docutils literal notranslate"><span class="pre">--heatmap</span></code></a> creates a directory named <code class="docutils literal notranslate"><span class="pre">heatmap_&lt;PID&gt;</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-browser">
+<span class="sig-name descname"><span class="pre">--browser</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-browser" title="連結到這個定義">¶</a></dt>
+<dd><p>Automatically open HTML output (<a class="reference internal" href="#cmdoption-profiling.sampling-flamegraph"><code class="xref std std-option docutils literal notranslate"><span class="pre">--flamegraph</span></code></a> and
+<a class="reference internal" href="#cmdoption-profiling.sampling-heatmap"><code class="xref std std-option docutils literal notranslate"><span class="pre">--heatmap</span></code></a>) in your default web browser after generation.
+When profiling with <a class="reference internal" href="#cmdoption-profiling.sampling-subprocesses"><code class="xref std std-option docutils literal notranslate"><span class="pre">--subprocesses</span></code></a>, only the main process
+opens the browser; subprocess outputs are never auto-opened.</p>
+</dd></dl>
+
+</section>
+<section id="pstats-display-options">
+<h3>pstats display options<a class="headerlink" href="#pstats-display-options" title="連結到這個標頭">¶</a></h3>
+<p>These options apply only to pstats format output.</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-sort">
+<span class="sig-name descname"><span class="pre">--sort</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;key&gt;</span></span><a class="headerlink" href="#cmdoption-profiling.sampling-sort" title="連結到這個定義">¶</a></dt>
+<dd><p>Sort order: <code class="docutils literal notranslate"><span class="pre">nsamples</span></code>, <code class="docutils literal notranslate"><span class="pre">tottime</span></code>, <code class="docutils literal notranslate"><span class="pre">cumtime</span></code>, <code class="docutils literal notranslate"><span class="pre">sample-pct</span></code>,
+<code class="docutils literal notranslate"><span class="pre">cumul-pct</span></code>, <code class="docutils literal notranslate"><span class="pre">nsamples-cumul</span></code>, or <code class="docutils literal notranslate"><span class="pre">name</span></code>. Default: <code class="docutils literal notranslate"><span class="pre">nsamples</span></code>.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-l">
+<span id="cmdoption-profiling.sampling-limit"></span><span class="sig-name descname"><span class="pre">-l</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;count&gt;</span></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--limit</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;count&gt;</span></span><a class="headerlink" href="#cmdoption-profiling.sampling-l" title="連結到這個定義">¶</a></dt>
+<dd><p>Maximum number of entries to display. Default: 15.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-no-summary">
+<span class="sig-name descname"><span class="pre">--no-summary</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-no-summary" title="連結到這個定義">¶</a></dt>
+<dd><p>Omit the Legend and Summary of Interesting Functions sections from output.</p>
+</dd></dl>
+
+</section>
+<section id="run-command-options">
+<h3>Run command options<a class="headerlink" href="#run-command-options" title="連結到這個標頭">¶</a></h3>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-m">
+<span id="cmdoption-profiling.sampling-module"></span><span class="sig-name descname"><span class="pre">-m</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--module</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-m" title="連結到這個定義">¶</a></dt>
+<dd><p>Treat the target as a module name rather than a script path.</p>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-profiling.sampling-live">
+<span class="sig-name descname"><span class="pre">--live</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-profiling.sampling-live" title="連結到這個定義">¶</a></dt>
+<dd><p>Start interactive terminal interface instead of batch profiling.</p>
+</dd></dl>
+
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<dl class="simple">
+<dt><a class="reference internal" href="profiling.html#module-profiling" title="profiling: Python profiling tools for performance analysis."><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling</span></code></a></dt><dd><p>Overview of Python profiling tools and guidance on choosing a profiler.</p>
+</dd>
+<dt><a class="reference internal" href="profiling.tracing.html#module-profiling.tracing" title="profiling.tracing: Deterministic tracing profiler for Python programs."><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling.tracing</span></code></a></dt><dd><p>Deterministic tracing profiler for exact call counts and timing.</p>
+</dd>
+<dt><a class="reference internal" href="pstats.html#module-pstats" title="pstats: Statistics object for analyzing profiler output."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pstats</span></code></a></dt><dd><p>Statistics analysis for profile data.</p>
+</dd>
+<dt><a class="reference external" href="https://profiler.firefox.com">Firefox Profiler</a></dt><dd><p>Web-based profiler that accepts Gecko format output. See the
+<a class="reference external" href="https://profiler.firefox.com/docs/#/">documentation</a> for usage details.</p>
+</dd>
+<dt><a class="reference external" href="https://github.com/brendangregg/FlameGraph">FlameGraph</a></dt><dd><p>Tools for generating flame graphs from collapsed stack format.</p>
+</dd>
+</dl>
+</div>
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="../contents.html">目錄</a></h3>
+    <ul>
+<li><a class="reference internal" href="#"><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling.sampling</span></code> --- Statistical profiler</a><ul>
+<li><a class="reference internal" href="#what-is-statistical-profiling">What is statistical profiling?</a><ul>
+<li><a class="reference internal" href="#how-time-is-estimated">How time is estimated</a></li>
+<li><a class="reference internal" href="#when-to-use-a-different-approach">When to use a different approach</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#quick-examples">Quick examples</a></li>
+<li><a class="reference internal" href="#commands">Commands</a><ul>
+<li><a class="reference internal" href="#the-run-command">The <code class="docutils literal notranslate"><span class="pre">run</span></code> command</a></li>
+<li><a class="reference internal" href="#the-attach-command">The <code class="docutils literal notranslate"><span class="pre">attach</span></code> command</a></li>
+<li><a class="reference internal" href="#the-dump-command">The <code class="docutils literal notranslate"><span class="pre">dump</span></code> command</a></li>
+<li><a class="reference internal" href="#the-replay-command">The <code class="docutils literal notranslate"><span class="pre">replay</span></code> command</a></li>
+<li><a class="reference internal" href="#profiling-in-production">Profiling in production</a></li>
+<li><a class="reference internal" href="#platform-requirements">Platform requirements</a></li>
+<li><a class="reference internal" href="#version-compatibility">Version compatibility</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sampling-configuration">Sampling configuration</a><ul>
+<li><a class="reference internal" href="#sampling-rate-and-duration">Sampling rate and duration</a></li>
+<li><a class="reference internal" href="#thread-selection">Thread selection</a></li>
+<li><a class="reference internal" href="#blocking-mode">Blocking mode</a></li>
+<li><a class="reference internal" href="#special-frames">Special frames</a></li>
+<li><a class="reference internal" href="#opcode-aware-profiling">Opcode-aware profiling</a></li>
+<li><a class="reference internal" href="#real-time-statistics">Real-time statistics</a></li>
+<li><a class="reference internal" href="#subprocess-profiling">Subprocess profiling</a></li>
+<li><a class="reference internal" href="#sampling-efficiency">Sampling efficiency</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#profiling-modes">Profiling modes</a><ul>
+<li><a class="reference internal" href="#wall-clock-mode">Wall-clock mode</a></li>
+<li><a class="reference internal" href="#cpu-mode">CPU mode</a></li>
+<li><a class="reference internal" href="#comparing-wall-clock-and-cpu-profiles">Comparing wall-clock and CPU profiles</a></li>
+<li><a class="reference internal" href="#gil-mode">GIL mode</a></li>
+<li><a class="reference internal" href="#exception-mode">Exception mode</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#output-formats">Output formats</a><ul>
+<li><a class="reference internal" href="#pstats-format">pstats format</a></li>
+<li><a class="reference internal" href="#collapsed-stacks-format">Collapsed stacks format</a></li>
+<li><a class="reference internal" href="#flame-graph-format">Flame graph format</a><ul>
+<li><a class="reference internal" href="#differential-flame-graphs">Differential flame graphs</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gecko-format">Gecko format</a></li>
+<li><a class="reference internal" href="#heatmap-format">Heatmap format</a></li>
+<li><a class="reference internal" href="#binary-format">Binary format</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#record-and-replay-workflow">Record and replay workflow</a></li>
+<li><a class="reference internal" href="#live-mode">Live mode</a><ul>
+<li><a class="reference internal" href="#keyboard-commands">Keyboard commands</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#async-aware-profiling">Async-aware profiling</a><ul>
+<li><a class="reference internal" href="#async-modes">Async modes</a></li>
+<li><a class="reference internal" href="#task-markers-and-stack-reconstruction">Task markers and stack reconstruction</a></li>
+<li><a class="reference internal" href="#option-restrictions">Option restrictions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#command-line-interface">Command-line interface</a><ul>
+<li><a class="reference internal" href="#global-options">Global options</a></li>
+<li><a class="reference internal" href="#dump-options">Dump options</a></li>
+<li><a class="reference internal" href="#sampling-options">Sampling options</a></li>
+<li><a class="reference internal" href="#mode-options">Mode options</a></li>
+<li><a class="reference internal" href="#output-options">Output options</a></li>
+<li><a class="reference internal" href="#pstats-display-options">pstats display options</a></li>
+<li><a class="reference internal" href="#run-command-options">Run command options</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>上個主題</h4>
+    <p class="topless"><a href="profiling.tracing.html"
+                          title="上一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling.tracing</span></code> --- Deterministic profiler</a></p>
+  </div>
+  <div>
+    <h4>下個主題</h4>
+    <p class="topless"><a href="pstats.html"
+                          title="下一章"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pstats</span></code> --- Statistics for profilers</a></p>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const title = document.querySelector('meta[property="og:title"]').content;
+        const elements = document.querySelectorAll('.improvepage');
+        const pageurl = window.location.href.split('?')[0];
+        elements.forEach(element => {
+            const url = new URL(element.href.split('?')[0].replace("-nojs", ""));
+            url.searchParams.set('pagetitle', title);
+            url.searchParams.set('pageurl', pageurl);
+            url.searchParams.set('pagesource', "library/profiling.sampling.rst");
+            element.href = url.toString();
+        });
+    });
+  </script>
+  <div role="note" aria-label="source link">
+    <h3>此頁面</h3>
+    <ul class="this-page-menu">
+      <li><a href="../bugs.html">回報錯誤</a></li>
+      <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
+      <li>
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/library/profiling.sampling.rst?plain=1"
+            rel="nofollow">顯示原始碼
+        </a>
+      </li>
+      
+      <li>
+        <a href="https://github.com/python/python-docs-zh-tw/blob/3.15/library/profiling.sampling.po?plain=1"
+           rel="nofollow">顯示翻譯原始碼</a>
+      </li>
+      
+    </ul>
+  </div>
+        </div>
+<div id="sidebarbutton" title="收合側邊欄">
+<span>«</span>
+</div>
+
+      </div>
+      <div class="clearer"></div>
+    </div>  
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>導航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="總索引"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python 模組索引"
+             >模組</a> |</li>
+        <li class="right" >
+          <a href="pstats.html" title="pstats --- Statistics for profilers"
+             >下一頁</a> |</li>
+        <li class="right" >
+          <a href="profiling.tracing.html" title="profiling.tracing --- Deterministic profiler"
+             >上一頁</a> |</li>
+
+          <li class="root-icon"><img src="../_static/py.svg" alt="Python logo" style="vertical-align: middle; margin-top: -1px"></li>
+          <li><a href="https://www.python.org/">Python</a> &#187;</li>
+          <li class="switchers">
+            <div class="language_switcher_placeholder"></div>
+            <div class="version_switcher_placeholder"></div>
+          </li>
+          <li>
+              
+          </li>
+    <li id="cpython-language-and-version">
+      <a href="../index.html">3.15.0 Documentation</a> &#187;
+    </li>
+
+          <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="debug.html" >Debugging and profiling</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="profiling.html" ><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling</span></code> --- Python profilers</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href=""><code class="xref py py-mod docutils literal notranslate"><span class="pre">profiling.sampling</span></code> --- Statistical profiler</a></li>
+                <li class="right">
+                    
+
+    <div class="inline-search" role="search">
+        <form class="inline-search" action="../search.html" method="get">
+          <input placeholder="快速搜索" aria-label="快速搜索" type="search" name="q" id="search-box">
+          <input type="submit" value="前往">
+        </form>
+    </div>
+                     |
+                </li>
+            <li class="right">
+<label class="theme-selector-label">
+    主題
+    <select class="theme-selector" oninput="activateTheme(this.value)">
+        <option value="auto" selected>自動</option>
+        <option value="light">淺色模式</option>
+        <option value="dark">深色模式</option>
+    </select>
+</label> |</li>
+            
+      </ul>
+    </div>  
+    <div class="footer">
+    &copy; <a href="../copyright.html">版權所有</a> 2001 Python Software Foundation.
+    <br>
+    此頁面採用 Python 軟體基金會授權條款第 2 版。
+    <br>
+    文件中的範例、應用技巧與其他程式碼額外採用了 Zero Clause BSD 授權條款。
+    <br>
+    
+      更多訊息請見<a href="/license.html">歷史與授權條款</a>。<br>
+    
+    
+    <br>
+
+    Python 軟體基金會是一家非營利法人。
+<a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
+<br>
+    <br>
+      最後更新於 10月 15, 2026 (20:22 UTC)。
+    
+      <a href="/bugs.html">發現 bug</a>？
+    
+    <br>
+
+    以 <a href="https://www.sphinx-doc.org/">Sphinx</a>8.2.3建立。 
+    </div>
+
+  </body>
+</html>
