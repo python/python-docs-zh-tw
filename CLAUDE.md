@@ -1,6 +1,6 @@
 # Python Documentation Traditional Chinese Translation
 
-This project translates Python 3.14 official documentation to Traditional Chinese (zh_TW).
+This project translates Python 3.15 official documentation to Traditional Chinese (zh_TW).
 
 ## Build Commands
 

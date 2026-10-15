@@ -31,7 +31,7 @@ confirm the generated HTML in `../cpython/Doc/build/html`.
 
 ## Commit & Pull Request Guidelines
 - Open an issue to claim a translation task before starting.
-- Base your branch on `upstream/3.13`.
+- Base your branch on `upstream/3.15`.
 - Use clear commit messages; the repo example is
   `Working on path/to/file.po`.
 - In PRs, summarize the files translated, link the issue, and note any build
