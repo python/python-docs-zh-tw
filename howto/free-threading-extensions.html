@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>支援自由執行緒的 C API 擴充 &#8212; Python 3.14.8 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支援自由執行緒的 C API 擴充 &#8212; Python 3.15.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=48df1187" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=0fc419ee" />
     
-    <script src="../_static/documentation_options.js?v=cb50f8de"></script>
+    <script src="../_static/documentation_options.js?v=5d502324"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,13 +20,13 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.14.8 說明文件 中搜尋"
+          title="在 Python 3.15.0 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜尋" href="../search.html" />
     <link rel="copyright" title="版權所有" href="../copyright.html" />
-    <link rel="next" title="遠端偵錯附加協定" href="remote_debugging.html" />
+    <link rel="next" title="Migrating to Stable ABI for free threading (abi3t)" href="abi3t-migration.html" />
     <link rel="prev" title="Python 自由執行緒的支援" href="free-threading-python.html" />
     
       
@@ -113,6 +113,7 @@
 <li><a class="reference internal" href="#how-critical-sections-work">How Critical Sections Work</a></li>
 <li><a class="reference internal" href="#deadlock-avoidance">Deadlock Avoidance</a></li>
 <li><a class="reference internal" href="#important-considerations">Important Considerations</a></li>
+<li><a class="reference internal" href="#per-object-locks-ob-mutex">Per-Object Locks (<code class="docutils literal notranslate"><span class="pre">ob_mutex</span></code>)</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#building-extensions-for-the-free-threaded-build">Building Extensions for the Free-Threaded Build</a><ul>
@@ -132,8 +133,8 @@
   </div>
   <div>
     <h4>下個主題</h4>
-    <p class="topless"><a href="remote_debugging.html"
-                          title="下一章">遠端偵錯附加協定</a></p>
+    <p class="topless"><a href="abi3t-migration.html"
+                          title="下一章">Migrating to Stable ABI for free threading (<code class="docutils literal notranslate"><span class="pre">abi3t</span></code>)</a></p>
   </div>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -155,13 +156,13 @@
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.14/Doc/howto/free-threading-extensions.rst?plain=1"
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/howto/free-threading-extensions.rst?plain=1"
             rel="nofollow">顯示原始碼
         </a>
       </li>
       
       <li>
-        <a href="https://github.com/python/python-docs-zh-tw/blob/3.14/howto/free-threading-extensions.po?plain=1"
+        <a href="https://github.com/python/python-docs-zh-tw/blob/3.15/howto/free-threading-extensions.po?plain=1"
            rel="nofollow">顯示翻譯原始碼</a>
       </li>
       
@@ -182,7 +183,7 @@
           <a href="../py-modindex.html" title="Python 模組索引"
              >模組</a> |</li>
         <li class="right" >
-          <a href="remote_debugging.html" title="遠端偵錯附加協定"
+          <a href="abi3t-migration.html" title="Migrating to Stable ABI for free threading (abi3t)"
              accesskey="N">下一頁</a> |</li>
         <li class="right" >
           <a href="free-threading-python.html" title="Python 自由執行緒的支援"
@@ -198,7 +199,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.8 Documentation</a> &#187;
+      <a href="../index.html">3.15.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python 如何達成任務</a> &#187;</li>
@@ -266,9 +267,12 @@ the GIL disabled depending on whether the extension uses multi-phase or
 single-phase initialization.</p>
 <section id="multi-phase-initialization">
 <h3>Multi-Phase Initialization<a class="headerlink" href="#multi-phase-initialization" title="連結到這個標頭">¶</a></h3>
-<p>Extensions that use multi-phase initialization (i.e.,
-<a class="reference internal" href="../c-api/extension-modules.html#c.PyModuleDef_Init" title="PyModuleDef_Init"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModuleDef_Init()</span></code></a>) should add a <a class="reference internal" href="../c-api/module.html#c.Py_mod_gil" title="Py_mod_gil"><code class="xref c c-data docutils literal notranslate"><span class="pre">Py_mod_gil</span></code></a> slot in the
-module definition.  If your extension supports older versions of CPython,
+<p>Extensions that use <a class="reference internal" href="../c-api/extension-modules.html#multi-phase-initialization"><span class="std std-ref">multi-phase initialization</span></a>
+(functions like <a class="reference internal" href="../c-api/extension-modules.html#c.PyModuleDef_Init" title="PyModuleDef_Init"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModuleDef_Init()</span></code></a>,
+<a class="reference internal" href="../c-api/extension-modules.html#c.PyModExport_modulename" title="PyModExport_modulename"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModExport_*</span></code></a> export hook,
+<a class="reference internal" href="../c-api/module.html#c.PyModule_FromSlotsAndSpec" title="PyModule_FromSlotsAndSpec"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_FromSlotsAndSpec()</span></code></a>) should add a
+<a class="reference internal" href="../c-api/module.html#c.Py_mod_gil" title="Py_mod_gil"><code class="xref c c-data docutils literal notranslate"><span class="pre">Py_mod_gil</span></code></a> slot in the module definition.
+If your extension supports older versions of CPython,
 you should guard the slot with a <a class="reference internal" href="../c-api/apiabiversion.html#c.PY_VERSION_HEX" title="PY_VERSION_HEX"><code class="xref c c-data docutils literal notranslate"><span class="pre">PY_VERSION_HEX</span></code></a> check.</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">PyModuleDef_Slot</span><span class="w"> </span><span class="n">module_slots</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="p">...</span>
@@ -277,19 +281,13 @@ you should guard the slot with a <a class="reference internal" href="../c-api/ap
 <span class="cp">#endif</span>
 <span class="w">    </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">}</span>
 <span class="p">};</span>
-
-<span class="k">static</span><span class="w"> </span><span class="k">struct</span><span class="w"> </span><span class="nc">PyModuleDef</span><span class="w"> </span><span class="n">moduledef</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="n">PyModuleDef_HEAD_INIT</span><span class="p">,</span>
-<span class="w">    </span><span class="p">.</span><span class="n">m_slots</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">module_slots</span><span class="p">,</span>
-<span class="w">    </span><span class="p">...</span>
-<span class="p">};</span>
 </pre></div>
 </div>
 </section>
 <section id="single-phase-initialization">
 <h3>單一階段初始化 (Single-Phase Initialization)<a class="headerlink" href="#single-phase-initialization" title="連結到這個標頭">¶</a></h3>
-<p>Extensions that use single-phase initialization (i.e.,
-<a class="reference internal" href="../c-api/module.html#c.PyModule_Create" title="PyModule_Create"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_Create()</span></code></a>) should call <a class="reference internal" href="../c-api/module.html#c.PyUnstable_Module_SetGIL" title="PyUnstable_Module_SetGIL"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnstable_Module_SetGIL()</span></code></a> to
+<p>Extensions that use legacy <a class="reference internal" href="../c-api/extension-modules.html#single-phase-initialization"><span class="std std-ref">single-phase initialization</span></a>
+(that is, <a class="reference internal" href="../c-api/module.html#c.PyModule_Create" title="PyModule_Create"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_Create()</span></code></a>) should call <a class="reference internal" href="../c-api/module.html#c.PyUnstable_Module_SetGIL" title="PyUnstable_Module_SetGIL"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnstable_Module_SetGIL()</span></code></a> to
 indicate that they support running with the GIL disabled.  The function is
 only defined in the free-threaded build, so you should guard the call with
 <code class="docutils literal notranslate"><span class="pre">#ifdef</span> <span class="pre">Py_GIL_DISABLED</span></code> to avoid compilation errors in the regular build.</p>
@@ -391,10 +389,10 @@ that return <a class="reference internal" href="../glossary.html#term-strong-ref
 <tr class="row-even"><td><p><a class="reference internal" href="../c-api/dict.html#c.PyDict_Next" title="PyDict_Next"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyDict_Next()</span></code></a></p></td>
 <td><p>none (see <a class="reference internal" href="#pydict-next"><span class="std std-ref">PyDict_Next</span></a>)</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="../c-api/weakref.html#c.PyWeakref_GetObject" title="PyWeakref_GetObject"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyWeakref_GetObject()</span></code></a></p></td>
+<tr class="row-odd"><td><p><code class="xref c c-func docutils literal notranslate"><span class="pre">PyWeakref_GetObject()</span></code></p></td>
 <td><p><a class="reference internal" href="../c-api/weakref.html#c.PyWeakref_GetRef" title="PyWeakref_GetRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyWeakref_GetRef()</span></code></a></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="../c-api/weakref.html#c.PyWeakref_GET_OBJECT" title="PyWeakref_GET_OBJECT"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyWeakref_GET_OBJECT()</span></code></a></p></td>
+<tr class="row-even"><td><p><code class="xref c c-func docutils literal notranslate"><span class="pre">PyWeakref_GET_OBJECT()</span></code></p></td>
 <td><p><a class="reference internal" href="../c-api/weakref.html#c.PyWeakref_GetRef" title="PyWeakref_GetRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyWeakref_GetRef()</span></code></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="../c-api/import.html#c.PyImport_AddModule" title="PyImport_AddModule"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyImport_AddModule()</span></code></a></p></td>
@@ -437,13 +435,15 @@ Use <a class="reference internal" href="../c-api/memory.html#c.PyMem_Malloc" tit
 <p>Python provides a set of functions and macros to manage thread state and the
 GIL, such as:</p>
 <ul class="simple">
+<li><p><a class="reference internal" href="../c-api/threads.html#c.PyThreadState_Ensure" title="PyThreadState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_Ensure()</span></code></a>, <a class="reference internal" href="../c-api/threads.html#c.PyThreadState_EnsureFromView" title="PyThreadState_EnsureFromView"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_EnsureFromView()</span></code></a>,
+and <a class="reference internal" href="../c-api/threads.html#c.PyThreadState_Release" title="PyThreadState_Release"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_Release()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../c-api/threads.html#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a> 和 <a class="reference internal" href="../c-api/threads.html#c.PyGILState_Release" title="PyGILState_Release"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Release()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../c-api/threads.html#c.PyEval_SaveThread" title="PyEval_SaveThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SaveThread()</span></code></a> 和 <a class="reference internal" href="../c-api/threads.html#c.PyEval_RestoreThread" title="PyEval_RestoreThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_RestoreThread()</span></code></a></p></li>
 <li><p><a class="reference internal" href="../c-api/threads.html#c.Py_BEGIN_ALLOW_THREADS" title="Py_BEGIN_ALLOW_THREADS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_BEGIN_ALLOW_THREADS</span></code></a> 和 <a class="reference internal" href="../c-api/threads.html#c.Py_END_ALLOW_THREADS" title="Py_END_ALLOW_THREADS"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_END_ALLOW_THREADS</span></code></a></p></li>
 </ul>
 <p>These functions should still be used in the free-threaded build to manage
 thread state even when the <a class="reference internal" href="../glossary.html#term-GIL"><span class="xref std std-term">GIL</span></a> is disabled.  For example, if you
-create a thread outside of Python, you must call <a class="reference internal" href="../c-api/threads.html#c.PyGILState_Ensure" title="PyGILState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyGILState_Ensure()</span></code></a>
+create a thread outside of Python, you must call <a class="reference internal" href="../c-api/threads.html#c.PyThreadState_Ensure" title="PyThreadState_Ensure"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyThreadState_Ensure()</span></code></a>
 before calling into the Python API to ensure that the thread has a valid
 Python thread state.</p>
 <p>You should continue to call <a class="reference internal" href="../c-api/threads.html#c.PyEval_SaveThread" title="PyEval_SaveThread"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyEval_SaveThread()</span></code></a> or
@@ -581,6 +581,25 @@ internal extension state, standard mutexes or other synchronization
 primitives might be more appropriate.</p></li>
 </ul>
 </section>
+<section id="per-object-locks-ob-mutex">
+<span id="per-object-locks"></span><h3>Per-Object Locks (<code class="docutils literal notranslate"><span class="pre">ob_mutex</span></code>)<a class="headerlink" href="#per-object-locks-ob-mutex" title="連結到這個標頭">¶</a></h3>
+<p>In the free-threaded build, each Python object contains a <a class="reference internal" href="../c-api/structures.html#c.PyObject.ob_mutex" title="PyObject.ob_mutex"><code class="xref c c-member docutils literal notranslate"><span class="pre">ob_mutex</span></code></a>
+field of type <a class="reference internal" href="../c-api/synchronization.html#c.PyMutex" title="PyMutex"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMutex</span></code></a>.  This mutex is <strong>reserved for use by the
+critical section API</strong> (<a class="reference internal" href="../c-api/synchronization.html#c.Py_BEGIN_CRITICAL_SECTION" title="Py_BEGIN_CRITICAL_SECTION"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_BEGIN_CRITICAL_SECTION</span></code></a> /
+<a class="reference internal" href="../c-api/synchronization.html#c.Py_END_CRITICAL_SECTION" title="Py_END_CRITICAL_SECTION"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_END_CRITICAL_SECTION</span></code></a>).</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>Do <strong>not</strong> lock <code class="docutils literal notranslate"><span class="pre">ob_mutex</span></code> directly with <code class="docutils literal notranslate"><span class="pre">PyMutex_Lock(&amp;obj-&gt;ob_mutex)</span></code>.
+Mixing direct <code class="docutils literal notranslate"><span class="pre">PyMutex_Lock</span></code> calls with the critical section API on the
+same mutex can cause deadlocks.</p>
+</div>
+<p>Even if your own code never uses critical sections on a particular object type,
+<strong>CPython internals may use the critical section API on any Python object</strong>.</p>
+<p>If your extension type needs its own lock, add a separate <a class="reference internal" href="../c-api/synchronization.html#c.PyMutex" title="PyMutex"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMutex</span></code></a>
+field (or another synchronization primitive) to your object struct.
+<a class="reference internal" href="../c-api/synchronization.html#c.PyMutex" title="PyMutex"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyMutex</span></code></a> is very lightweight, so there is negligible cost to having
+an additional one.</p>
+</section>
 </section>
 <section id="building-extensions-for-the-free-threaded-build">
 <h2>Building Extensions for the Free-Threaded Build<a class="headerlink" href="#building-extensions-for-the-free-threaded-build" title="連結到這個標頭">¶</a></h2>
@@ -654,6 +673,7 @@ A community-maintained porting guide for extension authors.</p>
 <li><a class="reference internal" href="#how-critical-sections-work">How Critical Sections Work</a></li>
 <li><a class="reference internal" href="#deadlock-avoidance">Deadlock Avoidance</a></li>
 <li><a class="reference internal" href="#important-considerations">Important Considerations</a></li>
+<li><a class="reference internal" href="#per-object-locks-ob-mutex">Per-Object Locks (<code class="docutils literal notranslate"><span class="pre">ob_mutex</span></code>)</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#building-extensions-for-the-free-threaded-build">Building Extensions for the Free-Threaded Build</a><ul>
@@ -673,8 +693,8 @@ A community-maintained porting guide for extension authors.</p>
   </div>
   <div>
     <h4>下個主題</h4>
-    <p class="topless"><a href="remote_debugging.html"
-                          title="下一章">遠端偵錯附加協定</a></p>
+    <p class="topless"><a href="abi3t-migration.html"
+                          title="下一章">Migrating to Stable ABI for free threading (<code class="docutils literal notranslate"><span class="pre">abi3t</span></code>)</a></p>
   </div>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -696,13 +716,13 @@ A community-maintained porting guide for extension authors.</p>
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.14/Doc/howto/free-threading-extensions.rst?plain=1"
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/howto/free-threading-extensions.rst?plain=1"
             rel="nofollow">顯示原始碼
         </a>
       </li>
       
       <li>
-        <a href="https://github.com/python/python-docs-zh-tw/blob/3.14/howto/free-threading-extensions.po?plain=1"
+        <a href="https://github.com/python/python-docs-zh-tw/blob/3.15/howto/free-threading-extensions.po?plain=1"
            rel="nofollow">顯示翻譯原始碼</a>
       </li>
       
@@ -726,7 +746,7 @@ A community-maintained porting guide for extension authors.</p>
           <a href="../py-modindex.html" title="Python 模組索引"
              >模組</a> |</li>
         <li class="right" >
-          <a href="remote_debugging.html" title="遠端偵錯附加協定"
+          <a href="abi3t-migration.html" title="Migrating to Stable ABI for free threading (abi3t)"
              >下一頁</a> |</li>
         <li class="right" >
           <a href="free-threading-python.html" title="Python 自由執行緒的支援"
@@ -742,7 +762,7 @@ A community-maintained porting guide for extension authors.</p>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.8 Documentation</a> &#187;
+      <a href="../index.html">3.15.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 如何達成任務</a> &#187;</li>
@@ -787,7 +807,7 @@ A community-maintained porting guide for extension authors.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 10月 15, 2026 (08:26 UTC)。
+      最後更新於 10月 15, 2026 (11:49 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

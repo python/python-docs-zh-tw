@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>循環垃圾回收的支援 &#8212; Python 3.14.8 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>循環垃圾回收的支援 &#8212; Python 3.15.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=48df1187" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=0fc419ee" />
     
-    <script src="../_static/documentation_options.js?v=cb50f8de"></script>
+    <script src="../_static/documentation_options.js?v=5d502324"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,7 +20,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.14.8 說明文件 中搜尋"
+          title="在 Python 3.15.0 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -90,6 +90,11 @@
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#">循環垃圾回收的支援</a><ul>
+<li><a class="reference internal" href="#traversal">Traversal</a><ul>
+<li><a class="reference internal" href="#traversal-safe-functions">Traversal-safe functions</a></li>
+<li><a class="reference internal" href="#duringgc-functions">&quot;DuringGC&quot; functions</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#controlling-the-garbage-collector-state">Controlling the Garbage Collector State</a></li>
 <li><a class="reference internal" href="#querying-garbage-collector-state">Querying Garbage Collector State</a></li>
 </ul>
@@ -127,13 +132,13 @@
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.14/Doc/c-api/gcsupport.rst?plain=1"
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/c-api/gcsupport.rst?plain=1"
             rel="nofollow">顯示原始碼
         </a>
       </li>
       
       <li>
-        <a href="https://github.com/python/python-docs-zh-tw/blob/3.14/c-api/gcsupport.po?plain=1"
+        <a href="https://github.com/python/python-docs-zh-tw/blob/3.15/c-api/gcsupport.po?plain=1"
            rel="nofollow">顯示翻譯原始碼</a>
       </li>
       
@@ -170,7 +175,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.8 Documentation</a> &#187;
+      <a href="../index.html">3.15.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python/C API 參考手冊</a> &#187;</li>
@@ -426,42 +431,6 @@ detection; it's not expected that users will need to write their own
 visitor functions.</p>
 </dd></dl>
 
-<p>The <a class="reference internal" href="typeobj.html#c.PyTypeObject.tp_traverse" title="PyTypeObject.tp_traverse"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code></a> handler must have the following type:</p>
-<dl class="c type">
-<dt class="sig sig-object c" id="c.traverseproc">
-<span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">traverseproc</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#c.visitproc" title="visitproc"><span class="n"><span class="pre">visitproc</span></span></a><span class="w"> </span><span class="n"><span class="pre">visit</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#c.traverseproc" title="連結到這個定義">¶</a><br /></dt>
-<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Traversal function for a container object.  Implementations must call the
-<em>visit</em> function for each object directly contained by <em>self</em>, with the
-parameters to <em>visit</em> being the contained object and the <em>arg</em> value passed
-to the handler.  The <em>visit</em> function must not be called with a <code class="docutils literal notranslate"><span class="pre">NULL</span></code>
-object argument.  If <em>visit</em> returns a non-zero value that value should be
-returned immediately.</p>
-<p>The traversal function must not have any side effects.  Implementations
-may not modify the reference counts of any Python objects nor create or
-destroy any Python objects.</p>
-</dd></dl>
-
-<p>To simplify writing <a class="reference internal" href="typeobj.html#c.PyTypeObject.tp_traverse" title="PyTypeObject.tp_traverse"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code></a> handlers, a <a class="reference internal" href="#c.Py_VISIT" title="Py_VISIT"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_VISIT()</span></code></a> macro is
-provided.  In order to use this macro, the <a class="reference internal" href="typeobj.html#c.PyTypeObject.tp_traverse" title="PyTypeObject.tp_traverse"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code></a> implementation
-must name its arguments exactly <em>visit</em> and <em>arg</em>:</p>
-<dl class="c macro">
-<dt class="sig sig-object c" id="c.Py_VISIT">
-<span class="sig-name descname"><span class="n"><span class="pre">Py_VISIT</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_VISIT" title="連結到這個定義">¶</a><br /></dt>
-<dd><p>If the <span class="c-expr sig sig-inline c"><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n">PyObject</span></a><span class="p">*</span></span> <em>o</em> is not <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, call the <em>visit</em> callback, with arguments <em>o</em>
-and <em>arg</em>.  If <em>visit</em> returns a non-zero value, then return it.
-Using this macro, <a class="reference internal" href="typeobj.html#c.PyTypeObject.tp_traverse" title="PyTypeObject.tp_traverse"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code></a> handlers
-look like:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span>
-<span class="nf">my_traverse</span><span class="p">(</span><span class="n">Noddy</span><span class="w"> </span><span class="o">*</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">visitproc</span><span class="w"> </span><span class="n">visit</span><span class="p">,</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">)</span>
-<span class="p">{</span>
-<span class="w">    </span><span class="n">Py_VISIT</span><span class="p">(</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">foo</span><span class="p">);</span>
-<span class="w">    </span><span class="n">Py_VISIT</span><span class="p">(</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">bar</span><span class="p">);</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</dd></dl>
-
 <p>The <a class="reference internal" href="typeobj.html#c.PyTypeObject.tp_clear" title="PyTypeObject.tp_clear"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_clear</span></code></a> handler must be of the <a class="reference internal" href="#c.inquiry" title="inquiry"><code class="xref c c-type docutils literal notranslate"><span class="pre">inquiry</span></code></a> type, or <code class="docutils literal notranslate"><span class="pre">NULL</span></code>
 if the object is immutable.</p>
 <dl class="c type">
@@ -475,6 +444,225 @@ collector will call this method if it detects that this object is involved
 in a reference cycle.</p>
 </dd></dl>
 
+<section id="traversal">
+<span id="gc-traversal"></span><h2>Traversal<a class="headerlink" href="#traversal" title="連結到這個標頭">¶</a></h2>
+<p>The <a class="reference internal" href="typeobj.html#c.PyTypeObject.tp_traverse" title="PyTypeObject.tp_traverse"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code></a> handler must have the following type:</p>
+<dl class="c type">
+<dt class="sig sig-object c" id="c.traverseproc">
+<span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">traverseproc</span></span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">self</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#c.visitproc" title="visitproc"><span class="n"><span class="pre">visitproc</span></span></a><span class="w"> </span><span class="n"><span class="pre">visit</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">arg</span></span><span class="p"><span class="pre">)</span></span><a class="headerlink" href="#c.traverseproc" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a>.</em><p>Traversal function for a garbage-collected object, used by the garbage
+collector to detect reference cycles.
+Implementations must call the
+<em>visit</em> function for each object directly contained by <em>self</em>, with the
+parameters to <em>visit</em> being the contained object and the <em>arg</em> value passed
+to the handler.  The <em>visit</em> function must not be called with a <code class="docutils literal notranslate"><span class="pre">NULL</span></code>
+object argument.  If <em>visit</em> returns a non-zero value, that value should be
+returned immediately.</p>
+<p>A typical <code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code> function calls the <a class="reference internal" href="#c.Py_VISIT" title="Py_VISIT"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_VISIT()</span></code></a>
+convenience macro on each of the instance's members that are Python
+objects that the instance owns.
+For example, this is a (slightly outdated) traversal function for
+the <a class="reference internal" href="../library/threading.html#threading.local" title="threading.local"><code class="xref py py-class docutils literal notranslate"><span class="pre">threading.local</span></code></a> class:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span>
+<span class="nf">local_traverse</span><span class="p">(</span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">op</span><span class="p">,</span><span class="w"> </span><span class="n">visitproc</span><span class="w"> </span><span class="n">visit</span><span class="p">,</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">*</span><span class="n">arg</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="n">localobject</span><span class="w"> </span><span class="o">*</span><span class="n">self</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">localobject</span><span class="w"> </span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="n">op</span><span class="p">;</span>
+<span class="w">    </span><span class="n">Py_VISIT</span><span class="p">(</span><span class="n">Py_TYPE</span><span class="p">(</span><span class="n">self</span><span class="p">));</span>
+<span class="w">    </span><span class="n">Py_VISIT</span><span class="p">(</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">args</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Py_VISIT</span><span class="p">(</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">kw</span><span class="p">);</span>
+<span class="w">    </span><span class="n">Py_VISIT</span><span class="p">(</span><span class="n">self</span><span class="o">-&gt;</span><span class="n">dict</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p><a class="reference internal" href="#c.Py_VISIT" title="Py_VISIT"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_VISIT()</span></code></a> requires the <em>visit</em> and <em>arg</em> parameters to
+<code class="xref c c-func docutils literal notranslate"><span class="pre">local_traverse()</span></code> to have these specific names; don't name them just
+anything.</p>
+</div>
+<p>Instances of <a class="reference internal" href="typeobj.html#heap-types"><span class="std std-ref">heap-allocated types</span></a> hold a reference to
+their type. Their traversal function must therefore visit the type:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">Py_VISIT</span><span class="p">(</span><span class="n">Py_TYPE</span><span class="p">(</span><span class="n">self</span><span class="p">));</span>
+</pre></div>
+</div>
+<p>Alternately, the type may delegate this responsibility by
+calling <code class="docutils literal notranslate"><span class="pre">tp_traverse</span></code> of a heap-allocated superclass (or another
+heap-allocated type, if applicable).
+If they do not, the type object may not be garbage-collected.</p>
+<p>If the <a class="reference internal" href="typeobj.html#c.Py_TPFLAGS_MANAGED_DICT" title="Py_TPFLAGS_MANAGED_DICT"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_TPFLAGS_MANAGED_DICT</span></code></a> bit is set in the
+<a class="reference internal" href="typeobj.html#c.PyTypeObject.tp_flags" title="PyTypeObject.tp_flags"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_flags</span></code></a> field, the traverse function must call
+<a class="reference internal" href="object.html#c.PyObject_VisitManagedDict" title="PyObject_VisitManagedDict"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_VisitManagedDict()</span></code></a> like this:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="kt">int</span><span class="w"> </span><span class="n">err</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyObject_VisitManagedDict</span><span class="p">((</span><span class="n">PyObject</span><span class="o">*</span><span class="p">)</span><span class="n">self</span><span class="p">,</span><span class="w"> </span><span class="n">visit</span><span class="p">,</span><span class="w"> </span><span class="n">arg</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">err</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">err</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Only the members that the instance <em>owns</em> (by having
+<a class="reference internal" href="../glossary.html#term-strong-reference"><span class="xref std std-term">strong references</span></a> to them) must be
+visited. For instance, if an object supports weak references via the
+<a class="reference internal" href="typeobj.html#c.PyTypeObject.tp_weaklist" title="PyTypeObject.tp_weaklist"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_weaklist</span></code></a> slot, the pointer supporting
+the linked list (what <em>tp_weaklist</em> points to) must <strong>not</strong> be
+visited as the instance does not directly own the weak references to itself.</p>
+<p>The traversal function has a limitation:</p>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<p>The traversal function must not have any side effects.  Implementations
+may not modify the reference counts of any Python objects nor create or
+destroy any Python objects, directly or indirectly.</p>
+</div>
+<p>This means that <em>most</em> Python C API functions may not be used, since
+they can raise a new exception, return a new reference to a result object,
+have internal logic that uses side effects.
+Also, unless documented otherwise, functions that happen to not have side
+effects may start having them in future versions, without warning.</p>
+<p>For a list of safe functions, see a
+<a class="reference internal" href="#duringgc-functions"><span class="std std-ref">separate section</span></a> below.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>The <a class="reference internal" href="#c.Py_VISIT" title="Py_VISIT"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_VISIT()</span></code></a> call may be skipped for those members that provably
+cannot participate in reference cycles.
+In the <code class="docutils literal notranslate"><span class="pre">local_traverse</span></code> example above, there is also a <code class="docutils literal notranslate"><span class="pre">self-&gt;key</span></code>
+member, but it can only be <code class="docutils literal notranslate"><span class="pre">NULL</span></code> or a Python string and therefore
+cannot be part of a reference cycle.</p>
+<p>On the other hand, even if you know a member can never be part of a cycle,
+as a debugging aid you may want to visit it anyway just so the <a class="reference internal" href="../library/gc.html#module-gc" title="gc: Interface to the cycle-detecting garbage collector."><code class="xref py py-mod docutils literal notranslate"><span class="pre">gc</span></code></a>
+module's <a class="reference internal" href="../library/gc.html#gc.get_referents" title="gc.get_referents"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_referents()</span></code></a> function will include it.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>The <a class="reference internal" href="typeobj.html#c.PyTypeObject.tp_traverse" title="PyTypeObject.tp_traverse"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code></a> function can be called from any
+thread.</p>
+<div class="impl-detail compound">
+<p><strong>CPython 實作細節：</strong> Garbage collection is a &quot;stop-the-world&quot; operation:
+even in <a class="reference internal" href="../glossary.html#term-free-threading"><span class="xref std std-term">free threading</span></a> builds, only one thread state is
+<a class="reference internal" href="../glossary.html#term-attached-thread-state"><span class="xref std std-term">attached</span></a> when <code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code>
+handlers run.</p>
+</div>
+</div>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.9 版的變更: </span>Heap-allocated types are expected to visit <code class="docutils literal notranslate"><span class="pre">Py_TYPE(self)</span></code> in
+<code class="docutils literal notranslate"><span class="pre">tp_traverse</span></code>.  In earlier versions of Python, due to
+<a class="reference external" href="https://bugs.python.org/issue40217">bug 40217</a>, doing this
+may lead to crashes in subclasses.</p>
+</div>
+</dd></dl>
+
+<p>To simplify writing <a class="reference internal" href="typeobj.html#c.PyTypeObject.tp_traverse" title="PyTypeObject.tp_traverse"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code></a> handlers,
+a <a class="reference internal" href="#c.Py_VISIT" title="Py_VISIT"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_VISIT()</span></code></a> macro is provided.
+In order to use this macro, the <a class="reference internal" href="typeobj.html#c.PyTypeObject.tp_traverse" title="PyTypeObject.tp_traverse"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code></a>
+implementation must name its arguments exactly <em>visit</em> and <em>arg</em>:</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.Py_VISIT">
+<span class="sig-name descname"><span class="n"><span class="pre">Py_VISIT</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.Py_VISIT" title="連結到這個定義">¶</a><br /></dt>
+<dd><p>If the <span class="c-expr sig sig-inline c"><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n">PyObject</span></a><span class="p">*</span></span> <em>o</em> is not <code class="docutils literal notranslate"><span class="pre">NULL</span></code>, call the <em>visit</em>
+callback, with arguments <em>o</em> and <em>arg</em>.
+If <em>visit</em> returns a non-zero value, then return it.</p>
+<p>This corresponds roughly to:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#define Py_VISIT(o)                             \</span>
+<span class="cp">   if (op) {                                    \</span>
+<span class="cp">      int visit_result = visit(o, arg);         \</span>
+<span class="cp">      if (visit_result != 0) {                  \</span>
+<span class="cp">         return visit_result;                   \</span>
+<span class="cp">      }                                         \</span>
+<span class="cp">   }</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<section id="traversal-safe-functions">
+<h3>Traversal-safe functions<a class="headerlink" href="#traversal-safe-functions" title="連結到這個標頭">¶</a></h3>
+<p>The following functions and macros are safe to use in a
+<a class="reference internal" href="typeobj.html#c.PyTypeObject.tp_traverse" title="PyTypeObject.tp_traverse"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code></a> handler:</p>
+<ul class="simple">
+<li><p>the <em>visit</em> function passed to <code class="docutils literal notranslate"><span class="pre">tp_traverse</span></code></p></li>
+<li><p><a class="reference internal" href="#c.Py_VISIT" title="Py_VISIT"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_VISIT()</span></code></a></p></li>
+<li><p><a class="reference internal" href="structures.html#c.Py_SIZE" title="Py_SIZE"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_SIZE()</span></code></a></p></li>
+<li><p><a class="reference internal" href="structures.html#c.Py_TYPE" title="Py_TYPE"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_TYPE()</span></code></a>: if called from a <code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code> handler,
+<code class="xref c c-func docutils literal notranslate"><span class="pre">Py_TYPE()</span></code>'s result will be valid for the duration of the handler call</p></li>
+<li><p><a class="reference internal" href="object.html#c.PyObject_VisitManagedDict" title="PyObject_VisitManagedDict"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_VisitManagedDict()</span></code></a></p></li>
+<li><p><a class="reference internal" href="object.html#c.PyObject_TypeCheck" title="PyObject_TypeCheck"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_TypeCheck()</span></code></a>, <a class="reference internal" href="type.html#c.PyType_IsSubtype" title="PyType_IsSubtype"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_IsSubtype()</span></code></a>,
+<a class="reference internal" href="type.html#c.PyType_HasFeature" title="PyType_HasFeature"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_HasFeature()</span></code></a></p></li>
+<li><p><code class="samp docutils literal notranslate"><span class="pre">Py</span><em><span class="pre">&lt;type&gt;</span></em><span class="pre">_Check</span></code> and <code class="samp docutils literal notranslate"><span class="pre">Py</span><em><span class="pre">&lt;type&gt;</span></em><span class="pre">_CheckExact</span></code> -- for example,
+<a class="reference internal" href="tuple.html#c.PyTuple_Check" title="PyTuple_Check"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyTuple_Check()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#duringgc-functions"><span class="std std-ref">&quot;DuringGC&quot; functions</span></a></p></li>
+</ul>
+</section>
+<section id="duringgc-functions">
+<span id="id1"></span><h3>&quot;DuringGC&quot; functions<a class="headerlink" href="#duringgc-functions" title="連結到這個標頭">¶</a></h3>
+<p>The following functions should <em>only</em> be used in a
+<a class="reference internal" href="typeobj.html#c.PyTypeObject.tp_traverse" title="PyTypeObject.tp_traverse"><code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code></a> handler; calling them in other
+contexts may have unintended consequences.</p>
+<p>These functions act like their counterparts without the <code class="docutils literal notranslate"><span class="pre">_DuringGC</span></code> suffix,
+but they are guaranteed to not have side effects, they do not set an exception
+on failure, and they return/set <a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">borrowed references</span></a>
+as detailed in the individual documentation.</p>
+<p>Note that these functions may fail (return <code class="docutils literal notranslate"><span class="pre">NULL</span></code> or <code class="docutils literal notranslate"><span class="pre">-1</span></code>),
+but as they do not set an exception, no error information is available.
+In some cases, failure is not distinguishable from a successful <code class="docutils literal notranslate"><span class="pre">NULL</span></code> result.</p>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyObject_GetTypeData_DuringGC">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyObject_GetTypeData_DuringGC</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span>, <a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><span class="n"><span class="pre">PyTypeObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">cls</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyObject_GetTypeData_DuringGC" title="連結到這個定義">¶</a><br /></dt>
+<dt class="sig sig-object c" id="c.PyObject_GetItemData_DuringGC">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyObject_GetItemData_DuringGC</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyObject_GetItemData_DuringGC" title="連結到這個定義">¶</a><br /></dt>
+<dt class="sig sig-object c" id="c.PyType_GetModuleState_DuringGC">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyType_GetModuleState_DuringGC</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><span class="n"><span class="pre">PyTypeObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">type</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyType_GetModuleState_DuringGC" title="連結到這個定義">¶</a><br /></dt>
+<dt class="sig sig-object c" id="c.PyModule_GetState_DuringGC">
+<span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyModule_GetState_DuringGC</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">module</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyModule_GetState_DuringGC" title="連結到這個定義">¶</a><br /></dt>
+<dt class="sig sig-object c" id="c.PyModule_GetToken_DuringGC">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyModule_GetToken_DuringGC</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">module</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">result</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyModule_GetToken_DuringGC" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.15 版本開始.</em><p>See <a class="reference internal" href="#duringgc-functions"><span class="std std-ref">&quot;DuringGC&quot; functions</span></a> for common information.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.15 版被加入.</span></p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><a class="reference internal" href="object.html#c.PyObject_GetTypeData" title="PyObject_GetTypeData"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_GetTypeData()</span></code></a>,
+<a class="reference internal" href="object.html#c.PyObject_GetItemData" title="PyObject_GetItemData"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_GetItemData()</span></code></a>,
+<a class="reference internal" href="type.html#c.PyType_GetModuleState" title="PyType_GetModuleState"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_GetModuleState()</span></code></a>,
+<a class="reference internal" href="module.html#c.PyModule_GetState" title="PyModule_GetState"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_GetState()</span></code></a>,
+<a class="reference internal" href="module.html#c.PyModule_GetToken" title="PyModule_GetToken"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_GetToken()</span></code></a>,
+<a class="reference internal" href="type.html#c.PyType_GetBaseByToken" title="PyType_GetBaseByToken"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_GetBaseByToken()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyType_GetBaseByToken_DuringGC">
+<span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyType_GetBaseByToken_DuringGC</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><span class="n"><span class="pre">PyTypeObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">type</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">tp_token</span></span>, <a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><span class="n"><span class="pre">PyTypeObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">result</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyType_GetBaseByToken_DuringGC" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.15 版本開始.</em><p>See <a class="reference internal" href="#duringgc-functions"><span class="std std-ref">&quot;DuringGC&quot; functions</span></a> for common information.</p>
+<p>Sets <em>*result</em> to a <a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">borrowed reference</span></a> rather than a strong one.
+The reference is valid for the duration
+of the <code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code> handler call.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.15 版被加入.</span></p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><a class="reference internal" href="type.html#c.PyType_GetBaseByToken" title="PyType_GetBaseByToken"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_GetBaseByToken()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyType_GetModule_DuringGC">
+<a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyType_GetModule_DuringGC</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><span class="n"><span class="pre">PyTypeObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">type</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyType_GetModule_DuringGC" title="連結到這個定義">¶</a><br /></dt>
+<dt class="sig sig-object c" id="c.PyType_GetModuleByToken_DuringGC">
+<a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyType_GetModuleByToken_DuringGC</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="type.html#c.PyTypeObject" title="PyTypeObject"><span class="n"><span class="pre">PyTypeObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mod_token</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyType_GetModuleByToken_DuringGC" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="refcount return_borrowed_ref">回傳值：借用參照。</em><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.15 版本開始.</em><p>See <a class="reference internal" href="#duringgc-functions"><span class="std std-ref">&quot;DuringGC&quot; functions</span></a> for common information.</p>
+<p>These functions return a <a class="reference internal" href="../glossary.html#term-borrowed-reference"><span class="xref std std-term">borrowed reference</span></a>, which is
+valid for the duration of the <code class="xref c c-member docutils literal notranslate"><span class="pre">tp_traverse</span></code> handler call.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.15 版被加入.</span></p>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">也參考</p>
+<p><a class="reference internal" href="type.html#c.PyType_GetModule" title="PyType_GetModule"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_GetModule()</span></code></a>,
+<a class="reference internal" href="type.html#c.PyType_GetModuleByToken" title="PyType_GetModuleByToken"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_GetModuleByToken()</span></code></a></p>
+</div>
+</dd></dl>
+
+</section>
+</section>
 <section id="controlling-the-garbage-collector-state">
 <h2>Controlling the Garbage Collector State<a class="headerlink" href="#controlling-the-garbage-collector-state" title="連結到這個標頭">¶</a></h2>
 <p>The C-API provides the following functions for controlling
@@ -573,6 +761,11 @@ values are reserved for now so behavior on returning anything else is undefined.
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#">循環垃圾回收的支援</a><ul>
+<li><a class="reference internal" href="#traversal">Traversal</a><ul>
+<li><a class="reference internal" href="#traversal-safe-functions">Traversal-safe functions</a></li>
+<li><a class="reference internal" href="#duringgc-functions">&quot;DuringGC&quot; functions</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#controlling-the-garbage-collector-state">Controlling the Garbage Collector State</a></li>
 <li><a class="reference internal" href="#querying-garbage-collector-state">Querying Garbage Collector State</a></li>
 </ul>
@@ -610,13 +803,13 @@ values are reserved for now so behavior on returning anything else is undefined.
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.14/Doc/c-api/gcsupport.rst?plain=1"
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/c-api/gcsupport.rst?plain=1"
             rel="nofollow">顯示原始碼
         </a>
       </li>
       
       <li>
-        <a href="https://github.com/python/python-docs-zh-tw/blob/3.14/c-api/gcsupport.po?plain=1"
+        <a href="https://github.com/python/python-docs-zh-tw/blob/3.15/c-api/gcsupport.po?plain=1"
            rel="nofollow">顯示翻譯原始碼</a>
       </li>
       
@@ -656,7 +849,7 @@ values are reserved for now so behavior on returning anything else is undefined.
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.8 Documentation</a> &#187;
+      <a href="../index.html">3.15.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python/C API 參考手冊</a> &#187;</li>
@@ -702,7 +895,7 @@ values are reserved for now so behavior on returning anything else is undefined.
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 10月 15, 2026 (08:26 UTC)。
+      最後更新於 10月 15, 2026 (11:49 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

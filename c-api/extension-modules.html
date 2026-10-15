@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Defining extension modules &#8212; Python 3.14.8 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defining extension modules &#8212; Python 3.15.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=48df1187" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=0fc419ee" />
     
-    <script src="../_static/documentation_options.js?v=cb50f8de"></script>
+    <script src="../_static/documentation_options.js?v=5d502324"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,13 +20,13 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.14.8 說明文件 中搜尋"
+          title="在 Python 3.15.0 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜尋" href="../search.html" />
     <link rel="copyright" title="版權所有" href="../copyright.html" />
-    <link rel="next" title="工具" href="utilities.html" />
+    <link rel="next" title="Definition slots" href="slots.html" />
     <link rel="prev" title="例外處理" href="exceptions.html" />
     
       
@@ -90,10 +90,13 @@
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Defining extension modules</a><ul>
-<li><a class="reference internal" href="#multiple-module-instances">Multiple module instances</a></li>
-<li><a class="reference internal" href="#initialization-function">Initialization function</a></li>
+<li><a class="reference internal" href="#extension-export-hook">Extension export hook</a></li>
 <li><a class="reference internal" href="#multi-phase-initialization">Multi-phase initialization</a></li>
+<li><a class="reference internal" href="#multiple-module-instances">Multiple module instances</a></li>
+<li><a class="reference internal" href="#pyinit-function"><code class="docutils literal notranslate"><span class="pre">PyInit</span></code> function</a><ul>
 <li><a class="reference internal" href="#legacy-single-phase-initialization">Legacy single-phase initialization</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -106,8 +109,8 @@
   </div>
   <div>
     <h4>下個主題</h4>
-    <p class="topless"><a href="utilities.html"
-                          title="下一章">工具</a></p>
+    <p class="topless"><a href="slots.html"
+                          title="下一章">Definition slots</a></p>
   </div>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -129,13 +132,13 @@
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.14/Doc/c-api/extension-modules.rst?plain=1"
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/c-api/extension-modules.rst?plain=1"
             rel="nofollow">顯示原始碼
         </a>
       </li>
       
       <li>
-        <a href="https://github.com/python/python-docs-zh-tw/blob/3.14/c-api/extension-modules.po?plain=1"
+        <a href="https://github.com/python/python-docs-zh-tw/blob/3.15/c-api/extension-modules.po?plain=1"
            rel="nofollow">顯示翻譯原始碼</a>
       </li>
       
@@ -156,7 +159,7 @@
           <a href="../py-modindex.html" title="Python 模組索引"
              >模組</a> |</li>
         <li class="right" >
-          <a href="utilities.html" title="工具"
+          <a href="slots.html" title="Definition slots"
              accesskey="N">下一頁</a> |</li>
         <li class="right" >
           <a href="exceptions.html" title="例外處理"
@@ -172,7 +175,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.8 Documentation</a> &#187;
+      <a href="../index.html">3.15.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python/C API 參考手冊</a> &#187;</li>
@@ -211,7 +214,8 @@
 <p>A C extension for CPython is a shared library (for example, a <code class="docutils literal notranslate"><span class="pre">.so</span></code> file
 on Linux, <code class="docutils literal notranslate"><span class="pre">.pyd</span></code> DLL on Windows), which is loadable into the Python process
 (for example, it is compiled with compatible compiler settings), and which
-exports an <a class="reference internal" href="#extension-export-hook"><span class="std std-ref">initialization function</span></a>.</p>
+exports an <em class="dfn">export hook</em> function (or an
+old-style <a class="reference internal" href="#extension-pyinit"><span class="std std-ref">initialization function</span></a>).</p>
 <p>To be importable by default (that is, by
 <a class="reference internal" href="../library/importlib.html#importlib.machinery.ExtensionFileLoader" title="importlib.machinery.ExtensionFileLoader"><code class="xref py py-class docutils literal notranslate"><span class="pre">importlib.machinery.ExtensionFileLoader</span></code></a>),
 the shared library must be available on <a class="reference internal" href="../library/sys.html#sys.path" title="sys.path"><code class="xref py py-attr docutils literal notranslate"><span class="pre">sys.path</span></code></a>,
@@ -224,33 +228,148 @@ third-party tools, and is out of scope of this document.
 One suitable tool is Setuptools, whose documentation can be found at
 <a class="reference external" href="https://setuptools.pypa.io/en/latest/setuptools.html">https://setuptools.pypa.io/en/latest/setuptools.html</a>.</p>
 </div>
-<p>Normally, the initialization function returns a module definition initialized
-using <a class="reference internal" href="#c.PyModuleDef_Init" title="PyModuleDef_Init"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModuleDef_Init()</span></code></a>.
-This allows splitting the creation process into several phases:</p>
+<section id="extension-export-hook">
+<span id="id1"></span><h2>Extension export hook<a class="headerlink" href="#extension-export-hook" title="連結到這個標頭">¶</a></h2>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.15 版被加入: </span>Support for the <code class="samp docutils literal notranslate"><span class="pre">PyModExport_</span><em><span class="pre">&lt;name&gt;</span></em></code> export hook was added in Python
+3.15. The older way of defining modules is still available: consult either
+the <a class="reference internal" href="#extension-pyinit"><span class="std std-ref">PyInit function</span></a> section or earlier versions of this
+documentation if you plan to support earlier Python versions.</p>
+</div>
+<p>The export hook must be an exported function with the following signature:</p>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyModExport_modulename">
+<a class="reference internal" href="slots.html#c.PySlot" title="PySlot"><span class="n"><span class="pre">PySlot</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyModExport_modulename</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyModExport_modulename" title="連結到這個定義">¶</a><br /></dt>
+<dd></dd></dl>
+
+<p>For modules with ASCII-only names, the <a class="reference internal" href="#extension-export-hook"><span class="std std-ref">export hook</span></a>
+must be named <code class="samp docutils literal notranslate"><span class="pre">PyModExport_</span><em><span class="pre">&lt;name&gt;</span></em></code>,
+with <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> replaced by the module's name.</p>
+<p>For non-ASCII module names, the export hook must instead be named
+<code class="samp docutils literal notranslate"><span class="pre">PyModExportU_</span><em><span class="pre">&lt;name&gt;</span></em></code> (note the <code class="docutils literal notranslate"><span class="pre">U</span></code>), with <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> encoded using
+Python's <em>punycode</em> encoding with hyphens replaced by underscores. In Python:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">hook_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">'_'</span> <span class="o">+</span> <span class="n">name</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'ascii'</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">UnicodeEncodeError</span><span class="p">:</span>
+        <span class="n">suffix</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">'U_'</span> <span class="o">+</span> <span class="n">name</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'punycode'</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">b</span><span class="s1">'-'</span><span class="p">,</span> <span class="sa">b</span><span class="s1">'_'</span><span class="p">)</span>
+    <span class="k">return</span> <span class="sa">b</span><span class="s1">'PyModExport'</span> <span class="o">+</span> <span class="n">suffix</span>
+</pre></div>
+</div>
+<p>The export hook returns an array of <a class="reference internal" href="slots.html#c.PySlot" title="PySlot"><code class="xref c c-type docutils literal notranslate"><span class="pre">PySlot</span></code></a> entries,
+terminated by an entry with a slot ID of <code class="docutils literal notranslate"><span class="pre">0</span></code>.
+These slots describe how the module should be created and initialized.</p>
+<p>This array must remain valid and constant until interpreter shutdown.
+Typically, it should use <code class="docutils literal notranslate"><span class="pre">static</span></code> storage.
+Prefer using the <a class="reference internal" href="module.html#c.Py_mod_create" title="Py_mod_create"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_mod_create</span></code></a> and <a class="reference internal" href="module.html#c.Py_mod_exec" title="Py_mod_exec"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_mod_exec</span></code></a> slots
+for any dynamic behavior.</p>
+<p>The export hook may return <code class="docutils literal notranslate"><span class="pre">NULL</span></code> with an exception set to signal failure.</p>
+<p>It is recommended to define the export hook function using a helper macro:</p>
+<dl class="c macro">
+<dt class="sig sig-object c" id="c.PyMODEXPORT_FUNC">
+<span class="sig-name descname"><span class="n"><span class="pre">PyMODEXPORT_FUNC</span></span></span><a class="headerlink" href="#c.PyMODEXPORT_FUNC" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> This macro is available when compiling for the <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.15 版本開始.</em><p>Declare an extension module export hook.
+This macro:</p>
 <ul class="simple">
+<li><p>specifies the <span class="c-expr sig sig-inline c"><a class="reference internal" href="slots.html#c.PySlot" title="PySlot"><span class="n">PySlot</span></a><span class="p">*</span></span> return type,</p></li>
+<li><p>adds any special linkage declarations required by the platform, and</p></li>
+<li><p>for C++, declares the function as <code class="docutils literal notranslate"><span class="pre">extern</span> <span class="pre">&quot;C&quot;</span></code>.</p></li>
+</ul>
+</dd></dl>
+
+<p>For example, a module called <code class="docutils literal notranslate"><span class="pre">spam</span></code> would be defined like this:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyABIInfo_VAR</span><span class="p">(</span><span class="n">abi_info</span><span class="p">);</span>
+
+<span class="k">static</span><span class="w"> </span><span class="n">PySlot</span><span class="w"> </span><span class="n">spam_slots</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">PySlot_STATIC_DATA</span><span class="p">(</span><span class="n">Py_mod_abi</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">abi_info</span><span class="p">),</span>
+<span class="w">    </span><span class="n">PySlot_STATIC_DATA</span><span class="p">(</span><span class="n">Py_mod_name</span><span class="p">,</span><span class="w"> </span><span class="s">"spam"</span><span class="p">),</span>
+<span class="w">    </span><span class="n">PySlot_FUNC</span><span class="p">(</span><span class="n">Py_mod_init</span><span class="p">,</span><span class="w"> </span><span class="n">spam_init_function</span><span class="p">),</span>
+<span class="w">    </span><span class="p">...</span>
+<span class="w">    </span><span class="n">PySlot_END</span>
+<span class="p">};</span>
+
+<span class="n">PyMODEXPORT_FUNC</span>
+<span class="nf">PyModExport_spam</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">spam_slots</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The export hook is typically the only non-<code class="docutils literal notranslate"><span class="pre">static</span></code>
+item defined in the module's C source.</p>
+<p id="pymodexport-api-caveats">The hook should be kept short.
+If it does more than <code class="docutils literal notranslate"><span class="pre">return</span></code> a static array, several caveats apply:</p>
+<ul class="simple">
+<li><p>If you need to use any Python C API, it is recommended to call
+<a class="reference internal" href="stable.html#c.PyABIInfo_Check" title="PyABIInfo_Check"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyABIInfo_Check()</span></code></a> first to raise an exception,
+rather than crash, in common cases of ABI mismatch.</p></li>
+<li><p>Code in the export hook must never rely on the <a class="reference internal" href="../glossary.html#term-GIL"><span class="xref std std-term">GIL</span></a>:
+<a class="reference internal" href="../glossary.html#term-free-threaded-build"><span class="xref std std-term">free-threaded builds</span></a> of Python can only check
+the <a class="reference internal" href="module.html#c.Py_mod_gil" title="Py_mod_gil"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_mod_gil</span></code></a> slot (or the lack of it) after the hook returns,</p></li>
+<li><p>Similarly, the hook may be called in any subinterpreter, since the
+<a class="reference internal" href="module.html#c.Py_mod_multiple_interpreters" title="Py_mod_multiple_interpreters"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_mod_multiple_interpreters</span></code></a> slot (or lack of it)
+is only checked after the hook returns.</p></li>
+</ul>
+<p>For example:</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyMODEXPORT_FUNC</span>
+<span class="nf">PyModExport_modulename</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PyABIInfo_Check</span><span class="p">(</span><span class="o">&amp;</span><span class="n">abi_info</span><span class="p">,</span><span class="w"> </span><span class="s">"modulename"</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="cm">/* ABI mismatch. It's not safe to examine the raised exception. */</span>
+<span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">   </span><span class="p">}</span>
+
+<span class="w">   </span><span class="cm">/* use Python API (as little as possible); don't rely on GIL */</span>
+
+<span class="w">   </span><span class="k">return</span><span class="w"> </span><span class="n">modulename_slots</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>It is possible to export multiple modules from a single shared library by
+defining multiple export hooks.
+However, importing  them requires a custom importer or suitably named
+copies/links of the extension file, because Python's import machinery only
+finds the function corresponding to the filename.
+See the <a class="reference external" href="https://peps.python.org/pep-0489/#multiple-modules-in-one-library">Multiple modules in one library</a>
+section in <span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0489/"><strong>PEP 489</strong></a> for details.</p>
+</div>
+</section>
+<section id="multi-phase-initialization">
+<span id="id2"></span><h2>Multi-phase initialization<a class="headerlink" href="#multi-phase-initialization" title="連結到這個標頭">¶</a></h2>
+<p>The process of creating an extension module follows several phases:</p>
+<ul class="simple">
+<li><p>Python finds and calls the export hook to get information on how to
+create the module.</p></li>
 <li><p>Before any substantial code is executed, Python can determine which
 capabilities the module supports, and it can adjust the environment or
-refuse loading an incompatible extension.</p></li>
-<li><p>By default, Python itself creates the module object -- that is, it does
-the equivalent of <a class="reference internal" href="../reference/datamodel.html#object.__new__" title="object.__new__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">object.__new__()</span></code></a> for classes.
-It also sets initial attributes like <a class="reference internal" href="../reference/datamodel.html#module.__package__" title="module.__package__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__package__</span></code></a> and
-<a class="reference internal" href="../reference/datamodel.html#module.__loader__" title="module.__loader__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__loader__</span></code></a>.</p></li>
-<li><p>Afterwards, the module object is initialized using extension-specific
-code -- the equivalent of <a class="reference internal" href="../reference/datamodel.html#object.__init__" title="object.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__init__()</span></code></a> on classes.</p></li>
+refuse loading an incompatible extension.
+Slots like <a class="reference internal" href="module.html#c.Py_mod_abi" title="Py_mod_abi"><code class="xref c c-data docutils literal notranslate"><span class="pre">Py_mod_abi</span></code></a>, <a class="reference internal" href="module.html#c.Py_mod_gil" title="Py_mod_gil"><code class="xref c c-data docutils literal notranslate"><span class="pre">Py_mod_gil</span></code></a> and
+<a class="reference internal" href="module.html#c.Py_mod_multiple_interpreters" title="Py_mod_multiple_interpreters"><code class="xref c c-data docutils literal notranslate"><span class="pre">Py_mod_multiple_interpreters</span></code></a> influence this step.</p></li>
+<li><p>By default, Python itself then creates the module object -- that is, it does
+the equivalent of calling <a class="reference internal" href="../reference/datamodel.html#object.__new__" title="object.__new__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__new__()</span></code></a> when creating an object.
+This step can be overridden using the <a class="reference internal" href="module.html#c.Py_mod_create" title="Py_mod_create"><code class="xref c c-data docutils literal notranslate"><span class="pre">Py_mod_create</span></code></a> slot.</p></li>
+<li><p>Python sets initial module attributes like <a class="reference internal" href="../reference/datamodel.html#module.__package__" title="module.__package__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__package__</span></code></a> and
+<a class="reference internal" href="../reference/datamodel.html#module.__loader__" title="module.__loader__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__loader__</span></code></a>, and inserts the module object into
+<a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-attr docutils literal notranslate"><span class="pre">sys.modules</span></code></a>.</p></li>
+<li><p>Afterwards, the module object is initialized in an extension-specific way
+-- the equivalent of <a class="reference internal" href="../reference/datamodel.html#object.__init__" title="object.__init__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__init__()</span></code></a> when creating an object,
+or of executing top-level code in a Python-language module.
+The behavior is specified using the <a class="reference internal" href="module.html#c.Py_mod_exec" title="Py_mod_exec"><code class="xref c c-data docutils literal notranslate"><span class="pre">Py_mod_exec</span></code></a> slot.</p></li>
 </ul>
 <p>This is called <em>multi-phase initialization</em> to distinguish it from the legacy
-(but still supported) <em>single-phase initialization</em> scheme,
-where the initialization function returns a fully constructed module.
-See the <a class="reference internal" href="#single-phase-initialization"><span class="std std-ref">single-phase-initialization section below</span></a>
-for details.</p>
+(but still supported) <a class="reference internal" href="#single-phase-initialization"><span class="std std-ref">single-phase initialization</span></a>,
+where an initialization function returns a fully constructed module.</p>
 <div class="versionchanged">
-<p><span class="versionmodified changed">在 3.5 版的變更: </span>Added support for multi-phase initialization (<span class="target" id="index-0"></span><a class="pep reference external" href="https://peps.python.org/pep-0489/"><strong>PEP 489</strong></a>).</p>
+<p><span class="versionmodified changed">在 3.5 版的變更: </span>Added support for multi-phase initialization (<span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0489/"><strong>PEP 489</strong></a>).</p>
 </div>
+</section>
 <section id="multiple-module-instances">
 <h2>Multiple module instances<a class="headerlink" href="#multiple-module-instances" title="連結到這個標頭">¶</a></h2>
 <p>By default, extension modules are not singletons.
 For example, if the <a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-attr docutils literal notranslate"><span class="pre">sys.modules</span></code></a> entry is removed and the module
-is re-imported, a new module object is created, and typically populated with
+is re-imported, a new module object is created and, typically, populated with
 fresh method and type objects.
 The old module is subject to normal garbage collection.
 This mirrors the behavior of pure-Python modules.</p>
@@ -275,32 +394,30 @@ as above.
 A module may also be limited to the main interpreter using
 the <a class="reference internal" href="module.html#c.Py_mod_multiple_interpreters" title="Py_mod_multiple_interpreters"><code class="xref c c-data docutils literal notranslate"><span class="pre">Py_mod_multiple_interpreters</span></code></a> slot.</p>
 </section>
-<section id="initialization-function">
-<span id="extension-export-hook"></span><h2>Initialization function<a class="headerlink" href="#initialization-function" title="連結到這個標頭">¶</a></h2>
-<p>The initialization function defined by an extension module has the
-following signature:</p>
+<section id="pyinit-function">
+<span id="extension-pyinit"></span><h2><code class="docutils literal notranslate"><span class="pre">PyInit</span></code> function<a class="headerlink" href="#pyinit-function" title="連結到這個標頭">¶</a></h2>
+<div class="versionchanged soft-deprecated">
+<p><span class="versionmodified soft-deprecated"><a class="reference internal" href="../glossary.html#term-soft-deprecated">Soft deprecated</a> since version 3.15: </span>This functionality will not get new features,
+but there are no plans to remove it.</p>
+</div>
+<p>Instead of <a class="reference internal" href="#c.PyModExport_modulename" title="PyModExport_modulename"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModExport_modulename()</span></code></a>, an extension module can define
+an older-style <em class="dfn">initialization function</em> with the signature:</p>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.PyInit_modulename">
 <a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyInit_modulename</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">void</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyInit_modulename" title="連結到這個定義">¶</a><br /></dt>
 <dd></dd></dl>
 
 <p>Its name should be <code class="samp docutils literal notranslate"><span class="pre">PyInit_</span><em><span class="pre">&lt;name&gt;</span></em></code>, with <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> replaced by the
-name of the module.</p>
-<p>For modules with ASCII-only names, the function must instead be named
-<code class="samp docutils literal notranslate"><span class="pre">PyInit_</span><em><span class="pre">&lt;name&gt;</span></em></code>, with <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> replaced by the name of the module.
-When using <a class="reference internal" href="#multi-phase-initialization"><span class="std std-ref">Multi-phase initialization</span></a>, non-ASCII module names
-are allowed. In this case, the initialization function name is
-<code class="samp docutils literal notranslate"><span class="pre">PyInitU_</span><em><span class="pre">&lt;name&gt;</span></em></code>, with <code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> encoded using Python's
-<em>punycode</em> encoding with hyphens replaced by underscores. In Python:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">initfunc_name</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">suffix</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">'_'</span> <span class="o">+</span> <span class="n">name</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'ascii'</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">UnicodeEncodeError</span><span class="p">:</span>
-        <span class="n">suffix</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">'U_'</span> <span class="o">+</span> <span class="n">name</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">'punycode'</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">b</span><span class="s1">'-'</span><span class="p">,</span> <span class="sa">b</span><span class="s1">'_'</span><span class="p">)</span>
-    <span class="k">return</span> <span class="sa">b</span><span class="s1">'PyInit'</span> <span class="o">+</span> <span class="n">suffix</span>
-</pre></div>
-</div>
-<p>It is recommended to define the initialization function using a helper macro:</p>
+name of the module.
+For non-ASCII module names, use <code class="samp docutils literal notranslate"><span class="pre">PyInitU_</span><em><span class="pre">&lt;name&gt;</span></em></code> instead, with
+<code class="docutils literal notranslate"><span class="pre">&lt;name&gt;</span></code> encoded in the same way as for the
+<a class="reference internal" href="#extension-export-hook"><span class="std std-ref">export hook</span></a> (that is, using Punycode
+with underscores).</p>
+<p>If a module exports both <code class="samp docutils literal notranslate"><span class="pre">PyInit_</span><em><span class="pre">&lt;name&gt;</span></em></code> and
+<code class="samp docutils literal notranslate"><span class="pre">PyModExport_</span><em><span class="pre">&lt;name&gt;</span></em></code>, the <code class="samp docutils literal notranslate"><span class="pre">PyInit_</span><em><span class="pre">&lt;name&gt;</span></em></code> function
+is ignored.</p>
+<p>Like with <a class="reference internal" href="#c.PyMODEXPORT_FUNC" title="PyMODEXPORT_FUNC"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PyMODEXPORT_FUNC</span></code></a>, it is recommended to define the
+initialization function using a helper macro:</p>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.PyMODINIT_FUNC">
 <span class="sig-name descname"><span class="n"><span class="pre">PyMODINIT_FUNC</span></span></span><a class="headerlink" href="#c.PyMODINIT_FUNC" title="連結到這個定義">¶</a><br /></dt>
@@ -311,6 +428,30 @@ This macro:</p>
 <li><p>adds any special linkage declarations required by the platform, and</p></li>
 <li><p>for C++, declares the function as <code class="docutils literal notranslate"><span class="pre">extern</span> <span class="pre">&quot;C&quot;</span></code>.</p></li>
 </ul>
+</dd></dl>
+
+<p>Normally, the initialization function (<code class="docutils literal notranslate"><span class="pre">PyInit_modulename</span></code>) returns
+a <a class="reference internal" href="module.html#c.PyModuleDef" title="PyModuleDef"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyModuleDef</span></code></a> instance with non-<code class="docutils literal notranslate"><span class="pre">NULL</span></code>
+<a class="reference internal" href="module.html#c.PyModuleDef.m_slots" title="PyModuleDef.m_slots"><code class="xref c c-member docutils literal notranslate"><span class="pre">m_slots</span></code></a>. This allows Python to use
+<a class="reference internal" href="#multi-phase-initialization"><span class="std std-ref">multi-phase initialization</span></a>.</p>
+<p>Before it is returned, the <code class="docutils literal notranslate"><span class="pre">PyModuleDef</span></code> instance must be initialized
+using the following function:</p>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.PyModuleDef_Init">
+<a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyModuleDef_Init</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="module.html#c.PyModuleDef" title="PyModuleDef"><span class="n"><span class="pre">PyModuleDef</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">def</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyModuleDef_Init" title="連結到這個定義">¶</a><br /></dt>
+<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.5 版本開始.</em><p>Ensure a module definition is a properly initialized Python object that
+correctly reports its type and a reference count.</p>
+<p>Return <em>def</em> cast to <code class="docutils literal notranslate"><span class="pre">PyObject*</span></code>, or <code class="docutils literal notranslate"><span class="pre">NULL</span></code> if an error occurred.</p>
+<p>Calling this function is required before returning a <a class="reference internal" href="module.html#c.PyModuleDef" title="PyModuleDef"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyModuleDef</span></code></a>
+from a module initialization function.
+It should not be used in other contexts.</p>
+<p>Note that Python assumes that <code class="docutils literal notranslate"><span class="pre">PyModuleDef</span></code> structures are statically
+allocated.
+This function may return either a new reference or a borrowed one;
+this reference must not be released.</p>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.5 版被加入.</span></p>
+</div>
 </dd></dl>
 
 <p>For example, a module called <code class="docutils literal notranslate"><span class="pre">spam</span></code> would be defined like this:</p>
@@ -327,50 +468,16 @@ This macro:</p>
 <span class="p">}</span>
 </pre></div>
 </div>
-<p>It is possible to export multiple modules from a single shared library by
-defining multiple initialization functions. However, importing them requires
-using symbolic links or a custom importer, because by default only the
-function corresponding to the filename is found.
-See the <a class="reference external" href="https://peps.python.org/pep-0489/#multiple-modules-in-one-library">Multiple modules in one library</a>
-section in <span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0489/"><strong>PEP 489</strong></a> for details.</p>
-<p>The initialization function is typically the only non-<code class="docutils literal notranslate"><span class="pre">static</span></code>
-item defined in the module's C source.</p>
-</section>
-<section id="multi-phase-initialization">
-<span id="id1"></span><h2>Multi-phase initialization<a class="headerlink" href="#multi-phase-initialization" title="連結到這個標頭">¶</a></h2>
-<p>Normally, the <a class="reference internal" href="#extension-export-hook"><span class="std std-ref">initialization function</span></a>
-(<code class="docutils literal notranslate"><span class="pre">PyInit_modulename</span></code>) returns a <a class="reference internal" href="module.html#c.PyModuleDef" title="PyModuleDef"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyModuleDef</span></code></a> instance with
-non-<code class="docutils literal notranslate"><span class="pre">NULL</span></code> <a class="reference internal" href="module.html#c.PyModuleDef.m_slots" title="PyModuleDef.m_slots"><code class="xref c c-member docutils literal notranslate"><span class="pre">m_slots</span></code></a>.
-Before it is returned, the <code class="docutils literal notranslate"><span class="pre">PyModuleDef</span></code> instance must be initialized
-using the following function:</p>
-<dl class="c function">
-<dt class="sig sig-object c" id="c.PyModuleDef_Init">
-<a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">PyModuleDef_Init</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="module.html#c.PyModuleDef" title="PyModuleDef"><span class="n"><span class="pre">PyModuleDef</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">def</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyModuleDef_Init" title="連結到這個定義">¶</a><br /></dt>
-<dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.5 版本開始.</em><p>Ensure a module definition is a properly initialized Python object that
-correctly reports its type and a reference count.</p>
-<p>Return <em>def</em> cast to <code class="docutils literal notranslate"><span class="pre">PyObject*</span></code>, or <code class="docutils literal notranslate"><span class="pre">NULL</span></code> if an error occurred.</p>
-<p>Calling this function is required for <a class="reference internal" href="#multi-phase-initialization"><span class="std std-ref">Multi-phase initialization</span></a>.
-It should not be used in other contexts.</p>
-<p>Note that Python assumes that <code class="docutils literal notranslate"><span class="pre">PyModuleDef</span></code> structures are statically
-allocated.
-This function may return either a new reference or a borrowed one;
-this reference must not be released.</p>
-<div class="versionadded">
-<p><span class="versionmodified added">在 3.5 版被加入.</span></p>
-</div>
-</dd></dl>
-
-</section>
 <section id="legacy-single-phase-initialization">
-<span id="single-phase-initialization"></span><h2>Legacy single-phase initialization<a class="headerlink" href="#legacy-single-phase-initialization" title="連結到這個標頭">¶</a></h2>
-<div class="admonition attention">
-<p class="admonition-title">注意</p>
-<p>Single-phase initialization is a legacy mechanism to initialize extension
+<span id="single-phase-initialization"></span><h3>Legacy single-phase initialization<a class="headerlink" href="#legacy-single-phase-initialization" title="連結到這個標頭">¶</a></h3>
+<div class="versionchanged soft-deprecated">
+<p><span class="versionmodified soft-deprecated"><a class="reference internal" href="../glossary.html#term-soft-deprecated">Soft deprecated</a> since version 3.15: </span>Single-phase initialization is a legacy mechanism to initialize extension
 modules, with known drawbacks and design flaws. Extension module authors
 are encouraged to use multi-phase initialization instead.</p>
+<p>However, there are no plans to remove support for it.</p>
 </div>
-<p>In single-phase initialization, the
-<a class="reference internal" href="#extension-export-hook"><span class="std std-ref">initialization function</span></a> (<code class="docutils literal notranslate"><span class="pre">PyInit_modulename</span></code>)
+<p>In single-phase initialization, the old-style
+<a class="reference internal" href="#extension-pyinit"><span class="std std-ref">initialization function</span></a> (<code class="docutils literal notranslate"><span class="pre">PyInit_modulename</span></code>)
 should create, populate and return a module object.
 This is typically done using <a class="reference internal" href="module.html#c.PyModule_Create" title="PyModule_Create"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_Create()</span></code></a> and functions like
 <a class="reference internal" href="module.html#c.PyModule_AddObjectRef" title="PyModule_AddObjectRef"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_AddObjectRef()</span></code></a>.</p>
@@ -386,7 +493,7 @@ again.
 Instead, it creates a new module object with a new <code class="docutils literal notranslate"><span class="pre">__dict__</span></code>, and copies
 the saved contents to it.
 For example, given a single-phase module <code class="docutils literal notranslate"><span class="pre">_testsinglephase</span></code>
-<a class="footnote-reference brackets" href="#testsinglephase" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> that defines a function <code class="docutils literal notranslate"><span class="pre">sum</span></code> and an exception class
+<a class="footnote-reference brackets" href="#testsinglephase" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> that defines a function <code class="docutils literal notranslate"><span class="pre">sum</span></code> and an exception class
 <code class="docutils literal notranslate"><span class="pre">error</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">_testsinglephase</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">one</span>
@@ -415,15 +522,17 @@ object as soon as possible, before any other module objects can be created.</p>
 <li><p>Non-ASCII module names (<code class="docutils literal notranslate"><span class="pre">PyInitU_modulename</span></code>) are not supported.</p></li>
 <li><p>Single-phase modules support module lookup functions like
 <a class="reference internal" href="module.html#c.PyState_FindModule" title="PyState_FindModule"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyState_FindModule()</span></code></a>.</p></li>
+<li><p>The module's <a class="reference internal" href="module.html#c.PyModuleDef.m_slots" title="PyModuleDef.m_slots"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyModuleDef.m_slots</span></code></a> must be NULL.</p></li>
 </ul>
 <aside class="footnote-list brackets">
 <aside class="footnote brackets" id="testsinglephase" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">1</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">1</a><span class="fn-bracket">]</span></span>
 <p><code class="docutils literal notranslate"><span class="pre">_testsinglephase</span></code> is an internal module used
 in CPython's self-test suite; your installation may or may not
 include it.</p>
 </aside>
 </aside>
+</section>
 </section>
 </section>
 
@@ -438,10 +547,13 @@ include it.</p>
     <h3><a href="../contents.html">目錄</a></h3>
     <ul>
 <li><a class="reference internal" href="#">Defining extension modules</a><ul>
-<li><a class="reference internal" href="#multiple-module-instances">Multiple module instances</a></li>
-<li><a class="reference internal" href="#initialization-function">Initialization function</a></li>
+<li><a class="reference internal" href="#extension-export-hook">Extension export hook</a></li>
 <li><a class="reference internal" href="#multi-phase-initialization">Multi-phase initialization</a></li>
+<li><a class="reference internal" href="#multiple-module-instances">Multiple module instances</a></li>
+<li><a class="reference internal" href="#pyinit-function"><code class="docutils literal notranslate"><span class="pre">PyInit</span></code> function</a><ul>
 <li><a class="reference internal" href="#legacy-single-phase-initialization">Legacy single-phase initialization</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -454,8 +566,8 @@ include it.</p>
   </div>
   <div>
     <h4>下個主題</h4>
-    <p class="topless"><a href="utilities.html"
-                          title="下一章">工具</a></p>
+    <p class="topless"><a href="slots.html"
+                          title="下一章">Definition slots</a></p>
   </div>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -477,13 +589,13 @@ include it.</p>
       <li><a href="../bugs.html">回報錯誤</a></li>
       <li><a class="improvepage" href="../improve-page-nojs.html">改進此頁面</a></li>
       <li>
-        <a href="https://github.com/python/cpython/blob/3.14/Doc/c-api/extension-modules.rst?plain=1"
+        <a href="https://github.com/python/cpython/blob/3.15/Doc/c-api/extension-modules.rst?plain=1"
             rel="nofollow">顯示原始碼
         </a>
       </li>
       
       <li>
-        <a href="https://github.com/python/python-docs-zh-tw/blob/3.14/c-api/extension-modules.po?plain=1"
+        <a href="https://github.com/python/python-docs-zh-tw/blob/3.15/c-api/extension-modules.po?plain=1"
            rel="nofollow">顯示翻譯原始碼</a>
       </li>
       
@@ -507,7 +619,7 @@ include it.</p>
           <a href="../py-modindex.html" title="Python 模組索引"
              >模組</a> |</li>
         <li class="right" >
-          <a href="utilities.html" title="工具"
+          <a href="slots.html" title="Definition slots"
              >下一頁</a> |</li>
         <li class="right" >
           <a href="exceptions.html" title="例外處理"
@@ -523,7 +635,7 @@ include it.</p>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.14.8 Documentation</a> &#187;
+      <a href="../index.html">3.15.0 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python/C API 參考手冊</a> &#187;</li>
@@ -568,7 +680,7 @@ include it.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 10月 15, 2026 (08:26 UTC)。
+      最後更新於 10月 15, 2026 (11:49 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
