@@ -211,6 +211,12 @@ the <a class="reference internal" href="../library/marshal.html#module-marshal" 
 <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyMarshal_WriteLongToFile</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="n"><span class="pre">value</span></span>, <span class="n"><span class="pre">FILE</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">file</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">version</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyMarshal_WriteLongToFile" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>將一個 <span class="c-expr sig sig-inline c"><span class="kt">long</span></span> 整數 <em>value</em> marshal 為 <em>file</em>。這只會寫入 <em>value</em> 的最低有效 32 位元；無論原生 <span class="c-expr sig sig-inline c"><span class="kt">long</span></span> 型別的大小如何。<em>version</em> 表示檔案的格式。</p>
 <p>這個函式可能會失敗，這時會設定錯誤指示器。使用 <a class="reference internal" href="exceptions.html#c.PyErr_Occurred" title="PyErr_Occurred"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_Occurred()</span></code></a> 來檢查是否發生錯誤。</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>In Python 3.15 and earlier, this function does not set the error
+indicator if writing to <em>file</em> fails.
+The same caveat applies as for <a class="reference internal" href="#c.PyMarshal_WriteObjectToFile" title="PyMarshal_WriteObjectToFile"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMarshal_WriteObjectToFile()</span></code></a>.</p>
+</div>
 </dd></dl>
 
 <dl class="c function">
@@ -218,6 +224,17 @@ the <a class="reference internal" href="../library/marshal.html#module-marshal" 
 <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyMarshal_WriteObjectToFile</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">value</span></span>, <span class="n"><span class="pre">FILE</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">file</span></span>, <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">version</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyMarshal_WriteObjectToFile" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>將一個 Python 物件 <em>value</em> marshal 為 <em>file</em>。<em>version</em> 表示檔案的格式。</p>
 <p>這個函式可能會失敗，這時會設定錯誤指示器。使用 <a class="reference internal" href="exceptions.html#c.PyErr_Occurred" title="PyErr_Occurred"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_Occurred()</span></code></a> 來檢查是否發生錯誤。</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>In Python 3.15 and earlier, this function can write only part of the
+data to <em>file</em> and return without setting the error indicator, for
+example if <em>value</em> contains an object which cannot be marshalled or
+if writing to <em>file</em> fails (see <a class="reference external" href="https://github.com/python/cpython/issues/155907">gh-155907</a>).
+Code which has to support these versions cannot rely on
+<a class="reference internal" href="exceptions.html#c.PyErr_Occurred" title="PyErr_Occurred"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyErr_Occurred()</span></code></a> alone to know that all the data was written.
+It can use <a class="reference internal" href="#c.PyMarshal_WriteObjectToString" title="PyMarshal_WriteObjectToString"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyMarshal_WriteObjectToString()</span></code></a> and write the
+result itself, or validate what was written.</p>
+</div>
 </dd></dl>
 
 <dl class="c function">
@@ -393,7 +410,7 @@ the <a class="reference internal" href="../library/marshal.html#module-marshal" 
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 10月 01, 2026 (00:31 UTC)。
+      最後更新於 10月 15, 2026 (03:08 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

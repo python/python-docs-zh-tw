@@ -414,9 +414,13 @@ and return a <a class="reference internal" href="#concurrent.interpreters.Interp
 
 <dl class="py function">
 <dt class="sig sig-object py" id="concurrent.interpreters.create_queue">
-<span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">create_queue</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.create_queue" title="連結到這個定義">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">create_queue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">maxsize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.create_queue" title="連結到這個定義">¶</a></dt>
 <dd><p>Initialize a new cross-interpreter queue and return a <a class="reference internal" href="#concurrent.interpreters.Queue" title="concurrent.interpreters.Queue"><code class="xref py py-class docutils literal notranslate"><span class="pre">Queue</span></code></a>
 object for it.</p>
+<p><em>maxsize</em> is an integer that sets the upperbound limit on the number of
+items that can be placed in the queue. Insertion will be blocked once this
+size has been reached, until queue items are consumed. If <em>maxsize</em> is
+less than or equal to zero, the queue size is infinite.</p>
 </dd></dl>
 
 <section id="interpreter-objects">
@@ -464,7 +468,7 @@ but most are copied via <a class="reference internal" href="pickle.html#module-p
 
 <dl class="py method">
 <dt class="sig sig-object py" id="concurrent.interpreters.Interpreter.exec">
-<span class="sig-name descname"><span class="pre">exec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">dedent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Interpreter.exec" title="連結到這個定義">¶</a></dt>
+<span class="sig-name descname"><span class="pre">exec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">code</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Interpreter.exec" title="連結到這個定義">¶</a></dt>
 <dd><p>Run the given source code in the interpreter (in the current thread).</p>
 </dd></dl>
 
@@ -527,7 +531,9 @@ an object cannot be sent to another interpreter.</p>
 <dt class="sig sig-object py" id="concurrent.interpreters.Queue">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">Queue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Queue" title="連結到這個定義">¶</a></dt>
 <dd><p>A wrapper around a low-level, cross-interpreter queue, which
-implements the <a class="reference internal" href="queue.html#queue.Queue" title="queue.Queue"><code class="xref py py-class docutils literal notranslate"><span class="pre">queue.Queue</span></code></a> interface.  The underlying queue
+implements all the methods of <a class="reference internal" href="queue.html#queue.Queue" title="queue.Queue"><code class="xref py py-class docutils literal notranslate"><span class="pre">queue.Queue</span></code></a> except for
+<a class="reference internal" href="queue.html#queue.Queue.task_done" title="queue.Queue.task_done"><code class="xref py py-meth docutils literal notranslate"><span class="pre">task_done()</span></code></a>, <a class="reference internal" href="queue.html#queue.Queue.join" title="queue.Queue.join"><code class="xref py py-meth docutils literal notranslate"><span class="pre">join()</span></code></a>
+and <a class="reference internal" href="queue.html#queue.Queue.shutdown" title="queue.Queue.shutdown"><code class="xref py py-meth docutils literal notranslate"><span class="pre">shutdown()</span></code></a>.  The underlying queue
 can only be created through <a class="reference internal" href="#concurrent.interpreters.create_queue" title="concurrent.interpreters.create_queue"><code class="xref py py-func docutils literal notranslate"><span class="pre">create_queue()</span></code></a>.</p>
 <p>Some objects are actually shared and some are copied efficiently,
 but most are copied via <a class="reference internal" href="pickle.html#module-pickle" title="pickle: Convert Python objects to streams of bytes and back."><code class="xref py py-mod docutils literal notranslate"><span class="pre">pickle</span></code></a>.  See <a class="reference internal" href="#interp-object-sharing"><span class="std std-ref">&quot;Sharing&quot; Objects</span></a>.</p>
@@ -538,21 +544,77 @@ but most are copied via <a class="reference internal" href="pickle.html#module-p
 <p>The queue's ID.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="concurrent.interpreters.Queue.qsize">
+<span class="sig-name descname"><span class="pre">qsize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Queue.qsize" title="連結到這個定義">¶</a></dt>
+<dd><p>Return the number of items in the queue.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="concurrent.interpreters.Queue.empty">
+<span class="sig-name descname"><span class="pre">empty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Queue.empty" title="連結到這個定義">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the queue is empty, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="concurrent.interpreters.Queue.full">
+<span class="sig-name descname"><span class="pre">full</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Queue.full" title="連結到這個定義">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code> if the queue is full, <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="concurrent.interpreters.Queue.put">
+<span class="sig-name descname"><span class="pre">put</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Queue.put" title="連結到這個定義">¶</a></dt>
+<dd><p>Put <em>obj</em> into the queue.  If optional args <em>block</em> is true and
+<em>timeout</em> is <code class="docutils literal notranslate"><span class="pre">None</span></code> (the default), block if necessary until a free
+slot is available.  If <em>timeout</em> is a positive number, it blocks at
+most <em>timeout</em> seconds and raises the <a class="reference internal" href="#concurrent.interpreters.QueueFull" title="concurrent.interpreters.QueueFull"><code class="xref py py-exc docutils literal notranslate"><span class="pre">QueueFull</span></code></a> exception if
+no free slot was available within that time.  Otherwise (<em>block</em> is
+false), put an object on the queue if a free slot is immediately
+available, else raise the <a class="reference internal" href="#concurrent.interpreters.QueueFull" title="concurrent.interpreters.QueueFull"><code class="xref py py-exc docutils literal notranslate"><span class="pre">QueueFull</span></code></a> exception (<em>timeout</em> is
+ignored in that case).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="concurrent.interpreters.Queue.put_nowait">
+<span class="sig-name descname"><span class="pre">put_nowait</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Queue.put_nowait" title="連結到這個定義">¶</a></dt>
+<dd><p>Equivalent to <code class="docutils literal notranslate"><span class="pre">put(obj,</span> <span class="pre">block=False)</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="concurrent.interpreters.Queue.get">
+<span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Queue.get" title="連結到這個定義">¶</a></dt>
+<dd><p>Remove and return an object from the queue.  If optional args <em>block</em>
+is true and <em>timeout</em> is <code class="docutils literal notranslate"><span class="pre">None</span></code> (the default), block if necessary
+until an object is available.  If <em>timeout</em> is a positive number, it
+blocks at most <em>timeout</em> seconds and raises the <a class="reference internal" href="#concurrent.interpreters.QueueEmpty" title="concurrent.interpreters.QueueEmpty"><code class="xref py py-exc docutils literal notranslate"><span class="pre">QueueEmpty</span></code></a>
+exception if no object was available within that time.  Otherwise
+(<em>block</em> is false), return an object if one is immediately available,
+else raise the <a class="reference internal" href="#concurrent.interpreters.QueueEmpty" title="concurrent.interpreters.QueueEmpty"><code class="xref py py-exc docutils literal notranslate"><span class="pre">QueueEmpty</span></code></a> exception (<em>timeout</em> is ignored in
+that case).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="concurrent.interpreters.Queue.get_nowait">
+<span class="sig-name descname"><span class="pre">get_nowait</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#concurrent.interpreters.Queue.get_nowait" title="連結到這個定義">¶</a></dt>
+<dd><p>Equivalent to <code class="docutils literal notranslate"><span class="pre">get(block=False)</span></code>.</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py exception">
-<dt class="sig sig-object py" id="concurrent.interpreters.QueueEmptyError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">QueueEmptyError</span></span><a class="headerlink" href="#concurrent.interpreters.QueueEmptyError" title="連結到這個定義">¶</a></dt>
+<dt class="sig sig-object py" id="concurrent.interpreters.QueueEmpty">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">QueueEmpty</span></span><a class="headerlink" href="#concurrent.interpreters.QueueEmpty" title="連結到這個定義">¶</a></dt>
 <dd><p>This exception, a subclass of <a class="reference internal" href="queue.html#queue.Empty" title="queue.Empty"><code class="xref py py-exc docutils literal notranslate"><span class="pre">queue.Empty</span></code></a>, is raised from
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">Queue.get()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">Queue.get_nowait()</span></code> when the queue
+<a class="reference internal" href="#concurrent.interpreters.Queue.get" title="concurrent.interpreters.Queue.get"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Queue.get()</span></code></a> and <a class="reference internal" href="#concurrent.interpreters.Queue.get_nowait" title="concurrent.interpreters.Queue.get_nowait"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Queue.get_nowait()</span></code></a> when the queue
 is empty.</p>
 </dd></dl>
 
 <dl class="py exception">
-<dt class="sig sig-object py" id="concurrent.interpreters.QueueFullError">
-<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">QueueFullError</span></span><a class="headerlink" href="#concurrent.interpreters.QueueFullError" title="連結到這個定義">¶</a></dt>
+<dt class="sig sig-object py" id="concurrent.interpreters.QueueFull">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">concurrent.interpreters.</span></span><span class="sig-name descname"><span class="pre">QueueFull</span></span><a class="headerlink" href="#concurrent.interpreters.QueueFull" title="連結到這個定義">¶</a></dt>
 <dd><p>This exception, a subclass of <a class="reference internal" href="queue.html#queue.Full" title="queue.Full"><code class="xref py py-exc docutils literal notranslate"><span class="pre">queue.Full</span></code></a>, is raised from
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">Queue.put()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">Queue.put_nowait()</span></code> when the queue
+<a class="reference internal" href="#concurrent.interpreters.Queue.put" title="concurrent.interpreters.Queue.put"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Queue.put()</span></code></a> and <a class="reference internal" href="#concurrent.interpreters.Queue.put_nowait" title="concurrent.interpreters.Queue.put_nowait"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Queue.put_nowait()</span></code></a> when the queue
 is full.</p>
 </dd></dl>
 
@@ -592,6 +654,20 @@ is full.</p>
 <span class="c1"># Run in new OS thread.</span>
 
 <span class="n">t</span> <span class="o">=</span> <span class="n">interp</span><span class="o">.</span><span class="n">call_in_thread</span><span class="p">(</span><span class="n">run</span><span class="p">)</span>
+<span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Communicating between interpreters with a queue:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">concurrent</span><span class="w"> </span><span class="kn">import</span> <span class="n">interpreters</span>
+
+<span class="n">interp</span> <span class="o">=</span> <span class="n">interpreters</span><span class="o">.</span><span class="n">create</span><span class="p">()</span>
+<span class="n">queue</span> <span class="o">=</span> <span class="n">interpreters</span><span class="o">.</span><span class="n">create_queue</span><span class="p">()</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">worker</span><span class="p">(</span><span class="n">queue</span><span class="p">):</span>
+    <span class="n">queue</span><span class="o">.</span><span class="n">put</span><span class="p">(</span><span class="s1">'spam!'</span><span class="p">)</span>
+
+<span class="n">t</span> <span class="o">=</span> <span class="n">interp</span><span class="o">.</span><span class="n">call_in_thread</span><span class="p">(</span><span class="n">worker</span><span class="p">,</span> <span class="n">queue</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">queue</span><span class="o">.</span><span class="n">get</span><span class="p">())</span>
 <span class="n">t</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
 </pre></div>
 </div>
@@ -752,7 +828,7 @@ is full.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 10月 01, 2026 (00:31 UTC)。
+      最後更新於 10月 15, 2026 (03:08 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
