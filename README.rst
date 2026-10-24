@@ -450,6 +450,44 @@ Skill 會將發現的問題分類為 ERROR、WARNING、INFO 並逐項列出，�
   Skill 產生的譯文僅供輔助，送出 Pull Request 前請務必人工確認每一條翻譯是否\
   正確、是否符合\ `翻譯守則`_\ 。
 
+翻譯記憶 (Translation Memory)
+------------------------------
+
+``translate-po``\ 、\ ``check-terminology`` 與 ``validate-translation`` 會在翻譯\
+或校對時，從本專案既有的 po 檔中查詢相似的已翻譯條目與用詞的翻譯方式作為參考。\
+此功能使用 `agentic-retrieval <https://github.com/josix/agentic-retrieval>`_
+建立索引；未安裝時 Skill 會自動略過此步驟。查詢結果僅供參考，用詞仍以\
+`術語表 Glossary`_\ 為準。
+
+事前準備（目前僅支援 macOS 與 Linux）：
+
+- 安裝 `uv <https://docs.astral.sh/uv/>`_\ 。
+- 取得 agentic-retrieval 的原始碼，並將環境變數指向其中的 ``engine`` 目錄：
+
+  .. code-block:: sh
+
+    export AGENTIC_RETRIEVAL_ENGINE=/path/to/agentic-retrieval/engine
+
+- agentic-retrieval 正式發布後，也可以改用 ``uv tool install`` 安裝，讓\
+  ``retrieval`` 指令出現在 ``PATH`` 中，就不需要設定環境變數：
+
+  .. code-block:: sh
+
+    uv tool install "agentic-retrieval @ git+https://github.com/josix/agentic-retrieval.git#subdirectory=engine"
+
+使用方式：
+
+.. code-block:: sh
+
+  .scripts/translation_memory.sh index                    # 建立或更新索引
+  .scripts/translation_memory.sh query "cache decorator"  # 以英文查詢
+  .scripts/translation_memory.sh query "快取 裝飾器"      # 以中文查詢
+
+索引存放在專案根目錄的 ``.agentic-retrieval/``\ （已列入 ``.gitignore``\ ）。專案\
+檔案更新後（例如 ``git pull``\ ），下一次查詢會自動重建索引。預設只列出已翻譯且\
+未標記 fuzzy 的條目，可加上 ``--include-fuzzy`` 或 ``--include-untranslated``
+調整。
+
 術語表 Glossary
 ===============
 
