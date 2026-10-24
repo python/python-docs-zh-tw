@@ -14,6 +14,7 @@ Check terminology against project glossary and zh_CN/zh_TW mappings.
 2. **Secondary:** `focused_terminology_dictionary.csv` - 118 key terms
 3. **Tertiary:** `.scripts/google_translate/utils.py` - zh_CN to zh_TW mappings
 4. **Usage evidence (not authority):** `.scripts/translation_memory.sh query "<term>"` - how existing translated .po entries render the term (skip if the command fails)
+5. **Reviewer-enforced terms:** the "Terminology enforced by reviewers" table in `../translate-po/references/review-corrections.md` - pairs reviewers repeatedly corrected (e.g. 傳回→回傳, 您→你, 協議→協定, 運行→執行), some context-dependent (串列 vs 清單, 檔案 vs 文件)
 
 ## Check Process
 

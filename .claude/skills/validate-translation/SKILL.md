@@ -38,6 +38,20 @@ Validate translated PO entries against project rules and report issues.
 - Maximum 79 characters per line
 - Multi-line format for longer content
 
+### 6. Past Review Corrections
+- Check changed entries against
+  `../translate-po/references/review-corrections.md`: phrasing and meaning,
+  omissions and additions, reviewer-enforced terms, `\\ ` next to full-width
+  punctuation, leftover English, 您, and stripped fuzzy flags
+- Report meaning errors and omissions as ERROR, the rest as WARNING
+
+### 7. Rendered Page
+- Run the `review-rendered-html` skill on every changed PO file: read the
+  text dump from `.scripts/render_review.py` and check Playwright screenshots
+  of the changed sections
+- Report rendered-only problems (spacing around literals/links/roles,
+  translationese that only shows once roles become plain text) as WARNING
+
 ## Review Process
 
 1. **Parse PO file** - Extract msgid/msgstr pairs
@@ -55,7 +69,9 @@ Validate translated PO entries against project rules and report issues.
 
 ## Quick Validation Commands
 
-After review, run: `make lint`, `make wrap`, `make build <file>.po`
+After review, run: `make lint`, `make wrap`, and
+`python3 .scripts/render_review.py <file>.po` (builds the page like
+`make build <file>.po` and checks the rendered text)
 
 ## References
 

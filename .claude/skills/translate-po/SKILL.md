@@ -76,6 +76,41 @@ See `references/rst-cheatsheet.md` for complete rules.
 4. If uncertain, add `#, fuzzy` flag
 5. Never use zh_CN terms from `references/forbidden-terms.md`
 
+### Step 5: Check Against Past Review Corrections
+
+Reviewers of this repo keep asking for the same fixes. Before finishing,
+re-read every changed msgstr against `references/review-corrections.md`
+(mined from ~1,500 review comments). The most frequent ones:
+
+1. **Phrasing and meaning:** no English word order, piles of 的 or needless
+   被; the meaning must match the source exactly (most common correction)
+2. **Terms reviewers enforce:** argument→引數 / parameter→參數, 回傳 (not
+   傳回/返回), 你 (not 您), 引發 (raise), 設定例外 (C API "set an
+   exception"), 透過, 協定, 命令列, 用戶端, 執行 (not 運行), 產生 (not 生成),
+   串列 only for a Python list (otherwise 清單); see the table in the reference
+3. **Spacing:** no space next to full-width punctuation, after 。, or
+   between CJK characters
+4. **`\\ `:** use it between CJK and markup, but not next to `，。、：；）「」`
+   (a full-width `（` right after markup still needs it)
+5. **Punctuation:** `、` for enumerations; keep `...` as in the source; keep
+   ASCII quotes around literal values
+6. **Markup:** re-add ``literal`` markup Poedit drops; balanced backticks
+7. **Completeness:** no omissions (qualifiers, parentheticals, second
+   occurrences) and no additions the source does not state (超譯)
+8. **Keep English:** socket, token, runtime, yield, library names, and words
+   that are really parameter names; translate comments in code samples
+9. **Consistency:** one rendering per term within a page; search existing
+   translations (translation memory) before coining a term
+10. **PO mechanics:** never just strip `#, fuzzy` without updating the
+    translation; index-only entries as `English（譯文）`
+
+### Step 6: Review the Rendered Page
+
+After the PO file is saved, build and read the rendered page with the
+`review-rendered-html` skill (`python3 .scripts/render_review.py <file>.po`,
+then Playwright screenshots of the changed sections). Spacing around
+literals, roles and links can only be judged on the rendered page.
+
 ## Output Format
 
 ```
@@ -95,6 +130,8 @@ Before outputting, verify:
 - [ ] Terminology matches glossary
 - [ ] No forbidden zh_CN terms
 - [ ] Consistent with translation memory hits, unless they conflict with the glossary
+- [ ] Checked against past review corrections (`references/review-corrections.md`)
+- [ ] Rendered page reads naturally and its layout is correct (`review-rendered-html`)
 
 ## Examples
 
@@ -154,4 +191,6 @@ msgstr "可能需要審核的翻譯"
 - `references/terminology.md` - Key term translations (186 terms)
 - `references/forbidden-terms.md` - zh_CN to zh_TW mappings
 - `references/rst-cheatsheet.md` - reST syntax rules
+- `references/review-corrections.md` - What reviewers most often correct, with examples and enforced terms
 - `.scripts/translation_memory.sh` - Translation memory lookup over this repo's .po files
+- `.scripts/render_review.py` - Build pages and check the rendered text (see `review-rendered-html`)
