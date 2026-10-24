@@ -64,7 +64,8 @@ python3 -m http.server 8765 --bind 127.0.0.1 --directory ../cpython/Doc/build/ht
 Then use the Playwright MCP tools:
 
 1. `browser_resize` to 1280x1600
-2. `browser_navigate` to `http://127.0.0.1:8765/<page>.html#<anchor>`
+2. `browser_navigate` to `http://127.0.0.1:8765/<page>.html?v=<n>#<anchor>`;
+   bump `v` after each rebuild, or the browser shows the cached old page
 3. `browser_take_screenshot` with `filename: ".playwright-mcp/<name>.png"`
    (the MCP only writes inside the repo; `.playwright-mcp/` is gitignored)
 4. Read the PNG and check: links and `:term:` text sit flush with the Chinese
