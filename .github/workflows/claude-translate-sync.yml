@@ -1,0 +1,106 @@
+name: claude-translate-sync
+
+on:
+  workflow_run:
+    workflows: ["python-3.14-sync-with-cpython"]
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: claude-translate-sync
+  cancel-in-progress: false
+
+jobs:
+  translate:
+    # Only run when sync workflow succeeded (or on manual dispatch)
+    if: >-
+      github.repository == 'python/python-docs-zh-tw'
+      && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Find sync PR
+        id: find-pr
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          PR_NUMBER=$(gh pr list \
+            --repo "${{ github.repository }}" \
+            --head "cron/sync/3.14" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No open sync PR found on cron/sync/3.14"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout sync branch
+        if: steps.find-pr.outputs.skip != 'true'
+        uses: actions/checkout@v6
+        with:
+          ref: cron/sync/3.14
+          token: ${{ steps.app-token.outputs.token }}
+          fetch-depth: 0
+
+      - name: Configure git
+        if: steps.find-pr.outputs.skip != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install gettext
+        if: steps.find-pr.outputs.skip != 'true'
+        run: sudo apt-get install -y gettext
+
+      - name: Install uv
+        if: steps.find-pr.outputs.skip != 'true'
+        uses: astral-sh/setup-uv@v7
+
+      - name: Run Claude to translate
+        if: steps.find-pr.outputs.skip != 'true'
+        uses: anthropics/claude-code-action@v1
+        timeout-minutes: 30
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_args: >-
+            --max-turns 20
+            --allowedTools "Read,Edit,Write,Bash(git:*),Bash(grep:*),Bash(msgattrib:*),Bash(msgfmt:*),Bash(msgcat:*),Bash(uvx:*),Bash(gh:*)"
+          track_progress: true
+          prompt: |
+            You are working on the CPython sync PR #${{ steps.find-pr.outputs.pr_number }}
+            on the `cron/sync/3.14` branch.
+
+            Your task: translate fuzzy and untranslated entries in changed PO files.
+            Follow the translate-po skill for translation rules and fuzzy resolution.
+
+            Steps:
+            1. Find changed PO files: `git diff --name-only origin/3.14...HEAD -- '*.po'`
+            2. For each file, use `msgattrib --only-fuzzy` and `msgattrib --only-untranslated` to find entries
+            3. Prioritize fuzzy entries first, then untranslated (use translate-po skill)
+            4. After editing, run `uvx powrap <file>` and `msgfmt --check <file>`
+            5. Commit and push:
+               ```
+               git add <changed .po files>
+               git commit -m "Translate fuzzy and untranslated entries from sync"
+               git push origin cron/sync/3.14
+               ```
+            6. Post a summary comment on PR #${{ steps.find-pr.outputs.pr_number }} with:
+               - Fuzzy entries fixed count
+               - New translations added count
+               - Files modified
+               - Entries skipped (if any, with reasons)
+               Use: `gh pr comment ${{ steps.find-pr.outputs.pr_number }} --body "<summary>"`
+
+            If no entries need work, post a short "nothing to translate" comment and skip commit/push.
