@@ -15,6 +15,27 @@ Translate English PO msgid entries to Traditional Chinese msgstr following all p
 3. Look up terminology in `references/terminology.md`
 4. Check `references/forbidden-terms.md` for zh_CN terms to avoid
 
+## Translation Memory Lookup
+
+Before translating an entry that contains prose, look up how similar text was
+already translated in this repo:
+
+```bash
+.scripts/translation_memory.sh query "<msgid text or its key English terms>"
+```
+
+- Prints up to 5 translated, non-fuzzy entries as `path:line` followed by
+  `msgid:` / `msgstr:` lines (use `--top-k N` for more).
+- To see how one term is rendered elsewhere, query the term alone
+  (e.g. `"context manager"`) or a candidate Chinese rendering of 2+ characters
+  (e.g. `"情境管理器"`).
+- Treat hits as reference for phrasing and term choice, not as authority:
+  `references/terminology.md`, `glossary.po`, and the rules below win when they
+  disagree, and existing translations may contain mistakes.
+- Skip the lookup for code-only entries and very short entries.
+- If the command fails or prints nothing (for example, the engine is not
+  installed), continue without it and do not report the failure.
+
 ## Translation Process
 
 ### Step 1: Content Analysis
@@ -50,8 +71,45 @@ See `references/rst-cheatsheet.md` for complete rules.
 
 1. Check term in `references/terminology.md`
 2. If not found, check `glossary.po` in project root
-3. If uncertain, add `#, fuzzy` flag
-4. Never use zh_CN terms from `references/forbidden-terms.md`
+3. If still not found, run `.scripts/translation_memory.sh query "<term>"` and
+   follow the dominant existing rendering
+4. If uncertain, add `#, fuzzy` flag
+5. Never use zh_CN terms from `references/forbidden-terms.md`
+
+### Step 5: Check Against Past Review Corrections
+
+Reviewers of this repo keep asking for the same fixes. Before finishing,
+re-read every changed msgstr against `references/review-corrections.md`
+(mined from ~1,500 review comments). The most frequent ones:
+
+1. **Phrasing and meaning:** no English word order, piles of 的 or needless
+   被; the meaning must match the source exactly (most common correction)
+2. **Terms reviewers enforce:** argument→引數 / parameter→參數, 回傳 (not
+   傳回/返回), 你 (not 您), 引發 (raise), 設定例外 (C API "set an
+   exception"), 透過, 協定, 命令列, 用戶端, 執行 (not 運行), 產生 (not 生成),
+   串列 only for a Python list (otherwise 清單); see the table in the reference
+3. **Spacing:** no space next to full-width punctuation, after 。, or
+   between CJK characters
+4. **`\\ `:** use it between CJK and markup, but not next to `，。、：；）「」`
+   (a full-width `（` right after markup still needs it)
+5. **Punctuation:** `、` for enumerations; keep `...` as in the source; keep
+   ASCII quotes around literal values
+6. **Markup:** re-add ``literal`` markup Poedit drops; balanced backticks
+7. **Completeness:** no omissions (qualifiers, parentheticals, second
+   occurrences) and no additions the source does not state (超譯)
+8. **Keep English:** socket, token, runtime, yield, library names, and words
+   that are really parameter names; translate comments in code samples
+9. **Consistency:** one rendering per term within a page; search existing
+   translations (translation memory) before coining a term
+10. **PO mechanics:** never just strip `#, fuzzy` without updating the
+    translation; index-only entries as `English（譯文）`
+
+### Step 6: Review the Rendered Page
+
+After the PO file is saved, build and read the rendered page with the
+`review-rendered-html` skill (`python3 .scripts/render_review.py <file>.po`,
+then Playwright screenshots of the changed sections). Spacing around
+literals, roles and links can only be judged on the rendered page.
 
 ## Output Format
 
@@ -71,6 +129,9 @@ Before outputting, verify:
 - [ ] reST syntax preserved
 - [ ] Terminology matches glossary
 - [ ] No forbidden zh_CN terms
+- [ ] Consistent with translation memory hits, unless they conflict with the glossary
+- [ ] Checked against past review corrections (`references/review-corrections.md`)
+- [ ] Rendered page reads naturally and its layout is correct (`review-rendered-html`)
 
 ## Examples
 
@@ -130,3 +191,6 @@ msgstr "可能需要審核的翻譯"
 - `references/terminology.md` - Key term translations (186 terms)
 - `references/forbidden-terms.md` - zh_CN to zh_TW mappings
 - `references/rst-cheatsheet.md` - reST syntax rules
+- `references/review-corrections.md` - What reviewers most often correct, with examples and enforced terms
+- `.scripts/translation_memory.sh` - Translation memory lookup over this repo's .po files
+- `.scripts/render_review.py` - Build pages and check the rendered text (see `review-rendered-html`)
