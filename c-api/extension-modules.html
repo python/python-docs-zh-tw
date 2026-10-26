@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Defining extension modules &#8212; Python 3.15.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defining extension modules &#8212; Python 3.15.2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=48df1187" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=0fc419ee" />
     
-    <script src="../_static/documentation_options.js?v=5d502324"></script>
+    <script src="../_static/documentation_options.js?v=7cc15be9"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,7 +20,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.15.0 說明文件 中搜尋"
+          title="在 Python 3.15.2 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -175,7 +175,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.15.0 Documentation</a> &#187;
+      <a href="../index.html">3.15.2 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Python/C API 參考手冊</a> &#187;</li>
@@ -484,14 +484,30 @@ This is typically done using <a class="reference internal" href="module.html#c.P
 <p>Single-phase initialization differs from the <a class="reference internal" href="#multi-phase-initialization"><span class="std std-ref">default</span></a>
 in the following ways:</p>
 <ul>
-<li><p>Single-phase modules are, or rather <em>contain</em>, “singletons”.</p>
-<p>When the module is first initialized, Python saves the contents of
+<li><p>Single-phase modules with <a class="reference internal" href="module.html#c.PyModuleDef.m_size" title="PyModuleDef.m_size"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyModuleDef.m_size</span></code></a> set to -1 are,
+or rather <em>contain</em>, “singletons”.</p>
+<p>When such a module is first initialized, Python saves the contents of
 the module's <code class="docutils literal notranslate"><span class="pre">__dict__</span></code> (that is, typically, the module's functions and
 types).</p>
 <p>For subsequent imports, Python does not call the initialization function
 again.
 Instead, it creates a new module object with a new <code class="docutils literal notranslate"><span class="pre">__dict__</span></code>, and copies
 the saved contents to it.
+Modules are matched to the saved contents by a (<em>module_name</em>, <em>file_name</em>)
+tuple where:</p>
+<ul class="simple">
+<li><p><em>module_name</em> is the module's full dotted name, taken from
+<a class="reference internal" href="../library/importlib.html#importlib.machinery.ModuleSpec.name" title="importlib.machinery.ModuleSpec.name"><code class="xref py py-attr docutils literal notranslate"><span class="pre">ModuleSpec.name</span></code></a>
+(or the equivalent argument of the importing function).
+Note that names that the initialization function uses to create the module
+(for example, <a class="reference internal" href="module.html#c.PyModuleDef.m_name" title="PyModuleDef.m_name"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyModuleDef.m_name</span></code></a>) are not taken into account.</p></li>
+<li><p><em>file_name</em> is the extension's file name.
+It is unset for modules not loaded from a file, such as built-ins and
+modules added with <a class="reference internal" href="import.html#c.PyImport_CreateModuleFromInitfunc" title="PyImport_CreateModuleFromInitfunc"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyImport_CreateModuleFromInitfunc()</span></code></a> or
+<a class="reference internal" href="import.html#c.PyImport_AppendInittab" title="PyImport_AppendInittab"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyImport_AppendInittab()</span></code></a>.</p></li>
+</ul>
+<p>As part of the first initialization, Python also adds the module to
+<a class="reference internal" href="../library/sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> under its name.
 For example, given a single-phase module <code class="docutils literal notranslate"><span class="pre">_testsinglephase</span></code>
 <a class="footnote-reference brackets" href="#testsinglephase" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> that defines a function <code class="docutils literal notranslate"><span class="pre">sum</span></code> and an exception class
 <code class="docutils literal notranslate"><span class="pre">error</span></code>:</p>
@@ -510,6 +526,14 @@ For example, given a single-phase module <code class="docutils literal notransla
 </pre></div>
 </div>
 <p>The exact behavior should be considered a CPython implementation detail.</p>
+</li>
+<li><p>For single-phase modules with non-negative <a class="reference internal" href="module.html#c.PyModuleDef.m_size" title="PyModuleDef.m_size"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyModuleDef.m_size</span></code></a>,
+Python may cache a pointer to the initialization function under the
+(<em>module_name</em>, <em>file_name</em>) key as for <code class="docutils literal notranslate"><span class="pre">m_size</span> <span class="pre">==</span> <span class="pre">-1</span></code>.</p>
+<p>Subsequent imports that specify a different initialization function
+(for example, using <a class="reference internal" href="import.html#c.PyImport_CreateModuleFromInitfunc" title="PyImport_CreateModuleFromInitfunc"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyImport_CreateModuleFromInitfunc()</span></code></a>)
+may call either the cached function or the provided &quot;new&quot; one.</p>
+<p>The exact behavior should again be considered a CPython implementation detail.</p>
 </li>
 <li><p>To work around the fact that <code class="docutils literal notranslate"><span class="pre">PyInit_modulename</span></code> does not take a <em>spec</em>
 argument, some state of the import machinery is saved and applied to the
@@ -635,7 +659,7 @@ include it.</p>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.15.0 Documentation</a> &#187;
+      <a href="../index.html">3.15.2 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python/C API 參考手冊</a> &#187;</li>
@@ -680,7 +704,7 @@ include it.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 10月 15, 2026 (20:36 UTC)。
+      最後更新於 10月 26, 2026 (12:34 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

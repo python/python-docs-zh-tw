@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Unicode 物件與編解碼器 &#8212; Python 3.15.0 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unicode 物件與編解碼器 &#8212; Python 3.15.2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=48df1187" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=0fc419ee" />
     
-    <script src="../_static/documentation_options.js?v=5d502324"></script>
+    <script src="../_static/documentation_options.js?v=7cc15be9"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,7 +20,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.15.0 說明文件 中搜尋"
+          title="在 Python 3.15.2 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -194,7 +194,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.15.0 Documentation</a> &#187;
+      <a href="../index.html">3.15.2 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python/C API 參考手冊</a> &#187;</li>
@@ -239,6 +239,12 @@ of Unicode characters while staying memory efficient.  There are special cases
 for strings where all code points are below 128, 256, or 65536; otherwise, code
 points must be below 1114112 (which is the full Unicode range).</p>
 <p>UTF-8 表示法會在需要時建立並快取在 Unicode 物件中。</p>
+<div class="impl-detail compound">
+<p><strong>CPython 實作細節：</strong> The internal buffer always includes an extra trailing null character for
+compatibility with null terminated C strings. This extra character is not
+counted in <a class="reference internal" href="#c.PyUnicode_GetLength" title="PyUnicode_GetLength"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_GetLength()</span></code></a> nor in the various <em>size</em> arguments
+of the functions below.</p>
+</div>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
 <p>自 Python 3.12 起，已移除 <a class="reference internal" href="#c.Py_UNICODE" title="Py_UNICODE"><code class="xref c c-type docutils literal notranslate"><span class="pre">Py_UNICODE</span></code></a> 表示法，並標示為已棄用的 API。更多資訊請參閱 <span class="target" id="index-7"></span><a class="pep reference external" href="https://peps.python.org/pep-0623/"><strong>PEP 623</strong></a>。</p>
@@ -411,7 +417,11 @@ and is intended for usage in loops.</p>
 <dt class="sig sig-object c" id="c.PyUnicode_READ">
 <a class="reference internal" href="#c.Py_UCS4" title="Py_UCS4"><span class="n"><span class="pre">Py_UCS4</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyUnicode_READ</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n"><span class="pre">kind</span></span>, <span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">data</span></span>, <a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><span class="n"><span class="pre">Py_ssize_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">index</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyUnicode_READ" title="連結到這個定義">¶</a><br /></dt>
 <dd><p>Read a code point from a canonical representation <em>data</em> (as obtained with
-<a class="reference internal" href="#c.PyUnicode_DATA" title="PyUnicode_DATA"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_DATA()</span></code></a>).  No checks or ready calls are performed.</p>
+<a class="reference internal" href="#c.PyUnicode_DATA" title="PyUnicode_DATA"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_DATA()</span></code></a>).  No checks are performed.</p>
+<div class="impl-detail compound">
+<p><strong>CPython 實作細節：</strong> Accept reading the trailing null character at index
+<a class="reference internal" href="#c.PyUnicode_GetLength" title="PyUnicode_GetLength"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_GetLength()</span></code></a>.</p>
+</div>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.3 版被加入.</span></p>
 </div>
@@ -423,6 +433,10 @@ and is intended for usage in loops.</p>
 <dd><p>Read a character from a Unicode object <em>unicode</em>, which must be in the &quot;canonical&quot;
 representation.  This is less efficient than <a class="reference internal" href="#c.PyUnicode_READ" title="PyUnicode_READ"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_READ()</span></code></a> if you
 do multiple consecutive reads.</p>
+<div class="impl-detail compound">
+<p><strong>CPython 實作細節：</strong> Accept reading the trailing null character at index
+<a class="reference internal" href="#c.PyUnicode_GetLength" title="PyUnicode_GetLength"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_GetLength()</span></code></a>.</p>
+</div>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.3 版被加入.</span></p>
 </div>
@@ -674,6 +688,9 @@ canonical representation.  For example, if the <em>buffer</em> is a UCS4 string
 (<a class="reference internal" href="#c.PyUnicode_4BYTE_KIND" title="PyUnicode_4BYTE_KIND"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PyUnicode_4BYTE_KIND</span></code></a>) and it consists only of codepoints in
 the UCS1 range, it will be transformed into UCS1
 (<a class="reference internal" href="#c.PyUnicode_1BYTE_KIND" title="PyUnicode_1BYTE_KIND"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PyUnicode_1BYTE_KIND</span></code></a>).</p>
+<p>All characters must be in range [U+0000; U+10ffff]. If <em>kind</em> is
+<a class="reference internal" href="#c.PyUnicode_4BYTE_KIND" title="PyUnicode_4BYTE_KIND"><code class="xref c c-macro docutils literal notranslate"><span class="pre">PyUnicode_4BYTE_KIND</span></code></a> and the string contains invalid characters,
+the behavior is undefined.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.3 版被加入.</span></p>
 </div>
@@ -991,6 +1008,9 @@ until interpreter shutdown.</p>
 <a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><span class="n"><span class="pre">Py_ssize_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyUnicode_GetLength</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="structures.html#c.PyObject" title="PyObject"><span class="n"><span class="pre">PyObject</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">unicode</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyUnicode_GetLength" title="連結到這個定義">¶</a><br /></dt>
 <dd><em class="stableabi"> 為 <a class="reference internal" href="stable.html#stable"><span class="std std-ref">穩定 ABI 的一部分</span></a> 自 3.7 版本開始.</em><p>Return the length of the Unicode object, in code points.</p>
 <p>發生錯誤時，設定例外並回傳 <code class="docutils literal notranslate"><span class="pre">-1</span></code>。</p>
+<div class="impl-detail compound">
+<p><strong>CPython 實作細節：</strong> The length does not count the trailing null character.</p>
+</div>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.3 版被加入.</span></p>
 </div>
@@ -1061,6 +1081,10 @@ See <a class="reference internal" href="#c.PyUnicode_New" title="PyUnicode_New">
 Unicode object and the index is not out of bounds, in contrast to
 <a class="reference internal" href="#c.PyUnicode_READ_CHAR" title="PyUnicode_READ_CHAR"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_READ_CHAR()</span></code></a>, which performs no error checking.</p>
 <p>成功時回傳字元，發生錯誤時設定例外並回傳 <code class="docutils literal notranslate"><span class="pre">-1</span></code>。</p>
+<div class="impl-detail compound">
+<p><strong>CPython 實作細節：</strong> Do not accept reading the trailing null character at index
+<a class="reference internal" href="#c.PyUnicode_GetLength" title="PyUnicode_GetLength"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicode_GetLength()</span></code></a>.</p>
+</div>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.3 版被加入.</span></p>
 </div>
@@ -1172,7 +1196,7 @@ used for <code class="docutils literal notranslate"><span class="pre">strict</sp
 
 </section>
 <section id="file-system-encoding">
-<h3>檔案系統編碼<a class="headerlink" href="#file-system-encoding" title="連結到這個標頭">¶</a></h3>
+<span id="capi-filesystem-encoding"></span><h3>檔案系統編碼<a class="headerlink" href="#file-system-encoding" title="連結到這個標頭">¶</a></h3>
 <p>Functions encoding to and decoding from the <a class="reference internal" href="../glossary.html#term-filesystem-encoding-and-error-handler"><span class="xref std std-term">filesystem encoding and
 error handler</span></a> (<span class="target" id="index-4"></span><a class="pep reference external" href="https://peps.python.org/pep-0383/"><strong>PEP 383</strong></a> and <span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0529/"><strong>PEP 529</strong></a>).</p>
 <p>To encode file names to <a class="reference internal" href="../builtins/stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a> during argument parsing, the <code class="docutils literal notranslate"><span class="pre">&quot;O&amp;&quot;</span></code>
@@ -2032,6 +2056,8 @@ object.</p>
 <dd><p>一個 Unicode 寫入器實例。</p>
 <p>The instance must be destroyed by <a class="reference internal" href="#c.PyUnicodeWriter_Finish" title="PyUnicodeWriter_Finish"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicodeWriter_Finish()</span></code></a> on
 success, or <a class="reference internal" href="#c.PyUnicodeWriter_Discard" title="PyUnicodeWriter_Discard"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyUnicodeWriter_Discard()</span></code></a> on error.</p>
+<p>The API is <strong>not thread safe</strong>. To share a writer with multiple threads, a
+critical section or a lock is needed.</p>
 </dd></dl>
 
 <dl class="c function">
@@ -2100,8 +2126,10 @@ success, or <a class="reference internal" href="#c.PyUnicodeWriter_Discard" titl
 <dl class="c function">
 <dt class="sig sig-object c" id="c.PyUnicodeWriter_WriteUCS4">
 <span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PyUnicodeWriter_WriteUCS4</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.PyUnicodeWriter" title="PyUnicodeWriter"><span class="n"><span class="pre">PyUnicodeWriter</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">writer</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#c.Py_UCS4" title="Py_UCS4"><span class="n"><span class="pre">Py_UCS4</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">str</span></span>, <a class="reference internal" href="intro.html#c.Py_ssize_t" title="Py_ssize_t"><span class="n"><span class="pre">Py_ssize_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.PyUnicodeWriter_WriteUCS4" title="連結到這個定義">¶</a><br /></dt>
-<dd><p>Writer the UCS4 string <em>str</em> into <em>writer</em>.</p>
+<dd><p>Write the UCS4 string <em>str</em> into <em>writer</em>.</p>
 <p><em>size</em> 是 UCS4 字元的數量。</p>
+<p>All characters must be in range [U+0000; U+10ffff]. If the string contains
+invalid characters, the behavior is undefined.</p>
 <p>成功時回傳 <code class="docutils literal notranslate"><span class="pre">0</span></code>，發生錯誤時設定例外、保持寫入器不變，並回傳 <code class="docutils literal notranslate"><span class="pre">-1</span></code>。</p>
 </dd></dl>
 
@@ -2333,7 +2361,7 @@ Previously, this could be called to check if
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.15.0 Documentation</a> &#187;
+      <a href="../index.html">3.15.2 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python/C API 參考手冊</a> &#187;</li>
@@ -2379,7 +2407,7 @@ Previously, this could be called to check if
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 10月 15, 2026 (20:36 UTC)。
+      最後更新於 10月 26, 2026 (12:34 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
