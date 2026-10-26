@@ -57,10 +57,14 @@ the images into a GitHub comment.
 - **Isolated builds:** each version's PO goes into its own temp `locale_dirs`, and
   `sphinx-build` runs on that one `.rst` into `--out/build-{old,new}/`. The working-tree PO
   and `../cpython/Doc/locales` are never touched.
-- **Changed entries** are found by comparing msgstr per `(msgctxt, msgid)` with polib.
+- **Changed entries** are found by comparing msgstr per `(msgctxt, msgid)` with polib. A fuzzy
+  msgstr counts as untranslated, because Sphinx does not render it, so a fixed fuzzy entry
+  shows as a new translation.
 - **Locating paragraphs:** roles, inline literals and links are dropped first, because
   `` :meth:`~Handler.setFormatter` `` renders as `setFormatter()`. The longest remaining plain
-  run is matched against the rendered text, and the smallest enclosing block is used.
+  run is matched against the rendered text, and the smallest enclosing block is used. When
+  that run appears in several blocks (e.g. the `asdict()`/`astuple()` sentences), the block
+  not yet highlighted and closest to the whole entry wins.
 - **Two blocks in tables and lists** go inside the cell or item, so the table and list
   structure survives.
 - **Diff on text, not HTML:** a character diff of the rendered text, applied to text nodes only,
@@ -75,7 +79,9 @@ the images into a GitHub comment.
   exists. On failure, read `build-*/build.log`.
 - **`SKIPPED (paragraph not found)`** means the entry has no rendered paragraph, e.g. an index
   entry or code block, or its msgid no longer matches the `../cpython` sources (the page
-  shows English). Check `../cpython` is on the same branch as the PO. A trailing ` ::`
+  shows English). Check `../cpython` is on the same branch as the PO. `../cpython` can also be
+  newer than the PO's last CPython sync: those entries are not a script bug, they will turn
+  fuzzy at the next sync, and are worth telling the PR author about. A trailing ` ::`
   literal-block marker is already handled, so it is not the cause. For a skip you cannot
   explain, grep the new msgstr's plain text in `build-new/html/<po>.html`.
 - **A paragraph containing several changed entries** is highlighted once, and later entries

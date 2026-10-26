@@ -21,6 +21,7 @@ from pathlib import Path
 import polib
 from bs4 import BeautifulSoup, NavigableString
 from PIL import Image
+from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import sync_playwright
 
 BLOCKS = ["p", "h1", "h2", "h3", "h4", "h5", "li", "dt", "dd", "th", "td", "caption"]
@@ -46,7 +47,8 @@ CJK = re.compile(r"[㐀-鿿豈-﫿]")
 
 
 def cjk_share(text):
-    letters = [c for c in text if c.isalpha()]
+    # URLs are untranslated by nature; a short Chinese sentence around a long URL is still Chinese
+    letters = [c for c in re.sub(r"[a-z]+://[\x21-\x7e]+", "", text) if c.isalpha()]
     return sum(bool(CJK.match(c)) for c in letters) / len(letters) if letters else 0.0
 
 
@@ -119,7 +121,7 @@ def build_page(cpython_doc, sphinx, po_rel, po_text, work):
         subprocess.run([sphinx, "-q", "-b", "html", "-j", "auto", "-D", "language=zh_TW",
                         "-D", f"locale_dirs={work / 'locales'}", "-D", "gettext_compact=0",
                         "-d", str(work / "doctrees"), str(cpython_doc), str(work / "html"), str(rst)],
-                       stdout=log, stderr=subprocess.STDOUT)
+                       check=False, stdout=log, stderr=subprocess.STDOUT)
     return html if html.exists() else None
 
 
@@ -136,12 +138,39 @@ def snippet(msgstr):
     return max(runs, key=len) if runs else ""
 
 
-def find_block(soup, text):
+def plain(msgstr):
+    """Rough rendered text of an entry, used only to pick between several matching blocks."""
+    text = " ".join(msgstr.split())
+    text = re.sub(r"::$", ":", re.sub(r"\s+::$", "", text))
+    text = re.sub(r"``([^`]*)``", r"\1", text)
+    text = re.sub(r"(?::[\w:.+-]+:)?`([^`<]*?)\s*(?:<[^>]*>)?`_{0,2}", lambda m: m[1].lstrip("!~"), text)
+    return re.sub(r"\\ ?|\*", "", text)
+
+
+def highlighted(el):
+    return "rr-target" in el.get("class", []) or el.find_parent(class_="rr-pair") is not None
+
+
+def find_block(soup, text, full=""):
+    """Smallest block containing the snippet. When the snippet is not unique (two sentences that
+    share a phrase), prefer blocks not yet highlighted, then the one closest to the full text."""
     body = soup.select_one("div[role=main]") or soup.select_one("div.body") or soup.body
     # rendered text keeps the source's line breaks and double spaces; msgid snippets don't
     text = " ".join(text.split())
     hits = [el for el in body.find_all(BLOCKS) if text and text in " ".join(el.get_text().split())]
-    return min(hits, key=lambda el: len(el.get_text())) if hits else None
+    if len(hits) < 2:
+        return hits[0] if hits else None
+
+    def rank(el):
+        el_txt = " ".join(el.get_text().split())
+        similarity = difflib.SequenceMatcher(None, full, el_txt, autojunk=False).ratio() if full else 0
+        return (highlighted(el), -similarity, len(el_txt))
+    return min(hits, key=rank)
+
+
+def visible(text):
+    """A changed run that is only whitespace would render as an empty colored box."""
+    return "␣" * len(text) if text.isspace() else text
 
 
 def inline_diff(soup, el, old_txt):
@@ -167,13 +196,13 @@ def inline_diff(soup, el, old_txt):
             for p, t in points:
                 if p == c:
                     tag = soup.new_tag("del", attrs={"class": "rr-del"})
-                    tag.string = t
+                    tag.string = visible(t)
                     pieces.append(tag)
             if k + 1 < len(cuts):
                 seg = text[c:cuts[k + 1]]
                 if any(a <= c and cuts[k + 1] <= b for a, b in spans):
                     tag = soup.new_tag("ins", attrs={"class": "rr-ins"})
-                    tag.string = seg
+                    tag.string = visible(seg)
                     pieces.append(tag)
                 else:
                     pieces.append(NavigableString(seg))
@@ -183,8 +212,11 @@ def inline_diff(soup, el, old_txt):
 
 
 def changed_entries(base_po, new_po):
-    base = {(e.msgctxt, e.msgid): e.msgstr for e in base_po}
-    return [e for e in new_po if e.msgstr and base.get((e.msgctxt, e.msgid), "") != e.msgstr
+    # Sphinx skips fuzzy entries, so on the rendered page a fuzzy msgstr is the same as none
+    def rendered(e):
+        return "" if "fuzzy" in e.flags else e.msgstr
+    base = {(e.msgctxt, e.msgid): rendered(e) for e in base_po}
+    return [e for e in new_po if rendered(e) and base.get((e.msgctxt, e.msgid), "") != e.msgstr
             and e.msgid != e.msgstr], base
 
 
@@ -210,7 +242,8 @@ def main(args, po_rel, repo, cpython_doc):
     print(f"== {po_rel}")
     sub = Path(po_rel).with_suffix("")
     if args.out:
-        out = Path(args.out) / sub if len(args.po) > 1 else Path(args.out)
+        base_out = Path(args.out).resolve()
+        out = base_out / sub if len(args.po) > 1 else base_out
     else:
         out = repo / ".render-review" / sub
     out.mkdir(parents=True, exist_ok=True)
@@ -243,14 +276,14 @@ def main(args, po_rel, repo, cpython_doc):
     report, done = [], 0
     for e in entries:
         base_msgstr = base_map.get((e.msgctxt, e.msgid), "")
-        new_el = find_block(new, snippet(e.msgstr))
+        new_el = find_block(new, snippet(e.msgstr), plain(e.msgstr))
         # a newly translated entry shows the English msgid on the old page
-        old_el = find_block(old, snippet(base_msgstr or e.msgid))
+        old_el = find_block(old, snippet(base_msgstr or e.msgid), plain(base_msgstr or e.msgid))
         label = f"L{e.linenum}"
         if new_el is None or old_el is None:
             report.append(f"{label}: SKIPPED (paragraph not found in rendered page) — {e.msgid[:60]!r}")
             continue
-        if "rr-target" in new_el.get("class", []) or new_el.find_parent(class_="rr-pair"):
+        if highlighted(new_el):
             report.append(f"{label}: same paragraph as an earlier entry, already highlighted")
             continue
         done += 1
@@ -274,7 +307,7 @@ def main(args, po_rel, repo, cpython_doc):
     with sync_playwright() as p:
         try:
             browser = p.chromium.launch(channel="chrome")
-        except Exception:
+        except PlaywrightError:  # no local Chrome; use bundled Chromium
             browser = p.chromium.launch()
         pg = browser.new_page(viewport={"width": 1100, "height": 900}, color_scheme="light",
                               device_scale_factor=2)
