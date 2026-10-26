@@ -5,14 +5,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>ssl --- socket 物件的 TLS/SSL 包裝器 &#8212; Python 3.15.1 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ssl --- socket 物件的 TLS/SSL 包裝器 &#8212; Python 3.15.2 說明文件</title><meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
     <link rel="stylesheet" type="text/css" href="../_static/classic.css?v=234b1a7c" />
     <link rel="stylesheet" type="text/css" href="../_static/pydoctheme.css?v=48df1187" />
     <link id="pygments_dark_css" media="(prefers-color-scheme: dark)" rel="stylesheet" type="text/css" href="../_static/pygments_dark.css?v=0fc419ee" />
     
-    <script src="../_static/documentation_options.js?v=a0201c62"></script>
+    <script src="../_static/documentation_options.js?v=7cc15be9"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/translations.js?v=cbf116e0"></script>
@@ -20,7 +20,7 @@
     <script src="../_static/sidebar.js"></script>
     
     <link rel="search" type="application/opensearchdescription+xml"
-          title="在 Python 3.15.1 說明文件 中搜尋"
+          title="在 Python 3.15.2 說明文件 中搜尋"
           href="../_static/opensearch.xml"/>
     <link rel="author" title="關於這些文件" href="../about.html" />
     <link rel="index" title="索引" href="../genindex.html" />
@@ -208,7 +208,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.15.1 Documentation</a> &#187;
+      <a href="../index.html">3.15.2 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -1444,6 +1444,8 @@ The returned dictionary includes additional X509v3 extension items
 end of the SSL channel as a list of DER-encoded bytes.
 If certificate verification was disabled method acts the same as
 <a class="reference internal" href="#ssl.SSLSocket.get_unverified_chain" title="ssl.SSLSocket.get_unverified_chain"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_unverified_chain()</span></code></a>.</p>
+<p>The verified chain is not stored with a session, so the list is empty
+when the session is resumed (see <a class="reference internal" href="#ssl.SSLSocket.session_reused" title="ssl.SSLSocket.session_reused"><code class="xref py py-attr docutils literal notranslate"><span class="pre">session_reused</span></code></a>).</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.13 版被加入.</span></p>
 </div>
@@ -1454,6 +1456,10 @@ If certificate verification was disabled method acts the same as
 <span class="sig-prename descclassname"><span class="pre">SSLSocket.</span></span><span class="sig-name descname"><span class="pre">get_unverified_chain</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#ssl.SSLSocket.get_unverified_chain" title="連結到這個定義">¶</a></dt>
 <dd><p>Returns raw certificate chain provided by the other
 end of the SSL channel as a list of DER-encoded bytes.</p>
+<p>No certificates are exchanged when a session is resumed (see
+<a class="reference internal" href="#ssl.SSLSocket.session_reused" title="ssl.SSLSocket.session_reused"><code class="xref py py-attr docutils literal notranslate"><span class="pre">session_reused</span></code></a>); the list then holds what was stored
+with the session, which for a session resumed from a ticket on the
+server side is the peer's own certificate only.</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.13 版被加入.</span></p>
 </div>
@@ -2546,8 +2552,8 @@ The return value is a tuple in the form (client-identity, psk).
 Client-identity is an optional string which may be used by the server to
 select a corresponding PSK for the client. The string must be less than or
 equal to <code class="docutils literal notranslate"><span class="pre">256</span></code> octets when UTF-8 encoded. PSK is a
-<a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a> representing the pre-shared key. Return a zero
-length PSK to reject the connection.</p>
+<a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a> representing the pre-shared key. With TLS 1.2
+and earlier, return a zero length PSK to reject the connection.</p>
 <p>Setting <code class="docutils literal notranslate"><span class="pre">callback</span></code> to <a class="reference internal" href="../builtins/constants.html#None" title="None"><code class="xref py py-const docutils literal notranslate"><span class="pre">None</span></code></a> removes any existing callback.</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
@@ -2555,12 +2561,23 @@ length PSK to reject the connection.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">hint</span></code> 參數始終為 <a class="reference internal" href="../builtins/constants.html#None" title="None"><code class="xref py py-const docutils literal notranslate"><span class="pre">None</span></code></a>。</p></li>
 <li><p>client-identity must be a non-empty string.</p></li>
+<li><p>the PSK is only offered to the server, which may decline it and
+authenticate with a certificate instead.  That certificate is checked
+according to <a class="reference internal" href="#ssl.SSLContext.verify_mode" title="ssl.SSLContext.verify_mode"><code class="xref py py-attr docutils literal notranslate"><span class="pre">verify_mode</span></code></a>, so a client relying on
+the PSK to authenticate the server should not set it to
+<a class="reference internal" href="#ssl.CERT_NONE" title="ssl.CERT_NONE"><code class="xref py py-const docutils literal notranslate"><span class="pre">CERT_NONE</span></code></a>, or should check <a class="reference internal" href="#ssl.SSLSocket.session_reused" title="ssl.SSLSocket.session_reused"><code class="xref py py-attr docutils literal notranslate"><span class="pre">SSLSocket.session_reused</span></code></a>,
+which is true if the PSK was used.  A PSK handshake does not need any
+CA certificates to be loaded when using <a class="reference internal" href="#ssl.CERT_REQUIRED" title="ssl.CERT_REQUIRED"><code class="xref py py-const docutils literal notranslate"><span class="pre">CERT_REQUIRED</span></code></a>.</p></li>
+<li><p>a zero length PSK does not reject the connection, it only means that
+no PSK is offered.  An exception raised by the callback has the same
+effect.</p></li>
+<li><p>the PSK is used with the SHA-256 handshake digest, so a server can
+only accept it with a cipher suite that uses SHA-256.</p></li>
 </ul>
 </div>
 <p>範例用法：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">context</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">SSLContext</span><span class="p">(</span><span class="n">ssl</span><span class="o">.</span><span class="n">PROTOCOL_TLS_CLIENT</span><span class="p">)</span>
 <span class="n">context</span><span class="o">.</span><span class="n">check_hostname</span> <span class="o">=</span> <span class="kc">False</span>
-<span class="n">context</span><span class="o">.</span><span class="n">verify_mode</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">CERT_NONE</span>
 <span class="n">context</span><span class="o">.</span><span class="n">maximum_version</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">TLSVersion</span><span class="o">.</span><span class="n">TLSv1_2</span>
 <span class="n">context</span><span class="o">.</span><span class="n">set_ciphers</span><span class="p">(</span><span class="s1">'PSK'</span><span class="p">)</span>
 
@@ -2594,14 +2611,27 @@ length PSK to reject the connection.</p>
 The <code class="docutils literal notranslate"><span class="pre">identity</span></code> parameter is an optional identity sent by the client which can
 be used to select a corresponding PSK.
 The return value is a <a class="reference internal" href="../glossary.html#term-bytes-like-object"><span class="xref std std-term">bytes-like object</span></a> representing the pre-shared key.
-Return a zero length PSK to reject the connection.</p>
+With TLS 1.2 and earlier, return a zero length PSK to reject the connection.</p>
 <p>Setting <code class="docutils literal notranslate"><span class="pre">callback</span></code> to <a class="reference internal" href="../builtins/constants.html#None" title="None"><code class="xref py py-const docutils literal notranslate"><span class="pre">None</span></code></a> removes any existing callback.</p>
 <p>The parameter <code class="docutils literal notranslate"><span class="pre">identity_hint</span></code> is an optional identity hint string sent to
 the client. The string must be less than or equal to <code class="docutils literal notranslate"><span class="pre">256</span></code> octets when
 UTF-8 encoded.</p>
 <div class="admonition note">
 <p class="admonition-title">備註</p>
-<p>When using TLS 1.3 the <code class="docutils literal notranslate"><span class="pre">identity_hint</span></code> parameter is not sent to the client.</p>
+<p>使用 TLS 1.3 時：</p>
+<ul class="simple">
+<li><p>the <code class="docutils literal notranslate"><span class="pre">identity_hint</span></code> parameter is not sent to the client.</p></li>
+<li><p>a zero length PSK, or an exception raised by the callback, only
+declines the client's PSK.  If a certificate was loaded with
+<a class="reference internal" href="#ssl.SSLContext.load_cert_chain" title="ssl.SSLContext.load_cert_chain"><code class="xref py py-meth docutils literal notranslate"><span class="pre">load_cert_chain()</span></code></a>, the handshake continues with
+certificate authentication instead of failing, so a server relying on
+the PSK to authenticate clients should not load one, or should check
+<a class="reference internal" href="#ssl.SSLSocket.session_reused" title="ssl.SSLSocket.session_reused"><code class="xref py py-attr docutils literal notranslate"><span class="pre">SSLSocket.session_reused</span></code></a>, which is true if the PSK was used.</p></li>
+<li><p>the PSK can only be accepted with a cipher suite that uses SHA-256.
+When a certificate is loaded, OpenSSL's default TLS 1.3 cipher suite
+order selects a SHA-384 suite instead, so the PSK is declined even if
+it matches.</p></li>
+</ul>
 </div>
 <p>範例用法：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">context</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">SSLContext</span><span class="p">(</span><span class="n">ssl</span><span class="o">.</span><span class="n">PROTOCOL_TLS_SERVER</span><span class="p">)</span>
@@ -3436,7 +3466,7 @@ and rekeying are not supported yet.</p></li>
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.15.1 Documentation</a> &#187;
+      <a href="../index.html">3.15.2 Documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >Python 標準函式庫 (Standard Library)</a> &#187;</li>
@@ -3482,7 +3512,7 @@ and rekeying are not supported yet.</p></li>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 10月 23, 2026 (00:32 UTC)。
+      最後更新於 10月 26, 2026 (12:39 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
