@@ -1,3 +1,12 @@
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "beautifulsoup4",
+#     "pillow",
+#     "playwright",
+#     "polib",
+# ]
+# ///
 """Render a PO file's translation changes as inline red/green diffs on the built HTML page.
 
 Builds the page twice (base version of the PO, then the working-tree version), finds every
@@ -5,8 +14,9 @@ entry whose msgstr changed, injects an inline diff into the new page's paragraph
 one screenshot per changed paragraph plus a stitched overview.
 
 usage (from the repo root):
-  uv run --no-project --with polib --with beautifulsoup4 --with playwright --with pillow \
-    python .claude/skills/review-rendered-diff/scripts/render_diff.py howto/logging.po --base origin/3.15
+  uv run .claude/skills/review-rendered-diff/scripts/render_diff.py howto/logging.po --base origin/3.15
+
+Dependencies are declared above (PEP 723), so uv installs them into a cached environment.
 
 Outputs go to .render-review/<po path without .po>/ unless --out is given.
 """

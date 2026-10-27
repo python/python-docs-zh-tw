@@ -25,9 +25,10 @@ mode used, e.g. `[blocks: rewritten, 87% changed]`.
 From the repo root:
 
 ```bash
-uv run --no-project --with polib --with beautifulsoup4 --with playwright --with pillow \
-  python .claude/skills/review-rendered-diff/scripts/render_diff.py howto/logging.po --base origin/3.15
+uv run .claude/skills/review-rendered-diff/scripts/render_diff.py howto/logging.po --base origin/3.15
 ```
+
+The script declares its dependencies inline (PEP 723), so `uv run` needs no `--with` flags.
 
 | Flag | Default | Use |
 |---|---|---|
