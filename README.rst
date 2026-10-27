@@ -370,7 +370,7 @@ reST 語法注意事項
 使用 Skills 協助翻譯
 ====================
 
-本專案在 ``.claude/skills/`` 目錄底下提供三個 Skill，協助你依照\ `翻譯守則`_\ 與\
+本專案在 ``.claude/skills/`` 目錄底下提供四個 Skill，協助你依照\ `翻譯守則`_\ 與\
 `術語表 Glossary`_\ 進行翻譯與校對。
 
 除了 `Claude Code <https://docs.anthropic.com/en/docs/claude-code>`_\ ，只要你使用
@@ -392,6 +392,8 @@ reST 語法注意事項
   中文的用語。
 - ``validate-translation``\ ：審閱已翻譯的條目，檢查用詞、標點、reST 語法與行\
   寬等問題。
+- ``review-rendered-diff``\ ：將 po 檔的翻譯修改 render 成實際的文件頁面，在頁\
+  面上標示修改前後的差異並截圖，方便在 Pull Request 中檢視。
 
 事前準備
 --------
@@ -444,6 +446,20 @@ Skill 會找出 ``msgstr`` 為空或標記為 fuzzy 的條目，並依照翻譯�
 Skill 會將發現的問題分類為 ERROR、WARNING、INFO 並逐項列出，例如建議執行
 ``make lint`` 確認格式。你也可以使用 ``check-terminology`` 單獨檢查某個用詞，\
 或整份 po 檔的術語一致性。
+
+**第三步：檢視 render 結果**
+
+若想確認修改在文件頁面上的實際樣子，可以請 coding agent 使用
+``review-rendered-diff``\ ：
+
+.. code-block:: text
+
+  請使用 review-rendered-diff skill 檢視 tutorial/introduction.po 相對於 3.15 的修改
+
+Skill 會分別 build 修改前後的頁面，並為每個有修改的段落截圖：小幅修改以紅色刪除\
+線、綠色底色標示在段落中；整段新翻譯或大幅改寫則以上下兩個區塊對照。截圖預設\
+存放在 ``.render-review/`` 目錄。使用前需先執行過 ``make prepare_deps``\ （或任\
+一次 ``make build``\ ），準備好 ``../cpython`` 與 Sphinx 環境。
 
 .. note::
 
