@@ -183,7 +183,7 @@
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.15.2 Documentation</a> &#187;
+      <a href="../index.html">3.15.2 documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">擴充和嵌入 Python 直譯器</a> &#187;</li>
@@ -390,24 +390,35 @@ imaginable.</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">arglist</span><span class="p">;</span>
 <span class="p">...</span>
 <span class="n">arglist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Py_BuildValue</span><span class="p">(</span><span class="s">"(l)"</span><span class="p">,</span><span class="w"> </span><span class="n">eventcode</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">arglist</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyObject_CallObject</span><span class="p">(</span><span class="n">my_callback</span><span class="p">,</span><span class="w"> </span><span class="n">arglist</span><span class="p">);</span>
 <span class="n">Py_DECREF</span><span class="p">(</span><span class="n">arglist</span><span class="p">);</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w"> </span><span class="cm">/* 將錯誤傳回 */</span>
-<span class="cm">/* 這裡可以使用 result */</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w"> </span><span class="cm">/* Pass error back */</span>
+<span class="cm">/* Here maybe use the result */</span>
 <span class="n">Py_DECREF</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
 </pre></div>
 </div>
-<p>請注意 <code class="docutils literal notranslate"><span class="pre">Py_DECREF(arglist)</span></code> 是在呼叫之後、錯誤檢查之前立即放置的！另外請注意嚴格來說這段程式碼並不完整：<a class="reference internal" href="../c-api/arg.html#c.Py_BuildValue" title="Py_BuildValue"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_BuildValue()</span></code></a> 可能會耗盡記憶體，這應該要被檢查。</p>
+<p>Note the placement of <code class="docutils literal notranslate"><span class="pre">Py_DECREF(arglist)</span></code> immediately after the call, before
+the error check!</p>
 <p>你也可以使用 <a class="reference internal" href="../c-api/call.html#c.PyObject_Call" title="PyObject_Call"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyObject_Call()</span></code></a> 來呼叫帶有關鍵字引數的函式，它支援引數和關鍵字引數。如同上面的範例，我們使用 <a class="reference internal" href="../c-api/arg.html#c.Py_BuildValue" title="Py_BuildValue"><code class="xref c c-func docutils literal notranslate"><span class="pre">Py_BuildValue()</span></code></a> 來建構字典。</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">dict</span><span class="p">;</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">arglist</span><span class="p">,</span><span class="w"> </span><span class="o">*</span><span class="n">dict</span><span class="p">;</span>
 <span class="p">...</span>
+<span class="n">arglist</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyTuple_New</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">arglist</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="n">dict</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">Py_BuildValue</span><span class="p">(</span><span class="s">"{s:i}"</span><span class="p">,</span><span class="w"> </span><span class="s">"name"</span><span class="p">,</span><span class="w"> </span><span class="n">val</span><span class="p">);</span>
-<span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyObject_Call</span><span class="p">(</span><span class="n">my_callback</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="n">dict</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">dict</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">Py_DECREF</span><span class="p">(</span><span class="n">arglist</span><span class="p">);</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyObject_Call</span><span class="p">(</span><span class="n">my_callback</span><span class="p">,</span><span class="w"> </span><span class="n">arglist</span><span class="p">,</span><span class="w"> </span><span class="n">dict</span><span class="p">);</span>
+<span class="n">Py_DECREF</span><span class="p">(</span><span class="n">arglist</span><span class="p">);</span>
 <span class="n">Py_DECREF</span><span class="p">(</span><span class="n">dict</span><span class="p">);</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">result</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="nb">NULL</span><span class="p">)</span>
-<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w"> </span><span class="cm">/* 將錯誤傳回 */</span>
-<span class="cm">/* 這裡可以使用 result */</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span><span class="w"> </span><span class="cm">/* Pass error back */</span>
+<span class="cm">/* Here maybe use the result */</span>
 <span class="n">Py_DECREF</span><span class="p">(</span><span class="n">result</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -944,7 +955,7 @@ reality (such as adding &quot;spam&quot; to every command). This function
               
           </li>
     <li id="cpython-language-and-version">
-      <a href="../index.html">3.15.2 Documentation</a> &#187;
+      <a href="../index.html">3.15.2 documentation</a> &#187;
     </li>
 
           <li class="nav-item nav-item-1"><a href="index.html" >擴充和嵌入 Python 直譯器</a> &#187;</li>
@@ -989,7 +1000,7 @@ reality (such as adding &quot;spam&quot; to every command). This function
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 10月 27, 2026 (03:59 UTC)。
+      最後更新於 11月 01, 2026 (13:08 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
