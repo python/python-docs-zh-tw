@@ -1752,6 +1752,10 @@ when a peer stops reading but keeps sending records that make OpenSSL
 generate its own replies (such as TLS 1.2 renegotiation alerts).  Reading
 from the peer is now paused when this output accumulates, instead of only
 when application data does.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/160506">gh-160506</a>: Fix <a class="reference internal" href="../library/os.path.html#os.path.realpath" title="os.path.realpath"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.path.realpath()</span></code></a> on Windows returning the wrong
+path for a broken relative symbolic link reached through a symbolic link
+to a directory. This allowed <a class="reference internal" href="../library/tarfile.html#module-tarfile" title="tarfile: Read and write tar-format archive files."><code class="xref py py-mod docutils literal notranslate"><span class="pre">tarfile</span></code></a> extraction with the <code class="docutils literal notranslate"><span class="pre">'data'</span></code>
+or <code class="docutils literal notranslate"><span class="pre">'tar'</span></code> filter to create a file outside the destination directory.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/160420">gh-160420</a>: Fix <a class="reference internal" href="../library/zoneinfo.html#zoneinfo.ZoneInfo" title="zoneinfo.ZoneInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">zoneinfo.ZoneInfo</span></code></a> on Windows accepting keys in
 which a component after a <code class="docutils literal notranslate"><span class="pre">/</span></code> starts with a drive letter, such as
 <code class="docutils literal notranslate"><span class="pre">America/C:\file</span></code>.  Such a key could open a file outside the <code class="docutils literal notranslate"><span class="pre">tzdata</span></code>
@@ -1781,6 +1785,14 @@ using <a class="reference internal" href="../library/functools.html#functools.wr
 <section id="library">
 <h3>Library<a class="headerlink" href="#library" title="連結到這個標頭">¶</a></h3>
 <ul class="simple">
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/137549">gh-137549</a>: <a class="reference internal" href="../library/asyncio-task.html#asyncio.timeout" title="asyncio.timeout"><code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.timeout()</span></code></a> now inserts <a class="reference internal" href="../builtins/exceptions.html#TimeoutError" title="TimeoutError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">TimeoutError</span></code></a> into
+the context chain of sub-exceptions of a <a class="reference internal" href="../builtins/exceptions.html#BaseExceptionGroup" title="BaseExceptionGroup"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BaseExceptionGroup</span></code></a>, as it
+already did for <a class="reference internal" href="../builtins/exceptions.html#ExceptionGroup" title="ExceptionGroup"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ExceptionGroup</span></code></a>.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/53089">gh-53089</a>: <a class="reference internal" href="../library/urllib.request.html#urllib.request.HTTPDigestAuthHandler" title="urllib.request.HTTPDigestAuthHandler"><code class="xref py py-class docutils literal notranslate"><span class="pre">urllib.request.HTTPDigestAuthHandler</span></code></a> now sends
+<code class="docutils literal notranslate"><span class="pre">uri=&quot;/&quot;</span></code> in the Digest <code class="docutils literal notranslate"><span class="pre">Authorization</span></code> header for URLs with an empty
+path, such as <code class="docutils literal notranslate"><span class="pre">http://example.com</span></code>, matching the request-target sent by
+<a class="reference internal" href="../library/http.client.html#module-http.client" title="http.client: HTTP and HTTPS protocol client (requires sockets)."><code class="xref py py-mod docutils literal notranslate"><span class="pre">http.client</span></code></a>. Previously it sent <code class="docutils literal notranslate"><span class="pre">uri=&quot;&quot;</span></code>, which servers could
+reject. Patch by Senthil Kumaran.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/109564">gh-109564</a>: Fix a race in <a class="reference internal" href="../library/asyncio.html#module-asyncio" title="asyncio: Asynchronous I/O."><code class="xref py py-mod docutils literal notranslate"><span class="pre">asyncio</span></code></a> where closing a server after it
 accepted a connection, but before the connection's transport was created,
 reported an <a class="reference internal" href="../builtins/exceptions.html#AssertionError" title="AssertionError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">AssertionError</span></code></a> to the exception handler. Such
@@ -1810,18 +1822,47 @@ authenticate. It looked up credentials using the target request URL
 instead of the proxy's authority, so passwords registered via
 <code class="docutils literal notranslate"><span class="pre">add_password()</span></code> against the proxy never matched. Patch by Senthil
 Kumaran.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/160314">gh-160314</a>: Raise an error in <a class="reference internal" href="../library/lzma.html#lzma.LZMAFile" title="lzma.LZMAFile"><code class="xref py py-class docutils literal notranslate"><span class="pre">lzma.LZMAFile</span></code></a>,
+<a class="reference internal" href="../library/lzma.html#lzma.decompress" title="lzma.decompress"><code class="xref py py-func docutils literal notranslate"><span class="pre">lzma.decompress()</span></code></a>, <a class="reference internal" href="../library/bz2.html#bz2.BZ2File" title="bz2.BZ2File"><code class="xref py py-class docutils literal notranslate"><span class="pre">bz2.BZ2File</span></code></a> and <a class="reference internal" href="../library/bz2.html#bz2.decompress" title="bz2.decompress"><code class="xref py py-func docutils literal notranslate"><span class="pre">bz2.decompress()</span></code></a>
+for a damaged <code class="docutils literal notranslate"><span class="pre">.xz</span></code> or bzip2 stream that follows another stream, instead
+of silently ignoring it and everything after it as trailing data.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/159739">gh-159739</a>: Fix HZ encoding of a tilde at an output buffer boundary and
+ISO-2022 decoding of split escape sequences. Reset ISO-2022 incremental
+codecs to their initial state. Keep multibyte codec tables and custom
+encoder error policies alive when Python code replaces them during use.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/160310">gh-160310</a>: Fix quadratic time complexity of <a class="reference internal" href="../library/gzip.html#gzip.decompress" title="gzip.decompress"><code class="xref py py-func docutils literal notranslate"><span class="pre">gzip.decompress()</span></code></a>,
+<a class="reference internal" href="../library/bz2.html#bz2.decompress" title="bz2.decompress"><code class="xref py py-func docutils literal notranslate"><span class="pre">bz2.decompress()</span></code></a>, <a class="reference internal" href="../library/lzma.html#lzma.decompress" title="lzma.decompress"><code class="xref py py-func docutils literal notranslate"><span class="pre">lzma.decompress()</span></code></a> and
+<a class="reference internal" href="../library/compression.zstd.html#compression.zstd.decompress" title="compression.zstd.decompress"><code class="xref py py-func docutils literal notranslate"><span class="pre">compression.zstd.decompress()</span></code></a> on data consisting of many
+concatenated members.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/160522">gh-160522</a>: Fix the incremental encoders and stream writers of the stateful
+CJK codecs (<code class="docutils literal notranslate"><span class="pre">iso2022_*</span></code> and <code class="docutils literal notranslate"><span class="pre">hz</span></code>) keeping a changed shift state after
+an <code class="xref py py-meth docutils literal notranslate"><span class="pre">encode()</span></code> or <code class="xref py py-meth docutils literal notranslate"><span class="pre">write()</span></code> call failed.  The next call could
+omit the escape sequence, writing multibyte characters in ASCII mode.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/160518">gh-160518</a>: Fix the <code class="docutils literal notranslate"><span class="pre">hz</span></code> codec sometimes encoding <code class="docutils literal notranslate"><span class="pre">~</span></code> as a single <code class="docutils literal notranslate"><span class="pre">~</span></code>
+instead of <code class="docutils literal notranslate"><span class="pre">~~</span></code> in text that mixes ASCII and Chinese characters, which
+produced data that did not decode back to the original text.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/160513">gh-160513</a>: Fix <a class="reference internal" href="../library/asyncio-eventloop.html#asyncio.loop.start_tls" title="asyncio.loop.start_tls"><code class="xref py py-meth docutils literal notranslate"><span class="pre">asyncio.loop.start_tls()</span></code></a> and
 <a class="reference internal" href="../library/asyncio-stream.html#asyncio.StreamWriter.start_tls" title="asyncio.StreamWriter.start_tls"><code class="xref py py-meth docutils literal notranslate"><span class="pre">asyncio.StreamWriter.start_tls()</span></code></a> not calling the protocol's
 <a class="reference internal" href="../library/asyncio-protocol.html#asyncio.BaseProtocol.connection_lost" title="asyncio.BaseProtocol.connection_lost"><code class="xref py py-meth docutils literal notranslate"><span class="pre">connection_lost()</span></code></a> when the connection is lost,
 the handshake times out or the call is cancelled during the TLS handshake.
 <a class="reference internal" href="../library/asyncio-stream.html#asyncio.StreamWriter.wait_closed" title="asyncio.StreamWriter.wait_closed"><code class="xref py py-meth docutils literal notranslate"><span class="pre">asyncio.StreamWriter.wait_closed()</span></code></a> no longer waits forever after
 such a failure.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/160297">gh-160297</a>: Fix <a class="reference internal" href="../library/tarfile.html#tarfile.TarFile.extractall" title="tarfile.TarFile.extractall"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tarfile.TarFile.extractall()</span></code></a> and
+<a class="reference internal" href="../library/tarfile.html#tarfile.TarFile.extract" title="tarfile.TarFile.extract"><code class="xref py py-meth docutils literal notranslate"><span class="pre">tarfile.TarFile.extract()</span></code></a> changing the mode, modification time and
+owner of a file outside the destination directory when a hard link member
+is extracted as a copy of a symbolic link member, for example with the
+<code class="docutils literal notranslate"><span class="pre">'tar'</span></code> filter.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/159398">gh-159398</a>: Fix the sampling profiler crashing when a string read from the
+target process contains code points above <code class="docutils literal notranslate"><span class="pre">U+10FFFF</span></code>.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/158998">gh-158998</a>: Fix <a class="reference internal" href="../library/os.html#os.statx" title="os.statx"><code class="xref py py-func docutils literal notranslate"><span class="pre">os.statx()</span></code></a> ignoring the <em>follow_symlinks</em> argument.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/157928">gh-157928</a>: Correctly detect and handle OSC sequences in PyREPL.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/157856">gh-157856</a>: Fix <a class="reference internal" href="../library/asyncio-task.html#asyncio.as_completed" title="asyncio.as_completed"><code class="xref py py-func docutils literal notranslate"><span class="pre">asyncio.as_completed()</span></code></a> raising <a class="reference internal" href="../builtins/exceptions.html#RuntimeError" title="RuntimeError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">RuntimeError</span></code></a>
 (&quot;no running event loop&quot;) when the iterator is created outside of a
 running event loop and driven with <a class="reference internal" href="../library/asyncio-eventloop.html#asyncio.loop.run_until_complete" title="asyncio.loop.run_until_complete"><code class="xref py py-meth docutils literal notranslate"><span class="pre">loop.run_until_complete()</span></code></a>.</p></li>
 <li><p><a class="reference external" href="https://github.com/python/cpython/issues/151126">gh-151126</a>: Fix a crash caused by failing to set <a class="reference internal" href="../builtins/exceptions.html#MemoryError" title="MemoryError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">MemoryError</span></code></a> on
 allocation failure when first using a Chinese, Japanese or Korean codec.</p></li>
+<li><p><a class="reference external" href="https://github.com/python/cpython/issues/139105">gh-139105</a>: Correct the EOF key shown in the <a class="reference internal" href="../library/sqlite3.html#module-sqlite3" title="sqlite3: A DB-API 2.0 implementation using SQLite 3.x."><code class="xref py py-mod docutils literal notranslate"><span class="pre">sqlite3</span></code></a> CLI <code class="docutils literal notranslate"><span class="pre">.help</span></code>
+text on Windows.</p></li>
 </ul>
 </section>
 <section id="tests">
@@ -51340,7 +51381,7 @@ Kilburn.</p></li>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 10月 30, 2026 (00:26 UTC)。
+      最後更新於 11月 01, 2026 (13:12 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
