@@ -93,7 +93,7 @@
 <li><a class="reference internal" href="#functions-and-exceptions">函式與例外</a></li>
 <li><a class="reference internal" href="#format-strings">格式字串</a><ul>
 <li><a class="reference internal" href="#byte-order-size-and-alignment">位元組順序、大小和對齊</a></li>
-<li><a class="reference internal" href="#format-characters">格式字元</a></li>
+<li><a class="reference internal" href="#format-characters">Type Codes</a></li>
 <li><a class="reference internal" href="#examples">範例</a></li>
 </ul>
 </li>
@@ -278,7 +278,13 @@
 </section>
 <section id="format-strings">
 <span id="struct-format-strings"></span><h2>格式字串<a class="headerlink" href="#format-strings" title="連結到這個標頭">¶</a></h2>
-<p>格式字串描述了打包和解包資料時的資料配置 (layout)。它們由<a class="reference internal" href="#format-characters"><span class="std std-ref">格式字元</span></a>組成，這些字元指定了要打包或解包的資料型別。此外，特殊字元控制<a class="reference internal" href="#struct-alignment"><span class="std std-ref">位元組順序、大小和對齊</span></a>。每個格式字串由一個可選的前綴字元組成，描述資料的整體屬性，以及一個或多個描述實際資料值和填充的格式字元。</p>
+<p>Format strings describe the data layout when
+packing and unpacking data.  They are built up from <a class="reference internal" href="#type-codes"><span class="std std-ref">type codes</span></a>,
+which specify the type of data being packed/unpacked.  In addition,
+special characters control the <a class="reference internal" href="#struct-alignment"><span class="std std-ref">byte order, size and alignment</span></a>.
+Each format string consists of an optional prefix character which
+describes the overall properties of the data and one or more format
+characters which describe the actual data values and padding.</p>
 <section id="byte-order-size-and-alignment">
 <span id="struct-alignment"></span><h3>位元組順序、大小和對齊<a class="headerlink" href="#byte-order-size-and-alignment" title="連結到這個標頭">¶</a></h3>
 <p>預設情況下，C 型別以機器的原生格式和位元組順序表示，並在必要時透過跳過填充位元組來正確對齊（根據 C 編譯器所使用的規則）。選擇此行為使得打包結構的位元組完全對應於相對應 C 結構的記憶體配置。是否使用原生位元組順序和填充或標準格式取決於應用程式。</p>
@@ -338,7 +344,8 @@
 </div>
 <p>原生位元組順序是大端序或小端序，會取決於主機系統。例如，Intel x86、AMD64 (x86-64)和 Apple M1 是小端序；IBM z 和許多舊架構是大端序。可使用 <a class="reference internal" href="sys.html#sys.byteorder" title="sys.byteorder"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.byteorder</span></code></a> 來檢查你系統的位元組順序。</p>
 <p>原生大小和對齊是使用 C 編譯器的 <code class="docutils literal notranslate"><span class="pre">sizeof</span></code> 運算式來決定的。這總是與原生位元組順序結合使用。</p>
-<p>標準大小僅取決於格式字元；請參見<a class="reference internal" href="#format-characters"><span class="std std-ref">格式字元</span></a>區塊中的表格。</p>
+<p>Standard size depends only on the type code;  see the table in
+the <a class="reference internal" href="#type-codes"><span class="std std-ref">Type Codes</span></a> section.</p>
 <p>請注意 <code class="docutils literal notranslate"><span class="pre">'&#64;'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'='</span></code> 之間的差異：兩者都使用原生位元組順序，但後者的大小和對齊是標準化的。</p>
 <p><code class="docutils literal notranslate"><span class="pre">'!'</span></code> 形式表示網路位元組順序，根據 <a class="reference external" href="https://datatracker.ietf.org/doc/html/rfc1700">IETF RFC 1700</a> 的定義，它總是大端序。</p>
 <p>沒有方法來指示非原生位元組順序（強制位元組交換）；請使用適當的 <code class="docutils literal notranslate"><span class="pre">'&lt;'</span></code> 或 <code class="docutils literal notranslate"><span class="pre">'&gt;'</span></code> 選擇。</p>
@@ -350,8 +357,13 @@
 </ol>
 </section>
 <section id="format-characters">
-<span id="id1"></span><h3>格式字元<a class="headerlink" href="#format-characters" title="連結到這個標頭">¶</a></h3>
-<p>格式字元具有以下意義；在給定型別的情況下，C 和 Python 數值之間的轉換應該是顯而易見的。「標準大小」欄位指的是使用標準大小時（即當格式字串以 <code class="docutils literal notranslate"><span class="pre">'&lt;'</span></code>、<code class="docutils literal notranslate"><span class="pre">'&gt;'</span></code>、<code class="docutils literal notranslate"><span class="pre">'!'</span></code> 或 <code class="docutils literal notranslate"><span class="pre">'='</span></code> 其中之一開始時）打包數值的位元組大小。使用原生大小時，打包數值的大小取決於平台。</p>
+<span id="type-codes"></span><span id="id1"></span><h3>Type Codes<a class="headerlink" href="#format-characters" title="連結到這個標頭">¶</a></h3>
+<p>Type codes (or format codes) have the following meaning; the conversion between C and
+Python values should be obvious given their types.  The 'Standard size' column
+refers to the size of the packed value in bytes when using standard size; that
+is, when the format string starts with one of <code class="docutils literal notranslate"><span class="pre">'&lt;'</span></code>, <code class="docutils literal notranslate"><span class="pre">'&gt;'</span></code>, <code class="docutils literal notranslate"><span class="pre">'!'</span></code> or
+<code class="docutils literal notranslate"><span class="pre">'='</span></code>.  When using native size, the size of the packed value is
+platform-dependent.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>格式</p></th>
@@ -531,20 +543,52 @@ use similar -- but slightly different -- type codes.</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">'n'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'N'</span></code> 轉換碼僅適用於原生大小（作為預設選擇或使用 <code class="docutils literal notranslate"><span class="pre">'&#64;'</span></code> 位元組順序字元）。對於標準大小，你可以使用適合你應用程式的其他整數格式。</p></li>
 <li><p>對於 <code class="docutils literal notranslate"><span class="pre">'f'</span></code>、<code class="docutils literal notranslate"><span class="pre">'d'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'e'</span></code> 轉換碼，打包表示法使用 IEEE 754 binary32、binary64 或 binary16 格式（分別對應於 <code class="docutils literal notranslate"><span class="pre">'f'</span></code>、<code class="docutils literal notranslate"><span class="pre">'d'</span></code> 或 <code class="docutils literal notranslate"><span class="pre">'e'</span></code>），無論平台使用何種浮點數格式。</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'P'</span></code> 格式字元僅適用於原生位元組順序（作為預設選擇或使用 <code class="docutils literal notranslate"><span class="pre">'&#64;'</span></code> 位元組順序字元）。位元組順序字元 <code class="docutils literal notranslate"><span class="pre">'='</span></code> 根據主機系統選擇使用小端序或大端序。struct 模組不將其解釋為原生順序，因此 <code class="docutils literal notranslate"><span class="pre">'P'</span></code> 格式不可用。</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">'P'</span></code> type code is only available for the native byte ordering
+(selected as the default or with the <code class="docutils literal notranslate"><span class="pre">'&#64;'</span></code> byte order character). The byte
+order character <code class="docutils literal notranslate"><span class="pre">'='</span></code> chooses to use little- or big-endian ordering based
+on the host system. The struct module does not interpret this as native
+ordering, so the <code class="docutils literal notranslate"><span class="pre">'P'</span></code> format is not available.</p></li>
 <li><p>IEEE 754 binary16「半精度 (half precision)」型別是在 2008 年的 <a class="reference external" href="https://en.wikipedia.org/wiki/IEEE_754-2008_revision">IEEE 754 標準</a>修訂版中引入的。它有一個符號位元 (sign bit)、5 位元指數和 11 位元精度（明確儲存 10 位元），可以全精度表示大約 <code class="docutils literal notranslate"><span class="pre">6.1e-05</span></code> 到 <code class="docutils literal notranslate"><span class="pre">6.5e+04</span></code> 之間的數字。此型別未被 C 編譯器廣泛支援：若編譯器支援 C23 標準的附錄 H，則可以作為 <span class="c-expr sig sig-inline c"><span class="n">_Float16</span></span> 型別使用。在典型機器上，unsigned short 可以用於儲存但不能用於數學運算。請參見 Wikipedia 上的<a class="reference external" href="https://en.wikipedia.org/wiki/Half-precision_floating-point_format">半精度浮點數格式</a>頁面以取得更多資訊。</p></li>
 <li><p>打包時，<code class="docutils literal notranslate"><span class="pre">'x'</span></code> 插入一個 NUL 位元組。</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'p'</span></code> 格式字元編碼一個「Pascal 字串」，意思是儲存在<em>固定位元組數</em>中的短、長度可變字串，由計數指定。儲存的第一個位元組是字串的長度，或與 255 間取較小者。字串的位元組在其後。如果傳遞給 <a class="reference internal" href="#struct.pack" title="struct.pack"><code class="xref py py-func docutils literal notranslate"><span class="pre">pack()</span></code></a> 的位元組字串太長（長於計數減 1），則只儲存字串的前 <code class="docutils literal notranslate"><span class="pre">count-1</span></code> 個位元組。如果位元組字串短於 <code class="docutils literal notranslate"><span class="pre">count-1</span></code>，則用空位元組填充，使得總共使用恰好 count 個位元組。請注意，對於 <a class="reference internal" href="#struct.unpack" title="struct.unpack"><code class="xref py py-func docutils literal notranslate"><span class="pre">unpack()</span></code></a>，<code class="docutils literal notranslate"><span class="pre">'p'</span></code> 格式字元消耗 <code class="docutils literal notranslate"><span class="pre">count</span></code> 個位元組，但回傳的 <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code> 物件永遠不能包含超過 255 個位元組。打包時，接受 <a class="reference internal" href="../builtins/stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a> 和 <a class="reference internal" href="../builtins/stdtypes.html#bytearray" title="bytearray"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code></a> 型別的引數。</p></li>
-<li><p>對於 <code class="docutils literal notranslate"><span class="pre">'s'</span></code> 格式字元，計數被直譯為位元組字串的長度，而不是像其他格式字元那樣的重複次數；例如，<code class="docutils literal notranslate"><span class="pre">'10s'</span></code> 表示一個 10 位元組字串，對應於單一 Python 位元組字串，而 <code class="docutils literal notranslate"><span class="pre">'10c'</span></code> 表示 10 個獨立的單位元組字元元素（例如 <code class="docutils literal notranslate"><span class="pre">cccccccccc</span></code>），對應於十個不同的 Python 位元組物件。（請參見 <a class="reference internal" href="#struct-examples"><span class="std std-ref">範例</span></a> 以了解具體差異的示範。）如果未給定計數，則預設為 1。打包時，會適當地截斷或用空位元組填充位元組字串以使其適合。解包時，結果<code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code> 物件總是恰好具有指定的位元組數。作為特殊情況，<code class="docutils literal notranslate"><span class="pre">'0s'</span></code> 表示單一空位元組字串（而 <code class="docutils literal notranslate"><span class="pre">'0c'</span></code> 表示 0 個字元）。打包時，接受 <a class="reference internal" href="../builtins/stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a> 和 <a class="reference internal" href="../builtins/stdtypes.html#bytearray" title="bytearray"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code></a> 型別的引數。</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">'p'</span></code> type code encodes a &quot;Pascal string&quot;, meaning a short
+variable-length string stored in a <em>fixed number of bytes</em>, given by the count.
+The first byte stored is the length of the string, or 255, whichever is
+smaller.  The bytes of the string follow.  If the byte string passed in to
+<a class="reference internal" href="#struct.pack" title="struct.pack"><code class="xref py py-func docutils literal notranslate"><span class="pre">pack()</span></code></a> is too long (longer than the count minus 1), only the leading
+<code class="docutils literal notranslate"><span class="pre">count-1</span></code> bytes of the string are stored.  If the byte string is shorter than
+<code class="docutils literal notranslate"><span class="pre">count-1</span></code>, it is padded with null bytes so that exactly count bytes in all
+are used.  Note that for <a class="reference internal" href="#struct.unpack" title="struct.unpack"><code class="xref py py-func docutils literal notranslate"><span class="pre">unpack()</span></code></a>, the <code class="docutils literal notranslate"><span class="pre">'p'</span></code> type code consumes
+<code class="docutils literal notranslate"><span class="pre">count</span></code> bytes, but that the <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code> object returned can never contain more than 255
+bytes.
+When packing, arguments of types <a class="reference internal" href="../builtins/stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a> and <a class="reference internal" href="../builtins/stdtypes.html#bytearray" title="bytearray"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code></a>
+are accepted.</p></li>
+<li><p>For the <code class="docutils literal notranslate"><span class="pre">'s'</span></code> type code, the count is interpreted as the length of the
+byte string, not a repeat count like for the other type codes; for example,
+<code class="docutils literal notranslate"><span class="pre">'10s'</span></code> means a single 10-byte string mapping to or from a single
+Python byte string, while <code class="docutils literal notranslate"><span class="pre">'10c'</span></code> means 10
+separate one byte character elements (e.g., <code class="docutils literal notranslate"><span class="pre">cccccccccc</span></code>) mapping
+to or from ten different Python byte objects. (See <a class="reference internal" href="#struct-examples"><span class="std std-ref">範例</span></a>
+for a concrete demonstration of the difference.)
+If a count is not given, it defaults to 1.  For packing, the byte string is
+truncated or padded with null bytes as appropriate to make it fit. For
+unpacking, the resulting <code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code> object always has exactly the specified number
+of bytes.  As a special case, <code class="docutils literal notranslate"><span class="pre">'0s'</span></code> means a single, empty byte string (while
+<code class="docutils literal notranslate"><span class="pre">'0c'</span></code> means 0 characters).
+When packing, arguments of types <a class="reference internal" href="../builtins/stdtypes.html#bytes" title="bytes"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a> and <a class="reference internal" href="../builtins/stdtypes.html#bytearray" title="bytearray"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytearray</span></code></a>
+are accepted.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">'Zf'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'Zd'</span></code> 型別碼的封裝表示法會以 IEEE 754 binary32 及 binary64 格式處理複數的實部與虛部，與平台所使用的浮點數格式無關。請注意，即使複數型別在 C 中屬於可選功能，複數型別仍然可以無條件使用。根據 C11 標準，每個複數型別由一個含有二個元素的 C 陣列表示，分別存放實部與虛部。為了相容性，也支援 <code class="docutils literal notranslate"><span class="pre">'F'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'D'</span></code>（分別對應 <code class="docutils literal notranslate"><span class="pre">'Zf'</span></code> 和 <code class="docutils literal notranslate"><span class="pre">'Zd'</span></code>）格式字元。</p></li>
 </ol>
-<p>格式字元前面可以加上整數重複次數。例如，格式字串 <code class="docutils literal notranslate"><span class="pre">'4h'</span></code> 與 <code class="docutils literal notranslate"><span class="pre">'hhhh'</span></code> 意思完全相同。</p>
+<p>A type code may be preceded by an integral repeat count.  For example,
+the format string <code class="docutils literal notranslate"><span class="pre">'4h'</span></code> means exactly the same as <code class="docutils literal notranslate"><span class="pre">'hhhh'</span></code>.</p>
 <p>格式之間的空白字元會被忽略；但是計數和其格式不能包含空白字元。</p>
 <p>當使用整數格式之一（<code class="docutils literal notranslate"><span class="pre">'b'</span></code>、<code class="docutils literal notranslate"><span class="pre">'B'</span></code>、<code class="docutils literal notranslate"><span class="pre">'h'</span></code>、<code class="docutils literal notranslate"><span class="pre">'H'</span></code>、<code class="docutils literal notranslate"><span class="pre">'i'</span></code>、<code class="docutils literal notranslate"><span class="pre">'I'</span></code>、<code class="docutils literal notranslate"><span class="pre">'l'</span></code>、<code class="docutils literal notranslate"><span class="pre">'L'</span></code>、<code class="docutils literal notranslate"><span class="pre">'q'</span></code>、<code class="docutils literal notranslate"><span class="pre">'Q'</span></code>）打包數值 <code class="docutils literal notranslate"><span class="pre">x</span></code> 時，如果 <code class="docutils literal notranslate"><span class="pre">x</span></code> 超出該格式的有效範圍，則會觸發 <a class="reference internal" href="#struct.error" title="struct.error"><code class="xref py py-exc docutils literal notranslate"><span class="pre">struct.error</span></code></a>。</p>
 <div class="versionchanged">
 <p><span class="versionmodified changed">在 3.1 版的變更: </span>以前一些整數格式會環繞超出範圍的數值並引發 <a class="reference internal" href="../builtins/exceptions.html#DeprecationWarning" title="DeprecationWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DeprecationWarning</span></code></a> 而不是 <a class="reference internal" href="#struct.error" title="struct.error"><code class="xref py py-exc docutils literal notranslate"><span class="pre">struct.error</span></code></a>。</p>
 </div>
-<p id="index-3">對於 <code class="docutils literal notranslate"><span class="pre">'?'</span></code> 格式字元，回傳值是 <a class="reference internal" href="../builtins/constants.html#True" title="True"><code class="xref py py-const docutils literal notranslate"><span class="pre">True</span></code></a> 或 <a class="reference internal" href="../builtins/constants.html#False" title="False"><code class="xref py py-const docutils literal notranslate"><span class="pre">False</span></code></a>。打包時，使用引數物件的真值。原生或標準布林值表示法中的 0 或 1 將被打包，解包時任何非零值都將為 <code class="docutils literal notranslate"><span class="pre">True</span></code>。</p>
+<p id="index-3">For the <code class="docutils literal notranslate"><span class="pre">'?'</span></code> type code, the return value is either <a class="reference internal" href="../builtins/constants.html#True" title="True"><code class="xref py py-const docutils literal notranslate"><span class="pre">True</span></code></a> or
+<a class="reference internal" href="../builtins/constants.html#False" title="False"><code class="xref py py-const docutils literal notranslate"><span class="pre">False</span></code></a>. When packing, the truth value of the argument object is used.
+Either 0 or 1 in the native or standard bool representation will be packed, and
+any non-zero value will be <code class="docutils literal notranslate"><span class="pre">True</span></code> when unpacking.</p>
 </section>
 <section id="examples">
 <span id="struct-examples"></span><h3>範例<a class="headerlink" href="#examples" title="連結到這個標頭">¶</a></h3>
@@ -586,7 +630,13 @@ use similar -- but slightly different -- type codes.</p>
 <span class="go">Student(name=b'raymond   ', serialnum=4658, school=264, gradelevel=8)</span>
 </pre></div>
 </div>
-<p>在原生模式下，格式字元的順序可能會影響大小，因為填充是隱式的。在標準模式下，使用者負責插入任何所需的填充。請注意下面第一個 <code class="docutils literal notranslate"><span class="pre">pack</span></code> 呼叫中，在打包的 <code class="docutils literal notranslate"><span class="pre">'#'</span></code> 之後加入了三個 NUL 位元組，以將後續整數對齊到四位元組邊界。在此範例中，輸出是在小端序機器上產生的：</p>
+<p>The ordering of type codes may have an impact on size in native
+mode since padding is implicit. In standard mode, the user is
+responsible for inserting any desired padding.
+Note in
+the first <code class="docutils literal notranslate"><span class="pre">pack</span></code> call below that three NUL bytes were added after the
+packed <code class="docutils literal notranslate"><span class="pre">'#'</span></code> to align the following integer on a four-byte boundary.
+In this example, the output was produced on a little endian machine:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s1">'@ci'</span><span class="p">,</span> <span class="sa">b</span><span class="s1">'#'</span><span class="p">,</span> <span class="mh">0x12131415</span><span class="p">)</span>
 <span class="go">b'#\x00\x00\x00\x15\x14\x13\x12'</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">pack</span><span class="p">(</span><span class="s1">'@ic'</span><span class="p">,</span> <span class="mh">0x12131415</span><span class="p">,</span> <span class="sa">b</span><span class="s1">'#'</span><span class="p">)</span>
@@ -620,7 +670,13 @@ use similar -- but slightly different -- type codes.</p>
 <p><code class="xref py py-mod docutils literal notranslate"><span class="pre">struct</span></code> 模組有兩種主要應用程式：在應用程式內或使用相同編譯器編譯的另一個應用程式之間進行 Python 和 C 程式碼的資料交換（<a class="reference internal" href="#struct-native-formats"><span class="std std-ref">原生格式</span></a>），以及使用約定資料配置的應用程式之間的資料交換（<a class="reference internal" href="#struct-standard-formats"><span class="std std-ref">標準格式</span></a>）。一般來說，為這兩個領域建構的格式字串是不同的。</p>
 <section id="native-formats">
 <span id="struct-native-formats"></span><h3>原生格式<a class="headerlink" href="#native-formats" title="連結到這個標頭">¶</a></h3>
-<p>當構造模擬原生配置的格式字串時，編譯器和機器架構會決定位元組順序和填充。在這種情況下，應該使用 <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> 格式字元來指定原生位元組順序和資料大小。內部填充位元組通常會自動插入。可能需要在格式字串的結尾使用零重複格式碼來向上舍入到正確的位元組邊界，以便正確對齊連續的資料區塊 (chunks)。</p>
+<p>When constructing format strings which mimic native layouts, the
+compiler and machine architecture determine byte ordering and padding.
+In such cases, the <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> format character should be used to specify
+native byte ordering and data sizes.  Internal pad bytes are normally inserted
+automatically.  It is possible that a zero-repeat type code will be
+needed at the end of a format string to round up to the correct
+byte boundary for proper alignment of consecutive chunks of data.</p>
 <p>考慮這兩個簡單範例（在 64 位元小端序機器上）：</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">calcsize</span><span class="p">(</span><span class="s1">'@lhl'</span><span class="p">)</span>
 <span class="go">24</span>
@@ -633,7 +689,8 @@ use similar -- but slightly different -- type codes.</p>
 <span class="go">24</span>
 </pre></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">'x'</span></code> 格式碼可以用來指定重複，但對於原生格式來說最好使用像 <code class="docutils literal notranslate"><span class="pre">'0l'</span></code> 這樣的零重複格式。</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">'x'</span></code> type code can be used to specify the repeat, but for
+native formats it is better to use a zero-repeat format like <code class="docutils literal notranslate"><span class="pre">'0l'</span></code>.</p>
 <p>預設使用原生位元組順序和對齊，但最好明確使用 <code class="docutils literal notranslate"><span class="pre">'&#64;'</span></code> 前綴字元。</p>
 </section>
 <section id="standard-formats">
@@ -752,7 +809,7 @@ use similar -- but slightly different -- type codes.</p>
 <li><a class="reference internal" href="#functions-and-exceptions">函式與例外</a></li>
 <li><a class="reference internal" href="#format-strings">格式字串</a><ul>
 <li><a class="reference internal" href="#byte-order-size-and-alignment">位元組順序、大小和對齊</a></li>
-<li><a class="reference internal" href="#format-characters">格式字元</a></li>
+<li><a class="reference internal" href="#format-characters">Type Codes</a></li>
 <li><a class="reference internal" href="#examples">範例</a></li>
 </ul>
 </li>
@@ -889,7 +946,7 @@ use similar -- but slightly different -- type codes.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 11月 01, 2026 (13:12 UTC)。
+      最後更新於 11月 06, 2026 (00:25 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

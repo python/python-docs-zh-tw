@@ -104,8 +104,8 @@
 <li><a class="reference internal" href="#setting-up-the-build">Setting up the build</a></li>
 <li><a class="reference internal" href="#module-export-hook">Module export hook</a><ul>
 <li><a class="reference internal" href="#existing-slots">Existing slots</a><ul>
-<li><a class="reference internal" href="#py-mod-create"><code class="docutils literal notranslate"><span class="pre">py_mod_create</span></code></a></li>
-<li><a class="reference internal" href="#multiple-py-mod-exec">Multiple <code class="docutils literal notranslate"><span class="pre">py_mod_exec</span></code></a></li>
+<li><a class="reference internal" href="#py-mod-create"><code class="docutils literal notranslate"><span class="pre">Py_mod_create</span></code></a></li>
+<li><a class="reference internal" href="#multiple-py-mod-exec">Multiple <code class="docutils literal notranslate"><span class="pre">Py_mod_exec</span></code></a></li>
 <li><a class="reference internal" href="#merging-slot-arrays">Merging slot arrays</a></li>
 </ul>
 </li>
@@ -431,12 +431,12 @@ For reference, here are direct links for several popular build tools:</p>
 </ul>
 <p>You may want to verify that the tool set the right flag by temporarily adding the
 following just after <code class="docutils literal notranslate"><span class="pre">#include</span> <span class="pre">&lt;Python.h&gt;</span></code>:</p>
-<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#if Py_TARGET_ABI3T+0 &lt;= 0x30f0000</span>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#if Py_TARGET_ABI3T+0 &lt; 0x30f0000</span>
 <span class="cp">#error "abi3t define is not set!"</span>
 <span class="cp">#endif</span>
 </pre></div>
 </div>
-<p>This should result in a different error than &quot;<code class="docutils literal notranslate"><span class="pre">abi3t</span></code> define is not set&quot;.</p>
+<p>This should result in a different error than &quot;<code class="docutils literal notranslate"><span class="pre">abi3t</span></code> define is not set&quot;. (If you get no error at all, either the module is already ported or you're not compiling the code you changed.)</p>
 <div class="admonition seealso">
 <p class="admonition-title">也參考</p>
 <p><a class="reference external" href="https://py-free-threading.github.io/abi3t/">Building and distributing abi3t extensions</a>:
@@ -571,7 +571,7 @@ It should be a <a class="reference internal" href="../c-api/module.html#c.PyModu
 <span class="k">static</span><span class="w"> </span><span class="n">PyModuleDef_Slot</span><span class="w"> </span><span class="n">my_slots</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
 <span class="w">   </span><span class="p">{</span><span class="n">Py_mod_gil</span><span class="p">,</span><span class="w"> </span><span class="n">Py_MOD_GIL_NOT_USED</span><span class="p">},</span>
 <span class="w">   </span><span class="p">{</span><span class="n">Py_mod_multiple_interpreters</span><span class="p">,</span><span class="w"> </span><span class="n">Py_MOD_PER_INTERPRETER_GIL_SUPPORTED</span><span class="p">},</span>
-<span class="w">   </span><span class="p">{</span><span class="n">Py_mod_create</span><span class="p">,</span><span class="w"> </span><span class="n">my_module_create</span><span class="p">},</span>
+<span class="w">   </span><span class="p">{</span><span class="n">Py_mod_create</span><span class="p">,</span><span class="w"> </span><span class="n">create_module</span><span class="p">},</span>
 <span class="w">   </span><span class="p">{</span><span class="n">Py_mod_exec</span><span class="p">,</span><span class="w"> </span><span class="n">my_first_module_exec</span><span class="p">},</span>
 <span class="w">   </span><span class="p">{</span><span class="n">Py_mod_exec</span><span class="p">,</span><span class="w"> </span><span class="n">my_second_module_exec</span><span class="p">},</span>
 <span class="w">   </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">}</span>
@@ -579,7 +579,7 @@ It should be a <a class="reference internal" href="../c-api/module.html#c.PyModu
 </pre></div>
 </div>
 <section id="py-mod-create">
-<h4><code class="docutils literal notranslate"><span class="pre">py_mod_create</span></code><a class="headerlink" href="#py-mod-create" title="連結到這個標頭">¶</a></h4>
+<h4><code class="docutils literal notranslate"><span class="pre">Py_mod_create</span></code><a class="headerlink" href="#py-mod-create" title="連結到這個標頭">¶</a></h4>
 <p>If you have a <a class="reference internal" href="../c-api/module.html#c.Py_mod_create" title="Py_mod_create"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_mod_create</span></code></a> entry, make sure the function can be
 called with <code class="docutils literal notranslate"><span class="pre">NULL</span></code> as its second argument (instead of the
 <a class="reference internal" href="../c-api/module.html#c.PyModuleDef" title="PyModuleDef"><code class="xref c c-type docutils literal notranslate"><span class="pre">PyModuleDef</span></code></a>, which you are removing).
@@ -593,18 +593,19 @@ Commonly, the information is static and you can refer to it directly.
 defining several functions instead.)</p>
 </section>
 <section id="multiple-py-mod-exec">
-<h4>Multiple <code class="docutils literal notranslate"><span class="pre">py_mod_exec</span></code><a class="headerlink" href="#multiple-py-mod-exec" title="連結到這個標頭">¶</a></h4>
+<h4>Multiple <code class="docutils literal notranslate"><span class="pre">Py_mod_exec</span></code><a class="headerlink" href="#multiple-py-mod-exec" title="連結到這個標頭">¶</a></h4>
 <p>If you have <em>more than one</em> <a class="reference internal" href="../c-api/module.html#c.Py_mod_exec" title="Py_mod_exec"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_mod_exec</span></code></a> entry, consolidate them:
 create a new function that calls the others, and replace existing slots
 with it.</p>
 <div class="good highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">static</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">my_module_exec</span><span class="p">(</span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">module</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">my_first_module_exec</span><span class="p">(</span><span class="n">module</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
 <span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">my_second_module_exec</span><span class="p">(</span><span class="n">module</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="w">   </span><span class="k">return</span><span class="w"> </span><span class="mi">0</span><span class="p">;</span>
 <span class="p">}</span>
 
 <span class="k">static</span><span class="w"> </span><span class="n">PyModuleDef_Slot</span><span class="w"> </span><span class="n">my_slots</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
 <span class="w">   </span><span class="p">...</span>
-<span class="w">   </span><span class="cm">/* （移除其他 Py_mod_exec 插槽） */</span>
+<span class="w">   </span><span class="cm">/* (remove other Py_mod_exec slots) */</span>
 <span class="w">   </span><span class="p">...</span>
 <span class="w">   </span><span class="p">{</span><span class="n">Py_mod_exec</span><span class="p">,</span><span class="w"> </span><span class="n">my_module_exec</span><span class="p">},</span>
 <span class="w">   </span><span class="p">{</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">}</span>
@@ -622,8 +623,8 @@ definitions to <a class="reference internal" href="../c-api/slots.html#c.PySlot_
 <span class="w">    </span><span class="p">...</span>
 <span class="w">    </span><span class="n">PySlot_DATA</span><span class="p">(</span><span class="n">Py_mod_gil</span><span class="p">,</span><span class="w"> </span><span class="n">Py_MOD_GIL_NOT_USED</span><span class="p">),</span>
 <span class="w">    </span><span class="n">PySlot_DATA</span><span class="p">(</span><span class="n">Py_mod_multiple_interpreters</span><span class="p">,</span>
-<span class="w">         </span><span class="n">Py_MOD_PER_INTERPRETER_GIL_SUPPORTED</span><span class="p">)</span>
-<span class="w">    </span><span class="n">PySlot_FUNC</span><span class="p">(</span><span class="n">Py_mod_create</span><span class="p">,</span><span class="w"> </span><span class="n">my_module_create</span><span class="p">),</span>
+<span class="w">         </span><span class="n">Py_MOD_PER_INTERPRETER_GIL_SUPPORTED</span><span class="p">),</span>
+<span class="w">    </span><span class="n">PySlot_FUNC</span><span class="p">(</span><span class="n">Py_mod_create</span><span class="p">,</span><span class="w"> </span><span class="n">create_module</span><span class="p">),</span>
 <span class="w">    </span><span class="n">PySlot_FUNC</span><span class="p">(</span><span class="n">Py_mod_exec</span><span class="p">,</span><span class="w"> </span><span class="n">my_module_exec</span><span class="p">),</span>
 <span class="w">    </span><span class="n">PySlot_END</span>
 <span class="p">};</span>
@@ -664,7 +665,7 @@ To use a token, declare (or reuse) a unique static variable, for example:</p>
 <span class="w">   </span><span class="p">...</span>
 <span class="hll"><span class="w">   </span><span class="n">PySlot_STATIC_DATA</span><span class="p">(</span><span class="n">Py_mod_token</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">my_token</span><span class="p">),</span>
 </span><span class="w">   </span><span class="n">PySlot_END</span>
-<span class="p">}</span>
+<span class="p">};</span>
 </pre></div>
 </div>
 <p>Then, switch from <a class="reference internal" href="../c-api/module.html#c.PyModule_GetDef" title="PyModule_GetDef"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyModule_GetDef()</span></code></a> calls such as:</p>
@@ -685,8 +686,8 @@ with an exception):</p>
 </pre></div>
 </div>
 <p>to <a class="reference internal" href="../c-api/type.html#c.PyType_GetModuleByToken" title="PyType_GetModuleByToken"><code class="xref c c-func docutils literal notranslate"><span class="pre">PyType_GetModuleByToken()</span></code></a> (which returns a strong reference):</p>
-<div class="good highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyType_GetModuleByToken</span><span class="p">(</span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="n">my_token</span><span class="p">);</span>
-<span class="cm">/* 處理錯誤；使用 module */</span>
+<div class="good highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyObject</span><span class="w"> </span><span class="o">*</span><span class="n">module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyType_GetModuleByToken</span><span class="p">(</span><span class="n">type</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">my_token</span><span class="p">);</span>
+<span class="cm">/* handle error; use module */</span>
 <span class="n">Py_XDECREF</span><span class="p">(</span><span class="n">module</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -806,11 +807,12 @@ signature (and the <a class="reference internal" href="../c-api/structures.html#
 and get the class as the <code class="docutils literal notranslate"><span class="pre">defining_class</span></code> argument.</p></li>
 <li><p>Otherwise, give your class a unique static token using the
 <a class="reference internal" href="../c-api/type.html#c.Py_tp_token" title="Py_tp_token"><code class="xref c c-macro docutils literal notranslate"><span class="pre">Py_tp_token</span></code></a> slot, and use:</p>
-<div class="good highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyTypeObject</span><span class="w"> </span><span class="n">cls</span><span class="p">;</span>
+<div class="good highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">PyTypeObject</span><span class="w"> </span><span class="o">*</span><span class="n">cls</span><span class="p">;</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">PyType_GetBaseByToken</span><span class="p">(</span><span class="n">Py_TYPE</span><span class="p">(</span><span class="n">obj</span><span class="p">),</span><span class="w"> </span><span class="n">my_tp_token</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">cls</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="cm">/* 處理錯誤 */</span>
+<span class="w">    </span><span class="cm">/* handle error */</span>
 <span class="p">}</span>
 <span class="n">CustomObjectData</span><span class="w"> </span><span class="o">*</span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PyObject_GetTypeData</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span><span class="w"> </span><span class="n">cls</span><span class="p">);</span>
+<span class="n">Py_DECREF</span><span class="p">(</span><span class="n">cls</span><span class="p">);</span>
 </pre></div>
 </div>
 <p>Type tokens work similarly to module tokens covered <a class="reference internal" href="#abi3t-migration-module-token"><span class="std std-ref">earlier in this
@@ -924,8 +926,8 @@ of CPython.</p>
 <li><a class="reference internal" href="#setting-up-the-build">Setting up the build</a></li>
 <li><a class="reference internal" href="#module-export-hook">Module export hook</a><ul>
 <li><a class="reference internal" href="#existing-slots">Existing slots</a><ul>
-<li><a class="reference internal" href="#py-mod-create"><code class="docutils literal notranslate"><span class="pre">py_mod_create</span></code></a></li>
-<li><a class="reference internal" href="#multiple-py-mod-exec">Multiple <code class="docutils literal notranslate"><span class="pre">py_mod_exec</span></code></a></li>
+<li><a class="reference internal" href="#py-mod-create"><code class="docutils literal notranslate"><span class="pre">Py_mod_create</span></code></a></li>
+<li><a class="reference internal" href="#multiple-py-mod-exec">Multiple <code class="docutils literal notranslate"><span class="pre">Py_mod_exec</span></code></a></li>
 <li><a class="reference internal" href="#merging-slot-arrays">Merging slot arrays</a></li>
 </ul>
 </li>
@@ -1067,7 +1069,7 @@ of CPython.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 11月 01, 2026 (13:12 UTC)。
+      最後更新於 11月 06, 2026 (00:25 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
