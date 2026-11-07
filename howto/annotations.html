@@ -263,7 +263,7 @@
 </ul>
 <p>然而，並非所有用作註釋的字串值都可以透過 <a class="reference internal" href="../builtins/functions.html#eval" title="eval"><code class="xref py py-func docutils literal notranslate"><span class="pre">eval()</span></code></a> 成功轉換為 Python 值。理論上，字串值可以包含任何有效的字串，並且在實踐中，型別提示存在有效的用例，需要使用特定「無法」評估的字串值進行註釋。例如：</p>
 <ul class="simple">
-<li><p>在 Python 3.10 支援 <span class="target" id="index-4"></span><a class="pep reference external" href="https://peps.python.org/pep-0604/"><strong>PEP 604</strong></a> 聯合型別 (union type) <code class="docutils literal notranslate"><span class="pre">|</span></code> 之前使用它。</p></li>
+<li><p>在 Python 3.10 支援 <span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0604/"><strong>PEP 604</strong></a> 聯合型別 (union type) <code class="docutils literal notranslate"><span class="pre">|</span></code> 之前使用它。</p></li>
 <li><p>Runtime 中不需要的定義，僅在 <a class="reference internal" href="../library/typing.html#typing.TYPE_CHECKING" title="typing.TYPE_CHECKING"><code class="xref py py-const docutils literal notranslate"><span class="pre">typing.TYPE_CHECKING</span></code></a> 為 true 時匯入。</p></li>
 </ul>
 <p>如果 <a class="reference internal" href="../builtins/functions.html#eval" title="eval"><code class="xref py py-func docutils literal notranslate"><span class="pre">eval()</span></code></a> 嘗試計算這類型的值，它將失敗並引發例外。因此，在設計使用註釋的函式庫 API 時，建議僅在呼叫者 (caller) 明確請求時嘗試評估字串值。</p>
@@ -292,7 +292,25 @@
 </pre></div>
 </div>
 <p>這會印出 <code class="docutils literal notranslate"><span class="pre">{'a':</span> <span class="pre">&quot;'str'&quot;}</span></code>。這不應該被認為是一個「奇異的事」，他在這裡被簡單提及，因為他可能會讓人意想不到。</p>
-<p>如果你使用的類別具有自訂的元類別且會存取該類別的 <code class="docutils literal notranslate"><span class="pre">__annotations__</span></code> ，你可能會觀察到不預期的行為；請查閱 <span class="target" id="index-5"></span><a class="pep reference external" href="https://peps.python.org/pep-0749/#pep749-metaclasses"><strong>749</strong></a> 的例子。你可以在 Python 3.14+ 使用 <a class="reference internal" href="../library/annotationlib.html#annotationlib.get_annotations" title="annotationlib.get_annotations"><code class="xref py py-func docutils literal notranslate"><span class="pre">annotationlib.get_annotations()</span></code></a> 或者在 Python 3.10+ 使用 <a class="reference internal" href="../library/inspect.html#inspect.get_annotations" title="inspect.get_annotations"><code class="xref py py-func docutils literal notranslate"><span class="pre">inspect.get_annotations()</span></code></a> 來避免這些問題。在更早期的版本，你可以存取類別的 <a class="reference internal" href="../reference/datamodel.html#type.__dict__" title="type.__dict__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__dict__</span></code></a> 來避免這些問題。（例如：<code class="docutils literal notranslate"><span class="pre">cls.__dict__.get('__annotations__',</span> <span class="pre">None)</span></code> ）。</p>
+<p>If you use a class with a custom metaclass and access <code class="docutils literal notranslate"><span class="pre">__annotations__</span></code>
+on the class, you may observe unexpected behavior; see
+<span class="target" id="index-1"></span><a class="pep reference external" href="https://peps.python.org/pep-0749/#pep749-metaclasses"><strong>749</strong></a> for some examples. You can avoid these
+quirks by using <a class="reference internal" href="../library/annotationlib.html#annotationlib.get_annotations" title="annotationlib.get_annotations"><code class="xref py py-func docutils literal notranslate"><span class="pre">annotationlib.get_annotations()</span></code></a> on Python 3.14+ or
+<a class="reference internal" href="../library/inspect.html#inspect.get_annotations" title="inspect.get_annotations"><code class="xref py py-func docutils literal notranslate"><span class="pre">inspect.get_annotations()</span></code></a> on Python 3.10+.</p>
+<div class="admonition note">
+<p class="admonition-title">備註</p>
+<p>On Python 3.14 and later, annotations are evaluated lazily (see
+<span class="target" id="index-2"></span><a class="pep reference external" href="https://peps.python.org/pep-0649/"><strong>PEP 649</strong></a> and <span class="target" id="index-3"></span><a class="pep reference external" href="https://peps.python.org/pep-0749/"><strong>PEP 749</strong></a>), and how the annotations dict is stored in
+the class's <a class="reference internal" href="../reference/datamodel.html#type.__dict__" title="type.__dict__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__dict__</span></code></a> is a private implementation detail.
+Reading <code class="docutils literal notranslate"><span class="pre">cls.__dict__.get('__annotations__',</span> <span class="pre">None)</span></code> may therefore
+return <code class="docutils literal notranslate"><span class="pre">None</span></code> even when the class has annotations. On these versions,
+always use <a class="reference internal" href="../library/annotationlib.html#annotationlib.get_annotations" title="annotationlib.get_annotations"><code class="xref py py-func docutils literal notranslate"><span class="pre">annotationlib.get_annotations()</span></code></a> (or
+<a class="reference internal" href="../library/inspect.html#inspect.get_annotations" title="inspect.get_annotations"><code class="xref py py-func docutils literal notranslate"><span class="pre">inspect.get_annotations()</span></code></a>) rather than accessing
+<a class="reference internal" href="../reference/datamodel.html#type.__dict__" title="type.__dict__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__dict__</span></code></a> directly.</p>
+</div>
+<p>Only on Python 3.9 and earlier, where neither function is available, can you
+avoid these bugs by reading the annotations from the class's
+<a class="reference internal" href="../reference/datamodel.html#type.__dict__" title="type.__dict__"><code class="xref py py-attr docutils literal notranslate"><span class="pre">__dict__</span></code></a> (for example, <code class="docutils literal notranslate"><span class="pre">cls.__dict__.get('__annotations__',</span> <span class="pre">None)</span></code>).</p>
 <p>在某些 Python 版本中，類別實例可能會帶有 <code class="docutils literal notranslate"><span class="pre">__annotations__</span></code> 的屬性，但這並非受支援的功能。如果你需要取得實例的註釋，可以用 <a class="reference internal" href="../builtins/functions.html#type" title="type"><code class="xref py py-func docutils literal notranslate"><span class="pre">type()</span></code></a> 來存取實例的類別（例如在 Python 3.14+ 中使用 <code class="docutils literal notranslate"><span class="pre">annotationlib.get_annotations(type(myinstance))</span></code> )。</p>
 </section>
 </section>
@@ -439,7 +457,7 @@
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 11月 01, 2026 (13:09 UTC)。
+      最後更新於 11月 07, 2026 (05:27 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
