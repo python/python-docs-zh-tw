@@ -34,6 +34,10 @@ Identify content type:
 - Add space between Chinese and Latin: "使用 CPU 運算" (correct)
 - No space with symbols: "使用「CPU」運算" (correct)
 
+**Parentheses:** Chinese inside -> full-width `（）`; English only inside ->
+half-width with spaces around, e.g. "全域直譯器鎖 (GIL) 被停用". Annotate a term
+only at its first occurrence on the page.
+
 **Line Width:** Max 79 characters (use multi-line format for longer text)
 
 ### Step 3: reST Handling
@@ -43,7 +47,9 @@ See `references/rst-cheatsheet.md` for complete rules.
 **Key patterns:**
 - `:mod:`os`` -> Keep unchanged
 - `:term:`iterator`` -> `:term:`疊代器 <iterator>``
-- Chinese before role: "參閱\\ :mod:`os`"
+- Role renders Latin (`:mod:`, `:func:`, `:class:`, `:ref:` without a title): plain space, "參閱 :mod:`os`"
+- Role renders Chinese (`:term:`/`:ref:` with a translated title): `\\ ` separator, "一個\\ :term:`情境管理器 <context manager>`"
+- `\\ ` renders as nothing, so never put it before a role that renders Latin (it removes the required CJK-Latin space). See `references/rst-cheatsheet.md`
 - After `::` markers: "範例： ::"
 
 ### Step 4: Terminology Workflow
@@ -67,7 +73,8 @@ For uncertain translations, add `#, fuzzy` flag before the entry.
 Before outputting, verify:
 - [ ] Line length <= 79 characters
 - [ ] Full-width punctuation in Chinese text
-- [ ] CJK-Latin spacing correct
+- [ ] CJK-Latin spacing correct (also across roles: no `\\ ` before roles that render Latin)
+- [ ] Parentheses: English-only content uses half-width `( )` with spaces
 - [ ] reST syntax preserved
 - [ ] Terminology matches glossary
 - [ ] No forbidden zh_CN terms
@@ -89,7 +96,7 @@ msgstr "此函式回傳一個疊代器。"
 ### With reST Role
 ```
 msgid "See :func:`len` for details."
-msgstr "詳情請參閱\\ :func:`len`。"
+msgstr "詳情請參閱 :func:`len`。"
 ```
 
 ### With Link
