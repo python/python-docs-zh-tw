@@ -38,15 +38,17 @@ Rules for preserving reStructuredText syntax in translations.
 
 ## Backslash Escaping
 
-Use `\\ ` (backslash-backslash-space) as zero-width separator:
+`\\ ` (backslash-backslash-space) is a zero-width separator. It is needed where
+reST requires a boundary but no visible space is wanted (see the table below
+for when a plain space is the right choice instead):
 
-### CJK Before Role
+### CJK Before Role (only if the role renders Chinese)
 ```
 # Wrong
 參閱:mod:`os`模組
 
 # Correct
-參閱\\ :mod:`os` 模組
+參閱 :mod:`os` 模組
 ```
 
 ### CJK After Link
@@ -57,6 +59,29 @@ Use `\\ ` (backslash-backslash-space) as zero-width separator:
 # Correct
 `連結 <url>`_\\ 中
 ```
+
+### Rendered Text Decides: `\\ ` or a Space
+
+`\\ ` renders as nothing, so it removes the space the CJK-Latin rule requires.
+Choose by what the role *renders*, not by how the source looks:
+
+| Role renders | Use | Example |
+|--------------|-----|---------|
+| Chinese (`:term:` with a translated display text) | `\\ ` | `包含\\ :term:`擴充模組 <extension module>`\\ 的套件` |
+| Latin (`:ref:`/`:doc:` with no explicit title, which shows the target's English section title; `:mod:`, `:func:`, `:class:`, etc.) | a plain space | `請參閱 :ref:`threadsafety`。` |
+
+```
+# Wrong: renders "請參閱C API Extension Support for Free Threading"
+請參閱\\ :ref:`freethreading-extensions-howto`。
+
+# Correct: renders "請參閱 C API Extension Support for Free Threading"
+請參閱 :ref:`freethreading-extensions-howto`。
+```
+
+For `:ref:`/`:doc:` without an explicit title, the rendered text is the
+target page's title, which is often still English, so check the rendered page.
+A role with a translated title (`:ref:`詳細說明 <detail-section>``) renders
+Chinese, so `\\ ` applies.
 
 ### Full-width Punctuation After Role
 ```
