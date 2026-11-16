@@ -1085,7 +1085,7 @@ be removed:</p>
     <span class="o">...</span>  <span class="c1"># do something with x ...</span>
 </pre></div>
 </div>
-<p>這不會動到你的原始序列，而是建立一個順序相反的新副本來進行疊代。</p>
+<p>This returns a reverse iterator without modifying your original sequence.</p>
 </section>
 <section id="how-do-you-remove-duplicates-from-a-list">
 <h3><a class="toc-backref" href="#id46" role="doc-backlink">如何從串列中刪除重複項？</a><a class="headerlink" href="#how-do-you-remove-duplicates-from-a-list" title="連結到這個標頭">¶</a></h3>
@@ -1384,8 +1384,8 @@ entries into <a class="reference internal" href="../reference/datamodel.html#obj
 </div>
 <p>In the example, <a class="reference internal" href="../builtins/functions.html#super" title="super"><code class="xref py py-func docutils literal notranslate"><span class="pre">super()</span></code></a> will automatically determine the instance from
 which it was called (the <code class="docutils literal notranslate"><span class="pre">self</span></code> value), look up the <a class="reference internal" href="../glossary.html#term-method-resolution-order"><span class="xref std std-term">method resolution
-order</span></a> (MRO) with <code class="docutils literal notranslate"><span class="pre">type(self).__mro__</span></code>, and return the next in line after
-<code class="docutils literal notranslate"><span class="pre">Derived</span></code> in the MRO: <code class="docutils literal notranslate"><span class="pre">Base</span></code>.</p>
+order</span></a> (MRO) with <code class="docutils literal notranslate"><span class="pre">type(self).__mro__</span></code>, and return a proxy that searches for
+methods starting with the next class after <code class="docutils literal notranslate"><span class="pre">Derived</span></code> in the MRO: <code class="docutils literal notranslate"><span class="pre">Base</span></code>.</p>
 </section>
 <section id="how-can-i-organize-my-code-to-make-it-easier-to-change-the-base-class">
 <h3><a class="toc-backref" href="#id61" role="doc-backlink">我可以如何組織我的程式碼以使得更改基底類別變得更容易？</a><a class="headerlink" href="#how-can-i-organize-my-code-to-make-it-easier-to-change-the-base-class" title="連結到這個標頭">¶</a></h3>
@@ -1415,7 +1415,10 @@ order</span></a> (MRO) with <code class="docutils literal notranslate"><span cla
 </pre></div>
 </div>
 <p>對於任何使得 <code class="docutils literal notranslate"><span class="pre">isinstance(c,</span> <span class="pre">C)</span></code> 成立的 <code class="docutils literal notranslate"><span class="pre">c</span></code>，<code class="docutils literal notranslate"><span class="pre">c.count</span></code> 也指向 <code class="docutils literal notranslate"><span class="pre">C.count</span></code>，除非被 <code class="docutils literal notranslate"><span class="pre">c</span></code> 本身或從 <code class="docutils literal notranslate"><span class="pre">c.__class__</span></code> 回溯到 <code class="docutils literal notranslate"><span class="pre">C</span></code> 的基底類別搜尋路徑上的某個類別所覆寫。</p>
-<p>注意：在 C 的方法中，像 <code class="docutils literal notranslate"><span class="pre">self.count</span> <span class="pre">=</span> <span class="pre">42</span></code> 這樣的賦值會在 <code class="docutils literal notranslate"><span class="pre">self</span></code> 自己的字典中建立一個名為 &quot;count&quot; 的新的不相關實例。類別靜態資料名稱的重新綁定必須始終指定類別，無論是否在方法內：</p>
+<p>Caution: within a method of C, an assignment like <code class="docutils literal notranslate"><span class="pre">self.count</span> <span class="pre">=</span> <span class="pre">42</span></code> creates a
+new and unrelated attribute named &quot;count&quot; in <code class="docutils literal notranslate"><span class="pre">self</span></code>'s own dict.  Rebinding of a
+class-static data name must always specify the class whether inside a method or
+not:</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="n">C</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="mi">314</span>
 </pre></div>
 </div>
@@ -1646,28 +1649,6 @@ for details and special cases.</p>
 </pre></div>
 </div>
 <p>上面的例子假設 <em>station_id</em> 永遠不會改變。如果相關的實例屬性是可變的，則 <code class="docutils literal notranslate"><span class="pre">cached_property</span></code> 方法無法工作，因為它無法檢測到屬性的更改。</p>
-<p>要在 <em>station_id</em> 可變時使 <code class="docutils literal notranslate"><span class="pre">lru_cache</span></code> 方法起作用，該類別需要定義 <a class="reference internal" href="../reference/datamodel.html#object.__eq__" title="object.__eq__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__eq__()</span></code></a> 和 <a class="reference internal" href="../reference/datamodel.html#object.__hash__" title="object.__hash__"><code class="xref py py-meth docutils literal notranslate"><span class="pre">__hash__()</span></code></a> 方法，以便快取可以檢測相關屬性更新：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Weather</span><span class="p">:</span>
-    <span class="s2">"Example with a mutable station identifier"</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">station_id</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">station_id</span> <span class="o">=</span> <span class="n">station_id</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">change_station</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">station_id</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">station_id</span> <span class="o">=</span> <span class="n">station_id</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">station_id</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">station_id</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">station_id</span><span class="p">)</span>
-
-    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">20</span><span class="p">)</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">historic_rainfall</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s1">'cm'</span><span class="p">):</span>
-        <span class="s1">'Rainfall on a given date'</span>
-        <span class="c1"># Depends on the station_id, date, and units.</span>
-</pre></div>
-</div>
 </section>
 </section>
 <section id="modules">
@@ -1924,7 +1905,7 @@ for details and special cases.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 11月 11, 2026 (06:44 UTC)。
+      最後更新於 11月 16, 2026 (18:10 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

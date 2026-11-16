@@ -956,6 +956,52 @@ than from zero.</p>
 </div>
 </li>
 </ul>
+<ul id="argparse-remainder">
+<li><p><code class="docutils literal notranslate"><span class="pre">argparse.REMAINDER</span></code>. Remaining command-line arguments are gathered into a
+list, including strings that look like options. This is useful for forwarding
+arguments to another command. A common pattern is a final positional argument
+after a command name; options for the outer parser must precede that command:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">'--foo'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">'command'</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">'args'</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">REMAINDER</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="s1">'--foo B cmd --foo C'</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+<span class="go">Namespace(foo='B', command='cmd', args=['--foo', 'C'])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s1">'cmd'</span><span class="p">])</span>
+<span class="go">Namespace(foo=None, command='cmd', args=[])</span>
+</pre></div>
+</div>
+<p>When the remainder is the first positional argument, leading options are still
+parsed normally. It starts with the first positional value, or with <code class="docutils literal notranslate"><span class="pre">--</span></code>.
+In a subparser, the subcommand name has already been consumed by the parent
+parser and does not start the remainder. Any <code class="docutils literal notranslate"><span class="pre">--</span></code> consumed by the remainder
+is retained:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">'args'</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">REMAINDER</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s1">'--'</span><span class="p">,</span> <span class="s1">'--foo'</span><span class="p">,</span> <span class="s1">'B'</span><span class="p">])</span>
+<span class="go">Namespace(args=['--', '--foo', 'B'])</span>
+</pre></div>
+</div>
+<p>For an optional argument, supply the option separately from its values:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">'--forward'</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">REMAINDER</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="s1">'--forward --foo B --'</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+<span class="go">Namespace(forward=['--foo', 'B', '--'])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">([</span><span class="s1">'--forward'</span><span class="p">])</span>
+<span class="go">Namespace(forward=[])</span>
+</pre></div>
+</div>
+<p>An attached value such as <code class="docutils literal notranslate"><span class="pre">--forward=value</span></code> supplies only that value;
+subsequent arguments are parsed normally.</p>
+<div class="versionchanged">
+<p><span class="versionmodified changed">在 3.15 版的變更: </span>Optional arguments with <code class="docutils literal notranslate"><span class="pre">nargs=argparse.REMAINDER</span></code> consume <code class="docutils literal notranslate"><span class="pre">--</span></code> and
+subsequent arguments instead of stopping at <code class="docutils literal notranslate"><span class="pre">--</span></code>.</p>
+</div>
+<p>With the default <code class="docutils literal notranslate"><span class="pre">'store'</span></code> action, an empty positional remainder ignores
+<a class="reference internal" href="#default">default</a> and produces <code class="docutils literal notranslate"><span class="pre">[]</span></code>. The <a class="reference internal" href="#choices">choices</a> restriction is not applied to the
+remainder.</p>
+</li>
+</ul>
 <p>如果未提供 <code class="docutils literal notranslate"><span class="pre">nargs</span></code> 關鍵字引數，消耗的引數數量由 <a class="reference internal" href="#action">action</a> 決定。一般而言，這意味著會消耗單個命令列引數並產生單個項目（而非串列）。不消耗命令列引數的 action（例如 <code class="docutils literal notranslate"><span class="pre">'store_const'</span></code>）會設定 <code class="docutils literal notranslate"><span class="pre">nargs=0</span></code>。</p>
 </section>
 <section id="const">
@@ -1954,7 +2000,11 @@ each space-separated word becomes a separate argument.</p>
 <dt class="sig sig-object py" id="argparse.ArgumentParser.parse_known_intermixed_args">
 <span class="sig-prename descclassname"><span class="pre">ArgumentParser.</span></span><span class="sig-name descname"><span class="pre">parse_known_intermixed_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#argparse.ArgumentParser.parse_known_intermixed_args" title="連結到這個定義">¶</a></dt>
 <dd><p>許多 Unix 命令允許使用者將可選引數與位置引數交錯使用。<a class="reference internal" href="#argparse.ArgumentParser.parse_intermixed_args" title="argparse.ArgumentParser.parse_intermixed_args"><code class="xref py py-meth docutils literal notranslate"><span class="pre">parse_intermixed_args()</span></code></a> 和 <a class="reference internal" href="#argparse.ArgumentParser.parse_known_intermixed_args" title="argparse.ArgumentParser.parse_known_intermixed_args"><code class="xref py py-meth docutils literal notranslate"><span class="pre">parse_known_intermixed_args()</span></code></a> 方法支援此剖析風格。</p>
-<p>這些剖析器不支援所有 <code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code> 功能，如果使用了不支援的功能會引發例外。特別是不支援子剖析器，以及同時包含可選引數和位置引數的互斥群組。</p>
+<p>These parsers do not support all the <code class="xref py py-mod docutils literal notranslate"><span class="pre">argparse</span></code> features, and will raise
+exceptions if unsupported features are used.  In particular, subparsers,
+positional arguments with
+<a class="reference internal" href="#argparse-remainder"><span class="std std-ref">nargs=argparse.REMAINDER</span></a>, and mutually exclusive
+groups that include both optionals and positionals are not supported.</p>
 <p>以下範例展示了 <a class="reference internal" href="#argparse.ArgumentParser.parse_known_args" title="argparse.ArgumentParser.parse_known_args"><code class="xref py py-meth docutils literal notranslate"><span class="pre">parse_known_args()</span></code></a> 和 <a class="reference internal" href="#argparse.ArgumentParser.parse_intermixed_args" title="argparse.ArgumentParser.parse_intermixed_args"><code class="xref py py-meth docutils literal notranslate"><span class="pre">parse_intermixed_args()</span></code></a> 之間的差異：前者回傳 <code class="docutils literal notranslate"><span class="pre">['2',</span> <span class="pre">'3']</span></code> 作為未剖析的引數，而後者將所有位置引數收集到 <code class="docutils literal notranslate"><span class="pre">rest</span></code> 中。</p>
 <div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">'--foo'</span><span class="p">)</span>
@@ -2218,7 +2268,7 @@ each space-separated word becomes a separate argument.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 11月 11, 2026 (06:44 UTC)。
+      最後更新於 11月 16, 2026 (18:10 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     

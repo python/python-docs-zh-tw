@@ -100,7 +100,15 @@
 <li><a class="reference internal" href="#module-test.support.bytecode_helper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">test.support.bytecode_helper</span></code> --- 用於測試位元組碼能正確產生的支援工具</a></li>
 <li><a class="reference internal" href="#module-test.support.threading_helper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">test.support.threading_helper</span></code> --- 用於 threading 測試的工具</a></li>
 <li><a class="reference internal" href="#module-test.support.os_helper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">test.support.os_helper</span></code> --- 用於 os 測試的工具</a></li>
-<li><a class="reference internal" href="#module-test.support.import_helper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">test.support.import_helper</span></code> --- 用於 import 測試的工具</a></li>
+<li><a class="reference internal" href="#module-test.support.import_helper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">test.support.import_helper</span></code> --- 用於 import 測試的工具</a><ul>
+<li><a class="reference internal" href="#creating-module-objects">Creating module objects</a></li>
+<li><a class="reference internal" href="#manipulating-sys-modules">Manipulating sys.modules</a></li>
+<li><a class="reference internal" href="#importing-modules">Importing modules</a></li>
+<li><a class="reference internal" href="#manipulating-sys-path">Manipulating sys.path</a></li>
+<li><a class="reference internal" href="#manipulating-internals">Manipulating internals</a></li>
+<li><a class="reference internal" href="#lazy-imports">Lazy imports</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-test.support.warnings_helper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">test.support.warnings_helper</span></code> --- 用於 warnings 測試的工具</a></li>
 </ul>
 
@@ -1965,45 +1973,89 @@ For example:</p>
 <div class="versionadded">
 <p><span class="versionmodified added">在 3.10 版被加入.</span></p>
 </div>
+<section id="creating-module-objects">
+<h2>Creating module objects<a class="headerlink" href="#creating-module-objects" title="連結到這個標頭">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="test.support.import_helper.create_module">
+<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">create_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loader</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">ispkg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.create_module" title="連結到這個定義">¶</a></dt>
+<dd><p>Create a new, empty <a class="reference internal" href="../glossary.html#term-module"><span class="xref std std-term">module</span></a> or <a class="reference internal" href="../glossary.html#term-package"><span class="xref std std-term">package</span></a> and return it.</p>
+<p><em>name</em>, <em>loader</em> and <em>ispkg</em> (as <code class="docutils literal notranslate"><span class="pre">is_package</span></code>) are passed to
+<a class="reference internal" href="importlib.html#importlib.machinery.ModuleSpec" title="importlib.machinery.ModuleSpec"><code class="xref py py-class docutils literal notranslate"><span class="pre">importlib.machinery.ModuleSpec</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="test.support.import_helper.add_module">
+<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">add_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.add_module" title="連結到這個定義">¶</a></dt>
+<dd><p>Create a <a class="reference internal" href="../glossary.html#term-module"><span class="xref std std-term">module</span></a> from a name or spec and add it to <a class="reference internal" href="sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>.</p>
+<p>If <em>parents</em> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, create any missing parent modules.</p>
+<p>Return the new module.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="test.support.import_helper.add_package">
+<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">add_package</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">parents</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.add_package" title="連結到這個定義">¶</a></dt>
+<dd><p>Create a <a class="reference internal" href="../glossary.html#term-package"><span class="xref std std-term">package</span></a> from a name or spec and add it to <a class="reference internal" href="sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>.</p>
+<p>If <em>parents</em> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, create any missing parent modules.</p>
+<p>Return the new package.</p>
+</dd></dl>
+
+</section>
+<section id="manipulating-sys-modules">
+<h2>Manipulating sys.modules<a class="headerlink" href="#manipulating-sys-modules" title="連結到這個標頭">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="test.support.import_helper.unload">
+<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">unload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.unload" title="連結到這個定義">¶</a></dt>
+<dd><p>Remove the module named <em>name</em> from <a class="reference internal" href="sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>.</p>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="test.support.import_helper.forget">
-<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.forget" title="連結到這個定義">¶</a></dt>
-<dd><p>Remove the module named <em>module_name</em> from <code class="docutils literal notranslate"><span class="pre">sys.modules</span></code> and delete any
+<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">forget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.forget" title="連結到這個定義">¶</a></dt>
+<dd><p>Remove the module named <em>modname</em> from <a class="reference internal" href="sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> and delete any
 byte-compiled files of the module.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="test.support.import_helper.import_fresh_module">
-<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">import_fresh_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blocked</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deprecated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.import_fresh_module" title="連結到這個定義">¶</a></dt>
-<dd><p>This function imports and returns a fresh copy of the named Python module
-by removing the named module from <code class="docutils literal notranslate"><span class="pre">sys.modules</span></code> before doing the import.
-Note that unlike <a class="reference internal" href="importlib.html#importlib.reload" title="importlib.reload"><code class="xref py py-func docutils literal notranslate"><span class="pre">importlib.reload()</span></code></a>, the original module is not
-affected by this operation.</p>
-<p><em>fresh</em> is an iterable of additional module names that are also removed
-from the <code class="docutils literal notranslate"><span class="pre">sys.modules</span></code> cache before doing the import.</p>
-<p><em>blocked</em> is an iterable of module names that are replaced with <code class="docutils literal notranslate"><span class="pre">None</span></code>
-in the module cache during the import to ensure that attempts to import
-them raise <a class="reference internal" href="../builtins/exceptions.html#ImportError" title="ImportError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportError</span></code></a>.</p>
-<p>The named module and any modules named in the <em>fresh</em> and <em>blocked</em>
-parameters are saved before starting the import and then reinserted into
-<code class="docutils literal notranslate"><span class="pre">sys.modules</span></code> when the fresh import is complete.</p>
-<p>Module and package deprecation messages are suppressed during this import
-if <em>deprecated</em> is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
-<p>如果無法引入指定的模組則此函式會引發 <a class="reference internal" href="../builtins/exceptions.html#ImportError" title="ImportError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportError</span></code></a>。</p>
-<p>用法範例：</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get copies of the warnings module for testing without affecting the</span>
-<span class="c1"># version being used by the rest of the test suite. One copy uses the</span>
-<span class="c1"># C implementation, the other is forced to use the pure Python fallback</span>
-<span class="c1"># implementation</span>
-<span class="n">py_warnings</span> <span class="o">=</span> <span class="n">import_fresh_module</span><span class="p">(</span><span class="s1">'warnings'</span><span class="p">,</span> <span class="n">blocked</span><span class="o">=</span><span class="p">[</span><span class="s1">'_warnings'</span><span class="p">])</span>
-<span class="n">c_warnings</span> <span class="o">=</span> <span class="n">import_fresh_module</span><span class="p">(</span><span class="s1">'warnings'</span><span class="p">,</span> <span class="n">fresh</span><span class="o">=</span><span class="p">[</span><span class="s1">'_warnings'</span><span class="p">])</span>
+<dt class="sig sig-object py" id="test.support.import_helper.modules_setup">
+<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">modules_setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.modules_setup" title="連結到這個定義">¶</a></dt>
+<dd><p>Return a tuple containing a copy of <a class="reference internal" href="sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="test.support.import_helper.modules_cleanup">
+<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">modules_cleanup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">oldmodules</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.modules_cleanup" title="連結到這個定義">¶</a></dt>
+<dd><p>Remove modules except for <em>oldmodules</em> and <code class="docutils literal notranslate"><span class="pre">encodings</span></code> from <a class="reference internal" href="sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>
+in order to preserve the internal cache.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="test.support.import_helper.isolated_modules">
+<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">isolated_modules</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.isolated_modules" title="連結到這個定義">¶</a></dt>
+<dd><p>A context manager that makes a copy of <a class="reference internal" href="sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> on entry and restores
+it on exit.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="test.support.import_helper.CleanImport">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">CleanImport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">module_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usefrozen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.CleanImport" title="連結到這個定義">¶</a></dt>
+<dd><p>A context manager to force imports to return new module references.  This
+is useful for testing module-level behaviors, such as the emission of a
+<a class="reference internal" href="../builtins/exceptions.html#DeprecationWarning" title="DeprecationWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DeprecationWarning</span></code></a> on import.</p>
+<p>When created, this makes a copy of <a class="reference internal" href="sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> and removes names from
+<em>module_names</em> from the original. On exit, the original module references are
+restored.</p>
+<p>If <em>usefrozen</em> is False (the default) then the frozen importer is
+disabled (except for essential modules like <code class="docutils literal notranslate"><span class="pre">importlib._bootstrap</span></code>).</p>
+<p>Example usage:</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">CleanImport</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">):</span>
+      <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">)</span>  <span class="c1"># New reference.</span>
 </pre></div>
-</div>
-<div class="versionadded">
-<p><span class="versionmodified added">在 3.1 版被加入.</span></p>
 </div>
 </dd></dl>
 
+</section>
+<section id="importing-modules">
+<h2>Importing modules<a class="headerlink" href="#importing-modules" title="連結到這個標頭">¶</a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="test.support.import_helper.import_module">
 <span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">import_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deprecated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">required_on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.import_module" title="連結到這個定義">¶</a></dt>
@@ -2020,45 +2072,53 @@ which will be compared against <a class="reference internal" href="sys.html#sys.
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="test.support.import_helper.modules_setup">
-<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">modules_setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.modules_setup" title="連結到這個定義">¶</a></dt>
-<dd><p>回傳 <a class="reference internal" href="sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> 的複本。</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="test.support.import_helper.modules_cleanup">
-<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">modules_cleanup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">oldmodules</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.modules_cleanup" title="連結到這個定義">¶</a></dt>
-<dd><p>Remove modules except for <em>oldmodules</em> and <code class="docutils literal notranslate"><span class="pre">encodings</span></code> in order to
-preserve internal cache.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="test.support.import_helper.unload">
-<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">unload</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.unload" title="連結到這個定義">¶</a></dt>
-<dd><p>從 <code class="docutils literal notranslate"><span class="pre">sys.modules</span></code> 中刪除 <em>name</em>。</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="test.support.import_helper.make_legacy_pyc">
-<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">make_legacy_pyc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.make_legacy_pyc" title="連結到這個定義">¶</a></dt>
-<dd><p>Move a <span class="target" id="index-6"></span><a class="pep reference external" href="https://peps.python.org/pep-3147/"><strong>PEP 3147</strong></a>/<span class="target" id="index-7"></span><a class="pep reference external" href="https://peps.python.org/pep-0488/"><strong>PEP 488</strong></a> pyc file to its legacy pyc location and return the file
-system path to the legacy pyc file.  The <em>source</em> value is the file system
-path to the source file.  It does not need to exist, however the PEP
-3147/488 pyc file must exist.</p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="test.support.import_helper.CleanImport">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">CleanImport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">module_names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.CleanImport" title="連結到這個定義">¶</a></dt>
-<dd><p>A context manager to force import to return a new module reference.  This
-is useful for testing module-level behaviors, such as the emission of a
-<a class="reference internal" href="../builtins/exceptions.html#DeprecationWarning" title="DeprecationWarning"><code class="xref py py-exc docutils literal notranslate"><span class="pre">DeprecationWarning</span></code></a> on import.  Example usage:</p>
-<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">CleanImport</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">):</span>
-    <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s1">'foo'</span><span class="p">)</span>  <span class="c1"># New reference.</span>
+<dt class="sig sig-object py" id="test.support.import_helper.import_fresh_module">
+<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">import_fresh_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fresh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blocked</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">deprecated</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">usefrozen</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.import_fresh_module" title="連結到這個定義">¶</a></dt>
+<dd><p>This function imports and returns a fresh copy of the named Python module
+by removing the named module from <a class="reference internal" href="sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> before doing the import.
+Note that unlike <a class="reference internal" href="importlib.html#importlib.reload" title="importlib.reload"><code class="xref py py-func docutils literal notranslate"><span class="pre">reload</span></code></a>, the original module is not
+affected by this operation.</p>
+<p><em>fresh</em> is an iterable of additional module names that are also removed
+from the <a class="reference internal" href="sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> cache before doing the import.</p>
+<p><em>blocked</em> is an iterable of module names that are replaced with <code class="docutils literal notranslate"><span class="pre">None</span></code>
+in the module cache during the import to ensure that attempts to import
+them raise <a class="reference internal" href="../builtins/exceptions.html#ImportError" title="ImportError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportError</span></code></a>.</p>
+<p>The named module and any modules named in the <em>fresh</em> and <em>blocked</em>
+parameters are saved before starting the import and then reinserted into
+<a class="reference internal" href="sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a> when the fresh import is complete.</p>
+<p>Module and package deprecation messages are suppressed during this import
+if <em>deprecated</em> is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<p>If <em>usefrozen</em> is False (the default) then the frozen importer is
+disabled (except for essential modules like <code class="docutils literal notranslate"><span class="pre">importlib._bootstrap</span></code>).</p>
+<p>如果無法引入指定的模組則此函式會引發 <a class="reference internal" href="../builtins/exceptions.html#ImportError" title="ImportError"><code class="xref py py-exc docutils literal notranslate"><span class="pre">ImportError</span></code></a>。</p>
+<p>用法範例：</p>
+<div class="highlight-python3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get copies of the warnings module for testing without affecting the</span>
+<span class="c1"># version being used by the rest of the test suite. One copy uses the</span>
+<span class="c1"># C implementation, the other is forced to use the pure Python fallback</span>
+<span class="c1"># implementation</span>
+<span class="n">py_warnings</span> <span class="o">=</span> <span class="n">import_fresh_module</span><span class="p">(</span><span class="s1">'warnings'</span><span class="p">,</span> <span class="n">blocked</span><span class="o">=</span><span class="p">[</span><span class="s1">'_warnings'</span><span class="p">])</span>
+<span class="n">c_warnings</span> <span class="o">=</span> <span class="n">import_fresh_module</span><span class="p">(</span><span class="s1">'warnings'</span><span class="p">,</span> <span class="n">fresh</span><span class="o">=</span><span class="p">[</span><span class="s1">'_warnings'</span><span class="p">])</span>
 </pre></div>
+</div>
+<div class="versionadded">
+<p><span class="versionmodified added">在 3.1 版被加入.</span></p>
 </div>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="test.support.import_helper.ensure_module_imported">
+<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">ensure_module_imported</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">clearnone</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.ensure_module_imported" title="連結到這個定義">¶</a></dt>
+<dd><p>Import and return the named module.</p>
+<p>If the module is already imported, this is returned. Otherwise, import
+the module and return it. If the module is not found a new, empty module
+will be created.</p>
+<p>If <em>clearnone</em> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, this will first remove any <code class="docutils literal notranslate"><span class="pre">None</span></code> values that
+would block the import.</p>
+</dd></dl>
+
+</section>
+<section id="manipulating-sys-path">
+<h2>Manipulating sys.path<a class="headerlink" href="#manipulating-sys-path" title="連結到這個標頭">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="test.support.import_helper.DirsOnSysPath">
 <em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">DirsOnSysPath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">paths</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.DirsOnSysPath" title="連結到這個定義">¶</a></dt>
@@ -2071,6 +2131,63 @@ context manager, including replacement of the object,
 will be reverted at the end of the block.</p>
 </dd></dl>
 
+<dl class="py function">
+<dt class="sig sig-object py" id="test.support.import_helper.ready_to_import">
+<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">ready_to_import</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.ready_to_import" title="連結到這個定義">¶</a></dt>
+<dd><p>A context manager that will create a new Python module <em>name</em> with <em>source</em>
+source code in a temporary directory and inserts this directory at the start
+of <a class="reference internal" href="sys.html#sys.path" title="sys.path"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.path</span></code></a>. The context manager yields a tuple with the name and the path
+to the script in the temporary directory.</p>
+<p>If the name matches an existing module, this will be cleared from <a class="reference internal" href="sys.html#sys.modules" title="sys.modules"><code class="xref py py-data docutils literal notranslate"><span class="pre">sys.modules</span></code></a>
+on entry and restored on exit.</p>
+<p>If no name is given, the module will be named &quot;spam&quot;.</p>
+</dd></dl>
+
+</section>
+<section id="manipulating-internals">
+<h2>Manipulating internals<a class="headerlink" href="#manipulating-internals" title="連結到這個標頭">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="test.support.import_helper.make_legacy_pyc">
+<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">make_legacy_pyc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_compile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.make_legacy_pyc" title="連結到這個定義">¶</a></dt>
+<dd><p>Move a <span class="target" id="index-6"></span><a class="pep reference external" href="https://peps.python.org/pep-3147/"><strong>PEP 3147</strong></a>/<span class="target" id="index-7"></span><a class="pep reference external" href="https://peps.python.org/pep-0488/"><strong>PEP 488</strong></a> pyc file to its legacy pyc location and return the file
+system path to the legacy pyc file.  The <em>source</em> value is the file system
+path to the source file.  It does not need to exist, however the PEP
+3147/488 pyc file must exist or <em>allow_compile</em> must be set.</p>
+<p>If <em>allow_compile</em> is <code class="docutils literal notranslate"><span class="pre">True</span></code> this will create a .pyc file if it does not exist.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="test.support.import_helper.frozen_modules">
+<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">frozen_modules</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.frozen_modules" title="連結到這個定義">¶</a></dt>
+<dd><p>A context manager that forces frozen modules to be used or excluded.</p>
+<p>If <em>enabled</em> is <code class="docutils literal notranslate"><span class="pre">True</span></code> frozen modules are used, otherwise they are excluded.</p>
+<p>This only applies to modules that have not yet been imported. Some essential
+modules will always be imported frozen.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="test.support.import_helper.multi_interp_extensions_check">
+<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">multi_interp_extensions_check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enabled</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.multi_interp_extensions_check" title="連結到這個定義">¶</a></dt>
+<dd><p>A context manager that forces (if <em>enabled</em> is <code class="docutils literal notranslate"><span class="pre">True</span></code>) or prevents legacy (single-phase init)
+modules from being allowed in subinterpreters.</p>
+<p>This only applies to modules that haven't been imported yet.
+It overrides the <a class="reference internal" href="../c-api/subinterpreters.html#c.PyInterpreterConfig.check_multi_interp_extensions" title="PyInterpreterConfig.check_multi_interp_extensions"><code class="xref c c-member docutils literal notranslate"><span class="pre">PyInterpreterConfig.check_multi_interp_extensions</span></code></a>
+setting.</p>
+</dd></dl>
+
+</section>
+<section id="lazy-imports">
+<h2>Lazy imports<a class="headerlink" href="#lazy-imports" title="連結到這個標頭">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="test.support.import_helper.ensure_lazy_imports">
+<span class="sig-prename descclassname"><span class="pre">test.support.import_helper.</span></span><span class="sig-name descname"><span class="pre">ensure_lazy_imports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">imported_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modules_to_block</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">additional_code</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#test.support.import_helper.ensure_lazy_imports" title="連結到這個定義">¶</a></dt>
+<dd><p>Test that when <em>imported_module</em> is imported, none of the modules named in <em>modules_to_block</em>
+are imported as a side effect.</p>
+<p><em>additional_code</em> if given should be additional Python source code to execute before
+checking that the blocked modules still haven't been imported.</p>
+</dd></dl>
+
+</section>
 </section>
 <section id="module-test.support.warnings_helper">
 <span id="test-support-warnings-helper-utilities-for-warnings-tests"></span><h1><code class="xref py py-mod docutils literal notranslate"><span class="pre">test.support.warnings_helper</span></code> --- 用於 warnings 測試的工具<a class="headerlink" href="#module-test.support.warnings_helper" title="連結到這個標頭">¶</a></h1>
@@ -2222,7 +2339,15 @@ The underlying warnings list is not modified.</p>
 <li><a class="reference internal" href="#module-test.support.bytecode_helper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">test.support.bytecode_helper</span></code> --- 用於測試位元組碼能正確產生的支援工具</a></li>
 <li><a class="reference internal" href="#module-test.support.threading_helper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">test.support.threading_helper</span></code> --- 用於 threading 測試的工具</a></li>
 <li><a class="reference internal" href="#module-test.support.os_helper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">test.support.os_helper</span></code> --- 用於 os 測試的工具</a></li>
-<li><a class="reference internal" href="#module-test.support.import_helper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">test.support.import_helper</span></code> --- 用於 import 測試的工具</a></li>
+<li><a class="reference internal" href="#module-test.support.import_helper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">test.support.import_helper</span></code> --- 用於 import 測試的工具</a><ul>
+<li><a class="reference internal" href="#creating-module-objects">Creating module objects</a></li>
+<li><a class="reference internal" href="#manipulating-sys-modules">Manipulating sys.modules</a></li>
+<li><a class="reference internal" href="#importing-modules">Importing modules</a></li>
+<li><a class="reference internal" href="#manipulating-sys-path">Manipulating sys.path</a></li>
+<li><a class="reference internal" href="#manipulating-internals">Manipulating internals</a></li>
+<li><a class="reference internal" href="#lazy-imports">Lazy imports</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#module-test.support.warnings_helper"><code class="xref py py-mod docutils literal notranslate"><span class="pre">test.support.warnings_helper</span></code> --- 用於 warnings 測試的工具</a></li>
 </ul>
 
@@ -2349,7 +2474,7 @@ The underlying warnings list is not modified.</p>
 <a href="https://www.python.org/psf/donations/">敬請捐贈。</a>
 <br>
     <br>
-      最後更新於 11月 11, 2026 (06:44 UTC)。
+      最後更新於 11月 16, 2026 (18:10 UTC)。
     
       <a href="/bugs.html">發現 bug</a>？
     
